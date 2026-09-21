@@ -1,0 +1,28 @@
+# Build output
+build/
+build-*/
+*.o
+*.a
+*.so
+*.so.*
+
+# Fetched, not versioned: cross toolchain + device sysroot
+toolchain/
+sysroot/
+third_party/
+
+# Game data — never commit. The user supplies their own copy.
+*.u
+*.utx
+*.uax
+*.umx
+*.unr
+*.dts
+*.exe
+*.dll
+
+# Editor / OS
+.cache/
+compile_commands.json
+*.swp
+.DS_Store
