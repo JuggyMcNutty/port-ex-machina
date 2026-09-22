@@ -10,7 +10,8 @@ APPDIR="$(cd "$(dirname "$0")" && pwd)"
 GAMEDIR="$(pwd)"
 LOG="$APPDIR/run-game.log"
 
-export LD_LIBRARY_PATH="/usr/trimui/lib:/usr/lib:/lib:$LD_LIBRARY_PATH"
+# APPDIR first: the engine links libSurrealVideo.so, which ships beside it.
+export LD_LIBRARY_PATH="$APPDIR:/usr/trimui/lib:/usr/lib:/lib:$LD_LIBRARY_PATH"
 
 # The engine writes Settings.json and SE-Log-LastRun.txt under
 # $HOME/.config/SurrealEngine. Pin HOME to the SD card so both land somewhere

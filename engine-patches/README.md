@@ -46,6 +46,71 @@ they exist because the upstream front end assumes a desktop with a mouse.
    the actual work item for Deus Ex support — it is worth nothing trapped in a
    window.
 
+## 0002 — cross-compiling for an embedded aarch64 target
+
+All in the build system and the SDL2 backend. None of it changes behaviour on a
+desktop build.
+
+4. **Gate the desktop display backends.** `SurrealWidgets` hard-required
+   `find_package(OpenGL REQUIRED COMPONENTS EGL)` and always compiled and linked
+   the X11 backend. A handheld has no X11, no Wayland compositor, no dbus and no
+   desktop GL. New `ENABLE_X11`/`ENABLE_WAYLAND` options (both ON by default)
+   let an SDL2-only build configure; `window.cpp` already had null-returning
+   stubs for every backend whose `USE_*` define is absent, so nothing else
+   needed touching.
+
+5. **Missing includes in the SDL2 backend.** `sdl2_display_backend.cpp` and
+   `sdl2_display_window.cpp` used `strcmp`, `memcpy` and `std::round` without
+   `<cstring>`/`<cmath>`. That backend is rarely built on Linux, where X11 and
+   Wayland are preferred, so it had not been noticed.
+
+6. **SDL discovered by pkg-config links nothing.** The link step used
+   `${SDL2_LIBRARY}`, which `find_package` sets but `pkg_search_module` does not
+   — it sets `SDL2_LIBRARIES`. A cross build takes the pkg-config path, so every
+   SDL symbol came out undefined. Now tries the imported target, then
+   `SDL2_LIBRARIES`, then `SDL2_LIBRARY`.
+
+7. **`zipdir` must run on the build machine.** It packs the resource zip during
+   the build, so a cross build produces an aarch64 binary that cannot execute.
+   `ZIPDIR_EXECUTABLE` now points at a host-built one, and the in-tree target is
+   skipped when it is set.
+
+8. **System font lookup without a desktop.** `resourcedata_unix.cpp` asked
+   GSettings for the GNOME UI font and resolved it with fontconfig. Neither
+   exists on a handheld. Guarded by `SURREALWIDGETS_DESKTOP_FONTS` (defined only
+   when both glib and fontconfig are found); otherwise it reads the fonts the
+   device actually ships, overridable via `SURREALWIDGETS_FONT`.
+
+9. **Exit status reflects failure.** `GameApp::main` returned 0 even after
+   catching an exception. Our launcher keys its crash sentinel off the exit
+   status, so a failed start was being recorded as a clean run.
+
+## Known blocker on the TrimUI Smart Pro
+
+The cross build runs and gets as far as creating a Vulkan surface, then stops at:
+
+    Could not create vulkan renderer: No Vulkan device found supports
+    the minimum requirements of this application
+
+`VulkanRenderDevice.cpp:34` requires `VK_EXT_descriptor_indexing`. The PowerVR
+Rogue GE8300 supports descriptor indexing **neither** as that extension **nor**
+as Vulkan 1.2 core, despite advertising API 1.3.225:
+
+    VK_EXT_descriptor_indexing                   ABSENT  (of 87 extensions)
+    descriptorIndexing (1.2 core)                NO
+    runtimeDescriptorArray                       NO
+    shaderSampledImageArrayNonUniformIndexing    NO
+    bufferDeviceAddress                          yes
+
+Everything else the device filter demands is present: `VK_KHR_swapchain`,
+`samplerAnisotropy`, `fragmentStoresAndAtomics`, `multiDrawIndirect`,
+`independentBlend`, and a graphics queue that can present to the surface.
+
+The renderer uses descriptor indexing for bindless textures
+(`GetTextureIndexes` returns indices into a large descriptor array), so this is
+a design dependency rather than a flag to flip. `port/tools/probe-vkfeatures.c`,
+`probe-vkfeatures2.c` and `probe-sdl-vulkan.c` reproduce each measurement.
+
 ## Running it headlessly
 
 ```sh

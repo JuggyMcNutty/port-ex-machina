@@ -67,6 +67,34 @@ int main(void) {
                 int dw = 0, dh = 0;
                 SDL_Vulkan_GetDrawableSize(w, &dw, &dh);
                 printf("drawable size: %dx%d\n", dw, dh);
+
+                /* This is the check SurrealGPU's device filter actually fails
+                 * on: a graphics queue family that can also present to THIS
+                 * surface. Report every family so we can see which. */
+                uint32_t pdn = 0;
+                vkEnumeratePhysicalDevices(inst, &pdn, NULL);
+                VkPhysicalDevice *pds = calloc(pdn ? pdn : 1, sizeof *pds);
+                vkEnumeratePhysicalDevices(inst, &pdn, pds);
+                for (uint32_t d = 0; d < pdn; d++) {
+                    uint32_t qn = 0;
+                    vkGetPhysicalDeviceQueueFamilyProperties(pds[d], &qn, NULL);
+                    VkQueueFamilyProperties *qs = calloc(qn ? qn : 1, sizeof *qs);
+                    vkGetPhysicalDeviceQueueFamilyProperties(pds[d], &qn, qs);
+                    printf("device %u: %u queue family(ies)\n", d, qn);
+                    for (uint32_t q = 0; q < qn; q++) {
+                        VkBool32 present = VK_FALSE;
+                        VkResult pr = vkGetPhysicalDeviceSurfaceSupportKHR(pds[d], q, surface, &present);
+                        printf("  family %u: count=%u graphics=%s compute=%s "
+                               "transfer=%s | surfaceSupport rc=%d present=%s\n",
+                               q, qs[q].queueCount,
+                               (qs[q].queueFlags & VK_QUEUE_GRAPHICS_BIT) ? "yes" : "no",
+                               (qs[q].queueFlags & VK_QUEUE_COMPUTE_BIT) ? "yes" : "no",
+                               (qs[q].queueFlags & VK_QUEUE_TRANSFER_BIT) ? "yes" : "no",
+                               (int)pr, present ? "YES" : "NO");
+                    }
+                    free(qs);
+                }
+                free(pds);
             } else {
                 printf("SDL_Vulkan_CreateSurface FAILED: %s\n", SDL_GetError());
             }

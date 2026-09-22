@@ -19,7 +19,10 @@ cp "$ENGINE/SurrealEngine" "$stage/"
 for f in libSurrealVideo.so; do
     [ -f "$ENGINE/$f" ] && cp "$ENGINE/$f" "$stage/"
 done
-# Resource bundles the engine loads at runtime, if the build produced any.
+# The resource zip the engine loads at runtime, and any bundle directories.
+for f in SurrealEngine.pk3; do
+    [ -f "$ENGINE/$f" ] && cp "$ENGINE/$f" "$stage/"
+done
 for d in Resources Assets; do
     [ -d "$ENGINE/$d" ] && cp -a "$ENGINE/$d" "$stage/"
 done
