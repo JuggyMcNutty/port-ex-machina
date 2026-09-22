@@ -1,17 +1,18 @@
-# Build output
-build/
-build-*/
-*.o
-*.a
-*.so
-*.so.*
+# Build output: every port builds under build/<port>/{launcher,engine,app}
+/build/
 
-# Fetched, not versioned: cross toolchain + device sysroot
-toolchain/
-sysroot/
-third_party/
+# Fetched, not versioned: cross toolchains and device sysroots (scripts/dx.sh deps)
+/deps/
 
-# Game data — never commit. The user supplies their own copy.
+# Not ours, each for its own reason:
+#   engine/     a separate git clone of the Surreal Engine fork (scripts/engine.sh fetch)
+#   gamefiles/  your own Deus Ex install -- never commit it
+#   reference/  the 1112f SDK, the DeusExe source, IDA and ini backups
+/engine/
+/gamefiles/
+/reference/
+
+# Game data anywhere else -- never commit. The user supplies their own copy.
 *.u
 *.utx
 *.uax
@@ -21,12 +22,15 @@ third_party/
 *.exe
 *.dll
 
-# Editor / OS
+# Loose build products
+*.o
+*.a
+*.so
+*.so.*
+
+# Editor / OS / local tool state
+/.claude/settings.local.json
 .cache/
 compile_commands.json
 *.swp
 .DS_Store
-
-# scratch configs used while iterating
-build-host/launcher.ini
-build-host/renderers.ini
