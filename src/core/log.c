@@ -8,10 +8,14 @@
 
 static FILE *log_file;
 static int   log_echo = 1;
+static int   log_to_file = 1;
+
+void dxl_log_set_to_file(int on) { log_to_file = on; }
 
 void dxl_log_open(const char *path) {
-    if (log_file && log_file != stderr) fclose(log_file);
-    log_file = path ? fopen(path, "ab") : NULL;
+    if (log_file) { fclose(log_file); log_file = NULL; }
+    if (!log_to_file || !path) return;
+    log_file = fopen(path, "ab");
 }
 
 void dxl_log_close(void) {

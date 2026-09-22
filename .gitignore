@@ -26,3 +26,7 @@ third_party/
 compile_commands.json
 *.swp
 .DS_Store
+
+# scratch configs used while iterating
+build-host/launcher.ini
+build-host/renderers.ini

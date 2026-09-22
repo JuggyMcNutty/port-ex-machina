@@ -32,9 +32,27 @@ add_library(dxl_core STATIC
     src/core/install.c
     src/core/instance.c
     src/core/relaunch.c
+    src/core/renderers.c
     src/core/log.c
 )
 target_include_directories(dxl_core PUBLIC src)
+
+# ---------------------------------------------------------------------------
+# session layer -- the launcher's sequence, shared by both front ends.
+# ---------------------------------------------------------------------------
+add_library(dxl_app STATIC src/app.c src/platform/posix.c)
+target_include_directories(dxl_app PUBLIC src)
+target_link_libraries(dxl_app PUBLIC dxl_core)
+
+# Headless driver: the whole contract with no display. Always built -- it is
+# how the on-device behaviour gets checked over SSH.
+add_executable(dxl-cli src/cli_main.c)
+target_link_libraries(dxl-cli PRIVATE dxl_app)
+if(NOT DXL_PLATFORM STREQUAL "host")
+    add_custom_command(TARGET dxl-cli POST_BUILD
+        COMMAND "${CMAKE_SOURCE_DIR}/scripts/check-abi.sh" "$<TARGET_FILE:dxl-cli>"
+        COMMENT "checking glibc ABI against device glibc 2.33")
+endif()
 
 # ---------------------------------------------------------------------------
 # frontend -- SDL2. The device's own build on the cross target, the distro's
@@ -55,7 +73,6 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/main.c")
 
     add_executable(deusex-launcher
         src/main.c
-        src/platform/posix.c
         src/ui/ui.c
         src/ui/theme.c
         src/ui/input.c
@@ -68,7 +85,7 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/main.c")
     )
     target_include_directories(deusex-launcher PRIVATE src ${DXL_SDL_INCLUDE} ${DXL_SDL_INCLUDE}/SDL2)
     target_link_directories(deusex-launcher PRIVATE ${DXL_SDL_DIRS})
-    target_link_libraries(deusex-launcher PRIVATE dxl_core ${DXL_SDL_LIBS} m)
+    target_link_libraries(deusex-launcher PRIVATE dxl_app ${DXL_SDL_LIBS} m)
 
     if(NOT DXL_PLATFORM STREQUAL "host")
         # The device resolves these from /usr/lib and /usr/trimui/lib at run time.

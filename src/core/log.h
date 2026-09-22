@@ -19,4 +19,9 @@ void dxl_log(const char *fmt, ...);
 /* Mirrors to stderr as well as the file. On by default. */
 void dxl_log_set_echo(int on);
 
+/* Turns the file side off entirely, so dxl_log_open becomes a no-op. --dry-run
+ * uses this: a run that promises to write nothing must not create a log in
+ * someone's game directory just to say so. */
+void dxl_log_set_to_file(int on);
+
 #endif
