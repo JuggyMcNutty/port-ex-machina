@@ -1,46 +1,50 @@
 #!/bin/sh
-# Stand-in for the game.
+# Hands off from the launcher to the engine.
 #
-# Nothing on this device can execute the x86 Windows Core.dll / Engine.dll /
-# DeusEx.dll yet: there is no box64, no wine, no native UE1 engine. So the
-# launcher's final exec lands here.
-#
-# This is not a placeholder to be embarrassed about -- it is what makes the
-# rest observable. The launcher's whole contract (renderer choice, detail
-# block, FirstRun clamp, the crash sentinel, the safe-mode flag string)
-# happens BEFORE this point, and this script records exactly what the launcher
-# decided to hand over.
-#
-# Replacing it with a real runtime is a one-line change in launcher.ini.
+# The launcher has already settled configuration (renderer, detail block,
+# FirstRun) and created the crash sentinel, and it chdir's to GameDir before
+# exec'ing this script. Everything here is about starting Surreal Engine and
+# honouring the sentinel contract on the way out.
 
-LOG="${0%/*}/run-game.log"
+APPDIR="$(cd "$(dirname "$0")" && pwd)"
 GAMEDIR="$(pwd)"
+LOG="$APPDIR/run-game.log"
+
+export LD_LIBRARY_PATH="/usr/trimui/lib:/usr/lib:/lib:$LD_LIBRARY_PATH"
+
+# The engine writes Settings.json and SE-Log-LastRun.txt under
+# $HOME/.config/SurrealEngine. Pin HOME to the SD card so both land somewhere
+# writable and readable over SSH, instead of wherever HOME points on boot.
+export HOME="$APPDIR/home"
+mkdir -p "$HOME/.config/SurrealEngine"
+
+# The vendor SDL2 is the only display path here. Its "mali" video driver wires
+# Vulkan surface creation to the PowerVR implementation, which is what lets the
+# engine's Vulkan renderer present at 1280x720 via VK_KHR_display.
+export SURREALWIDGETS_DISPLAY_BACKEND=SDL2
 
 {
     echo "--- $(date '+%Y-%m-%d %H:%M:%S') ---"
-    echo "cwd:  $GAMEDIR"
-    echo "argc: $#"
-    i=1
-    for a in "$@"; do
-        echo "argv[$i]: $a"
-        i=$((i + 1))
-    done
-    [ $# -eq 0 ] && echo "(no arguments)"
+    echo "gamedir: $GAMEDIR"
+    echo "args:    $*"
 } >> "$LOG"
 
-# The game owns the crash sentinel from here: it is deleted on a clean exit,
-# and survives a crash so the next launch offers recovery. Set DXL_STUB_CRASH=1
-# to leave it behind and exercise that path.
-SENTINEL="$GAMEDIR/System/Running.ini"
-if [ "$DXL_STUB_CRASH" = "1" ]; then
-    echo "exit: simulating a crash, leaving $SENTINEL in place" >> "$LOG"
-    exit 1
+if [ ! -x "$APPDIR/SurrealEngine" ]; then
+    echo "SurrealEngine binary missing -- nothing to launch" >> "$LOG"
+    exit 127
 fi
 
-if [ -f "$SENTINEL" ]; then
-    rm -f "$SENTINEL"
-    echo "exit: clean, removed Running.ini" >> "$LOG"
+"$APPDIR/SurrealEngine" --no-launcher "$GAMEDIR" "$@" >> "$LOG" 2>&1
+status=$?
+echo "engine exit: $status" >> "$LOG"
+
+# The sentinel is the launcher's crash contract: clear it only on a clean exit,
+# so an engine crash still produces the recovery screen on the next launch.
+if [ "$status" -eq 0 ]; then
+    rm -f "$GAMEDIR/System/Running.ini"
+    echo "clean exit, removed Running.ini" >> "$LOG"
 else
-    echo "exit: clean, no Running.ini found" >> "$LOG"
+    echo "unclean exit, leaving Running.ini for recovery" >> "$LOG"
 fi
-exit 0
+
+exit $status
