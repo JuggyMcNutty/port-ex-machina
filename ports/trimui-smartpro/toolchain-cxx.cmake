@@ -1,6 +1,6 @@
-# Cross-compile C++20 for the TrimUI Smart Pro.
+# Cross-compile C++20 for the TrimUI Smart Pro: the engine (engine.cmake).
 #
-# Separate from aarch64-trimui.cmake because the launcher is C11 on a GCC 9.3
+# Separate from toolchain-c.cmake because the launcher is C11 on a GCC 9.3
 # toolchain, while Surreal Engine needs C++20. Both must stay at or below the
 # device's glibc 2.33:
 #
@@ -17,12 +17,12 @@
 set(CMAKE_SYSTEM_NAME      Linux)
 set(CMAKE_SYSTEM_PROCESSOR aarch64)
 
-get_filename_component(PORT_ROOT "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
-set(TRIMUI_TOOLCHAIN "${PORT_ROOT}/toolchain/bleeding/aarch64--glibc--bleeding-edge-2021.05-1")
-set(TRIMUI_SYSROOT   "${PORT_ROOT}/sysroot/trimui")
+get_filename_component(DXL_ROOT "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
+set(TRIMUI_TOOLCHAIN "${DXL_ROOT}/deps/toolchains/aarch64--glibc--bleeding-edge-2021.05-1")
+set(TRIMUI_SYSROOT   "${DXL_ROOT}/deps/sysroots/trimui-smartpro")
 
 if(NOT EXISTS "${TRIMUI_TOOLCHAIN}/bin/aarch64-linux-g++")
-    message(FATAL_ERROR "C++ toolchain missing -- run scripts/fetch-toolchain-cxx.sh")
+    message(FATAL_ERROR "C++ toolchain missing -- run scripts/dx.sh deps trimui-smartpro")
 endif()
 
 set(CMAKE_C_COMPILER   "${TRIMUI_TOOLCHAIN}/bin/aarch64-linux-gcc")
@@ -54,6 +54,3 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 set(ENV{PKG_CONFIG_LIBDIR}      "${TRIMUI_SYSROOT}/lib/pkgconfig")
 set(ENV{PKG_CONFIG_SYSROOT_DIR} "${TRIMUI_SYSROOT}")
 set(ENV{PKG_CONFIG_PATH}        "")
-
-set(DXL_PLATFORM       "trimui-smartpro" CACHE STRING "")
-set(DXL_DEVICE_SYSROOT "${TRIMUI_SYSROOT}" CACHE PATH "")

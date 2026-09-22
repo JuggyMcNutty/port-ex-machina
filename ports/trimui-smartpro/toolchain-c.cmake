@@ -1,25 +1,28 @@
-# Cross-compile for the TrimUI Smart Pro (Allwinner A133, spruceOS / TinaLinux).
+# Cross-compile C11 for the TrimUI Smart Pro (Allwinner A133, spruceOS /
+# TinaLinux): the launcher.
 #
 # Two sysroots are in play and they are not interchangeable:
 #   - the toolchain's own (glibc 2.31 headers + crt objects), set as CMAKE_SYSROOT
-#   - sysroot/trimui, holding the DEVICE's SDL2/freetype shared objects, added
-#     as an extra search path. We link against the vendor SDL2 because it carries
-#     a custom "mali" EGL video driver that upstream SDL2 does not have.
+#   - deps/sysroots/trimui-smartpro, holding the DEVICE's SDL2/freetype shared
+#     objects, added as an extra search path. We link against the vendor SDL2
+#     because it carries a custom "mali" EGL video driver that upstream SDL2
+#     does not have.
 #
-# See scripts/fetch-toolchain.sh for why the glibc version is load-bearing.
+# The toolchain's glibc is load-bearing: see this port's README.md. Fetched by
+# scripts/dx.sh deps trimui-smartpro.
 
 set(CMAKE_SYSTEM_NAME      Linux)
 set(CMAKE_SYSTEM_PROCESSOR aarch64)
 
-get_filename_component(PORT_ROOT "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
-set(TRIMUI_TOOLCHAIN "${PORT_ROOT}/toolchain/aarch64--glibc--stable-2020.08-1")
-set(TRIMUI_SYSROOT   "${PORT_ROOT}/sysroot/trimui")
+get_filename_component(DXL_ROOT "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
+set(TRIMUI_TOOLCHAIN "${DXL_ROOT}/deps/toolchains/aarch64--glibc--stable-2020.08-1")
+set(TRIMUI_SYSROOT   "${DXL_ROOT}/deps/sysroots/trimui-smartpro")
 
 if(NOT EXISTS "${TRIMUI_TOOLCHAIN}/bin/aarch64-linux-gcc")
-    message(FATAL_ERROR "toolchain missing -- run scripts/fetch-toolchain.sh")
+    message(FATAL_ERROR "toolchain missing -- run scripts/dx.sh deps trimui-smartpro")
 endif()
 if(NOT EXISTS "${TRIMUI_SYSROOT}/lib/libSDL2-2.0.so.0")
-    message(FATAL_ERROR "device sysroot missing -- run scripts/fetch-sysroot.sh")
+    message(FATAL_ERROR "device sysroot missing -- run scripts/dx.sh deps trimui-smartpro")
 endif()
 
 set(CMAKE_C_COMPILER   "${TRIMUI_TOOLCHAIN}/bin/aarch64-linux-gcc")
@@ -39,6 +42,3 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
-
-set(DXL_PLATFORM       "trimui-smartpro" CACHE STRING "")
-set(DXL_DEVICE_SYSROOT "${TRIMUI_SYSROOT}" CACHE PATH "")

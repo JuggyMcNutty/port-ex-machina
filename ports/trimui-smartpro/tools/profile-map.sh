@@ -1,13 +1,15 @@
 #!/bin/sh
 # Frame-time profile of one map, on the handheld.
 #
-# Needs an engine built with tools/perf-instrumentation.patch applied (the
-# hooks are temporary and never committed -- see the patch header comments):
+# Needs an engine built with engine-patches/optional/perf-instrumentation.patch
+# applied (the hooks are temporary and never committed -- see the patch header
+# comments). From the repository root:
 #
-#   cd ../engine/SurrealEngine && git apply ../../port/tools/perf-instrumentation.patch
-#   cmake --build build-trimui --target SurrealEngine && cd - && scripts/deploy-engine.sh
+#   scripts/engine.sh perf on
+#   scripts/dx.sh build trimui-smartpro engine && scripts/dx.sh stage trimui-smartpro
+#   scripts/dx.sh deploy trimui-smartpro
 #   ...profile...
-#   cd ../engine/SurrealEngine && git apply -R ../../port/tools/perf-instrumentation.patch
+#   scripts/engine.sh perf off     (then rebuild, stage and deploy again)
 #
 # Then copy this script to the device and run it over SSH:
 #

@@ -1,79 +1,107 @@
 #!/usr/bin/env bash
-# Build a link sysroot for the TrimUI Smart Pro.
+# Build the link sysroot for the TrimUI Smart Pro: deps/sysroots/trimui-smartpro.
 #
-# We link against the DEVICE's own SDL2 (/usr/trimui/lib), not a self-built one:
-# that vendor build carries a custom "mali" EGL video driver (SDL_malivideo.c)
-# that upstream SDL2 does not have, and the PowerVR stack on this device ships
-# only libpvrNULL_WSEGL.so -- so an upstream KMSDRM build has nothing to draw on.
+#   ports/trimui-smartpro/fetch-sysroot.sh [--force] [dest]
 #
-# Headers come from the matching SDL 2.30.8 release tarball.
+# Libraries come off the device itself, so what we link against is exactly
+# what will be there at run time. We link the DEVICE's own SDL2
+# (/usr/trimui/lib), not a self-built one: that vendor build carries a custom
+# "mali" EGL video driver (SDL_malivideo.c) that upstream SDL2 does not have,
+# and the PowerVR stack ships only libpvrNULL_WSEGL.so -- so an upstream
+# KMSDRM build has nothing to draw on. The engine also links the device's EGL,
+# GLESv2, OpenAL, ALSA, zlib and Vulkan loader.
+#
+# Headers are pinned: SDL2 and SDL_ttf from the release matching the device's
+# libraries, the rest from exact package versions in the Arch Linux archive
+# (the headers the engine was first built against).
 set -euo pipefail
+. "$(dirname "${BASH_SOURCE[0]}")/../../scripts/lib/common.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/port.sh"     # the device's address and login
 
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SYS="$ROOT/sysroot/trimui"
-SDL_VER="2.30.8"
-# libSDL2_ttf-2.0.so.0.14.1 on the device is SDL_ttf 2.0.15.
-TTF_VER="2.0.15"
+# Bump when anything below changes, so an existing sysroot is rebuilt.
+RECIPE="trimui-smartpro sysroot 2"
 
-DEVICE="${DEVICE:-192.168.1.211}"
-DEVICE_USER="${DEVICE_USER:-spruce}"
-DEVICE_PASS="${DEVICE_PASS:-happygaming}"
-SSHOPTS=(-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15)
+force=0
+[ "${1:-}" = "--force" ] && { force=1; shift; }
+SYS="${1:-$DX_DEPS/sysroots/trimui-smartpro}"
 
-mkdir -p "$SYS/lib" "$SYS/include"
+if [ "$force" = 0 ] && [ "$(cat "$SYS/.dx-recipe" 2>/dev/null)" = "$RECIPE" ]; then
+    say "sysroot present: $SYS"
+    exit 0
+fi
+
+SDL_VER="2.30.8"     # /usr/trimui/lib/libSDL2-2.0.so.0.3000.8
+TTF_VER="2.0.15"     # libSDL2_ttf-2.0.so.0.14.1 is SDL_ttf 2.0.15
+MESA_TAG="mesa-26.2.2"
+
+tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
+rm -rf "$SYS"; mkdir -p "$SYS/lib/pkgconfig" "$SYS/include"
 
 # ---- device libraries ------------------------------------------------------
-if [ -z "$(ls -A "$SYS/lib" 2>/dev/null)" ]; then
-    echo "pulling libraries from $DEVICE_USER@$DEVICE ..."
-    tmp="$(mktemp -d)"
-    sshpass -p "$DEVICE_PASS" ssh "${SSHOPTS[@]}" "$DEVICE_USER@$DEVICE" \
-        'tar -C / -chf - usr/trimui/lib/libSDL2-2.0.so.0 \
-                        usr/trimui/lib/libSDL2_ttf-2.0.so.0 \
-                        usr/trimui/lib/libSDL2_image-2.0.so.0 \
-                        usr/trimui/lib/libSDL2_mixer-2.0.so.0 \
-                        usr/lib/libfreetype.so.6 2>/dev/null' > "$tmp/dev.tar"
-    tar -C "$tmp" -xf "$tmp/dev.tar"
-    cp -a "$tmp"/usr/trimui/lib/* "$SYS/lib/"
-    cp -a "$tmp"/usr/lib/* "$SYS/lib/" 2>/dev/null || true
-    rm -rf "$tmp"
+# tar -h follows the device's symlinks, so each name arrives as a real file;
+# the development symlinks the linker wants are made locally below.
+say "pulling libraries from $DEVICE_USER@$DEVICE ..."
+dx_ssh 'tar -C / -chf - \
+    usr/trimui/lib/libSDL2-2.0.so.0 usr/trimui/lib/libSDL2_ttf-2.0.so.0 \
+    usr/trimui/lib/libSDL2_image-2.0.so.0 usr/trimui/lib/libSDL2_mixer-2.0.so.0 \
+    usr/lib/libfreetype.so.6 usr/lib/libEGL.so usr/lib/libGLESv2.so \
+    usr/lib/libopenal.so usr/lib/libasound.so.2 usr/lib/libz.so \
+    usr/lib/libstdc++.so.6 usr/lib/libvulkan.so.1' > "$tmp/dev.tar" \
+    || die "could not reach the device (asleep? it drops off the network when it sleeps)"
+mkdir "$tmp/dev"
+tar -C "$tmp/dev" -xf "$tmp/dev.tar"
+cp "$tmp"/dev/usr/trimui/lib/* "$tmp"/dev/usr/lib/* "$SYS/lib/"
 
-    # The linker resolves -lSDL2 through the unversioned soname.
-    ln -sf libfreetype.so.6 "$SYS/lib/libfreetype.so"
-    for l in SDL2-2.0 SDL2_ttf-2.0 SDL2_image-2.0 SDL2_mixer-2.0; do
-        base="${l%%-*}"
-        [ -e "$SYS/lib/lib$l.so.0" ] && ln -sf "lib$l.so.0" "$SYS/lib/lib$base.so"
-    done
-    ls -la "$SYS/lib"
-else
-    echo "device libraries already present in $SYS/lib"
-fi
+ln -s libSDL2-2.0.so.0       "$SYS/lib/libSDL2.so"
+ln -s libSDL2_ttf-2.0.so.0   "$SYS/lib/libSDL2_ttf.so"
+ln -s libSDL2_image-2.0.so.0 "$SYS/lib/libSDL2_image.so"
+ln -s libSDL2_mixer-2.0.so.0 "$SYS/lib/libSDL2_mixer.so"
+ln -s libfreetype.so.6       "$SYS/lib/libfreetype.so"
+ln -s libEGL.so              "$SYS/lib/libEGL.so.1"
+ln -s libGLESv2.so           "$SYS/lib/libGLESv2.so.2"
+ln -s libopenal.so           "$SYS/lib/libopenal.so.1"
+ln -s libasound.so.2         "$SYS/lib/libasound.so"
+ln -s libz.so                "$SYS/lib/libz.so.1"
+ln -s libvulkan.so.1         "$SYS/lib/libvulkan.so"
 
-# ---- SDL2 headers ----------------------------------------------------------
-if [ ! -f "$SYS/include/SDL2/SDL.h" ]; then
-    echo "fetching SDL $SDL_VER headers ..."
-    tmp="$(mktemp -d)"
-    curl -fL --retry 3 -o "$tmp/sdl.tar.gz" \
-        "https://github.com/libsdl-org/SDL/releases/download/release-$SDL_VER/SDL2-$SDL_VER.tar.gz"
-    tar -C "$tmp" -xzf "$tmp/sdl.tar.gz"
-    mkdir -p "$SYS/include/SDL2"
-    cp "$tmp/SDL2-$SDL_VER/include/"*.h "$SYS/include/SDL2/"
-    # SDL_config.h / SDL_revision.h are generated; the release tarball ships
-    # usable defaults under include/ already, but SDL_config.h needs the
-    # non-cmake fallback to exist.
-    [ -f "$SYS/include/SDL2/SDL_config.h" ] || \
-        cp "$tmp/SDL2-$SDL_VER/include/SDL_config.h.default" "$SYS/include/SDL2/SDL_config.h" 2>/dev/null || true
-    rm -rf "$tmp"
-else
-    echo "SDL2 headers already present in $SYS/include/SDL2"
-fi
+# The engine finds SDL2 through pkg-config (toolchain-cxx.cmake points it here).
+cat > "$SYS/lib/pkgconfig/sdl2.pc" <<PC
+prefix=/
+exec_prefix=\${prefix}
+libdir=\${prefix}/lib
+includedir=\${prefix}/include
 
-# ---- SDL2_ttf header -------------------------------------------------------
-if [ ! -f "$SYS/include/SDL2/SDL_ttf.h" ]; then
-    echo "fetching SDL_ttf $TTF_VER header ..."
-    curl -fL --retry 3 -o "$SYS/include/SDL2/SDL_ttf.h" \
-        "https://raw.githubusercontent.com/libsdl-org/SDL_ttf/release-$TTF_VER/SDL_ttf.h"
-else
-    echo "SDL_ttf header already present"
-fi
+Name: sdl2
+Description: Simple DirectMedia Layer (TrimUI vendor build)
+Version: $SDL_VER
+Libs: -L\${libdir} -lSDL2
+Cflags: -I\${includedir}/SDL2 -D_REENTRANT
+PC
 
-echo "sysroot ready: $SYS"
+# ---- SDL2 and SDL_ttf headers ---------------------------------------------
+say "fetching SDL $SDL_VER and SDL_ttf $TTF_VER headers ..."
+curl -fsSL --retry 3 -o "$tmp/sdl.tar.gz" \
+    "https://github.com/libsdl-org/SDL/releases/download/release-$SDL_VER/SDL2-$SDL_VER.tar.gz"
+tar -C "$tmp" -xzf "$tmp/sdl.tar.gz"
+mkdir -p "$SYS/include/SDL2"
+cp "$tmp/SDL2-$SDL_VER/include/"*.h "$SYS/include/SDL2/"
+curl -fsSL --retry 3 -o "$SYS/include/SDL2/SDL_ttf.h" \
+    "https://raw.githubusercontent.com/libsdl-org/SDL_ttf/release-$TTF_VER/SDL_ttf.h"
+
+# ---- Vulkan, EGL/GLES/KHR, OpenAL, ALSA headers -----------------------------
+say "fetching pinned headers ..."
+dx_fetch_arch_pkg "$tmp/arch" vulkan-headers 1:1.4.357.0-1 any
+dx_fetch_arch_pkg "$tmp/arch" libglvnd       1.7.0-3       x86_64
+dx_fetch_arch_pkg "$tmp/arch" openal         1.25.2-2      x86_64
+dx_fetch_arch_pkg "$tmp/arch" alsa-lib       1.2.16.1-1    x86_64
+for d in vulkan vk_video EGL GLES2 GLES3 KHR AL alsa; do
+    cp -a "$tmp/arch/usr/include/$d" "$SYS/include/"
+done
+# Mesa's two EGL extension headers, beside libglvnd's.
+for h in eglmesaext.h eglext_angle.h; do
+    curl -fsSL --retry 3 -o "$SYS/include/EGL/$h" \
+        "https://gitlab.freedesktop.org/mesa/mesa/-/raw/$MESA_TAG/include/EGL/$h"
+done
+
+printf '%s\n' "$RECIPE" > "$SYS/.dx-recipe"
+say "sysroot ready: $SYS"
