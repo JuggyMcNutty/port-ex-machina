@@ -60,9 +60,42 @@ Each is argued for in the RE docs; this is the ledger.
 | 7 | `CreateMutex` + `FindWindowEx`/`WM_COPYDATA` handoff | `flock` pidfile + abstract unix socket | Same protocol (one string, the command-line tail), different transport. The four `appStrfind` bypass tokens still skip it |
 | 8 | CD check loops on `<CdPath>Textures\Palettes.utx` with a modal box | Install-validation screen | Generalises to "did the user supply the game files?", which is the actual first-run failure here |
 
+| 9 | Driver page (2022) shows the detected Direct3D card name | Folded into the renderer screen | The page exists only to name a detected D3D card and point at a driver download. Neither means anything here |
+| 10 | FirstTime page (2019) reached from Detail unconditionally | Shown only on an actual first run | Its text is "Deus Ex is starting up for the first time", which `-changevideo` also got |
+| 11 | Web button `ShellExecute`s the URL | Shows the address | There is no browser to hand off to, and silently doing nothing is worse than printing it |
+| 12 | Wizard is a six-page modal with mouse-sized controls | One gamepad-driven screen per decision | A 1280x720 panel held in two hands. The decisions and the strings are the original's; the layout is not |
+
 Everything else is reproduced as specified — in particular the `FirstRun` gates
 (220/400/1100), the `Running.ini` sentinel lifecycle, the three non-equivalent
 command-line parsers, and safe mode's **re-exec rather than in-process apply**.
+
+## What was verified, and how
+
+Host (`ctest`, 7 suites): the byte-identical round-trip on all three shipped
+inis, the three command-line parsers including the `appStrfind` surprises, the
+entry matrix with its ordering, the detail block against the values recorded in
+[`re/live-verification.md`](re/live-verification.md), and the eight safe-mode
+boxes each producing only their own flags.
+
+On the Smart Pro, with a minimal real install under `Roms/PORTS/DeusEx`:
+
+| Check | Result |
+|---|---|
+| glibc ABI of both binaries | `GLIBC_2.17` only |
+| No game files | install reported INCOMPLETE, each missing piece named |
+| Complete install, `FirstRun=0` | `renderer/firsttime`, migrate-saves set |
+| Settled install (`FirstRun=1100`) | no display created at all; exec'd straight into the game command with the right argv |
+| `Running.ini` lifecycle | created at commit, removed by the game on clean exit |
+| Simulated crash (`DXL_STUB_CRASH=1`) | sentinel survived; next launch reported `main/recovery` |
+| Same sentinel, live instance | `action=forward` -- not treated as a crash |
+| `FirstRun=500` clamp | rewritten to 1100; all 25 sections intact, **no line lost its CR** |
+| `-safe` with a display | renders at 1280x720 using the device's own font and the real `Startup.int` strings |
+
+![The safe-mode screen, captured on the device](img/device-safemode.png)
+
+Not yet exercised on hardware: the messenger half of the handoff (delivery is
+covered by a unit test, and the device confirmed the `forward` decision), and
+navigating the screens by hand -- there is no way to press buttons over SSH.
 
 ## What this port does not do yet
 
