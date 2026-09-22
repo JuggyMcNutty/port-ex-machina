@@ -6,8 +6,10 @@ bootstrap shell, so reimplementing it natively is tractable, while the game
 itself needs a UE1 engine.
 
 **State.** The launcher is finished and verified on hardware. The engine (a
-fork of Surreal Engine) runs the game on a desktop and cross-builds for the
-device, where it stops at one GPU capability gap. One decision is open.
+fork of Surreal Engine) runs the game on a desktop and on the device, which it
+did not before: the GE8300's missing descriptor indexing is worked around with
+a non-bindless fallback, its missing texture formats are CPU-decoded, and its
+broken MSAA resolve is switched off. The port is playable on the handheld.
 
 ---
 
@@ -45,25 +47,38 @@ app lives at `/mnt/SDCARD/App/DeusEx`, the game data at
 | Reverse-engineering spec (`docs/`) | Complete. Five phases, cross-verified, one live run under Proton |
 | Launcher (`port/`) | Complete. 7 host test suites green; full matrix verified on hardware |
 | Engine on the host | Runs the game. Main menu renders and takes input; New Game reaches `00_Intro` |
-| Engine on the device | Cross-builds and runs up to Vulkan device selection, then stops |
+| Engine on the device | Runs. The GE8300 takes the non-bindless fallback; intro renders clean at ~28 FPS |
 
 ### The one open decision
 
-`VulkanRenderDevice.cpp:34` requires `VK_EXT_descriptor_indexing` for bindless
-textures. The PowerVR Rogue GE8300 supports descriptor indexing by **none** of
-the three routes — the EXT extension, the Vulkan 1.2 core feature, or the older
-per-extension struct — although it advertises API 1.3.225. Everything else the
-device filter wants is present. `port/tools/probe-vulkan-caps.c` prints the
-whole verdict in one run.
+**Resolved (route 1, implemented and verified on hardware).**
+`VulkanRenderDevice.cpp` used to require `VK_EXT_descriptor_indexing` for
+bindless textures. The PowerVR Rogue GE8300 supports descriptor indexing by
+none of the three routes — the EXT extension, the Vulkan 1.2 core feature, or
+the older per-extension struct — although it advertises API 1.3.225.
+`port/tools/probe-vulkan-caps.c` prints the whole verdict in one run.
 
-1. **Non-bindless texture path in the fork.** Per-batch descriptor sets instead
-   of indexed arrays: `DescriptorSetManager`, `TextureManager`,
-   `GetTextureIndexes`, and the shaders. The only route that ends with the game
-   running well on this GPU.
-2. **Software rendering.** The engine's OpenGL backend has no
-   descriptor-indexing concept, so Mesa llvmpipe sidesteps the gap — but that
-   backend wants desktop GL 3.2 while the device's SDL2 offers only GLES, so
-   llvmpipe would need its own window system. Slower, plus a winsys problem.
+1. **Non-bindless texture path in the fork.** ✅ Done. Per-batch descriptor
+   sets instead of indexed arrays (`DescriptorSetManager` scene cache,
+   `Batch.DescriptorSet` split batching, `Scene.frag` compiled both ways),
+   forced on capable GPUs with `SURREAL_VK_NO_BINDLESS=1`. See
+   `port/engine-patches/0002-nonbindless-fallback-and-format-support.patch`.
+
+Two more device-specific gaps surfaced once the game ran; both are fixed too:
+
+- **Texture formats.** The GE8300 supports **none** of BC1–BC7, not
+  `R8G8B8_UNORM` either, and samples RGBA32F (lightmaps, fog maps) without the
+  linear-filter bit — undefined behavior with the engine's samplers.
+  `TextureUploader::GetUploader` now takes the device and checks both bits,
+  falling back to CPU decoders (BC1/2/3→RGBA8, BC4→R8, BC5→RG8, RGB8→RGBA8,
+  RGBA32F→RGBA8). Without this every texture was speckle garbage. The format
+  table came from `port/tools/probe-texture-formats.c`.
+- **MSAA.** The engine defaults to 4x MSAA with no `Settings.json`, and the
+  PowerVR resolve turns partially covered pixels into speckle. The port seeds
+  `Settings.json` with `Antialias: Off` (`run-game.sh` +
+  `engine-settings.json.default`; `deploy.sh` installs it if missing).
+
+2. **Software rendering.** Not pursued: route 1 works.
 
 Not pursued: box64/box86/wine. None is on the device, and box64's own notes
 record Deus Ex under Wine crashing before the menu on much stronger hardware.
@@ -83,7 +98,22 @@ record Deus Ex under Wine crashing before the menu on much stronger hardware.
   no Wayland, no desktop GL.
 - **Never `pkill -f <pattern>`** in a command whose own text contains the
   pattern. It matches the shell running it. This killed the session's own shell
-  twice, locally and over SSH. Use `pkill -x <name>` / `killall -x`.
+  twice, locally and over SSH. Over SSH the reliable pattern is
+  `kill -9 $(ps | grep <name> | grep -v grep | awk '{print $1}')` — the device's
+  busybox `killall` rejects `-x` ("bad signal name"), and plain `killall` still
+  matched. Always follow with `ps | grep` and check the count: SSH-launched
+  engines survive sloppy kills, two engines fight over the display, and
+  half the debugging this session was screenshots from a process that had
+  already been superseded.
+- **The device screen can only be seen over SSH by dumping the framebuffer**:
+  `cat /dev/fb0 > /tmp/fb.raw`, gzip it before scp (67 MB → 0.4 MB), then
+  decode on the host as 1280×720 BGRA. The engine has no screenshot facility;
+  a temporary `SURREAL_DEBUG_SHOTS` hook in `VulkanRenderDevice::Unlock`
+  writing BMPs via `ReadPixels` worked well when per-frame precision was
+  needed (added, used, reverted — same for `SURREAL_ANISO`, `SURREAL_MIP0`,
+  `SURREAL_FORCE_DECODE`, and a shader `BISECT` define). Such env-gated debug
+  hooks are the standard technique here, but every one carries a
+  `TEMPORARY DEBUG TOOL` comment and must be reverted before commit.
 - **`zipdir` is a build-time tool.** A cross build produces an aarch64 binary
   that cannot run on the build host; pass `-DZIPDIR_EXECUTABLE=` a host-built
   one.
@@ -253,14 +283,22 @@ and never be PR'd.** Our patches were written with Claude, so they stay in the
 fork permanently. `port/engine-patches/README.md` records this; honour it.
 Building and using the engine is separately permitted by its own license.
 
-Nine patches, all in `port/engine-patches/`: skipping the desktop launcher
-window, reporting exceptions to stderr, streaming the engine log, gating the
-X11/Wayland/EGL desktop backends, two missing includes in the SDL2 backend, SDL
-linking nothing when found via pkg-config, `zipdir` as a host tool, system fonts
-without a desktop, and a non-zero exit status on a caught exception.
+Two patch files, all in `port/engine-patches/`:
 
-Regenerate the patch file after any engine change:
+- `0001-headless-and-embedded-support.patch` — nine changes: skipping the
+desktop launcher window, reporting exceptions to stderr, streaming the engine
+log, gating the X11/Wayland/EGL desktop backends, two missing includes in the
+SDL2 backend, SDL linking nothing when found via pkg-config, `zipdir` as a host
+tool, system fonts without a desktop, and a non-zero exit status on a caught
+exception.
+- `0002-nonbindless-fallback-and-format-support.patch` — the texture path: the
+non-bindless fallback for GPUs without descriptor indexing, and the texture
+format support checks with CPU decoders (BC1/2/3, BC4, BC5, RGB8, RGBA32F).
+
+Regenerate a patch after any engine change, from its commit:
 
 ```sh
-cd engine/SurrealEngine && git diff > ../../port/engine-patches/0001-headless-and-embedded-support.patch
+cd engine/SurrealEngine
+git format-patch -1 HEAD --stdout > \
+    ../../port/engine-patches/000N-<name>.patch
 ```

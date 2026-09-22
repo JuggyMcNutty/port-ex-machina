@@ -21,8 +21,11 @@ vendored here; [`engine-patches/`](engine-patches/) holds the fork patches and
 the reason they must stay in a fork.
 
 Status: the launcher is complete and verified on hardware. The engine runs the
-game on a desktop; on the handheld it stops at one GPU capability gap, recorded
-in [`engine-patches/README.md`](engine-patches/README.md).
+game on the desktop and on the handheld — the GE8300's missing descriptor
+indexing and texture formats are worked around in the fork (see
+[`engine-patches/README.md`](engine-patches/README.md)); the intro renders
+clean at ~28 FPS. Weapons, menus and a map change are still unverified on
+device.
 
 ## Layout
 
@@ -32,7 +35,7 @@ src/ui/           SDL2 frontend, gamepad-driven
 src/app.c         the launcher's sequence, shared by both front ends
 src/cli_main.c    dxl-cli: the same contract with no display
 cmake/            cross toolchain files (C11 for the launcher, C++20 for the engine)
-packaging/        the spruceOS app: config.json, launch.sh, run-game.sh
+packaging/        the spruceOS app: config.json, launch.sh, run-game.sh, engine settings default
 engine-patches/   fork patches for Surreal Engine, and why they stay in a fork
 docs/re/          the reverse-engineering spec this is built from
 docs/DESIGN.md    what this port does differently, and why
@@ -117,6 +120,20 @@ pins to the SD card.
 
 `tools/probe-vulkan-caps.c` reports every requirement the engine's Vulkan device
 filter checks, with a verdict — one run instead of a series of guesses.
+`tools/probe-texture-formats.c` reports which texture formats that GPU can
+sample, and whether it can linearly filter them — the engine hardcodes a
+`VkFormat` per texture format and must not sample what the device does not
+support.
+
+## Engine settings on the handheld
+
+`run-game.sh` pins `HOME` to the SD card and seeds
+`$HOME/.config/SurrealEngine/Settings.json` from
+`packaging/trimui-smartpro/engine-settings.json.default` if none exists. The
+non-negotiable entry is `Antialias: Off`: the engine defaults to 4x MSAA, and
+the PowerVR Rogue GE8300's resolve turns partially covered pixels into speckle.
+The file survives reinstalls (`deploy.sh` installs it if missing), and the
+engine rewrites it with the same value on exit.
 
 ## Keeping docs honest
 

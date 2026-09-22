@@ -166,9 +166,12 @@ was never affected because its settings file already said `Off`.
 ## Running it headlessly
 
 ```sh
-ALSOFT_DRIVERS=null \
+printf '[general]\ndrivers = null\n' > /tmp/alsoft.conf
+ALSOFT_CONF=/tmp/alsoft.conf \
 SurrealEngine --no-launcher /path/to/deusex
 ```
 
-`ALSOFT_DRIVERS=null` is only needed where there is no audio device (a container);
-the handheld has ALSA.
+The `ALSOFT_CONF` redirect is only needed where there is no audio device (a
+container); the handheld has ALSA. Verified this session — `ALSOFT_DRIVERS`,
+an older note here, does not exist in OpenAL Soft; the config file is the
+mechanism.

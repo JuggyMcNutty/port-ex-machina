@@ -8,7 +8,7 @@ Companion to the reverse-engineering spec in [`re/`](re/). That folder says what
 Probed over SSH on 2026-09-21, not assumed. `tools/probe-sdl.c` reproduces it.
 
 | | |
-|---|---|
+| --- | --- |
 | Device | TrimUI Smart Pro (`hwserial TG5040`), spruceOS `PLATFORM=SmartPro` |
 | SoC | Allwinner A133 `sun50iw10p1`, 4× Cortex-A53 |
 | OS | TinaLinux "Neptune", kernel 4.9.191, **glibc 2.33**, busybox 1.36.1 |
@@ -30,7 +30,7 @@ our own code calls.
 Measured:
 
 | Toolchain | gcc | glibc | Result |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Arch `aarch64-linux-gnu-gcc` | 16 | 2.44 | rejected |
 | ARM GNU 13.3.rel1 | 13.3 | 2.38 | rejected — emitted `GLIBC_2.34` in a one-line test |
 | **Bootlin `stable-2020.08-1`** | 9.3 | **2.31** | **the launcher** — emits only `GLIBC_2.17`, verified on the device |
@@ -67,7 +67,7 @@ vendors the headers and loads the loader through volk at run time.
 Each is argued for in the RE docs; this is the ledger.
 
 | # | Original | Here | Why |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | Three safe-mode checkboxes are dead — five of eight `BM_GETCHECK` sites read the same control `+0xB0` | All eight wired independently | Shipped bug. Ticking "Disable 3D sound hardware" silently also applies `-nohard -noddraw -defaultres`, and three boxes do nothing. [`re/wizard.md`](re/wizard.md) §"Shipped bug" |
 | 2 | Missing splash bitmap → assert → process dies before the wizard | Non-fatal; logged and skipped | The fallback to `..\Help\Logo.bmp` is applied without an existence check (`0x109090A4`). [`re/live-verification.md`](re/live-verification.md) |
 | 3 | `MPLAYER` / `HEAT` console commands, one `HKLM\software\mpath` read | Dropped | Services dead since ~2001; `GotoHEAT.exe` is not shipped. [`re/porting-notes.md`](re/porting-notes.md) |
@@ -96,7 +96,7 @@ boxes each producing only their own flags.
 On the Smart Pro, with a minimal real install under `Roms/PORTS/DeusEx`:
 
 | Check | Result |
-|---|---|
+| --- | --- |
 | glibc ABI of both binaries | `GLIBC_2.17` only |
 | No game files | install reported INCOMPLETE, each missing piece named |
 | Complete install, `FirstRun=0` | `renderer/firsttime`, migrate-saves set |
@@ -138,27 +138,33 @@ after catching an exception, so a failed start looked clean.
 ### Where it works, and where it stops
 
 | | |
-|---|---|
+| --- | --- |
 | Host (x86_64, Vulkan) | Runs. Main menu renders and takes input; New Game travels into `00_Intro` with the mission script and lip-sync running |
-| TrimUI Smart Pro | Brings up SDL2 at 1280×720, identifies Deus Ex 1112fm, reads the package hashes, obtains a real Vulkan surface from the PowerVR driver — then fails device selection |
+| TrimUI Smart Pro | Runs. SDL2 at 1280×720 via the PowerVR driver, a real Vulkan surface, and the GE8300 on the fork's non-bindless texture path; the intro renders clean at ~28 FPS |
 
-The handheld blocker is one GPU capability. `VulkanRenderDevice.cpp:34` requires
-`VK_EXT_descriptor_indexing` for its bindless texture path, and the PowerVR Rogue
-GE8300 supports descriptor indexing by none of the three available routes — not
-the EXT extension, not the Vulkan 1.2 core feature, not the older per-extension
-struct — despite advertising API 1.3.225. Everything else the filter demands is
-present. `tools/probe-vulkan-caps.c` prints the whole verdict in one run.
+The handheld used to fail at one GPU capability. `VulkanRenderDevice.cpp`
+required `VK_EXT_descriptor_indexing` for its bindless texture path, and the
+PowerVR Rogue GE8300 supports descriptor indexing by none of the three
+available routes — not the EXT extension, not the Vulkan 1.2 core feature, not
+the older per-extension struct — despite advertising API 1.3.225.
+`tools/probe-vulkan-caps.c` prints the whole verdict in one run.
 
-Two ways past it, neither started:
+Route 1 was implemented and verified on hardware (engine fork commit `e5c9935`,
+shipped as `engine-patches/0002-nonbindless-fallback-and-format-support.patch`):
 
 1. **A non-bindless texture path in the fork** — conventional per-batch
-   descriptor sets instead of indexed arrays. Touches `DescriptorSetManager`,
-   `TextureManager`, `GetTextureIndexes` and the shaders. The only route that
-   ends with the game running well on this GPU.
+   descriptor sets instead of indexed arrays, plus two device-specific fixes it
+   exposed: the GE8300 supports no BCn format (BC1–BC7) and no `R8G8B8_UNORM`,
+   and samples RGBA32F without the linear-filter bit, so
+   `TextureUploader::GetUploader` now takes the device and CPU-decodes what it
+   cannot sample (`tools/probe-texture-formats.c` produced that table); and the
+   engine's default 4x MSAA resolves to speckle on the PowerVR, so the port
+   seeds `Settings.json` with `Antialias: Off`.
 2. **Software rendering** — the engine's OpenGL backend has no descriptor-indexing
    concept, so Mesa llvmpipe sidesteps the gap entirely. But that backend wants
    desktop GL 3.2 and this device's SDL2 only offers GLES, so llvmpipe would need
-   its own window system. Slower, and a winsys problem on top.
+   its own window system. Slower, and a winsys problem on top. Not pursued: the
+   Vulkan path works.
 
 ## Device probes
 
@@ -177,7 +183,7 @@ scripts/check-abi.sh /tmp/probe
 ```
 
 | Probe | Answers | Links |
-|---|---|---|
+| --- | --- | --- |
 | `probe-sdl.c` | video driver, surface size, renderer backend, what the pad reports | `-lSDL2` |
 | `probe-vulkan.c` | is there a usable Vulkan device at all | `-lvulkan` |
 | `probe-sdl-vulkan.c` | can SDL2 hand out a Vulkan surface here | `-lSDL2 -lvulkan` |
