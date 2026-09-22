@@ -39,6 +39,13 @@ fi
 status=$?
 echo "engine exit: $status" >> "$LOG"
 
+# Set DXL_SIMULATE_CRASH=1 to leave the sentinel behind whatever the engine did,
+# so the recovery path can be exercised without actually crashing anything.
+if [ "$DXL_SIMULATE_CRASH" = "1" ]; then
+    echo "DXL_SIMULATE_CRASH=1, leaving Running.ini in place" >> "$LOG"
+    exit 1
+fi
+
 # The sentinel is the launcher's crash contract: clear it only on a clean exit,
 # so an engine crash still produces the recovery screen on the next launch.
 if [ "$status" -eq 0 ]; then

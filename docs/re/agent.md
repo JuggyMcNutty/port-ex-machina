@@ -1,16 +1,107 @@
-# DeusEx.exe launcher — RE working log
+# Deus Ex on aarch64 — working log and session handoff
 
-Living document. Updated at the end of every phase.
+**Goal.** Run Deus Ex on an aarch64 handheld. That splits into a launcher we
+write and an engine we don't: `System/DeusEx.exe` is only the Unreal Engine 1
+bootstrap shell, so reimplementing it natively is tractable, while the game
+itself needs a UE1 engine.
 
-**Goal:** document `System/DeusEx.exe` well enough to reimplement the Deus Ex launcher
-on non-Windows platforms, and to modernize it.
+**State.** The launcher is finished and verified on hardware. The engine (a
+fork of Surreal Engine) runs the game on a desktop and cross-builds for the
+device, where it stops at one GPU capability gap. One decision is open.
 
 ---
 
-## 1. What this binary actually is
+## Start here
 
-`System/DeusEx.exe` is **not the game**. It is the Unreal Engine 1 **`Launch` module** —
-a thin bootstrap shell. The engine lives in `Core.dll`, `Engine.dll`, `DeusEx.dll`.
+```
+deusex-launcher/                 the game install (your own files; unversioned)
+├── agent.md                     this file
+├── docs/                        the reverse-engineering spec -- CANONICAL
+├── System/ Maps/ Textures/ ...  game data
+├── port/                        git repo: the launcher we wrote  (branch: aarch64)
+│   ├── docs/re/                 synced copy of ../docs -- see sync-re-docs.sh
+│   ├── docs/DESIGN.md           what the port does differently, and why
+│   ├── engine-patches/          fork patches for the engine + the no-upstream rule
+│   └── README.md                build, run, diagnose
+└── engine/SurrealEngine/        git clone, branch deusex-handheld, patches applied
+```
+
+Two separate git repos: `port/` (ours) and `engine/SurrealEngine/` (a fork of
+someone else's). The game install itself is deliberately not versioned.
+
+**Cold start:** `port/README.md` has the toolchain fetches and both builds.
+Nothing in `port/` depends on state from a previous session; the toolchains and
+sysroot are fetched by script.
+
+**Device:** TrimUI Smart Pro at `spruce@192.168.1.211`, password `happygaming`
+(the stock firmware password; it is a default in the scripts on purpose). The
+app lives at `/mnt/SDCARD/App/DeusEx`, the game data at
+`/mnt/SDCARD/Roms/PORTS/DeusEx` (740 MB, all 38 `.u` packages, already copied).
+
+## Where each part stands
+
+| Part | State |
+|---|---|
+| Reverse-engineering spec (`docs/`) | Complete. Five phases, cross-verified, one live run under Proton |
+| Launcher (`port/`) | Complete. 7 host test suites green; full matrix verified on hardware |
+| Engine on the host | Runs the game. Main menu renders and takes input; New Game reaches `00_Intro` |
+| Engine on the device | Cross-builds and runs up to Vulkan device selection, then stops |
+
+### The one open decision
+
+`VulkanRenderDevice.cpp:34` requires `VK_EXT_descriptor_indexing` for bindless
+textures. The PowerVR Rogue GE8300 supports descriptor indexing by **none** of
+the three routes — the EXT extension, the Vulkan 1.2 core feature, or the older
+per-extension struct — although it advertises API 1.3.225. Everything else the
+device filter wants is present. `port/tools/probe-vulkan-caps.c` prints the
+whole verdict in one run.
+
+1. **Non-bindless texture path in the fork.** Per-batch descriptor sets instead
+   of indexed arrays: `DescriptorSetManager`, `TextureManager`,
+   `GetTextureIndexes`, and the shaders. The only route that ends with the game
+   running well on this GPU.
+2. **Software rendering.** The engine's OpenGL backend has no
+   descriptor-indexing concept, so Mesa llvmpipe sidesteps the gap — but that
+   backend wants desktop GL 3.2 while the device's SDL2 offers only GLES, so
+   llvmpipe would need its own window system. Slower, plus a winsys problem.
+
+Not pursued: box64/box86/wine. None is on the device, and box64's own notes
+record Deus Ex under Wine crashing before the menu on much stronger hardware.
+
+## Gotchas that cost time
+
+- **Toolchain glibc is load-bearing.** glibc 2.34 re-versioned the startup
+  symbols, so anything built against ≥ 2.34 emits `__libc_start_main@GLIBC_2.34`
+  and will not load on this device's 2.33. Arch's cross gcc (2.44) and ARM GNU
+  13.3 (2.38) both fail. We use Bootlin **2020.08-1** (GCC 9.3 / glibc 2.31) for
+  the C11 launcher and **bleeding-edge 2021.05-1** (GCC 10.3 / glibc 2.33) for
+  the C++20 engine. `port/scripts/check-abi.sh` enforces the ceiling on every
+  cross build.
+- **The vendor SDL2 is the only display path**, and its `mali` driver wires
+  Vulkan surface creation to the PowerVR implementation — so
+  `SDL_Vulkan_CreateSurface` does work, via `VK_KHR_display`. There is no X11,
+  no Wayland, no desktop GL.
+- **Never `pkill -f <pattern>`** in a command whose own text contains the
+  pattern. It matches the shell running it. This killed the session's own shell
+  twice, locally and over SSH. Use `pkill -x <name>` / `killall -x`.
+- **`zipdir` is a build-time tool.** A cross build produces an aarch64 binary
+  that cannot run on the build host; pass `-DZIPDIR_EXECUTABLE=` a host-built
+  one.
+- **The device's busybox has no `timeout` and no `nohup`.** Use `setsid` with
+  all three fds redirected, or SSH will hang waiting on the pipes.
+- **A missing `Save/` directory is fatal to the engine** (`directory iterator
+  cannot open directory`). It is empty in a fresh install, so it does not
+  survive a `tar` that lists only populated directories.
+- **Editing docs with string replacement fails silently** when the pattern does
+  not match. One README edit in this project was reported as done in a commit
+  message and had not happened. Prefer full rewrites, and verify.
+
+---
+
+# Part 1 — the reverse-engineering spec
+
+`System/DeusEx.exe` is **not the game**. It is the UE1 `Launch` module — a thin
+bootstrap shell. The engine lives in `Core.dll`, `Engine.dll`, `DeusEx.dll`.
 
 | Property | Value |
 |---|---|
@@ -18,117 +109,63 @@ a thin bootstrap shell. The engine lives in `Core.dll`, `Engine.dll`, `DeusEx.dl
 | Imagebase | `0x10900000` |
 | `GPackage` | `"Launch"` (string at `0x1092C534`) |
 | Functions | 762 (367 named — mostly import thunks — / 371 unnamed) |
-| Strings | 697 |
 | MD5 | `795137104d97da1bf4282fd6979bb38d` |
+| **SHA1** | **`2a933e26aa9cfb33b37f78afe21434caa031f14a`** |
 | Build | Nov 2021 GOG repack of the 1112f-era binary |
 
-Everything we mean by "the launcher" is in here: first-run detection, the video/audio
-config wizard, safe mode, crash recovery, splash screen, single-instance handling,
-CD check, and engine bootstrap.
+That SHA1 matters twice: it identifies the build, and it is Surreal Engine's
+`DEUS_EX_1112fm` database entry, so the engine recognises this install directly.
 
-**Scope decision:** document `DeusEx.exe` only. `Window.dll` (widgets + dialog
-templates) and `Core.dll` (ini/file I/O) are treated as a *documented interface* read
-from the SDK headers, not reversed. A port replaces `Window.dll` wholesale.
+**Two things made this cheap.** `ReleaseSDK1112f/Headers/DxHeaders.zip` ships
+this build's own source headers (327 of them, including `LaunchPrivate.h` and
+`Window/Inc/Window.h`), so struct layouts were *read*, not guessed — the
+binary's assert strings name those exact paths. And `System/Startup.int` is the
+launcher's own string table, naming every wizard page and control.
 
-## 2. The two cheat codes
-
-Reverse engineering here is much cheaper than normal, for two reasons.
-
-**(a) The SDK ships this build's own source headers.**
-`ReleaseSDK1112f/Headers/DxHeaders.zip` — 327 headers, including:
-
-- `Launch/Src/LaunchPrivate.h`, `Launch/Src/Res/LaunchRes.h`
-- `Window/Inc/Window.h` (145 KB — every widget class)
-- `Window/Src/Res/WindowRes.h` (every dialog + control ID)
-- all of `Core/Inc/` (`Core.h`, `UnTemplate.h`, `FConfigCacheIni.h`, …)
-
-The binary's own assert strings name these exact paths (`..\..\Core\Inc\UnTemplate.h`,
-`..\..\Window\Inc\Window.h`), so they are the real headers for this build. **Struct
-layouts can be read, not guessed.**
-
-Extracted for this session to: `$SCRATCH/hdr/` (re-extract with `unzip DxHeaders.zip`).
-
-**(b) `System/Startup.int` is the launcher's own string table.** It names every wizard
-page and every control on it. Cross-check all UI findings against it.
-
-## 3. Confirmed anchors
-
-Established by decompilation. These are facts, not guesses.
+### Confirmed anchors
 
 | Address | Meaning |
 |---|---|
-| `0x10908A30` | `WinMain` (real body; `0x10901366` is the thunk from CRT `start`) |
+| `0x10908A30` | `WinMain` (real body; `0x10901366` is the CRT thunk) |
 | `0x1090A050` | `InitEngine` — the launcher/wizard brain, 974 decompiled lines |
 | `0x10914630` | `MainLoop(Engine)` |
-| `0x10901190` / `0x109011B3` | `InitSplash` / `ExitSplash` thunks |
 | `0x10901320` | `FConfigCacheIni` factory passed to `appInit` |
-| `0x1092E7B0` | `GExec` local exec handler object (vtables `off_109270A0`, `off_1092708C`) |
+| `0x1092E7B0` | `GExec` local exec handler (vtables `off_109270A0`, `off_1092708C`) |
 | `off_10926D70` | `WConfigPageRenderer` vtable — page size 464, dialog ID 2017 |
 | `off_10926E7C` | `WConfigPageSafeMode` vtable — page size 564, dialog ID 2020 |
 | `off_10926F88` | Launch's `WWizardDialog` subclass vtable |
-| `off_10926C88` | Launch's `WLog` subclass vtable (`GameLog`) |
-| `sub_109010C3` / `sub_1090128F` / `sub_1090121C` / `sub_109013ED` | SafeMode page button delegates (Run / Video / SafeMode / Web) |
-| `sub_10901375` | Renderer page list/radio delegate |
 
-## 4. Verified struct sizes
+### Verified struct sizes
 
-Transcribed from `Window/Inc/Window.h` into `docs/types/launch.h`, then **cross-checked
-against real `GMalloc` allocation sizes and field offsets in the binary**:
+Transcribed from `Window/Inc/Window.h` into `docs/types/launch.h`, then
+cross-checked against real `GMalloc` sizes and field offsets:
 
-| Type | Size | Confirmed by |
-|---|---|---|
-| `FName` | 4 | `NAME_INDEX Index` |
-| `FArray` / `FString` | 12 | stack locals at `ebp-0x98/-0x94/-0x90` |
-| `FDelegate` | 12 | virtual → vtable + target + member-ptr; `WButton` = 48+6×12 |
-| `WWindow` | 44 | anchors everything below |
-| `WControl` | 48 | `WWindow` + `WNDPROC` |
-| `WLabel` | 48 | renderer page slot 400..448 |
-| `WListBox` | 108 | renderer page slot 52..160 |
-| `WButton` | 120 | renderer page slots 160, 280 |
-| `WCoolButton` | 128 | safemode page slots 52..564 |
-| `WDialog` | 44 | `WWizardDialog` total 620 |
-| `WWizardPage` | 48 | `WDialog` + `Owner` |
-| `WWizardDialog` | 620 | 44 + 128×4 + 48 + 12 + 4; matches `ebp` span `0x26C` |
+`FName` 4 · `FString`/`FArray` 12 · `FDelegate` 12 · `WWindow` 44 ·
+`WControl` 48 · `WLabel` 48 · `WListBox` 108 · `WButton` 120 ·
+`WCoolButton` 128 · `WDialog` 44 · `WWizardPage` 48 · `WWizardDialog` 620
 
-Three independent totals close exactly:
+Three independent totals close exactly: `WConfigPageRenderer` = 464 == observed
+`GMalloc(464)`; `WConfigPageSafeMode` = 564 == `GMalloc(564)`;
+`WConfigPageSafeOptions` = 1012 == `GMalloc(1012)`.
 
-- `WConfigPageRenderer` = `48+4+108+120+120+48+4+12` = **464** == observed `GMalloc(464)`
-- `WConfigPageSafeMode` = `48+4+128×4` = **564** == observed `GMalloc(564)`
-- `WWizardDialog` = **620** == observed stack span
+> **Correction kept for the record.** An earlier reading put `WWizardPage` at
+> 52. It is **48** — the slot at +48 is each config page's own typed `Owner`,
+> declared by the derived class in addition to the inherited one. At 52 every
+> derived offset is out by a slot and the totals do not close.
 
-> **Correction (Phase 1).** An earlier reading put `WWizardPage` at 52. It is **48**.
-> The slot at +48 is not part of `WWizardPage` — it is each config page's *own* typed
-> `Owner` pointer, declared by the derived class in addition to the inherited
-> `WWizardPage::Owner`. Same pattern as UT's `Launch.cpp`. This matters: at 52 the
-> derived member offsets are all off by one slot and the totals do not close.
+### RE gotchas
 
-Any future struct must pass this same size gate before being applied.
-
-## 5. Gotchas
-
-**MSVC reverses overload groups in the vtable.** In `FConfigCache`
-(`Core/Inc/Core.h:195`), `GetString(FString&)` sits at **+12**, *before*
-`GetString(TCHAR*, INT)` at **+16** — the opposite of declaration order. Resolve every
-`GConfig` call site by **argument arity and types**, never by index arithmetic alone.
-Verified against 4 call sites. This is the one place where blind index math silently
-produces wrong documentation.
-
-**IDA runs under Proton.** Windows IDA 9.4 via umu, in-IDA HTTP server on
-`127.0.0.1:13337` + Linux-side proxy. `idalib` headless mode is impossible here.
-If MCP tools go dark mid-session, that bridge broke — not the analysis.
-
-**The IDB is unpacked while open.** IDA keeps `.id0/.id1/.id2/.nam/.til` as working
-files; the `.i64` is only written on save. Backup of all components at
-`.idb-backup/` (taken before annotation began).
-
-## 6. Progress
-
-- [x] **Phase 0** — workspace, IDB backup (`.idb-backup/`)
-- [x] **Phase 1** — types written to `docs/types/launch.h`, declared in IDA, **all size-gated**
-- [x] **Phase 2** — 70+ names applied; all six wizard pages found and the `GetNext` graph closed
-- [x] **Phase 3** — contract extracted (flags, ini keys, files, registry, IPC, console commands)
-- [x] **Phase 4** — spec written to `docs/`
-- [x] **Phase 5** — cross-source verification passed **and live run completed** (see §9)
+- **MSVC reverses overload groups in the vtable.** In `FConfigCache`,
+  `GetString(FString&)` sits at **+12**, *before* `GetString(TCHAR*, INT)` at
+  **+16**. Resolve every `GConfig` call by argument arity and types, never by
+  index arithmetic. This is the one place blind index math silently produces
+  wrong documentation.
+- **IDA runs under Proton** (Windows IDA 9.4 via umu, in-IDA HTTP server on
+  `127.0.0.1:13337` plus a Linux-side proxy). `idalib` headless mode is
+  impossible here. If the MCP tools go dark mid-session that bridge broke, not
+  the analysis.
+- **The IDB is unpacked while open** — `.id0/.id1/.id2/.nam/.til` are working
+  files and the `.i64` is only written on save. Backup at `.idb-backup/`.
 
 ### Output
 
@@ -136,15 +173,15 @@ files; the `.i64` is only written on save. Backup of all components at
 |---|---|
 | `docs/launch-flow.md` | startup→shutdown sequence, all exit paths |
 | `docs/wizard.md` | page graph, `FirstRun` gates, control inventory, the shipped bug |
-| `docs/cli-flags.md` | every flag, with which of the three parsers reads it |
+| `docs/cli-flags.md` | every flag, and which of the three parsers reads it |
 | `docs/ini-keys.md` | every read/write, files, the one registry key |
 | `docs/porting-notes.md` | load-bearing vs. incidental; the seven platform seams |
-| `docs/types/launch.h` | transcribed struct definitions + size ledger |
-| `docs/live-verification.md` | the live Proton run: what it confirmed, corrected, added |
+| `docs/types/launch.h` | struct definitions + size ledger |
+| `docs/live-verification.md` | the live Proton run: confirmed, corrected, added |
 
-## 7. Key findings
+### Key findings
 
-**The wizard graph** (was the main unknown; now closed):
+**The wizard graph:**
 
 ```
 SafeMode(2020) ─Run→ launch │ ─Video→ Renderer │ ─SafeMode→ SafeOptions │ ─Web→ URL
@@ -153,95 +190,77 @@ Detail(2018) → FirstTime(2019) → EndDialog(1) = launch
 SafeOptions(2021) → ShellExecute(self, flags); EndDialog(0)
 ```
 
-**Safe mode re-executes the binary.** `WConfigPageSafeOptions__GetNext` (`0x10911C00`)
-does not apply settings in-process — it builds a flag string, optionally deletes
-`<Package>.ini`, `ShellExecute`s `GModuleFilename` with those flags, and ends the
-current process. A port must reproduce this or consciously replace it.
+**Safe mode re-executes the binary.** `WConfigPageSafeOptions__GetNext`
+(`0x10911C00`) does not apply settings in-process — it builds a flag string,
+optionally deletes `<Package>.ini`, `ShellExecute`s `GModuleFilename`, and ends
+the current process. The relaunch *is* the mechanism.
 
-**Crash detection is one file.** `Running.ini` is created after the wizard and deleted
-on clean exit. If it survives, the next launch shows RecoveryMode. That is the whole
-mechanism.
+**Crash detection is one file.** `Running.ini` is created after the wizard and
+deleted on clean exit. If it survives, the next launch shows RecoveryMode.
 
-**⚠ Shipped bug — three safe-mode checkboxes are dead.** Verified in raw disassembly:
-of eight `BM_GETCHECK` sites, five read the *same* control (`+0xB0`, `IDC_No3DSound`).
-Checkboxes #3 `No3DVideo` (`+0x128`), #4 `Window` (`+0x1A0`) and #5 `Res` (`+0x218`) are
-constructed but never read. So ticking "Disable 3D sound hardware" silently also applies
-`-nohard -noddraw -defaultres`, and three checkboxes do nothing. **Do not replicate.**
+**⚠ Shipped bug — three safe-mode checkboxes are dead.** Of eight `BM_GETCHECK`
+sites, five read the *same* control (`+0xB0`, `IDC_No3DSound`). So ticking
+"Disable 3D sound hardware" silently also applies `-nohard -noddraw
+-defaultres`, and `No3DVideo`, `Window` and `Res` do nothing. Static analysis
+only — never observed live. **Do not replicate;** `port/tests/test_safemode.c`
+is the regression that keeps it fixed.
 
-**Dead legacy paths:** `MPLAYER` / `HEAT` console commands (services dead since ~2001,
-`GotoHEAT.exe` not shipped), the single registry read
-(`HKLM\software\mpath\mplayer\main`, only reachable from `MPLAYER`), and `.ICD`→`.EXE`
-rewriting in `InitPathnames` (`0x10901C40`) — SafeDisc copy-protection handling the GOG
-build does not need.
+**`appStrfind` flags match anywhere.** `readini`, `Server`, `NewWindow`,
+`changevideo`, `TestRenDev` are raw substring matches needing no leading `-` —
+they fire from inside a map name or URL. A naive `argv` parser behaves
+differently, which is why the launcher keeps the command line as one string.
 
-**`appStrfind` flags match anywhere.** `readini`, `Server`, `NewWindow`, `changevideo`,
-`TestRenDev` are raw substring matches with no leading `-` required — they will trigger
-from inside a map name or URL. A naive `argv` parser in a port behaves differently.
+**Dead legacy paths:** `MPLAYER`/`HEAT` console commands, the single registry
+read (`HKLM\software\mpath\mplayer\main`), and `.ICD`→`.EXE` rewriting in
+`InitPathnames` (`0x10901C40`, a SafeDisc artifact).
 
-**`DescFlags` / `Description` are runtime values**, written by device detection and read
-back by the wizard. They appear in no shipped ini; that is expected, not a gap.
+**A missing splash bitmap is fatal** in the original: the fallback to
+`..\Help\Logo.bmp` is applied without checking it exists (`0x109090A4`), so
+`InitSplash` asserts and the process dies before the wizard. Observed live.
 
-## 8. Live verification (2026-09-21)
+### Not verified against the original
 
-Ran the real binary under Proton. Full report in `docs/live-verification.md`.
-Install restored afterwards — `DeusEx.ini` is byte-identical to `.ini-backup/`.
+- The SafeMode/RecoveryMode entry paths and the safe-mode re-exec, live.
+- The three-dead-checkboxes bug, live. Well evidenced statically.
+- `MainLoop` (`0x10914630`) in depth — a port replaces it wholesale.
+- `Window.dll` dialog *templates* (geometry, styles, tab order) — out of scope;
+  needed only for a pixel-faithful recreation.
 
-**Confirmed:** `FirstRun` clamp value 1100 *is* the engine version (`Init: Version: 1100`);
-binds exactly Core/Engine/Window.dll; `[Engine.Engine] CdPath` read at startup;
-`FirstRun=0 < 400` opens the first-time wizard; the Renderer page runs device detection;
-`DescFlags`/`Description` really are runtime-written (detection added
-`Description=ATI Radeon HD 5600 Series` + `DescFlags=1` to an ini that shipped with
-neither); and `Running.ini` is created **after** the wizard — it stayed absent through
-2m47s of open wizard.
+---
 
-The splash condition got confirmed from both sides by accident: the `-testrendev` run
-never touched the splash, the `-firstrun` run did.
+# Part 2 — the launcher
 
-**Corrections made to the spec:**
+See `port/README.md` to build and `port/docs/DESIGN.md` for the twelve
+deliberate divergences from the original and the hardware verification table.
+In short: C11 core with no SDL and no globals, an SDL2 frontend that only
+appears when there is something to ask, and `dxl-cli` for driving the whole
+contract with no display.
 
-1. **A missing splash bitmap is fatal.** The fallback to `..\Help\Logo.bmp` is applied
-   without checking it exists (`0x109090A4`); if neither bitmap is there, `InitSplash`
-   asserts and the process dies before the wizard. A port should not copy this.
-2. `Detected.ini` is **also** written during first-run renderer detection, not only by an
-   explicit `-testrendev=` — the Renderer page `ShellExecute`s itself per candidate
-   driver (`0x1090DB18`) so a bad driver kills only a child.
-3. `[WindowPositions] GameLog=(...)` is written by the log window — was undocumented.
+Verified on hardware: install validation naming each missing file; `FirstRun=0`
+→ first-time flow; a settled install exec'ing straight through with no display
+created; the `Running.ini` lifecycle; a simulated crash producing
+`main/recovery`; the same sentinel with a live instance producing `forward`
+instead; and a `FirstRun 500→1100` clamp rewriting the ini with all 25 sections
+intact and not one line losing its CR.
 
-**Environment gotcha (not a game defect):** under plain Proton, `WLog::OpenWindow` fails
-creating its child `EDIT` (`CreateWindowEx` → NULL, `GetLastError()==0`). Running inside
-`explorer /desktop=…` avoids it. Matters because the log window is created
-unconditionally on every launch, so when it fails the game cannot start at all.
+# Part 3 — the engine
 
-**Note on this install:** both splash bitmaps had been deleted. `Help/Logo.bmp` was
-restored from `ReleaseSDK1112f/Help/Logo.bmp`. Without it the game does not start.
+A fork of [Surreal Engine](https://github.com/dpjudas/SurrealEngine) at
+`engine/SurrealEngine`, branch `deusex-handheld`.
 
-## 9. Remaining / open
+**It ships a `NO-AI Code Rule.md` asking that LLM-written changes stay in a fork
+and never be PR'd.** Our patches were written with Claude, so they stay in the
+fork permanently. `port/engine-patches/README.md` records this; honour it.
+Building and using the engine is separately permitted by its own license.
 
-- **Not verified live:** the SafeMode/RecoveryMode entry paths (`-safe`, stale
-  `Running.ini`), the safe-mode re-exec, and the `GetNext` chain past the Renderer page.
-- **The three-dead-checkboxes bug is still static-analysis only.** Well evidenced (eight
-  `BM_GETCHECK` sites, five reading `+0xB0`; struct size confirmed by `GMalloc(1012)`),
-  but not yet observed live. Repro is in `docs/porting-notes.md`.
-- `MainLoop` (`0x10914630`) named but not analysed in depth — Win32 message pump plus
-  `Engine->Tick`; a port replaces it wholesale.
-- `Window.dll` dialog *templates* (geometry, styles, tab order) deliberately not
-  extracted — outside agreed scope; needed only for a pixel-faithful recreation.
+Nine patches, all in `port/engine-patches/`: skipping the desktop launcher
+window, reporting exceptions to stderr, streaming the engine log, gating the
+X11/Wayland/EGL desktop backends, two missing includes in the SDL2 backend, SDL
+linking nothing when found via pkg-config, `zipdir` as a host tool, system fonts
+without a desktop, and a non-zero exit status on a caught exception.
 
-## 10. Test harness
-
-Reusable for further live checks (`/tmp/dxtest2.sh`):
+Regenerate the patch file after any engine change:
 
 ```sh
-cd <install>/System
-export WINEPREFIX=~/Games/umu/umu-default
-export PROTONPATH="~/.local/share/Steam/compatibilitytools.d/Proton-CachyOS Latest"
-export GAMEID=umu-default PROTON_VERB=run
-umu-run explorer /desktop=dxtest,1024x768 \
-    'X:\Documents\projects\deusex-launcher\System\DeusEx.exe' "$@"
+cd engine/SurrealEngine && git diff > ../../port/engine-patches/0001-headless-and-embedded-support.patch
 ```
-
-Run it from the host (this session is inside a distrobox container — use
-`distrobox-host-exec`). The virtual desktop is required; see the environment gotcha above.
-Evidence to watch: `System/DeusEx.log`, `Running.ini`/`Detected.ini` presence, and
-`diff .ini-backup/DeusEx.ini System/DeusEx.ini`. Screenshots via `spectacle -b -n -f -o`
-work only while no modal Wine window holds an input grab.

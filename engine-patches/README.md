@@ -22,9 +22,19 @@ person from the problem statement, not adapting from this diff.
 
 ## Base
 
-Applied on top of the upstream commit in `UPSTREAM-BASE.txt`.
+Applied on top of the upstream commit in `UPSTREAM-BASE.txt`. Regenerate after
+any change:
 
-## 0001 — headless and embedded support
+```sh
+cd engine/SurrealEngine
+git diff > ../../port/engine-patches/0001-headless-and-embedded-support.patch
+```
+
+## What the patch changes
+
+One patch file, nine changes, in two groups.
+
+### Driving the engine without a desktop
 
 Three changes, all in `SurrealEngine/GameApp.cpp`. None touch engine behaviour;
 they exist because the upstream front end assumes a desktop with a mouse.
@@ -46,7 +56,7 @@ they exist because the upstream front end assumes a desktop with a mouse.
    the actual work item for Deus Ex support — it is worth nothing trapped in a
    window.
 
-## 0002 — cross-compiling for an embedded aarch64 target
+### Cross-compiling for an embedded aarch64 target
 
 All in the build system and the SDL2 backend. None of it changes behaviour on a
 desktop build.
@@ -108,8 +118,8 @@ Everything else the device filter demands is present: `VK_KHR_swapchain`,
 
 The renderer uses descriptor indexing for bindless textures
 (`GetTextureIndexes` returns indices into a large descriptor array), so this is
-a design dependency rather than a flag to flip. `port/tools/probe-vkfeatures.c`,
-`probe-vkfeatures2.c` and `probe-sdl-vulkan.c` reproduce each measurement.
+a design dependency rather than a flag to flip. `port/tools/probe-vulkan-caps.c` reproduces every line of that in one run, and
+`probe-sdl-vulkan.c` shows the surface being created.
 
 ## Running it headlessly
 
