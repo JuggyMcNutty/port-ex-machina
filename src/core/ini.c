@@ -284,8 +284,14 @@ int dxl_ini_get_bool(const dxl_ini *ini, const char *section, const char *key,
 
 /* ---- mutation ------------------------------------------------------- */
 
-static void pair_write(ini_line *l, const char *key, const char *value) {
+/* Rewrites a line as key=value. eol may be NULL to keep whatever the line
+ * already had; callers that are regenerating a line pass the file's dominant
+ * terminator, so a line we touch ends up looking like the rest of the file
+ * rather than keeping a stray ending some other tool left behind. */
+static void pair_write(ini_line *l, const char *key, const char *value,
+                       const char *eol) {
     free(l->raw); free(l->name); free(l->value);
+    if (eol) { free(l->eol); l->eol = dxl_xstrdup(eol); }
     l->kind  = LINE_PAIR;
     l->name  = dxl_xstrdup(key);
     l->value = dxl_xstrdup(value ? value : "");
@@ -330,7 +336,7 @@ void dxl_ini_set(dxl_ini *ini, const char *section, const char *key,
     size_t i = find_pair(ini, section, key, 0);
     if (i != (size_t)-1) {
         if (strcmp(ini->lines[i].value, value ? value : "") == 0) return;
-        pair_write(ini->lines + i, key, value);
+        pair_write(ini->lines + i, key, value, ini->eol);
         ini->dirty = 1;
         return;
     }
@@ -341,8 +347,7 @@ void dxl_ini_append(dxl_ini *ini, const char *section, const char *key,
                     const char *value) {
     size_t header = ensure_section(ini, section);
     ini_line *l = line_insert(ini, section_insert_at(ini, header));
-    pair_write(l, key, value);
-    l->eol = dxl_xstrdup(ini->eol);
+    pair_write(l, key, value, ini->eol);
     ini->dirty = 1;
 }
 

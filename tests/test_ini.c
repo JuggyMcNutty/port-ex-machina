@@ -204,6 +204,31 @@ static void test_lf_file_stays_lf(void) {
     dxl_ini_free(ini);
 }
 
+/* A line we rewrite adopts the file's own terminator, rather than keeping a
+ * stray one another tool left behind. Mixed endings in a file the engine also
+ * writes are the kind of thing that goes unnoticed until something downstream
+ * chokes; a key we touch should look like its neighbours. */
+static void test_rewrite_normalises_line_ending(void) {
+    /* Middle line has a bare LF in an otherwise CRLF file. */
+    const char *src = "[A]\r\nx=1\ny=2\r\n";
+    dxl_ini *ini = dxl_ini_parse(src, strlen(src));
+
+    dxl_ini_set(ini, "A", "x", "9");
+    size_t len = 0;
+    char *out = dxl_ini_render(ini, &len);
+    CHECK_STR(out, "[A]\r\nx=9\r\ny=2\r\n");
+    free(out);
+    dxl_ini_free(ini);
+
+    /* An untouched odd line is still left exactly as found. */
+    ini = dxl_ini_parse(src, strlen(src));
+    out = dxl_ini_render(ini, &len);
+    CHECK_INT(len, strlen(src));
+    CHECK(memcmp(out, src, len) == 0);
+    free(out);
+    dxl_ini_free(ini);
+}
+
 TEST_MAIN_BEGIN
     RUN(test_roundtrip_shipped);
     RUN(test_reads_shipped_values);
@@ -215,4 +240,5 @@ TEST_MAIN_BEGIN
     RUN(test_comments_and_oddities);
     RUN(test_unterminated_last_line);
     RUN(test_lf_file_stays_lf);
+    RUN(test_rewrite_normalises_line_ending);
 TEST_MAIN_END

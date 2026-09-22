@@ -12,6 +12,8 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 SYS="$ROOT/sysroot/trimui"
 SDL_VER="2.30.8"
+# libSDL2_ttf-2.0.so.0.14.1 on the device is SDL_ttf 2.0.15.
+TTF_VER="2.0.15"
 
 DEVICE="${DEVICE:-192.168.1.211}"
 DEVICE_USER="${DEVICE_USER:-spruce}"
@@ -63,6 +65,15 @@ if [ ! -f "$SYS/include/SDL2/SDL.h" ]; then
     rm -rf "$tmp"
 else
     echo "SDL2 headers already present in $SYS/include/SDL2"
+fi
+
+# ---- SDL2_ttf header -------------------------------------------------------
+if [ ! -f "$SYS/include/SDL2/SDL_ttf.h" ]; then
+    echo "fetching SDL_ttf $TTF_VER header ..."
+    curl -fL --retry 3 -o "$SYS/include/SDL2/SDL_ttf.h" \
+        "https://raw.githubusercontent.com/libsdl-org/SDL_ttf/release-$TTF_VER/SDL_ttf.h"
+else
+    echo "SDL_ttf header already present"
 fi
 
 echo "sysroot ready: $SYS"

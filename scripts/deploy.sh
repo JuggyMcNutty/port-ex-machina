@@ -24,18 +24,26 @@ while [ $# -gt 0 ]; do
 done
 
 [ -x "$BUILD/deusex-launcher" ] || { echo "no build at $BUILD -- cmake --build it first" >&2; exit 1; }
-"$ROOT/scripts/check-abi.sh" "$BUILD/deusex-launcher"
+"$ROOT/scripts/check-abi.sh" "$BUILD/deusex-launcher" "$BUILD/dxl-cli"
 
 stage="$(mktemp -d)"; trap 'rm -rf "$stage"' EXIT
 cp -a "$ROOT/packaging/trimui-smartpro/." "$stage/"
+
+# launcher.ini belongs to whoever owns the device -- it holds the path to their
+# game files. Ship it as a default and only install it if none is there.
+mv "$stage/launcher.ini" "$stage/launcher.ini.default"
 cp "$BUILD/deusex-launcher" "$stage/deusex-launcher"
+cp "$BUILD/dxl-cli"          "$stage/dxl-cli"
 [ -d "$ROOT/assets" ] && cp -a "$ROOT/assets" "$stage/assets"
 
 echo "deploying to $DEVICE_USER@$DEVICE:$APPDIR ..."
 sshpass -p "$DEVICE_PASS" ssh "${SSHOPTS[@]}" "$DEVICE_USER@$DEVICE" "mkdir -p '$APPDIR'"
 # exFAT has no permission bits worth trusting -- tar in, then chmod on arrival.
 tar -C "$stage" -cf - . | sshpass -p "$DEVICE_PASS" ssh "${SSHOPTS[@]}" \
-    "$DEVICE_USER@$DEVICE" "tar -C '$APPDIR' -xf - && chmod +x '$APPDIR'/deusex-launcher '$APPDIR'/*.sh"
+    "$DEVICE_USER@$DEVICE" "tar -C '$APPDIR' -xf - && chmod +x '$APPDIR'/deusex-launcher '$APPDIR'/dxl-cli '$APPDIR'/*.sh"
+
+sshpass -p "$DEVICE_PASS" ssh "${SSHOPTS[@]}" "$DEVICE_USER@$DEVICE" \
+    "[ -s '$APPDIR/launcher.ini' ] || cp '$APPDIR/launcher.ini.default' '$APPDIR/launcher.ini'; true"
 
 if [ "$run" = 1 ]; then
     echo "--- running ---"

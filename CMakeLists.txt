@@ -75,17 +75,19 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/main.c")
         src/main.c
         src/ui/ui.c
         src/ui/theme.c
-        src/ui/input.c
-        src/ui/screen_main.c
-        src/ui/screen_renderer.c
-        src/ui/screen_detail.c
-        src/ui/screen_safeoptions.c
-        src/ui/screen_firstrun.c
-        src/ui/screen_install.c
+        src/ui/screens.c
     )
     target_include_directories(deusex-launcher PRIVATE src ${DXL_SDL_INCLUDE} ${DXL_SDL_INCLUDE}/SDL2)
     target_link_directories(deusex-launcher PRIVATE ${DXL_SDL_DIRS})
     target_link_libraries(deusex-launcher PRIVATE dxl_app ${DXL_SDL_LIBS} m)
+
+    # Development tool: renders each screen headlessly for review.
+    if(DXL_PLATFORM STREQUAL "host")
+        add_executable(dxl-shots tools/shots.c src/ui/ui.c src/ui/theme.c src/ui/screens.c)
+        target_include_directories(dxl-shots PRIVATE src ${DXL_SDL_INCLUDE} ${DXL_SDL_INCLUDE}/SDL2)
+        target_link_directories(dxl-shots PRIVATE ${DXL_SDL_DIRS})
+        target_link_libraries(dxl-shots PRIVATE dxl_app ${DXL_SDL_LIBS} m)
+    endif()
 
     if(NOT DXL_PLATFORM STREQUAL "host")
         # The device resolves these from /usr/lib and /usr/trimui/lib at run time.
