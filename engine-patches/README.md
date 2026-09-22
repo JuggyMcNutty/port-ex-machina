@@ -22,21 +22,31 @@ person from the problem statement, not adapting from this diff.
 
 ## Base
 
-Applied on top of the upstream commit in `UPSTREAM-BASE.txt`. Two patch files:
+Applied on top of the upstream commit in `UPSTREAM-BASE.txt`, one fork commit
+per patch file:
 
 - `0001-headless-and-embedded-support.patch` — headless/desktop-less support and
-  the aarch64 cross build.
-- `0002-nonbindless-fallback-and-format-support.patch` — the texture path.
+  the aarch64 cross build (fork commit `2328c37`).
+- `0002-nonbindless-fallback-and-format-support.patch` — the texture path
+  (`e5c9935`).
+- `0003-gamepad-and-deusex-fixes.patch` — controller support and two Deus Ex
+  fixes (`73c8c51`).
 
-Regenerate after any change (the diff is per-commit now, so use
-`git show <commit> --stdout`, or regenerate `git diff` into the newest file
-while the change is still uncommitted):
+Each file is its commit's `git format-patch` output (`0001` was regenerated
+with its header on 2026-09-22; it had been a bare diff), so `git am` applies
+them in order onto `UPSTREAM-BASE.txt` and reproduces the fork's tree exactly
+— checked that way. After committing a change:
 
 ```sh
 cd engine/SurrealEngine
-git format-patch -1 HEAD --stdout > \
+git format-patch -1 <commit> --stdout > \
     ../../port/engine-patches/000N-<name>.patch
 ```
+
+Temporary debugging hooks never go into a patch. They carry a
+`TEMPORARY DEBUG TOOL` comment and are reverted before committing; the
+frame-time profiling hooks live in `port/tools/perf-instrumentation.patch` so
+they can be re-applied (`git apply`, and `git apply -R` afterwards).
 
 ## What the patches change
 
@@ -159,9 +169,77 @@ missing filter bit). With the decoders it renders clean.
 
 With the texture path fixed, 4x MSAA — the engine default when there is no
 `Settings.json` — still produced edge speckle from the PowerVR resolve. The
-port seeds `Settings.json` with `Antialias: Off` (`run-game.sh` +
-`engine-settings.json.default`); `deploy.sh` installs it if missing. Host AMD
-was never affected because its settings file already said `Off`.
+launcher writes `Settings.json` before every launch with `Antialias: Off` and
+turns it off again if it finds anything else on a PowerVR GPU;
+`engine-settings.json.default` (seeded by `run-game.sh` and `deploy.sh` when
+the file is missing) says `Off` too. Host AMD was never affected because its
+settings file already said `Off`.
+
+## Patch 0003 — controller support, and two Deus Ex fixes
+
+Fork commit `73c8c51`, built and running on the device.
+
+### 12. Gamepad as a polled device
+
+`SurrealWidgets/include/surrealwidgets/window/window.h` gains `GamepadState`
+(six axes, fifteen buttons in SDL's order) and two `DisplayBackend` virtuals
+with no-op defaults: `GetGamepadState()` and `SetGamepadKeyEmulation()`. The
+SDL2 backend implements both — it keeps the first attached controller, reopens
+after a hot-unplug, and when emulation is off it drops the controller button
+events it used to turn into Enter/Escape/arrow keys (every button would
+otherwise arrive twice). Polling instead of a new event keeps the change out of
+`Widget`'s focus dispatch entirely; other backends report no pad.
+
+### 13. `GamepadInput`
+
+`SurrealEngine/GamepadInput.{h,cpp}`, called from `Engine::UpdateInput` after
+`TickWindow`:
+
+- In play, buttons become the UE1 joystick keys (A=`Joy1` … START=`Joy8`,
+  L2/R2=`Joy11`/`Joy12` past half travel with hysteresis, d-pad=`JoyPov*`) and
+  go through `Engine::OnWindowKeyDown/Up` like keys, so `User.ini` bindings
+  decide what they do. Sticks and triggers become `JoyX/Y/U/V/Z/R` axis events
+  every tick while deflected (±100 at full, up positive, radial dead zone, a
+  response curve on the look stick), with one `IST_Release` when a stick
+  recentres so `activeInputAxes` clears.
+- While `dxRootWindow->IsModalOpen()` (menus, inventory, conversations,
+  keypads): either stick moves the pointer through `OnWindowRawMouseMove`,
+  A/X click, B/Y/SELECT/START are Escape, the d-pad is the arrow keys with
+  key-style repeat, L1/R1 are the mouse wheel.
+- A button is released to whichever side saw its press, so a button held while
+  a menu opens or closes cannot stay down.
+- `PollSkip()` lets A/B/SELECT/START skip a movie: `PlayVideo`'s loop reads no
+  other input.
+
+### 14. `Gamepad` in `LauncherSettings`
+
+`Enabled`, `DeadZone`, `LookSensitivityX/Y`, `InvertY`, `CursorSpeed`,
+`Layout`, read from `Settings.json` (absent members keep their defaults — a
+missing bool would otherwise read as false and turn the pad off) and written by
+`Save()` so the desktop launcher window does not drop them. `Enabled=false`
+restores the old key emulation.
+
+### 15. `CycleActors` resumes where it stopped
+
+Deus Ex's native 1002 (`Actor.CycleActors(class BaseClass, out Actor, out int
+Index)`) is a resumable scan: `ScriptedPawn.CheckEnemyPresence` keeps
+`CycleIndex` between ticks, checks ~20 candidates per tick, and treats "the
+index went down" as "cycled through everyone". Surreal's iterator ignored the
+incoming index — it rebuilt a list of every matching actor (a name-based `IsA`
+on all ~2,500 actors of Liberty Island) on every call and always started from
+the first. So it was the costliest native in the game (~0.66 ms a call, ~46
+calls a frame), and each NPC only ever considered the first ~21 pawns. It now
+continues after `Index`, wraps, stops after one lap, and tests the class by
+pointer along `BaseStruct`.
+
+### 16. The first pause-menu press after the intro
+
+`DeusExPlayer.ShowMainMenu` sets the travel variable `bIgnoreNextShowMenu` when
+Escape (or START) skips the intro, to swallow a second menu event the original
+engine delivered for that press. Surreal delivers one, so the flag carried into
+the first level and ate the player's first attempt to open the pause menu.
+Nothing else sets it; `LoginPlayer` and `PossessSavedPlayer` clear it once a
+level is running (Deus Ex only).
 
 ## Running it headlessly
 
@@ -172,6 +250,10 @@ SurrealEngine --no-launcher /path/to/deusex
 ```
 
 The `ALSOFT_CONF` redirect is only needed where there is no audio device (a
-container); the handheld has ALSA. Verified this session — `ALSOFT_DRIVERS`,
-an older note here, does not exist in OpenAL Soft; the config file is the
-mechanism.
+container); the handheld has ALSA. `ALSOFT_DRIVERS`, an older note here, does
+not exist in OpenAL Soft; the config file is the mechanism.
+
+Start a map directly with `--url=<map>`, e.g. `--url=01_NYC_UNATCOIsland.dx`.
+The parser only takes the `=` form: `-u <map>` sets an empty `-u` and the map
+name becomes a stray argument, so the default (intro) map loads with no
+warning.

@@ -1,3 +1,38 @@
+From 2328c37bdfe0b023a662dfb0f4c99e641234aab5 Mon Sep 17 00:00:00 2001
+From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
+Date: Mon, 21 Sep 2026 22:20:24 -0500
+Subject: [PATCH] Headless and embedded aarch64 support
+
+FORK ONLY. This project ships a NO-AI Code Rule asking that LLM-written
+changes stay in a fork and are never PR'd upstream. These were written with
+Claude. Do not submit them.
+
+Driving the engine without a desktop:
+- skip the launcher window when a game folder is given, or on --no-launcher
+- report caught exceptions to stderr as well as the modal error window, which
+  otherwise spins at 100% CPU with nobody to close it
+- stream the engine log in headless mode, so LogUnimplemented() is visible
+- return non-zero after a caught exception
+
+Cross-compiling for an embedded aarch64 target:
+- ENABLE_X11 / ENABLE_WAYLAND options, so an SDL2-only build can configure
+  against a sysroot with no X11, no compositor and no desktop GL
+- missing <cstring>/<cmath> in the SDL2 backend, rarely built on Linux
+- link SDL from pkg-config: the link used SDL2_LIBRARY, which find_package sets
+  and pkg_search_module does not
+- ZIPDIR_EXECUTABLE, since zipdir runs on the build machine
+- system fonts without GSettings or fontconfig
+
+Rationale for each is in port/engine-patches/README.md.
+---
+ CMakeLists.txt                                | 41 ++++++++---
+ SurrealEngine/GameApp.cpp                     | 54 +++++++++++++-
+ SurrealWidgets/CMakeLists.txt                 | 72 +++++++++++++------
+ SurrealWidgets/src/core/resourcedata_unix.cpp | 48 +++++++++++++
+ .../src/window/sdl2/sdl2_display_backend.cpp  |  1 +
+ .../src/window/sdl2/sdl2_display_window.cpp   |  2 +
+ 6 files changed, 183 insertions(+), 35 deletions(-)
+
 diff --git a/CMakeLists.txt b/CMakeLists.txt
 index fba3c5e..9121b77 100644
 --- a/CMakeLists.txt
@@ -374,3 +409,6 @@ index e192adb..cb53ac5 100644
  
  Uint32 SDL2DisplayWindow::PaintEventNumber = 0xffffffff;
  bool SDL2DisplayWindow::ExitRunLoop;
+-- 
+2.55.0
+

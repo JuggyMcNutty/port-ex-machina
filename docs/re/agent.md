@@ -1,15 +1,16 @@
 # Deus Ex on aarch64 — working log and session handoff
 
-**Goal.** Run Deus Ex on an aarch64 handheld. That splits into a launcher we
-write and an engine we don't: `System/DeusEx.exe` is only the Unreal Engine 1
-bootstrap shell, so reimplementing it natively is tractable, while the game
-itself needs a UE1 engine.
+**Goal.** Run Deus Ex on an aarch64 handheld (TrimUI Smart Pro, spruceOS),
+driven entirely by the pad. That splits into a launcher we write and an engine
+we don't: `System/DeusEx.exe` is only the Unreal Engine 1 bootstrap shell, so
+reimplementing it natively is tractable, while the game itself needs a UE1
+engine — a fork of Surreal Engine.
 
-**State.** The launcher is finished and verified on hardware. The engine (a
-fork of Surreal Engine) runs the game on a desktop and on the device, which it
-did not before: the GE8300's missing descriptor indexing is worked around with
-a non-bindless fallback, its missing texture formats are CPU-decoded, and its
-broken MSAA resolve is switched off. The port is playable on the handheld.
+**State (2026-09-22).** The game runs on the handheld, launched from a
+controller-first launcher. The intro plays at ~30 FPS; **Liberty Island runs at
+2–3 FPS**, CPU-bound on NPC AI and lightmap rebuilds — measured, with candidate
+fixes waiting on the owner's choice (see "Open decisions"). Everything is
+committed in both repos; "Repository state" says where.
 
 ---
 
@@ -21,99 +22,154 @@ deusex-launcher/                 the game install (your own files; unversioned)
 ├── docs/                        the reverse-engineering spec -- CANONICAL
 ├── System/ Maps/ Textures/ ...  game data
 ├── port/                        git repo: the launcher we wrote  (branch: aarch64)
-│   ├── docs/re/                 synced copy of ../docs -- see sync-re-docs.sh
-│   ├── docs/DESIGN.md           what the port does differently, and why
+│   ├── docs/re/                 synced copy of ../docs and this file -- sync-re-docs.sh
+│   ├── docs/DESIGN.md           what the port does differently, why, and measurements
 │   ├── engine-patches/          fork patches for the engine + the no-upstream rule
+│   ├── tools/                   device probes, profile-map.sh + perf-instrumentation.patch
 │   └── README.md                build, run, diagnose
-└── engine/SurrealEngine/        git clone, branch deusex-handheld, patches applied
+└── engine/SurrealEngine/        git clone, branch deusex-handheld
 ```
 
 Two separate git repos: `port/` (ours) and `engine/SurrealEngine/` (a fork of
 someone else's). The game install itself is deliberately not versioned.
+
+**Read, in order:** this file → `port/docs/DESIGN.md` (design, the settings
+files, controller support, performance numbers) → `port/engine-patches/README.md`
+(every engine change and why) → `port/README.md` (build/run/diagnose).
 
 **Cold start:** `port/README.md` has the toolchain fetches and both builds.
 Nothing in `port/` depends on state from a previous session; the toolchains and
 sysroot are fetched by script.
 
 **Device:** TrimUI Smart Pro at `spruce@192.168.1.211`, password `happygaming`
-(the stock firmware password; it is a default in the scripts on purpose). The
-app lives at `/mnt/SDCARD/App/DeusEx`, the game data at
-`/mnt/SDCARD/Roms/PORTS/DeusEx` (740 MB, all 38 `.u` packages, already copied).
+(the stock firmware password; it is a default in the scripts on purpose). SSH
+is root. The app lives at `/mnt/SDCARD/App/DeusEx`, the game data at
+`/mnt/SDCARD/Roms/PORTS/DeusEx` (all 38 `.u` packages). The device drops off
+the network when it sleeps (no ping, SSH times out): ask the owner to wake it.
 
 ## Where each part stands
 
 | Part | State |
 |---|---|
 | Reverse-engineering spec (`docs/`) | Complete. Five phases, cross-verified, one live run under Proton |
-| Launcher (`port/`) | Complete. 7 host test suites green; full matrix verified on hardware |
-| Engine on the host | Runs the game. Main menu renders and takes input; New Game reaches `00_Intro` |
-| Engine on the device | Runs. The GE8300 takes the non-bindless fallback; intro renders clean at ~28 FPS |
+| Launcher (`port/`) | Redesigned this session: tabbed pad-driven home (Play/Video/Controls/System), GPU detection, Settings.json, pad layouts + per-button remap, CPU mode. 11 host suites green; on the device the home screen, GPU probe, config repair and CPU mode are verified |
+| Engine on the host | Runs the game (main menu, New Game into `00_Intro`) |
+| Engine on the device | Runs. Non-bindless texture path, CPU texture decode, MSAA off (patch 0002). Pad support in game (patch 0003). Intro ~30 FPS, Liberty Island 2–3 FPS |
 
-### The one open decision
+## Repository state
 
-**Resolved (route 1, implemented and verified on hardware).**
-`VulkanRenderDevice.cpp` used to require `VK_EXT_descriptor_indexing` for
-bindless textures. The PowerVR Rogue GE8300 supports descriptor indexing by
-none of the three routes — the EXT extension, the Vulkan 1.2 core feature, or
-the older per-extension struct — although it advertises API 1.3.225.
-`port/tools/probe-vulkan-caps.c` prints the whole verdict in one run.
+**`port/`** (branch `aarch64`): the launcher redesign is the commit
+"Controller-first launcher: tabs, real renderer choice, pad layouts, CPU mode",
+followed by a docs commit (DESIGN, README, engine-patches README, synced
+`docs/re/`, and patches 0001/0003). Both builds are warning-free and `ctest`
+passes (11/11).
 
-1. **Non-bindless texture path in the fork.** ✅ Done. Per-batch descriptor
-   sets instead of indexed arrays (`DescriptorSetManager` scene cache,
-   `Batch.DescriptorSet` split batching, `Scene.frag` compiled both ways),
-   forced on capable GPUs with `SURREAL_VK_NO_BINDLESS=1`. See
-   `port/engine-patches/0002-nonbindless-fallback-and-format-support.patch`.
+**`engine/SurrealEngine/`** (branch `deusex-handheld`): `2328c37` (0001),
+`e5c9935` (0002), `73c8c51` (0003: gamepad, `CycleActors`, the intro
+`bIgnoreNextShowMenu` swallow). `git am` of the three patch files onto
+`UPSTREAM-BASE.txt` reproduces this tree exactly. No `TEMPORARY DEBUG TOOL`
+code is committed; the profiling hooks are `port/tools/perf-instrumentation.patch`
+(`git apply` / `git apply -R`). Untracked `build-host/`, `.clangd` and
+`compile_commands.json` are local build clutter.
 
-Two more device-specific gaps surfaced once the game ran; both are fixed too:
+**The device** runs builds of exactly these commits (checksums matched at
+handoff for the launcher, `dxl-cli`, the engine, `run-game.sh`, `renderers.ini`
+and both defaults). `Running.ini` is present in the game's `System/` — left by
+profiling runs killed with SIGKILL; the launcher shows a crash banner until the
+next clean exit or "Clear crash marker".
 
-- **Texture formats.** The GE8300 supports **none** of BC1–BC7, not
-  `R8G8B8_UNORM` either, and samples RGBA32F (lightmaps, fog maps) without the
-  linear-filter bit — undefined behavior with the engine's samplers.
-  `TextureUploader::GetUploader` now takes the device and checks both bits,
-  falling back to CPU decoders (BC1/2/3→RGBA8, BC4→R8, BC5→RG8, RGB8→RGBA8,
-  RGBA32F→RGBA8). Without this every texture was speckle garbage. The format
-  table came from `port/tools/probe-texture-formats.c`.
-- **MSAA.** The engine defaults to 4x MSAA with no `Settings.json`, and the
-  PowerVR resolve turns partially covered pixels into speckle. The port seeds
-  `Settings.json` with `Antialias: Off` (`run-game.sh` +
-  `engine-settings.json.default`; `deploy.sh` installs it if missing).
+## Open decisions
 
-2. **Software rendering.** Not pursued: route 1 works.
-
-Not pursued: box64/box86/wine. None is on the device, and box64's own notes
-record Deus Ex under Wine crashing before the menu on much stronger hardware.
+1. **Performance** (owner to choose; nothing started). Liberty Island, from
+   `port/docs/DESIGN.md#performance`: game tick ~40% (NPC AI through a slow
+   script VM), lightmap rebuilds ~20% (muzzle flashes re-light surfaces on the
+   CPU), other render CPU ~20% (not yet broken down), GPU ~15% and serialised
+   with the CPU. Candidates, in order of payoff per effort:
+   - AI level of detail: tick far/unseen pawns every 2–4 frames. Trade-off:
+     distant AI reacts slightly later.
+   - Lightmaps: don't re-light for short-lived flashes; spread rebuilds over
+     the four cores. Trade-off: flashes light characters, not walls.
+   - Lower internal resolution + let CPU and GPU overlap
+     (`CommandBufferManager::SubmitCommands` waits on the fence right after
+     submit). Trade-off: a softer image.
+   - Speed up the VM call path (`Frame::Call` copies its argument array and
+     re-walks the parameter list per call). No trade-off; largest effort.
+   Next measurement: break down the ~100 ms of "other render CPU".
+2. **OpenGL ES backend** (planned as "Phase 4"): recommended to drop or park —
+   the CPU is the bottleneck and Vulkan is the better API on this GPU. The
+   launcher already lists GLES (device has ES 3.2) as "not in this engine build";
+   setting `EngineType=GLES` in `renderers.ini` is all it would need later.
+3. **Verify on the device by hand** (owner): START opens the pause menu on the
+   first press after skipping the intro; SELECT opens it too; B/Y/SELECT/START
+   close menus; the Customize buttons screen; the retired-layout upgrade being
+   written on Play/Quit; CPU mode chosen from the Video tab; stick speeds —
+   look (`Speed=3.75`/`2.25`) and pointer speed are calibrated by reasoning, not
+   by feel.
+4. **Release polish** (owner's request, deferred): the home screen is
+   deliberately verbose for development; a final build needs a declutter pass,
+   and Surreal Engine's always-on Deus Ex stats overlay (FPS/actors/surfaces,
+   `RenderCanvas.cpp` `DrawTimedemoStats`) hidden behind an option.
+5. **Cleanups**: `core/strings.{c,h}` (Startup.int reading) is no longer used by
+   the app, only by `test_strings`; `dxl_config_set_render_device` and the
+   `DescFlags` accessors are only used by tests. Remove or keep deliberately.
 
 ## Gotchas that cost time
 
 - **Toolchain glibc is load-bearing.** glibc 2.34 re-versioned the startup
   symbols, so anything built against ≥ 2.34 emits `__libc_start_main@GLIBC_2.34`
-  and will not load on this device's 2.33. Arch's cross gcc (2.44) and ARM GNU
-  13.3 (2.38) both fail. We use Bootlin **2020.08-1** (GCC 9.3 / glibc 2.31) for
-  the C11 launcher and **bleeding-edge 2021.05-1** (GCC 10.3 / glibc 2.33) for
-  the C++20 engine. `port/scripts/check-abi.sh` enforces the ceiling on every
-  cross build.
+  and will not load on this device's 2.33. We use Bootlin **2020.08-1** (GCC 9.3
+  / glibc 2.31) for the C11 launcher and **bleeding-edge 2021.05-1** (GCC 10.3 /
+  glibc 2.33) for the C++20 engine. `port/scripts/check-abi.sh` enforces the
+  ceiling. GCC 9.3 also warns (`-Wshadow`, `-Wformat-truncation`) where the host
+  compiler is quiet: build both.
 - **The vendor SDL2 is the only display path**, and its `mali` driver wires
   Vulkan surface creation to the PowerVR implementation — so
-  `SDL_Vulkan_CreateSurface` does work, via `VK_KHR_display`. There is no X11,
-  no Wayland, no desktop GL.
+  `SDL_Vulkan_CreateSurface` does work, via `VK_KHR_display`. No X11, no
+  Wayland, no desktop GL.
+- **Surreal Engine does not read what the original wizard wrote.** The renderer
+  is `Settings.json` `RenderDevice.Type` (`GameRenderDevice` in `DeusEx.ini` is
+  overridden inside the engine); texture/skin detail, sound quality and the
+  safe-mode flags are ignored. On the device the engine only *reads*
+  `Settings.json` — it saves it solely from its desktop launcher window.
+- **After the engine's first clean exit it reads `SE-DeusEx.ini` and
+  `SE-User.ini`, not `DeusEx.ini`/`User.ini`**, with client settings under
+  `[Engine.SurrealClient]`. Anything written for the engine must go to whichever
+  file it will read (`port/src/core/config.c` does this).
+- **A stub `DeusEx.ini` kills the engine** (`Could not find package Core`).
+  Surreal falls back to `Default.ini` only when the file is absent. An earlier
+  launcher build wrote a 212-byte one on the device; the launcher now rebuilds
+  such a file from `Default.ini`.
+- **The engine takes `--url=<map>` only.** `-u <map>` silently loads the intro,
+  which is how a whole round of "Liberty Island" profiling actually measured the
+  intro.
+- **The spruceOS menu leaves the CPU in power-save** (2 cores, conservative,
+  ≤ 1.49 GHz). Games get their mode from spruce's helpers; `run-game.sh` applies
+  the launcher's `CpuMode` and restores the previous state. **Source
+  `helperFunctions.sh` only in a subshell**: it exports its own
+  `LD_LIBRARY_PATH`, which hid `libSurrealVideo.so` from the engine.
+- **Pause the spruceOS menu when running anything that draws over SSH**:
+  `kill -STOP $(pidof MainUI)` and `kill -CONT` afterwards (use a `trap`). Two
+  programs on one framebuffer fight, and pad presses would also drive the menu.
+- **The engine ignores SIGTERM**; stop it with SIGKILL. That leaves
+  `Running.ini` behind like any crash.
 - **Never `pkill -f <pattern>`** in a command whose own text contains the
-  pattern. It matches the shell running it. This killed the session's own shell
-  twice, locally and over SSH. Over SSH the reliable pattern is
-  `kill -9 $(ps | grep <name> | grep -v grep | awk '{print $1}')` — the device's
-  busybox `killall` rejects `-x` ("bad signal name"), and plain `killall` still
-  matched. Always follow with `ps | grep` and check the count: SSH-launched
-  engines survive sloppy kills, two engines fight over the display, and
-  half the debugging this session was screenshots from a process that had
-  already been superseded.
+  pattern — it matches the shell running it (this killed the session's shell
+  twice). Likewise `ps | grep deusex` over SSH matches the SSH command itself;
+  use `pidof`. Over SSH the reliable kill is
+  `kill -9 $(ps | grep <name> | grep -v grep | awk '{print $1}')`; busybox
+  `killall` rejects `-x`. Always check afterwards: SSH-launched engines survive
+  sloppy kills, and two engines fight over the display.
 - **The device screen can only be seen over SSH by dumping the framebuffer**:
-  `cat /dev/fb0 > /tmp/fb.raw`, gzip it before scp (67 MB → 0.4 MB), then
-  decode on the host as 1280×720 BGRA. The engine has no screenshot facility;
-  a temporary `SURREAL_DEBUG_SHOTS` hook in `VulkanRenderDevice::Unlock`
-  writing BMPs via `ReadPixels` worked well when per-frame precision was
-  needed (added, used, reverted — same for `SURREAL_ANISO`, `SURREAL_MIP0`,
-  `SURREAL_FORCE_DECODE`, and a shader `BISECT` define). Such env-gated debug
-  hooks are the standard technique here, but every one carries a
-  `TEMPORARY DEBUG TOOL` comment and must be reverted before commit.
+  `cat /dev/fb0 > /tmp/fb.raw` (64 MB), gzip it before scp, decode the first
+  1280×720 as BGRA (`magick -size 1280x720 -depth 8 bgra:frame -alpha off`).
+  The engine has no screenshot facility; env-gated debug hooks (e.g. a
+  `SURREAL_DEBUG_SHOTS` in `VulkanRenderDevice::Unlock` writing `ReadPixels`
+  BMPs) are the standard technique, but every one carries a
+  `TEMPORARY DEBUG TOOL` comment and is reverted before commit.
+- **Deus Ex's UnrealScript source is embedded in `System/DeusEx.u`** (and the
+  other `.u` files). Search it — a regex over the file — before guessing what
+  the game's script does: that is how the `CycleActors` semantics, the
+  `bIgnoreNextShowMenu` swallow and the key-menu command list were found.
 - **`zipdir` is a build-time tool.** A cross build produces an aarch64 binary
   that cannot run on the build host; pass `-DZIPDIR_EXECUTABLE=` a host-built
   one.
@@ -124,7 +180,8 @@ record Deus Ex under Wine crashing before the menu on much stronger hardware.
   survive a `tar` that lists only populated directories.
 - **Editing docs with string replacement fails silently** when the pattern does
   not match. One README edit in this project was reported as done in a commit
-  message and had not happened. Prefer full rewrites, and verify.
+  message and had not happened. Prefer full rewrites, or scripted replacements
+  that assert the pattern was found, and verify.
 
 ---
 
@@ -232,8 +289,8 @@ deleted on clean exit. If it survives, the next launch shows RecoveryMode.
 sites, five read the *same* control (`+0xB0`, `IDC_No3DSound`). So ticking
 "Disable 3D sound hardware" silently also applies `-nohard -noddraw
 -defaultres`, and `No3DVideo`, `Window` and `Res` do nothing. Static analysis
-only — never observed live. **Do not replicate;** `port/tests/test_safemode.c`
-is the regression that keeps it fixed.
+only — never observed live. Moot for the port now: safe mode was dropped
+because Surreal Engine honours none of its flags (`port/docs/DESIGN.md` #1).
 
 **`appStrfind` flags match anywhere.** `readini`, `Server`, `NewWindow`,
 `changevideo`, `TestRenDev` are raw substring matches needing no leading `-` —
@@ -260,18 +317,33 @@ read (`HKLM\software\mpath\mplayer\main`), and `.ICD`→`.EXE` rewriting in
 
 # Part 2 — the launcher
 
-See `port/README.md` to build and `port/docs/DESIGN.md` for the twelve
-deliberate divergences from the original and the hardware verification table.
-In short: C11 core with no SDL and no globals, an SDL2 frontend that only
-appears when there is something to ask, and `dxl-cli` for driving the whole
-contract with no display.
+Full design in `port/docs/DESIGN.md`; build, run and diagnose in
+`port/README.md`. In short:
 
-Verified on hardware: install validation naming each missing file; `FirstRun=0`
-→ first-time flow; a settled install exec'ing straight through with no display
-created; the `Running.ini` lifecycle; a simulated crash producing
-`main/recovery`; the same sentinel with a live instance producing `forward`
-instead; and a `FirstRun 500→1100` clamp rewriting the ini with all 25 sections
-intact and not one line losing its CR.
+- **Core** (`src/core/`, C11, no SDL, no globals): the original's contract —
+  `policy` (the entry decision tree, unchanged), `cmdline` (the three parsers),
+  `sentinel` (`Running.ini`), `instance` (single-instance handoff), `install` —
+  plus what the engine actually reads: `config` (DeusEx.ini / SE- files /
+  User.ini, seeded and repaired from `Default.ini`/`DefUser.ini`),
+  `engine_settings` + `json` (`Settings.json`), `renderers` (engine backend ×
+  device API), `bindings` (pad presets, the action catalogue, retired presets).
+- **Platform**: `gpu_probe` — Vulkan and EGL via `dlopen` in a forked child with
+  a timeout, run before the display comes up.
+- **UI** (`src/ui/`, SDL2): tabs Play/Video/Controls/System, driven by a row
+  table (`screens_internal.h`); overlays for the renderer picker, confirmations,
+  text (logs) and Customize buttons (`remap.c`). Every row has help text.
+- **Flow** (`src/main.c`): home screen every launch; START plays;
+  `DXL_NO_HOME=1` for unattended runs. Quit saves settings, creates no sentinel.
+- **`dxl-cli`**: `--dry-run [--probe]`, `--probe`. Writes nothing.
+- **`run-game.sh`**: CPU mode → engine → restore CPU → sentinel cleared only on
+  a clean exit.
+
+Verified on hardware this session: GPU probe results; the stub-ini repair
+(the game started afterwards); CPU mode applied and restored; the home screen
+on the panel (`port/docs/img/device-home.png`) with the retired pad layout
+recognised. From the previous (wizard) build, on unchanged code paths: install
+validation, the `Running.ini` lifecycle, a simulated crash, the `forward`
+decision with a live instance, the `FirstRun` 500→1100 clamp keeping every CR.
 
 # Part 3 — the engine
 
@@ -283,22 +355,36 @@ and never be PR'd.** Our patches were written with Claude, so they stay in the
 fork permanently. `port/engine-patches/README.md` records this; honour it.
 Building and using the engine is separately permitted by its own license.
 
-Two patch files, all in `port/engine-patches/`:
+Patches, all in `port/engine-patches/` (details and rationale in its README):
 
-- `0001-headless-and-embedded-support.patch` — nine changes: skipping the
-desktop launcher window, reporting exceptions to stderr, streaming the engine
-log, gating the X11/Wayland/EGL desktop backends, two missing includes in the
-SDL2 backend, SDL linking nothing when found via pkg-config, `zipdir` as a host
-tool, system fonts without a desktop, and a non-zero exit status on a caught
-exception.
-- `0002-nonbindless-fallback-and-format-support.patch` — the texture path: the
-non-bindless fallback for GPUs without descriptor indexing, and the texture
-format support checks with CPU decoders (BC1/2/3, BC4, BC5, RGB8, RGBA32F).
+- `0001-headless-and-embedded-support.patch` (`2328c37`) — nine changes:
+  skipping the desktop launcher window, exceptions to stderr, streaming the
+  engine log, gating the X11/Wayland/EGL backends, two missing includes in the
+  SDL2 backend, SDL linking via pkg-config, `zipdir` as a host tool, system
+  fonts without a desktop, a non-zero exit status on a caught exception.
+- `0002-nonbindless-fallback-and-format-support.patch` (`e5c9935`) — the
+  non-bindless fallback for GPUs without descriptor indexing, and texture format
+  checks with CPU decoders (BC1/2/3, BC4, BC5, RGB8, RGBA32F).
+- `0003-gamepad-and-deusex-fixes.patch` (`73c8c51`): gamepad as a polled device
+  in SurrealWidgets, `GamepadInput` (UE1 Joy keys and axes in play, pointer and
+  clicks in Deus Ex's menus), `LauncherSettings.Gamepad`, `CycleActors` made
+  resumable (it was the costliest native and made NPCs consider only the first
+  ~21 pawns), and the intro `bIgnoreNextShowMenu` swallow cleared on level load.
 
-Regenerate a patch after any engine change, from its commit:
+Regenerate a patch after committing:
 
 ```sh
 cd engine/SurrealEngine
-git format-patch -1 HEAD --stdout > \
+git format-patch -1 <commit> --stdout > \
     ../../port/engine-patches/000N-<name>.patch
+```
+
+Profiling (hooks never committed):
+
+```sh
+cd engine/SurrealEngine && git apply ../../port/tools/perf-instrumentation.patch
+cmake --build build-trimui --target SurrealEngine && cd ../../port && scripts/deploy-engine.sh
+# copy tools/profile-map.sh to the device; run e.g.
+#   profile-map.sh 60 li perf 0        (Liberty Island, performance mode, still)
+cd ../engine/SurrealEngine && git apply -R ../../port/tools/perf-instrumentation.patch
 ```
