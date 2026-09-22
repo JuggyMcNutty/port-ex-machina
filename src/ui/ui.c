@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CACHE_MAX 96
+#define CACHE_MAX 160
 #define REPEAT_DELAY_MS  320
 #define REPEAT_RATE_MS    90
 #define STICK_THRESHOLD 16000
@@ -60,10 +60,16 @@ dxl_ui *dxl_ui_init(dxl_err *err) {
 
     /* Fullscreen-desktop rather than a mode switch: the vendor "mali" driver
      * hands out one surface at the panel's native size, and asking it to
-     * change modes gains nothing on a fixed screen. */
+     * change modes gains nothing on a fixed screen. DXL_WINDOW=WxH asks for
+     * a plain window instead -- for working on the UI at the panel's size
+     * on a desktop, and for the screenshot tool. */
+    int ww = 1280, wh = 720;
+    Uint32 wflags = SDL_WINDOW_FULLSCREEN_DESKTOP;
+    const char *wenv = SDL_getenv("DXL_WINDOW");
+    if (wenv && sscanf(wenv, "%dx%d", &ww, &wh) == 2 && ww > 0 && wh > 0)
+        wflags = 0;
     ui->win = SDL_CreateWindow("Deus Ex", SDL_WINDOWPOS_CENTERED,
-                               SDL_WINDOWPOS_CENTERED, 1280, 720,
-                               SDL_WINDOW_FULLSCREEN_DESKTOP);
+                               SDL_WINDOWPOS_CENTERED, ww, wh, wflags);
     if (!ui->win) {
         dxl_err_set(err, "SDL_CreateWindow: %s", SDL_GetError());
         free(ui);
@@ -80,6 +86,7 @@ dxl_ui *dxl_ui_init(dxl_err *err) {
         SDL_Quit();
         return NULL;
     }
+    SDL_SetRenderDrawBlendMode(ui->ren, SDL_BLENDMODE_BLEND);
     SDL_GetRendererOutputSize(ui->ren, &ui->w, &ui->h);
     if (ui->w <= 0 || ui->h <= 0) { ui->w = 1280; ui->h = 720; }
     dxl_metrics_for(&ui->m, ui->h);
@@ -127,6 +134,10 @@ int dxl_ui_width (const dxl_ui *ui) { return ui->w; }
 int dxl_ui_height(const dxl_ui *ui) { return ui->h; }
 const dxl_metrics *dxl_ui_metrics(const dxl_ui *ui) { return &ui->m; }
 int dxl_ui_headless(const dxl_ui *ui) { return ui->headless; }
+
+const char *dxl_ui_pad_name(const dxl_ui *ui) {
+    return ui->pad ? SDL_GameControllerName(ui->pad) : NULL;
+}
 
 /* ---- text cache ------------------------------------------------------
  * Rendering every string through SDL_ttf each frame is the easy way to make
@@ -194,22 +205,55 @@ void dxl_ui_fill(dxl_ui *ui, SDL_Rect r, SDL_Color c) {
     SDL_RenderFillRect(ui->ren, &r);
 }
 
-int dxl_ui_paragraph(dxl_ui *ui, int x, int y, int max_w, const char *s,
-                     dxl_txt style, SDL_Color c) {
+static void outline(dxl_ui *ui, SDL_Rect r, SDL_Color c) {
+    SDL_SetRenderDrawColor(ui->ren, c.r, c.g, c.b, c.a);
+    SDL_RenderDrawRect(ui->ren, &r);
+}
+
+/* A small solid triangle pointing left (dir < 0) or right, centred on
+ * (cx, cy). Drawn rather than typed: the device font's coverage of arrow
+ * glyphs is unknown, and a missing glyph renders as a box. */
+static void arrow(dxl_ui *ui, int cx, int cy, int size, int dir, SDL_Color c) {
+    SDL_Vertex v[3];
+    float h = (float)size, w = (float)size * 0.6f;
+    float tip = (float)cx + (dir < 0 ? -w : w) / 2, base = (float)cx - (dir < 0 ? -w : w) / 2;
+    v[0].position = (SDL_FPoint){ tip,  (float)cy };
+    v[1].position = (SDL_FPoint){ base, (float)cy - h / 2 };
+    v[2].position = (SDL_FPoint){ base, (float)cy + h / 2 };
+    for (int i = 0; i < 3; i++) {
+        v[i].color = c;
+        v[i].tex_coord = (SDL_FPoint){ 0, 0 };
+    }
+    SDL_RenderGeometry(ui->ren, NULL, v, 3, NULL, 0);
+}
+
+int dxl_ui_paragraph_n(dxl_ui *ui, int x, int y, int max_w, const char *s,
+                       dxl_txt style, SDL_Color c, int max_lines) {
     if (!s || !*s) return y;
     int lh = dxl_ui_line_height(ui, style);
     if (ui->headless) return y + lh;
 
     char line[512];
     size_t len = 0;
+    int lines = 0;
     line[0] = '\0';
 
     const char *p = s;
     while (*p) {
-        /* Take the next word, including the space that precedes it, so the
-         * measurement matches what gets drawn. */
+        /* Explicit newlines break the line. */
+        if (*p == '\n') {
+            p++;
+            if (max_lines > 0 && lines + 1 >= max_lines && *p) {
+                snprintf(line + len, sizeof line - len, "...");
+                break;
+            }
+            dxl_ui_text(ui, x, y, line, style, c);
+            y += lh; lines++;
+            line[0] = '\0'; len = 0;
+            continue;
+        }
         const char *ws = p;
-        while (*p && *p != ' ') p++;
+        while (*p && *p != ' ' && *p != '\n') p++;
         size_t wlen = (size_t)(p - ws);
         while (*p == ' ') p++;
 
@@ -219,16 +263,27 @@ int dxl_ui_paragraph(dxl_ui *ui, int x, int y, int max_w, const char *s,
         if (n < 0) break;
 
         if (len && dxl_ui_text_width(ui, candidate, style) > max_w) {
+            if (max_lines > 0 && lines + 1 >= max_lines) {
+                snprintf(line + len, sizeof line - len, "...");
+                len = strlen(line);
+                p = "";   /* stop */
+                break;
+            }
             dxl_ui_text(ui, x, y, line, style, c);
-            y += lh;
+            y += lh; lines++;
             snprintf(line, sizeof line, "%.*s", (int)wlen, ws);
         } else {
             snprintf(line, sizeof line, "%s", candidate);
         }
         len = strlen(line);
     }
-    if (len) { dxl_ui_text(ui, x, y, line, style, c); y += lh; }
+    if (line[0]) { dxl_ui_text(ui, x, y, line, style, c); y += lh; }
     return y;
+}
+
+int dxl_ui_paragraph(dxl_ui *ui, int x, int y, int max_w, const char *s,
+                     dxl_txt style, SDL_Color c) {
+    return dxl_ui_paragraph_n(ui, x, y, max_w, s, style, c, 0);
 }
 
 int dxl_ui_header(dxl_ui *ui, const char *title) {
@@ -239,24 +294,76 @@ int dxl_ui_header(dxl_ui *ui, const char *title) {
     return y + ui->m.pad / 2;
 }
 
-void dxl_ui_footer(dxl_ui *ui, const char *hints) {
+/* A button name in a filled chip, the way handheld UIs label controls.
+ * Returns the x after it. */
+static int chip(dxl_ui *ui, int x, int y, const char *button, SDL_Color bg) {
+    int lh = dxl_ui_line_height(ui, DXL_TXT_FOOTER);
+    int tw = dxl_ui_text_width(ui, button, DXL_TXT_FOOTER);
+    int padx = lh / 3;
+    dxl_ui_fill(ui, (SDL_Rect){ x, y, tw + 2 * padx, lh }, bg);
+    dxl_ui_text(ui, x + padx, y, button, DXL_TXT_FOOTER, DXL_PAL.bg);
+    return x + tw + 2 * padx;
+}
+
+int dxl_ui_tabbar(dxl_ui *ui, const char *const *labels, int count, int active) {
+    int pad = ui->m.pad;
+    int y = pad / 2;
+    int lh = dxl_ui_line_height(ui, DXL_TXT_ITEM);
+    int bar_h = lh + pad / 2;
+
+    /* L1 / R1 at the ends, the tabs spread between them. */
+    int flh = dxl_ui_line_height(ui, DXL_TXT_FOOTER);
+    int cy = y + (bar_h - flh) / 2;
+    int left_end = chip(ui, pad, cy, "L1", DXL_PAL.text_dim) + pad / 2;
+    int r1w = dxl_ui_text_width(ui, "R1", DXL_TXT_FOOTER) + 2 * (flh / 3);
+    int right_start = ui->w - pad - r1w;
+    chip(ui, right_start, cy, "R1", DXL_PAL.text_dim);
+    right_start -= pad / 2;
+
+    int span = right_start - left_end;
+    int slot = count > 0 ? span / count : span;
+    for (int i = 0; i < count; i++) {
+        int sx = left_end + i * slot;
+        int tw = dxl_ui_text_width(ui, labels[i], DXL_TXT_ITEM);
+        int tx = sx + (slot - tw) / 2;
+        int ty = y + (bar_h - lh) / 2;
+        if (i == active) {
+            dxl_ui_fill(ui, (SDL_Rect){ sx + 4, y, slot - 8, bar_h }, DXL_PAL.panel_sel);
+            dxl_ui_fill(ui, (SDL_Rect){ sx + 4, y + bar_h - 3, slot - 8, 3 }, DXL_PAL.accent);
+        }
+        dxl_ui_text(ui, tx, ty, labels[i], DXL_TXT_ITEM,
+                    i == active ? DXL_PAL.accent : DXL_PAL.text_dim);
+    }
+    y += bar_h;
+    dxl_ui_fill(ui, (SDL_Rect){ pad, y, ui->w - 2 * pad, 2 }, DXL_PAL.rule);
+    return y + pad / 2;
+}
+
+int dxl_ui_footer(dxl_ui *ui, const char *const *pairs, int npairs) {
     int lh = dxl_ui_line_height(ui, DXL_TXT_FOOTER);
     int y  = ui->h - ui->m.pad / 2 - lh;
-    dxl_ui_fill(ui, (SDL_Rect){ ui->m.pad, y - ui->m.pad / 4,
-                                ui->w - 2 * ui->m.pad, 1 }, DXL_PAL.rule);
-    dxl_ui_text(ui, ui->m.pad, y, hints, DXL_TXT_FOOTER, DXL_PAL.text_dim);
+    int top = y - ui->m.pad / 4;
+    dxl_ui_fill(ui, (SDL_Rect){ ui->m.pad, top, ui->w - 2 * ui->m.pad, 1 }, DXL_PAL.rule);
+    int x = ui->m.pad;
+    for (int i = 0; i + 1 < 2 * npairs; i += 2) {
+        x = chip(ui, x, y, pairs[i], DXL_PAL.accent_dim) + lh / 3;
+        dxl_ui_text(ui, x, y, pairs[i + 1], DXL_TXT_FOOTER, DXL_PAL.text_dim);
+        x += dxl_ui_text_width(ui, pairs[i + 1], DXL_TXT_FOOTER) + lh;
+    }
+    return top;
 }
 
 void dxl_ui_row(dxl_ui *ui, int y, const char *label, const char *value,
-                int selected, int enabled) {
+                int selected, int flags) {
     int x = ui->m.pad, w = ui->w - 2 * ui->m.pad;
     int ih = ui->m.item_height;
+    int disabled = flags & DXL_ROW_DISABLED;
 
     if (selected) {
         dxl_ui_fill(ui, (SDL_Rect){ x, y, w, ih }, DXL_PAL.panel_sel);
         dxl_ui_fill(ui, (SDL_Rect){ x, y, 4, ih }, DXL_PAL.accent);
     }
-    SDL_Color c = !enabled ? DXL_PAL.text_dim
+    SDL_Color c = disabled ? DXL_PAL.text_dim
                 : selected ? DXL_PAL.accent : DXL_PAL.text;
 
     int lh  = dxl_ui_line_height(ui, DXL_TXT_ITEM);
@@ -265,9 +372,55 @@ void dxl_ui_row(dxl_ui *ui, int y, const char *label, const char *value,
 
     if (value && *value) {
         int vw = dxl_ui_text_width(ui, value, DXL_TXT_ITEM);
-        dxl_ui_text(ui, x + w - ui->m.pad / 2 - vw, ty, value, DXL_TXT_ITEM,
+        int right = x + w - ui->m.pad / 2;
+        int show_arrows = selected && (flags & DXL_ROW_ARROWS) && !disabled;
+        int asz = lh / 2;
+        if (show_arrows) right -= asz + asz / 2;
+        int vx = right - vw;
+        dxl_ui_text(ui, vx, ty, value, DXL_TXT_ITEM,
+                    disabled ? DXL_PAL.text_dim : selected ? DXL_PAL.text : DXL_PAL.text_dim);
+        if (show_arrows) {
+            arrow(ui, vx - asz, y + ih / 2, asz, -1, DXL_PAL.accent);
+            arrow(ui, right + asz, y + ih / 2, asz, +1, DXL_PAL.accent);
+        }
+    }
+}
+
+void dxl_ui_slider_row(dxl_ui *ui, int y, const char *label, double frac,
+                       const char *value_text, int selected, int flags) {
+    dxl_ui_row(ui, y, label, NULL, selected, flags);
+    if (frac < 0) frac = 0;
+    if (frac > 1) frac = 1;
+
+    int ih = ui->m.item_height;
+    int right = ui->w - ui->m.pad - ui->m.pad / 2;
+    int vw = dxl_ui_text_width(ui, "000%", DXL_TXT_ITEM);
+    int bar_w = ui->w / 5;
+    int bar_h = ih / 5;
+    int bar_x = right - vw - ui->m.pad / 2 - bar_w;
+    int bar_y = y + (ih - bar_h) / 2;
+    int disabled = flags & DXL_ROW_DISABLED;
+
+    dxl_ui_fill(ui, (SDL_Rect){ bar_x, bar_y, bar_w, bar_h }, DXL_PAL.rule);
+    dxl_ui_fill(ui, (SDL_Rect){ bar_x, bar_y, (int)(bar_w * frac + 0.5), bar_h },
+                disabled ? DXL_PAL.text_dim : selected ? DXL_PAL.accent : DXL_PAL.accent_dim);
+    if (selected && !disabled) {
+        int asz = dxl_ui_line_height(ui, DXL_TXT_ITEM) / 2;
+        arrow(ui, bar_x - asz, y + ih / 2, asz, -1, DXL_PAL.accent);
+        arrow(ui, bar_x + bar_w + asz, y + ih / 2, asz, +1, DXL_PAL.accent);
+    }
+    if (value_text) {
+        int tw = dxl_ui_text_width(ui, value_text, DXL_TXT_ITEM);
+        int lh = dxl_ui_line_height(ui, DXL_TXT_ITEM);
+        dxl_ui_text(ui, right - tw, y + (ih - lh) / 2, value_text, DXL_TXT_ITEM,
                     selected ? DXL_PAL.text : DXL_PAL.text_dim);
     }
+}
+
+void dxl_ui_overlay_panel(dxl_ui *ui, SDL_Rect r) {
+    dxl_ui_fill(ui, (SDL_Rect){ 0, 0, ui->w, ui->h }, (SDL_Color){ 0, 0, 0, 170 });
+    dxl_ui_fill(ui, r, DXL_PAL.panel);
+    outline(ui, r, DXL_PAL.accent_dim);
 }
 
 void dxl_ui_frame_begin(dxl_ui *ui) {
@@ -281,18 +434,21 @@ void dxl_ui_frame_end(dxl_ui *ui) { SDL_RenderPresent(ui->ren); }
 
 static dxl_act from_button(SDL_GameControllerButton b) {
     switch (b) {
-    case SDL_CONTROLLER_BUTTON_DPAD_UP:    return DXL_ACT_UP;
-    case SDL_CONTROLLER_BUTTON_DPAD_DOWN:  return DXL_ACT_DOWN;
-    case SDL_CONTROLLER_BUTTON_DPAD_LEFT:  return DXL_ACT_LEFT;
-    case SDL_CONTROLLER_BUTTON_DPAD_RIGHT: return DXL_ACT_RIGHT;
+    case SDL_CONTROLLER_BUTTON_DPAD_UP:       return DXL_ACT_UP;
+    case SDL_CONTROLLER_BUTTON_DPAD_DOWN:     return DXL_ACT_DOWN;
+    case SDL_CONTROLLER_BUTTON_DPAD_LEFT:     return DXL_ACT_LEFT;
+    case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:    return DXL_ACT_RIGHT;
     /* The pad reports as an Xbox 360 controller, so SDL's A/B are already the
      * physical A/B on this shell -- confirmed with tools/probe-sdl.c. */
-    case SDL_CONTROLLER_BUTTON_A:          return DXL_ACT_CONFIRM;
-    case SDL_CONTROLLER_BUTTON_B:          return DXL_ACT_BACK;
-    case SDL_CONTROLLER_BUTTON_START:      return DXL_ACT_CONFIRM;
-    case SDL_CONTROLLER_BUTTON_BACK:       return DXL_ACT_QUIT;   /* SELECT */
-    case SDL_CONTROLLER_BUTTON_GUIDE:      return DXL_ACT_QUIT;   /* MENU   */
-    default:                               return DXL_ACT_NONE;
+    case SDL_CONTROLLER_BUTTON_A:             return DXL_ACT_CONFIRM;
+    case SDL_CONTROLLER_BUTTON_B:             return DXL_ACT_BACK;
+    case SDL_CONTROLLER_BUTTON_X:             return DXL_ACT_ALT;
+    case SDL_CONTROLLER_BUTTON_LEFTSHOULDER:  return DXL_ACT_TAB_PREV;
+    case SDL_CONTROLLER_BUTTON_RIGHTSHOULDER: return DXL_ACT_TAB_NEXT;
+    case SDL_CONTROLLER_BUTTON_START:         return DXL_ACT_START;
+    case SDL_CONTROLLER_BUTTON_BACK:          return DXL_ACT_QUIT;   /* SELECT */
+    case SDL_CONTROLLER_BUTTON_GUIDE:         return DXL_ACT_QUIT;   /* MENU   */
+    default:                                  return DXL_ACT_NONE;
     }
 }
 
@@ -304,6 +460,10 @@ static dxl_act from_key(SDL_Keycode k) {
     case SDLK_RIGHT:  case SDLK_d: return DXL_ACT_RIGHT;
     case SDLK_RETURN: case SDLK_SPACE: case SDLK_z: return DXL_ACT_CONFIRM;
     case SDLK_BACKSPACE: case SDLK_x: return DXL_ACT_BACK;
+    case SDLK_r:                   return DXL_ACT_ALT;
+    case SDLK_PAGEUP: case SDLK_COMMA:    return DXL_ACT_TAB_PREV;
+    case SDLK_PAGEDOWN: case SDLK_PERIOD: case SDLK_TAB: return DXL_ACT_TAB_NEXT;
+    case SDLK_p: case SDLK_F5:     return DXL_ACT_START;
     case SDLK_ESCAPE: case SDLK_q: return DXL_ACT_QUIT;
     default: return DXL_ACT_NONE;
     }
@@ -323,6 +483,13 @@ dxl_act dxl_ui_poll(dxl_ui *ui) {
 
         case SDL_CONTROLLERDEVICEADDED:
             if (!ui->pad) ui->pad = SDL_GameControllerOpen(e.cdevice.which);
+            break;
+        case SDL_CONTROLLERDEVICEREMOVED:
+            if (ui->pad &&
+                SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(ui->pad)) == e.cdevice.which) {
+                SDL_GameControllerClose(ui->pad);
+                ui->pad = NULL;
+            }
             break;
 
         case SDL_CONTROLLERBUTTONDOWN: {

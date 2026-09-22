@@ -53,6 +53,11 @@ void dxl_ini_set_bool(dxl_ini *ini, const char *section, const char *key, int va
 /* Appends without replacing, for array-style repeated keys. */
 void dxl_ini_append  (dxl_ini *ini, const char *section, const char *key, const char *value);
 
+/* Sets every key/value pair of src onto dst (first occurrence semantics, as
+ * dxl_ini_set). Used to rebuild a config from Default.ini while keeping the
+ * values a partial file already carried. */
+void dxl_ini_overlay(dxl_ini *dst, const dxl_ini *src);
+
 int  dxl_ini_has_section(const dxl_ini *ini, const char *section);
 /* Removes every key line in the section, keeping the header. Mirrors
  * FConfigCache::EmptySection. */

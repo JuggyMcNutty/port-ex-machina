@@ -34,15 +34,34 @@ add_library(dxl_core STATIC
     src/core/relaunch.c
     src/core/renderers.c
     src/core/log.c
+    src/core/json.c
+    src/core/engine_settings.c
+    src/core/bindings.c
 )
+# Shown on the System tab: which build is on the device.
+execute_process(COMMAND git describe --always --dirty --tags
+                WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+                OUTPUT_VARIABLE DXL_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET)
+if(NOT DXL_VERSION)
+    set(DXL_VERSION "unversioned")
+endif()
+
 target_include_directories(dxl_core PUBLIC src)
+target_link_libraries(dxl_core PUBLIC m)
 
 # ---------------------------------------------------------------------------
 # session layer -- the launcher's sequence, shared by both front ends.
 # ---------------------------------------------------------------------------
-add_library(dxl_app STATIC src/app.c src/platform/posix.c)
+add_library(dxl_app STATIC src/app.c src/platform/posix.c src/platform/gpu_probe.c)
 target_include_directories(dxl_app PUBLIC src)
-target_link_libraries(dxl_app PUBLIC dxl_core)
+# The GPU probe dlopens the Vulkan loader and EGL rather than linking them, so
+# a device without either still starts the launcher. Their headers come from
+# the device sysroot on a cross build and from the host otherwise.
+if(DEFINED DXL_DEVICE_SYSROOT)
+    target_include_directories(dxl_app PRIVATE "${DXL_DEVICE_SYSROOT}/include")
+endif()
+target_link_libraries(dxl_app PUBLIC dxl_core ${CMAKE_DL_LIBS} m)
 
 # Headless driver: the whole contract with no display. Always built -- it is
 # how the on-device behaviour gets checked over SSH.
@@ -71,19 +90,27 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/src/main.c")
         set(DXL_SDL_DIRS    "${DXL_DEVICE_SYSROOT}/lib")
     endif()
 
-    add_executable(deusex-launcher
-        src/main.c
+    set(DXL_UI_SOURCES
         src/ui/ui.c
         src/ui/theme.c
         src/ui/screens.c
+        src/ui/tab_play.c
+        src/ui/tab_video.c
+        src/ui/tab_controls.c
+        src/ui/tab_system.c
+        src/ui/remap.c
     )
+    add_executable(deusex-launcher src/main.c ${DXL_UI_SOURCES})
+    # Captured at configure time; re-run cmake to refresh it after a commit.
+    target_compile_definitions(deusex-launcher PRIVATE DXL_VERSION="${DXL_VERSION}")
     target_include_directories(deusex-launcher PRIVATE src ${DXL_SDL_INCLUDE} ${DXL_SDL_INCLUDE}/SDL2)
     target_link_directories(deusex-launcher PRIVATE ${DXL_SDL_DIRS})
     target_link_libraries(deusex-launcher PRIVATE dxl_app ${DXL_SDL_LIBS} m)
 
     # Development tool: renders each screen headlessly for review.
     if(DXL_PLATFORM STREQUAL "host")
-        add_executable(dxl-shots tools/shots.c src/ui/ui.c src/ui/theme.c src/ui/screens.c)
+        add_executable(dxl-shots tools/shots.c ${DXL_UI_SOURCES})
+        target_compile_definitions(dxl-shots PRIVATE DXL_VERSION="${DXL_VERSION}")
         target_include_directories(dxl-shots PRIVATE src ${DXL_SDL_INCLUDE} ${DXL_SDL_INCLUDE}/SDL2)
         target_link_directories(dxl-shots PRIVATE ${DXL_SDL_DIRS})
         target_link_libraries(dxl-shots PRIVATE dxl_app ${DXL_SDL_LIBS} m)

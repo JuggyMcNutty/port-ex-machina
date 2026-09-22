@@ -1,6 +1,5 @@
 #define _GNU_SOURCE
 #include "core/relaunch.h"
-#include "core/paths.h"
 
 #include <ctype.h>
 #include <errno.h>
@@ -8,37 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
-char *dxl_safe_flags(const dxl_safe_options *o) {
-    dxl_buf b;
-    dxl_buf_init(&b);
-
-    if (o->no_sound)     dxl_buf_word(&b, "-nosound");
-    if (o->no_3d_sound)  dxl_buf_word(&b, "-no3dsound");
-    /* Boxes 3 and 4 both want -nohard; emit it once. */
-    if (o->no_3d_video || o->windowed) dxl_buf_word(&b, "-nohard");
-    if (o->windowed)     dxl_buf_word(&b, "-noddraw");
-    if (o->default_res)  dxl_buf_word(&b, "-defaultres");
-    if (o->no_processor) dxl_buf_word(&b, "-nommx -nokni -nok6");
-    if (o->no_joy)       dxl_buf_word(&b, "-nojoy");
-
-    if (!b.data) dxl_buf_puts(&b, "");
-    return b.data;
-}
-
-int dxl_safe_reset_config(const char *system_dir, const char *package) {
-    size_t n = strlen(package) + 5;
-    char *leaf = dxl_xmalloc(n);
-    snprintf(leaf, n, "%s.ini", package);
-
-    char *path = dxl_path_resolve_ci(system_dir, leaf);
-    free(leaf);
-    if (!path) return 0;               /* already absent */
-
-    int rc = (remove(path) == 0) ? 0 : -1;
-    free(path);
-    return rc;
-}
 
 char **dxl_argv_build(const char *exe, const char *flags) {
     size_t cap = 8, n = 0;

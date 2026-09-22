@@ -7,11 +7,128 @@
  *     recognises it without a custom mapping
  *
  * Draws a few test rectangles, then logs input for ~12s or until a quit.
+ *
+ * --pad [seconds] instead records every controller event (default 30s) and
+ * ends with a summary: each button seen, and for each axis its range and how
+ * many distinct values it reported. That summary is what tells an analog
+ * trigger (thousands of values) from a digital one wired as an axis (two).
  */
 #include <SDL.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-int main(void) {
+typedef struct {
+    int seen, min, max, distinct;
+    unsigned char hit[65536 / 8];   /* one bit per possible value */
+} axis_stat;
+
+static void axis_note(axis_stat *a, int v) {
+    unsigned idx = (unsigned)(v + 32768);
+    if (!a->seen) { a->min = a->max = v; a->seen = 1; }
+    if (v < a->min) a->min = v;
+    if (v > a->max) a->max = v;
+    if (!(a->hit[idx / 8] & (1u << (idx % 8)))) {
+        a->hit[idx / 8] |= (unsigned char)(1u << (idx % 8));
+        a->distinct++;
+    }
+}
+
+static int pad_mode(int seconds) {
+    /* No video: the pad is read straight from evdev, and leaving the display
+     * alone means this can run while the spruceOS menu is paused on screen. */
+    SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+    if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER) != 0) {
+        printf("SDL_Init FAILED: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    for (int i = 0; i < SDL_NumJoysticks(); i++) {
+        printf("joystick [%d] \"%s\" gamecontroller=%s\n", i,
+               SDL_JoystickNameForIndex(i), SDL_IsGameController(i) ? "yes" : "NO");
+        if (SDL_IsGameController(i)) {
+            SDL_GameController *gc = SDL_GameControllerOpen(i);
+            char *m = gc ? SDL_GameControllerMapping(gc) : NULL;
+            if (m) { printf("  mapping: %s\n", m); SDL_free(m); }
+        } else {
+            SDL_JoystickOpen(i);
+        }
+    }
+    printf("recording for %ds -- press every button, sweep both sticks and "
+           "both triggers slowly\n", seconds);
+    fflush(stdout);
+
+    static axis_stat caxes[SDL_CONTROLLER_AXIS_MAX];
+    static axis_stat jaxes[16];
+    int cbtn[SDL_CONTROLLER_BUTTON_MAX] = {0};
+    int jbtn[64] = {0};
+    int hats = 0;
+
+    Uint32 start = SDL_GetTicks();
+    while (SDL_GetTicks() - start < (Uint32)seconds * 1000) {
+        SDL_Event e;
+        while (SDL_PollEvent(&e)) {
+            switch (e.type) {
+            case SDL_CONTROLLERBUTTONDOWN:
+            case SDL_CONTROLLERBUTTONUP:
+                printf("%6u  controller %-13s %s\n", e.cbutton.timestamp,
+                       SDL_GameControllerGetStringForButton(e.cbutton.button),
+                       e.type == SDL_CONTROLLERBUTTONDOWN ? "down" : "up");
+                if (e.cbutton.button < SDL_CONTROLLER_BUTTON_MAX)
+                    cbtn[e.cbutton.button]++;
+                break;
+            case SDL_CONTROLLERAXISMOTION:
+                if (e.caxis.axis < SDL_CONTROLLER_AXIS_MAX) {
+                    axis_stat *a = &caxes[e.caxis.axis];
+                    int before = a->distinct;
+                    axis_note(a, e.caxis.value);
+                    /* Log sparsely: a stick sweep reports hundreds of values. */
+                    if (a->distinct != before && (a->distinct < 4 || a->distinct % 64 == 0))
+                        printf("%6u  controller axis %-13s %d\n", e.caxis.timestamp,
+                               SDL_GameControllerGetStringForAxis(e.caxis.axis),
+                               e.caxis.value);
+                }
+                break;
+            case SDL_JOYBUTTONDOWN:
+                printf("%6u  raw button %d down\n", e.jbutton.timestamp, e.jbutton.button);
+                if (e.jbutton.button < 64) jbtn[e.jbutton.button]++;
+                break;
+            case SDL_JOYAXISMOTION:
+                if (e.jaxis.axis < 16) axis_note(&jaxes[e.jaxis.axis], e.jaxis.value);
+                break;
+            case SDL_JOYHATMOTION:
+                printf("%6u  raw hat %d value %d\n", e.jhat.timestamp, e.jhat.hat, e.jhat.value);
+                hats++;
+                break;
+            }
+            fflush(stdout);
+        }
+        SDL_Delay(5);
+    }
+
+    printf("\n--- summary ---\ncontroller buttons seen:");
+    for (int b = 0; b < SDL_CONTROLLER_BUTTON_MAX; b++)
+        if (cbtn[b]) printf(" %s", SDL_GameControllerGetStringForButton(b));
+    printf("\nraw buttons seen:");
+    for (int b = 0; b < 64; b++) if (jbtn[b]) printf(" %d", b);
+    printf("\nhat events: %d\n", hats);
+    for (int a = 0; a < SDL_CONTROLLER_AXIS_MAX; a++)
+        if (caxes[a].seen)
+            printf("controller axis %-13s min %6d max %6d distinct %5d\n",
+                   SDL_GameControllerGetStringForAxis(a), caxes[a].min,
+                   caxes[a].max, caxes[a].distinct);
+    for (int a = 0; a < 16; a++)
+        if (jaxes[a].seen)
+            printf("raw axis %-2d min %6d max %6d distinct %5d\n", a,
+                   jaxes[a].min, jaxes[a].max, jaxes[a].distinct);
+    SDL_Quit();
+    return 0;
+}
+
+int main(int argc, char **argv) {
+    if (argc > 1 && strcmp(argv[1], "--pad") == 0)
+        return pad_mode(argc > 2 ? atoi(argv[2]) : 30);
+
     printf("compiled against SDL %d.%d.%d\n",
            SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_PATCHLEVEL);
     SDL_version rt; SDL_GetVersion(&rt);

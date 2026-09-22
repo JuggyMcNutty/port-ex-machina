@@ -376,3 +376,12 @@ void dxl_ini_empty_section(dxl_ini *ini, const char *section) {
 }
 
 int dxl_ini_dirty(const dxl_ini *ini) { return ini->dirty; }
+
+void dxl_ini_overlay(dxl_ini *dst, const dxl_ini *src) {
+    const char *section = "";
+    for (size_t i = 0; i < src->count; i++) {
+        const ini_line *l = src->lines + i;
+        if (l->kind == LINE_SECTION) section = l->name;
+        else if (l->kind == LINE_PAIR) dxl_ini_set(dst, section, l->name, l->value);
+    }
+}

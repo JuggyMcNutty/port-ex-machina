@@ -1,19 +1,21 @@
-/* The screens, and the navigation between them.
+/* The launcher's screens, and the navigation between them.
  *
- * Six screens standing in for the original's six wizard pages
- * (docs/re/wizard.md "Page graph"). The decisions are the same; the layout is
- * not, because a mouse-driven Win32 wizard is the wrong shape for a d-pad and
- * a 1280x720 panel held in two hands.
+ * A controller-first home: four tabs switched with L1/R1 -- Play, Video,
+ * Controls, System -- and START launches from any of them. The original's
+ * six-page wizard asked one question per page because it had to fit a
+ * mouse-driven Win32 dialog; on a handheld the same decisions are simply
+ * settings, each with a line of help saying what it really changes.
  *
- * Divergences from the page graph, all deliberate:
- *   - Driver (2022) is folded into the renderer screen. It existed only to
- *     show the detected Direct3D card name, which has no meaning here.
- *   - FirstTime (2019) is shown only when the entry really was a first run.
- *     The original reaches it from Detail unconditionally, so -changevideo
- *     greeted you with "Deus Ex is starting up for the first time".
- *   - The Web button cannot open a browser, so it shows the URL instead of
- *     pretending to.
- *   - An install screen is new; see docs/DESIGN.md.
+ * What the original's entry decision (docs/re/wizard.md) chose between is
+ * still honoured, as where the home screen opens:
+ *
+ *   first run / -changevideo   Video tab
+ *   -safe                      System tab
+ *   crash sentinel survived    Play tab, with the crash explained and the
+ *                              cursor on Troubleshoot
+ *
+ * The install screen stands alone: until the game files are there, there is
+ * nothing else to do.
  */
 #ifndef DXL_SCREENS_H
 #define DXL_SCREENS_H
@@ -22,38 +24,77 @@
 #include "ui.h"
 
 typedef enum {
-    DXL_SCR_INSTALL,
-    DXL_SCR_MAIN,
-    DXL_SCR_RENDERER,
-    DXL_SCR_DETAIL,
-    DXL_SCR_SAFEOPTIONS,
-    DXL_SCR_FIRSTRUN,
-    /* terminal states */
-    DXL_SCR_LAUNCH,     /* commit, then exec the game */
-    DXL_SCR_SAFE_EXEC,  /* re-exec the launcher with safe flags */
-    DXL_SCR_QUIT        /* leave without launching */
-} dxl_scr;
+    DXL_TAB_PLAY,
+    DXL_TAB_VIDEO,
+    DXL_TAB_CONTROLS,
+    DXL_TAB_SYSTEM,
+    DXL_TAB_COUNT
+} dxl_tab;
 
-typedef struct {
+typedef enum {
+    DXL_OVL_NONE,
+    DXL_OVL_RENDERERS,   /* the renderer picker */
+    DXL_OVL_CONFIRM,     /* yes/no before something destructive */
+    DXL_OVL_TEXT,        /* a scrollable text: the engine log */
+    DXL_OVL_REMAP,       /* every pad button and what it does */
+    DXL_OVL_ACTIONS,     /* the actions one button can be given */
+} dxl_overlay;
+
+typedef enum {
+    DXL_END_NONE,
+    DXL_END_LAUNCH,      /* commit, then exec the game */
+    DXL_END_QUIT         /* save settings and leave without playing */
+} dxl_end;
+
+typedef struct dxl_session dxl_session;
+typedef void (*dxl_confirm_fn)(dxl_session *s);
+
+struct dxl_session {
     dxl_app *app;
     dxl_ui  *ui;
 
-    dxl_scr screen;
-    int     cursor;
+    int     installing;          /* the install screen, not the tabs */
+    int     install_cursor;
+    dxl_tab tab;
+    int     cursor[DXL_TAB_COUNT];
+    int     scroll[DXL_TAB_COUNT];
 
-    /* Whether this session arrived through the first-run gate rather than
-     * -changevideo or the menu. Decides if the greeting page appears and
-     * whether Back can leave the renderer screen. */
-    int from_first_run;
-    int came_from_menu;
+    /* Facts about how this session started. */
+    int  crashed;                /* the sentinel survived the last run */
+    char crash_detail[192];      /* the engine's last error line, if any */
 
-    char notice[320];
-} dxl_session;
+    dxl_overlay overlay;
+    int  ovl_cursor, ovl_scroll;
+    char ovl_title[96];
+    char **ovl_lines;            /* DXL_OVL_TEXT: wrapped to the panel, owned */
+    int    ovl_nlines;
+    /* Remapping: the button being changed, where the button list was, and
+     * the picker's rows (a group header is -1 - group start). */
+    int  remap_button;
+    int  remap_cursor, remap_scroll;
+    int *action_rows;
+    int  action_nrows;
+    int  pending_preset;         /* layout to apply once a confirm is accepted */
+
+    char confirm_body[320];
+    char confirm_yes[48];
+    dxl_confirm_fn confirm_fn;
+
+    char notice[256];
+    int  notice_frames;          /* counts down; the notice shows while > 0 */
+    int  notice_bad;
+
+    dxl_end end;
+};
 
 void dxl_session_start(dxl_session *s, dxl_app *app, dxl_ui *ui);
-/* One frame. Returns 1 once a terminal state is reached. */
+void dxl_session_free(dxl_session *s);
+/* One frame. Returns 1 once the session has ended (s->end says how). */
 int  dxl_session_step(dxl_session *s);
-/* True if the session ended in a state that still needs no UI. */
-int  dxl_session_finished(const dxl_session *s);
+/* Draws the current state without reading input; used by the screenshot
+ * tool so every screen can be rendered headlessly. */
+void dxl_session_draw(dxl_session *s);
+/* Feeds one action as if it came from the pad. */
+void dxl_session_act(dxl_session *s, dxl_act a);
 
 #endif

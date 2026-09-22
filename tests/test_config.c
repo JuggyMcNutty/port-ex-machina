@@ -111,88 +111,6 @@ static void test_untouched_config_is_byte_identical_after_save(void) {
     scrub(dir);
 }
 
-/* The golden test: after the detail screen, the ini must carry the block
- * docs/re/ini-keys.md "Detail auto-configuration" lists. */
-static void test_detail_block_low(void) {
-    char *dir = scratch_install("detail-low");
-    dxl_config *c = dxl_config_open(dir, "DeusEx");
-    dxl_ini *ini = dxl_config_ini(c);
-
-    dxl_detail d;
-    dxl_detail_defaults(&d, 1);            /* weak machine -> everything low */
-    dxl_config_apply_detail(c, &d, "D3DDrv.D3DRenderDevice");
-
-    CHECK_STR(dxl_ini_get(ini, "WinDrv.WindowsClient", "MinDesiredFrameRate"), "1");
-    CHECK_STR(dxl_ini_get(ini, "Galaxy.GalaxyAudioSubsystem", "UseReverb"),  "False");
-    CHECK_STR(dxl_ini_get(ini, "Galaxy.GalaxyAudioSubsystem", "OutputRate"), "11025Hz");
-    CHECK_STR(dxl_ini_get(ini, "Galaxy.GalaxyAudioSubsystem", "UseSpatial"), "False");
-    CHECK_STR(dxl_ini_get(ini, "Galaxy.GalaxyAudioSubsystem", "UseFilter"),  "False");
-    CHECK_STR(dxl_ini_get(ini, "Galaxy.GalaxyAudioSubsystem", "LowSoundQuality"), "True");
-    CHECK_STR(dxl_ini_get(ini, "WinDrv.WindowsClient", "SkinDetail"),    "Medium");
-    CHECK_STR(dxl_ini_get(ini, "WinDrv.WindowsClient", "TextureDetail"), "Medium");
-    CHECK_STR(dxl_ini_get(ini, "WinDrv.WindowsClient", "WindowedViewportX"),   "640");
-    CHECK_STR(dxl_ini_get(ini, "WinDrv.WindowsClient", "WindowedViewportY"),   "480");
-    CHECK_STR(dxl_ini_get(ini, "WinDrv.WindowsClient", "WindowedColorBits"),    "16");
-    CHECK_STR(dxl_ini_get(ini, "WinDrv.WindowsClient", "FullscreenViewportX"), "640");
-    CHECK_STR(dxl_ini_get(ini, "WinDrv.WindowsClient", "FullscreenViewportY"), "480");
-    CHECK_STR(dxl_ini_get(ini, "WinDrv.WindowsClient", "FullscreenColorBits"),  "16");
-
-    dxl_config_free(c);
-    scrub(dir);
-}
-
-/* High detail leaves the shipped defaults where they are. The original only
- * ever writes the downgrade set. */
-static void test_detail_block_high_leaves_defaults(void) {
-    char *dir = scratch_install("detail-high");
-    dxl_config *c = dxl_config_open(dir, "DeusEx");
-    dxl_ini *ini = dxl_config_ini(c);
-
-    dxl_detail d;
-    dxl_detail_defaults(&d, 0);
-    dxl_config_apply_detail(c, &d, "OpenGLDrv.OpenGLRenderDevice");
-
-    /* Shipped values, untouched. */
-    CHECK_STR(dxl_ini_get(ini, "Galaxy.GalaxyAudioSubsystem", "UseReverb"),  "True");
-    CHECK_STR(dxl_ini_get(ini, "Galaxy.GalaxyAudioSubsystem", "OutputRate"), "44100Hz");
-    CHECK_STR(dxl_ini_get(ini, "WinDrv.WindowsClient", "SkinDetail"),    "High");
-    CHECK_STR(dxl_ini_get(ini, "WinDrv.WindowsClient", "TextureDetail"), "High");
-    CHECK_STR(dxl_ini_get(ini, "Galaxy.GalaxyAudioSubsystem", "LowSoundQuality"), "False");
-
-    /* OpenGL is neither SoftDrv nor D3DDrv, so the frame-rate override does
-     * not apply and the shipped 1.0 stands. */
-    CHECK_STR(dxl_ini_get(ini, "WinDrv.WindowsClient", "MinDesiredFrameRate"), "1.0");
-
-    dxl_config_free(c);
-    scrub(dir);
-}
-
-/* Verified in the disassembly: both call sites push the literal "1", and the
- * write happens for the software renderer as well as Direct3D. */
-static void test_min_frame_rate_rule(void) {
-    char *dir = scratch_install("mfr");
-    dxl_detail d;
-    dxl_detail_defaults(&d, 0);
-
-    const char *writes[] = { "SoftDrv.SoftwareRenderDevice", "D3DDrv.D3DRenderDevice" };
-    for (size_t i = 0; i < 2; i++) {
-        dxl_config *c = dxl_config_open(dir, "DeusEx");
-        dxl_config_apply_detail(c, &d, writes[i]);
-        CHECK_STR(dxl_ini_get(dxl_config_ini(c), "WinDrv.WindowsClient",
-                              "MinDesiredFrameRate"), "1");
-        dxl_config_free(c);
-    }
-    const char *leaves[] = { "OpenGLDrv.OpenGLRenderDevice", "GlideDrv.GlideRenderDevice" };
-    for (size_t i = 0; i < 2; i++) {
-        dxl_config *c = dxl_config_open(dir, "DeusEx");
-        dxl_config_apply_detail(c, &d, leaves[i]);
-        CHECK_STR(dxl_ini_get(dxl_config_ini(c), "WinDrv.WindowsClient",
-                              "MinDesiredFrameRate"), "1.0");
-        dxl_config_free(c);
-    }
-    scrub(dir);
-}
-
 /* Reproduces what the live Proton run actually wrote into the ini
  * (docs/re/live-verification.md): DescFlags and Description are runtime values
  * that no shipped file carries, written by detection and read back by the
@@ -241,14 +159,186 @@ static void test_missing_ini_is_not_fatal(void) {
     scrub(dir);
 }
 
+
+/* Writes text to <dir>/<name>. */
+static void put_file(const char *dir, const char *name, const char *text) {
+    char p[640];
+    snprintf(p, sizeof p, "%s/%s", dir, name);
+    FILE *f = fopen(p, "wb");
+    if (f) { fputs(text, f); fclose(f); }
+}
+
+static void copy_fixture(const char *dir, const char *fixture_name, const char *as) {
+    char *src = fixture(fixture_name);
+    size_t len = 0;
+    char *data = slurp(src, &len);
+    free(src);
+    char dst[640];
+    snprintf(dst, sizeof dst, "%s/%s", dir, as);
+    FILE *f = fopen(dst, "wb");
+    if (f && data) fwrite(data, 1, len, f);
+    if (f) fclose(f);
+    free(data);
+}
+
+static char *empty_dir(const char *tag) {
+    static char dir[512];
+    snprintf(dir, sizeof dir, "/tmp/dxl-test-%s-%d", tag, (int)getpid());
+    mkdir(dir, 0755);
+    return dir;
+}
+
+static void scrub_all(const char *dir) {
+    static const char *names[] = { "DeusEx.ini", "Default.ini", "User.ini", "DefUser.ini",
+                                   "SE-DeusEx.ini", "SE-User.ini", "Running.ini" };
+    for (size_t i = 0; i < sizeof names / sizeof *names; i++) {
+        char p[640];
+        snprintf(p, sizeof p, "%s/%s", dir, names[i]);
+        remove(p);
+    }
+    rmdir(dir);
+}
+
+/* UE1's Core creates <Game>.ini from Default.ini before the launcher runs.
+ * A GOG install copied to the SD card has no DeusEx.ini, so we must too. */
+static void test_missing_ini_is_created_from_default(void) {
+    char *dir = empty_dir("seed");
+    copy_fixture(dir, "Default.ini", "Default.ini");
+
+    dxl_config *c = dxl_config_open(dir, "DeusEx");
+    CHECK_INT(dxl_config_seeded(c), 1);
+    CHECK(dxl_ini_get(dxl_config_ini(c), "Core.System", "Paths") != NULL);
+    CHECK_INT(dxl_config_dirty(c), 1);
+    dxl_err e;
+    CHECK_INT(dxl_config_save(c, &e), 0);
+    dxl_config_free(c);
+
+    c = dxl_config_open(dir, "DeusEx");
+    CHECK_INT(dxl_config_seeded(c), 0);
+    CHECK_STR(dxl_config_game_engine(c), "DeusEx.DeusExGameEngine");
+    dxl_config_free(c);
+    scrub_all(dir);
+}
+
+/* The state found on the device: an earlier launcher wrote a 212-byte
+ * DeusEx.ini with only its own keys, and the engine died with "Could not
+ * find package Core". Rebuild from Default.ini, keep the stub's values. */
+static void test_stub_ini_is_rebuilt_keeping_its_values(void) {
+    char *dir = empty_dir("stub");
+    copy_fixture(dir, "Default.ini", "Default.ini");
+    put_file(dir, "DeusEx.ini",
+             "[Engine.Engine]\r\nGameRenderDevice=OpenGLDrv.OpenGLRenderDevice\r\n\r\n"
+             "[FirstRun]\r\nFirstRun=1100\r\n");
+
+    dxl_config *c = dxl_config_open(dir, "DeusEx");
+    CHECK_INT(dxl_config_seeded(c), 2);
+    CHECK_INT(dxl_config_first_run(c), 1100);
+    CHECK_STR(dxl_config_render_device(c), "OpenGLDrv.OpenGLRenderDevice");
+    CHECK(dxl_ini_get(dxl_config_ini(c), "Core.System", "Paths") != NULL);
+    dxl_err e;
+    CHECK_INT(dxl_config_save(c, &e), 0);
+    dxl_config_free(c);
+
+    c = dxl_config_open(dir, "DeusEx");
+    CHECK_INT(dxl_config_seeded(c), 0);
+    CHECK_INT(dxl_config_first_run(c), 1100);
+    dxl_config_free(c);
+    scrub_all(dir);
+}
+
+/* Once the engine has written SE-DeusEx.ini it reads only that, with client
+ * settings under its own section. Writing DeusEx.ini would change nothing. */
+static void test_client_settings_follow_the_engine_file(void) {
+    char *dir = scratch_install("client");
+    dxl_config *c = dxl_config_open(dir, "DeusEx");
+    CHECK_STR(dxl_config_client_section(c), "WinDrv.WindowsClient");
+    dxl_config_set_brightness(c, 0.75);
+    CHECK_STR(dxl_ini_get(dxl_config_ini(c), "WinDrv.WindowsClient", "Brightness"), "0.750000");
+    dxl_config_free(c);
+
+    put_file(dir, "SE-DeusEx.ini", "[Engine.SurrealClient]\nBrightness=0.500000\nDecals=True\n");
+    c = dxl_config_open(dir, "DeusEx");
+    CHECK_STR(dxl_config_client_section(c), "Engine.SurrealClient");
+    CHECK(dxl_config_brightness(c) > 0.49 && dxl_config_brightness(c) < 0.51);
+    dxl_config_set_brightness(c, 0.9);
+    dxl_config_set_decals(c, 0);
+    dxl_err e;
+    CHECK_INT(dxl_config_save(c, &e), 0);
+    dxl_config_free(c);
+
+    c = dxl_config_open(dir, "DeusEx");
+    CHECK(dxl_config_brightness(c) > 0.89 && dxl_config_brightness(c) < 0.91);
+    CHECK_INT(dxl_config_decals(c), 0);
+    /* The base ini's copy was not touched by the second session. */
+    CHECK_STR(dxl_ini_get(dxl_config_ini(c), "WinDrv.WindowsClient", "Brightness"), "0.600000");
+    dxl_config_free(c);
+    scrub_all(dir);
+}
+
+static void test_user_ini_prefers_the_engine_copy(void) {
+    char *dir = empty_dir("user");
+    copy_fixture(dir, "Default.ini", "Default.ini");
+    copy_fixture(dir, "DefUser.ini", "DefUser.ini");
+
+    /* No User.ini: created from DefUser.ini. */
+    dxl_config *c = dxl_config_open(dir, "DeusEx");
+    CHECK(dxl_config_user_ini(c) != NULL);
+    CHECK_STR(dxl_ini_get(dxl_config_user_ini(c), "Engine.Input", "Joy1"), "Fire");
+    dxl_err e;
+    CHECK_INT(dxl_config_save(c, &e), 0);
+    dxl_config_free(c);
+    char p[640];
+    snprintf(p, sizeof p, "%s/User.ini", dir);
+    CHECK(access(p, F_OK) == 0);
+
+    /* SE-User.ini wins once it exists. */
+    put_file(dir, "SE-User.ini", "[Engine.Input]\nJoy1=Jump\n");
+    c = dxl_config_open(dir, "DeusEx");
+    CHECK_STR(dxl_ini_get(dxl_config_user_ini(c), "Engine.Input", "Joy1"), "Jump");
+    CHECK(strstr(dxl_config_user_path(c), "SE-User.ini") != NULL);
+    dxl_config_free(c);
+    scrub_all(dir);
+}
+
+static void test_reset_deletes_and_rebuilds(void) {
+    char *dir = empty_dir("reset");
+    copy_fixture(dir, "Default.ini", "Default.ini");
+    copy_fixture(dir, "DefUser.ini", "DefUser.ini");
+    put_file(dir, "SE-DeusEx.ini", "[Engine.SurrealClient]\nBrightness=0.1\n");
+    put_file(dir, "SE-User.ini", "[Engine.Input]\nJoy1=Jump\n");
+
+    dxl_err e;
+    CHECK_INT(dxl_config_reset_files(dir, "DeusEx", &e), 0);
+    dxl_config *c = dxl_config_open(dir, "DeusEx");
+    CHECK_INT(dxl_config_seeded(c), 1);
+    CHECK_STR(dxl_config_client_section(c), "WinDrv.WindowsClient");
+    CHECK_STR(dxl_ini_get(dxl_config_user_ini(c), "Engine.Input", "Joy1"), "Fire");
+    dxl_config_free(c);
+    scrub_all(dir);
+}
+
+/* No Default.ini, nothing to rebuild from: refuse and delete nothing. */
+static void test_reset_refuses_without_default(void) {
+    char *dir = scratch_install("noreset");
+    dxl_err e;
+    CHECK_INT(dxl_config_reset_files(dir, "DeusEx", &e), -1);
+    char p[640];
+    snprintf(p, sizeof p, "%s/DeusEx.ini", dir);
+    CHECK(access(p, F_OK) == 0);
+    scrub_all(dir);
+}
+
 TEST_MAIN_BEGIN
     RUN(test_reads_the_gates);
     RUN(test_first_run_clamps_up_only);
     RUN(test_render_device_write_persists);
     RUN(test_untouched_config_is_byte_identical_after_save);
-    RUN(test_detail_block_low);
-    RUN(test_detail_block_high_leaves_defaults);
-    RUN(test_min_frame_rate_rule);
     RUN(test_desc_flags_round_trip);
     RUN(test_missing_ini_is_not_fatal);
+    RUN(test_missing_ini_is_created_from_default);
+    RUN(test_stub_ini_is_rebuilt_keeping_its_values);
+    RUN(test_client_settings_follow_the_engine_file);
+    RUN(test_user_ini_prefers_the_engine_copy);
+    RUN(test_reset_deletes_and_rebuilds);
+    RUN(test_reset_refuses_without_default);
 TEST_MAIN_END
