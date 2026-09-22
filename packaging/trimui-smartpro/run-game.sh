@@ -19,6 +19,13 @@ export LD_LIBRARY_PATH="$APPDIR:/usr/trimui/lib:/usr/lib:/lib:$LD_LIBRARY_PATH"
 export HOME="$APPDIR/home"
 mkdir -p "$HOME/.config/SurrealEngine"
 
+# The engine defaults to 4x MSAA when there is no Settings.json, and the
+# PowerVR Rogue GE8300 produces garbage with it (partially covered pixels
+# resolve to speckle). Ship MSAA off from the very first run.
+if [ ! -s "$HOME/.config/SurrealEngine/Settings.json" ]; then
+    cp "$APPDIR/engine-settings.json.default" "$HOME/.config/SurrealEngine/Settings.json"
+fi
+
 # The vendor SDL2 is the only display path here. Its "mali" video driver wires
 # Vulkan surface creation to the PowerVR implementation, which is what lets the
 # engine's Vulkan renderer present at 1280x720 via VK_KHR_display.

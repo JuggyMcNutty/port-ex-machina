@@ -182,6 +182,7 @@ scripts/check-abi.sh /tmp/probe
 | `probe-vulkan.c` | is there a usable Vulkan device at all | `-lvulkan` |
 | `probe-sdl-vulkan.c` | can SDL2 hand out a Vulkan surface here | `-lSDL2 -lvulkan` |
 | `probe-vulkan-caps.c` | every requirement the engine's device filter checks, with a verdict | `-lvulkan` |
+| `probe-texture-formats.c` | which texture formats this GPU can sample, and whether it can linearly filter them (BCn, RGB8, RGBA32F) | `-lvulkan` |
 | `shots.c` | renders each launcher screen headlessly (host only, built by CMake) | SDL2 + ttf |
 
 Each one exists because a guess about this hardware turned out to be wrong at

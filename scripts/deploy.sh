@@ -14,6 +14,10 @@ DEVICE_PASS="${DEVICE_PASS:-happygaming}"
 APPDIR="${APPDIR:-/mnt/SDCARD/App/DeusEx}"
 SSHOPTS=(-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=15)
 
+# sshpass -e reads SSHPASS from the environment, so the password string only
+# appears once, in the assignment below.
+export SSHPASS="$DEVICE_PASS"
+
 run=0; args=()
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -37,16 +41,22 @@ cp "$BUILD/dxl-cli"          "$stage/dxl-cli"
 [ -d "$ROOT/assets" ] && cp -a "$ROOT/assets" "$stage/assets"
 
 echo "deploying to $DEVICE_USER@$DEVICE:$APPDIR ..."
-sshpass -p "$DEVICE_PASS" ssh "${SSHOPTS[@]}" "$DEVICE_USER@$DEVICE" "mkdir -p '$APPDIR'"
+sshpass -e ssh "${SSHOPTS[@]}" "$DEVICE_USER@$DEVICE" "mkdir -p '$APPDIR'"
 # exFAT has no permission bits worth trusting -- tar in, then chmod on arrival.
-tar -C "$stage" -cf - . | sshpass -p "$DEVICE_PASS" ssh "${SSHOPTS[@]}" \
+tar -C "$stage" -cf - . | sshpass -e ssh "${SSHOPTS[@]}" \
     "$DEVICE_USER@$DEVICE" "tar -C '$APPDIR' -xf - && chmod +x '$APPDIR'/deusex-launcher '$APPDIR'/dxl-cli '$APPDIR'/*.sh"
 
-sshpass -p "$DEVICE_PASS" ssh "${SSHOPTS[@]}" "$DEVICE_USER@$DEVICE" \
+sshpass -e ssh "${SSHOPTS[@]}" "$DEVICE_USER@$DEVICE" \
     "[ -s '$APPDIR/launcher.ini' ] || cp '$APPDIR/launcher.ini.default' '$APPDIR/launcher.ini'; true"
+
+# The engine's Settings.json is pinned per-device: MSAA off (the PowerVR GE8300
+# produces speckle with its default 4x MSAA). run-game.sh seeds it from the
+# packaged default if missing, so this is only a fallback.
+sshpass -e ssh "${SSHOPTS[@]}" "$DEVICE_USER@$DEVICE" \
+    "[ -s '$APPDIR/home/.config/SurrealEngine/Settings.json' ] || { mkdir -p '$APPDIR/home/.config/SurrealEngine'; cp '$APPDIR/engine-settings.json.default' '$APPDIR/home/.config/SurrealEngine/Settings.json'; }; true"
 
 if [ "$run" = 1 ]; then
     echo "--- running ---"
-    sshpass -p "$DEVICE_PASS" ssh "${SSHOPTS[@]}" "$DEVICE_USER@$DEVICE" \
+    sshpass -e ssh "${SSHOPTS[@]}" "$DEVICE_USER@$DEVICE" \
         "cd '$APPDIR' && LD_LIBRARY_PATH=/usr/trimui/lib:/usr/lib:/lib ./deusex-launcher ${args[*]:-} 2>&1; echo \"exit=\$?\""
 fi

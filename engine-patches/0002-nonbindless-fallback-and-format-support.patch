@@ -1,0 +1,1020 @@
+From e5c99358b785275bb198eecfa1f56f2ca87f8f53 Mon Sep 17 00:00:00 2001
+From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
+Date: Tue, 22 Sep 2026 06:53:59 -0500
+Subject: [PATCH] Non-bindless fallback path and texture format support checks
+
+Two changes so the Vulkan renderer survives GPUs without desktop texture
+support. Both were tested on a PowerVR Rogue GE8300 (TrimUI Smart Pro,
+Vulkan 1.3.225) where the game previously stopped at device selection.
+
+Non-bindless texture path (SURREAL_VK_NO_BINDLESS=1 forces it on capable
+GPUs for testing):
+
+- The device no longer requires VK_EXT_descriptor_indexing outright; the
+  renderer falls back to one four-binding descriptor set per texture
+  combination when descriptor indexing is missing.
+- DescriptorSetManager grows SceneLayout/SceneSets/SceneSetCache with
+  pooled allocation; VulkanRenderDevice splits batches on descriptor set
+  changes via Batch.DescriptorSet/SetTextureSet, and drains pending
+  commands before clearing a full set cache.
+- Scene.frag compiles both ways under BINDLESS_TEXTURES; without it the
+  four samplers are bound directly. EndFlash binds a dummy set since
+  nothing is sampled there.
+- The scene pipeline layout takes whichever set layout the device can do.
+
+Texture format support (automatic, no env var):
+
+- TextureUploader::GetUploader now takes the physical device and checks
+  VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT plus
+  VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT. A format the GPU
+  cannot sample or cannot linearly filter (both undefined behavior with
+  the engine's samplers) falls back to a CPU decoder writing a format
+  the device does support.
+- New decoders: BC1/BC2/BC3 -> RGBA8, BC4 -> R8, BC5 -> RG8, RGB8 ->
+  RGBA8, RGBA32F -> RGBA8. Without a decoder the upload path uses its
+  existing white fallback.
+- On the GE8300 every BCn format is unsupported and RGBA32F (lightmaps,
+  fog maps) samples but cannot be filtered; without this both produced
+  heavy speckle.
+
+Verified on device: intro renders clean (textures, lightmaps, fog); the
+PowerVR also needs MSAA disabled via Settings.json (Antialias: Off) --
+with 4x MSAA its resolve produces edge speckle -- which the port's
+packaging now seeds. Host AMD still selects the bindless path.
+---
+ .../Vulkan/DescriptorSetManager.cpp           |  68 +++-
+ .../Vulkan/DescriptorSetManager.h             |  19 +-
+ .../RenderDevice/Vulkan/FileResource.cpp      |  16 +
+ .../RenderDevice/Vulkan/RenderPassManager.cpp |  12 +-
+ .../RenderDevice/Vulkan/RenderPassManager.h   |   4 +-
+ .../RenderDevice/Vulkan/SamplerManager.cpp    |   5 +-
+ .../RenderDevice/Vulkan/ShaderManager.cpp     |  12 +-
+ .../RenderDevice/Vulkan/TextureUploader.cpp   | 302 +++++++++++++++++-
+ .../RenderDevice/Vulkan/TextureUploader.h     |  71 +++-
+ .../RenderDevice/Vulkan/UploadManager.cpp     |   6 +-
+ .../Vulkan/VulkanRenderDevice.cpp             |  25 +-
+ .../RenderDevice/Vulkan/VulkanRenderDevice.h  |  43 +++
+ 12 files changed, 552 insertions(+), 31 deletions(-)
+
+diff --git a/SurrealEngine/RenderDevice/Vulkan/DescriptorSetManager.cpp b/SurrealEngine/RenderDevice/Vulkan/DescriptorSetManager.cpp
+index 2ff37d7..9ac4ea3 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/DescriptorSetManager.cpp
++++ b/SurrealEngine/RenderDevice/Vulkan/DescriptorSetManager.cpp
+@@ -8,7 +8,10 @@
+ 
+ DescriptorSetManager::DescriptorSetManager(VulkanRenderDevice* renderer) : renderer(renderer)
+ {
+-	CreateBindlessTextureSet();
++	if (renderer->SupportsBindless)
++		CreateBindlessTextureSet();
++	else
++		CreateSceneTextureLayout();
+ 	CreatePresentLayout();
+ 	CreatePresentSet();
+ 	CreateBloomLayout();
+@@ -23,6 +26,11 @@ void DescriptorSetManager::ClearCache()
+ {
+ 	Textures.WriteBindless = WriteDescriptors();
+ 	Textures.NextBindlessIndex = 0;
++
++	Textures.SceneSetCache.clear();
++	Textures.SceneSets.clear();
++	Textures.ScenePools.clear();
++	Textures.ScenePoolSetsLeft = 0;
+ }
+ 
+ int DescriptorSetManager::GetTextureArrayIndex(uint32_t PolyFlags, CachedTexture* tex, bool clamp)
+@@ -66,6 +74,53 @@ int DescriptorSetManager::GetTextureArrayIndex(uint32_t PolyFlags, CachedTexture
+ 	return index;
+ }
+ 
++VulkanDescriptorSet* DescriptorSetManager::GetTextureSet(uint32_t PolyFlags, CachedTexture* tex, CachedTexture* lightmap, CachedTexture* macrotex, CachedTexture* detailtex, bool clamp)
++{
++	uint32_t samplermode = 0;
++	if (PolyFlags & PF_NoSmooth) samplermode |= 1;
++	if (clamp) samplermode |= 2;
++
++	TexDescriptorKey key(tex, lightmap, detailtex, macrotex, samplermode);
++	auto it = Textures.SceneSetCache.find(key);
++	if (it != Textures.SceneSetCache.end())
++		return it->second;
++
++	VulkanDescriptorSet* descriptorSet = AllocSceneTextureSet();
++
++	// The sampler mode only applies to the surface texture, as in the bindless path.
++	VulkanSampler* sampler = renderer->Samplers->Samplers[samplermode].get();
++	VulkanSampler* plainSampler = renderer->Samplers->Samplers[0].get();
++	VulkanImageView* nulltex = renderer->Textures->NullTextureView.get();
++
++	// Binding order matches textureBinds.xyzw in the bindless shader.
++	WriteDescriptors write;
++	write.AddCombinedImageSampler(descriptorSet, 0, tex ? tex->imageView.get() : nulltex, tex ? sampler : plainSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
++	write.AddCombinedImageSampler(descriptorSet, 1, macrotex ? macrotex->imageView.get() : nulltex, plainSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
++	write.AddCombinedImageSampler(descriptorSet, 2, detailtex ? detailtex->imageView.get() : nulltex, plainSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
++	write.AddCombinedImageSampler(descriptorSet, 3, lightmap ? lightmap->imageView.get() : nulltex, plainSampler, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
++	write.Execute(renderer->Device.get());
++
++	Textures.SceneSetCache[key] = descriptorSet;
++	return descriptorSet;
++}
++
++VulkanDescriptorSet* DescriptorSetManager::AllocSceneTextureSet()
++{
++	if (Textures.ScenePoolSetsLeft == 0)
++	{
++		Textures.ScenePools.push_back(DescriptorPoolBuilder()
++			.AddPoolSize(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, SceneSetsPerPool * 4)
++			.MaxSets(SceneSetsPerPool)
++			.DebugName("SceneTexturePool")
++			.Create(renderer->Device.get()));
++		Textures.ScenePoolSetsLeft = SceneSetsPerPool;
++	}
++
++	Textures.SceneSets.push_back(Textures.ScenePools.back()->allocate(Textures.SceneLayout.get()));
++	Textures.ScenePoolSetsLeft--;
++	return Textures.SceneSets.back().get();
++}
++
+ void DescriptorSetManager::UpdateBindlessSet()
+ {
+ 	Textures.WriteBindless.Execute(renderer->Device.get());
+@@ -94,6 +149,17 @@ void DescriptorSetManager::CreateBindlessTextureSet()
+ 	Textures.BindlessSet = Textures.BindlessPool->allocate(Textures.BindlessLayout.get(), MaxBindlessTextures);
+ }
+ 
++void DescriptorSetManager::CreateSceneTextureLayout()
++{
++	Textures.SceneLayout = DescriptorSetLayoutBuilder()
++		.AddBinding(0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT)
++		.AddBinding(1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT)
++		.AddBinding(2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT)
++		.AddBinding(3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT)
++		.DebugName("SceneTextureLayout")
++		.Create(renderer->Device.get());
++}
++
+ void DescriptorSetManager::CreatePresentLayout()
+ {
+ 	Present.Layout = DescriptorSetLayoutBuilder()
+diff --git a/SurrealEngine/RenderDevice/Vulkan/DescriptorSetManager.h b/SurrealEngine/RenderDevice/Vulkan/DescriptorSetManager.h
+index 41f3ca9..15f61b9 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/DescriptorSetManager.h
++++ b/SurrealEngine/RenderDevice/Vulkan/DescriptorSetManager.h
+@@ -53,9 +53,14 @@ public:
+ 
+ 	void ClearCache();
+ 
++	// Bindless path: every texture lives in one array the shader indexes from the vertex data.
+ 	bool IsTextureArrayFull() const { return Textures.NextBindlessIndex + 4 > MaxBindlessTextures; }
+ 	int GetTextureArrayIndex(uint32_t PolyFlags, CachedTexture* tex, bool clamp = false);
+ 
++	// Non-bindless path: one four-binding set per texture combination, bound per batch.
++	bool IsTextureSetCacheFull() const { return (int)Textures.SceneSets.size() + 1 > MaxSceneSets; }
++	VulkanDescriptorSet* GetTextureSet(uint32_t PolyFlags, CachedTexture* tex, CachedTexture* lightmap, CachedTexture* macrotex, CachedTexture* detailtex, bool clamp = false);
++
+ 	VulkanDescriptorSet* GetBindlessSet() { return Textures.BindlessSet.get(); }
+ 	VulkanDescriptorSet* GetPresentSet() { return Present.Set.get(); }
+ 	VulkanDescriptorSet* GetBloomPPImageSet() { return Bloom.PPImageSet.get(); }
+@@ -66,13 +71,18 @@ public:
+ 	void UpdateFrameDescriptors();
+ 
+ 	static const int MaxBindlessTextures = 16536;
++	static const int MaxSceneSets = 16384;
++	static const int SceneSetsPerPool = 1024;
+ 
+-	VulkanDescriptorSetLayout* GetTextureBindlessLayout() { return Textures.BindlessLayout.get(); }
++	// The scene pipeline layout takes whichever of the two the device can do.
++	VulkanDescriptorSetLayout* GetTextureSetLayout() { return Textures.BindlessLayout ? Textures.BindlessLayout.get() : Textures.SceneLayout.get(); }
+ 	VulkanDescriptorSetLayout* GetPresentLayout() { return Present.Layout.get(); }
+ 	VulkanDescriptorSetLayout* GetBloomLayout() { return Bloom.Layout.get(); }
+ 
+ private:
+ 	void CreateBindlessTextureSet();
++	void CreateSceneTextureLayout();
++	VulkanDescriptorSet* AllocSceneTextureSet();
+ 	void CreatePresentLayout();
+ 	void CreatePresentSet();
+ 	void CreateBloomLayout();
+@@ -88,6 +98,13 @@ private:
+ 		WriteDescriptors WriteBindless;
+ 		int NextBindlessIndex = 0;
+ 
++		// Declared before the sets so the pools outlive them.
++		std::unique_ptr<VulkanDescriptorSetLayout> SceneLayout;
++		std::vector<std::unique_ptr<VulkanDescriptorPool>> ScenePools;
++		std::vector<std::unique_ptr<VulkanDescriptorSet>> SceneSets;
++		std::unordered_map<TexDescriptorKey, VulkanDescriptorSet*> SceneSetCache;
++		int ScenePoolSetsLeft = 0;
++
+ 	} Textures;
+ 
+ 	struct
+diff --git a/SurrealEngine/RenderDevice/Vulkan/FileResource.cpp b/SurrealEngine/RenderDevice/Vulkan/FileResource.cpp
+index 681fb55..2c78d50 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/FileResource.cpp
++++ b/SurrealEngine/RenderDevice/Vulkan/FileResource.cpp
+@@ -54,7 +54,14 @@ std::string FileResource::readAllText(const std::string& filename)
+ 	else if (filename == "shaders/Scene.frag")
+ 	{
+ 		return R"(
++			#if defined(BINDLESS_TEXTURES)
+ 			layout(binding = 0) uniform sampler2D textures[];
++			#else
++			layout(binding = 0) uniform sampler2D texSurface;
++			layout(binding = 1) uniform sampler2D texMacro;
++			layout(binding = 2) uniform sampler2D texDetail;
++			layout(binding = 3) uniform sampler2D texLightmap;
++			#endif
+ 
+ 			layout(location = 0) flat in uint flags;
+ 			layout(location = 1) centroid in vec2 texCoord;
+@@ -63,7 +70,9 @@ std::string FileResource::readAllText(const std::string& filename)
+ 			layout(location = 4) in vec2 texCoord4;
+ 			layout(location = 5) in vec4 color;
+ 			layout(location = 6) flat in uint hitIndex;
++			#if defined(BINDLESS_TEXTURES)
+ 			layout(location = 7) flat in ivec4 textureBinds;
++			#endif
+ 
+ 			layout(location = 0) out vec4 outColor;
+ 			layout(location = 1) out uint outHitIndex;
+@@ -75,10 +84,17 @@ std::string FileResource::readAllText(const std::string& filename)
+ 				return vec4(clamp((c.rgb - cutoff) / (1.0 - cutoff), 0.0, 1.0), c.a);
+ 			}
+ 
++			#if defined(BINDLESS_TEXTURES)
+ 			vec4 textureTex(vec2 uv) { return texture(textures[nonuniformEXT(textureBinds.x)], uv); }
+ 			vec4 textureMacro(vec2 uv) { return texture(textures[nonuniformEXT(textureBinds.y)], uv); }
+ 			vec4 textureDetail(vec2 uv) { return texture(textures[nonuniformEXT(textureBinds.z)], uv); }
+ 			vec4 textureLightmap(vec2 uv) { return texture(textures[nonuniformEXT(textureBinds.w)], uv); }
++			#else
++			vec4 textureTex(vec2 uv) { return texture(texSurface, uv); }
++			vec4 textureMacro(vec2 uv) { return texture(texMacro, uv); }
++			vec4 textureDetail(vec2 uv) { return texture(texDetail, uv); }
++			vec4 textureLightmap(vec2 uv) { return texture(texLightmap, uv); }
++			#endif
+ 
+ 			void main()
+ 			{
+diff --git a/SurrealEngine/RenderDevice/Vulkan/RenderPassManager.cpp b/SurrealEngine/RenderDevice/Vulkan/RenderPassManager.cpp
+index 62d8e05..379145c 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/RenderPassManager.cpp
++++ b/SurrealEngine/RenderDevice/Vulkan/RenderPassManager.cpp
+@@ -8,7 +8,7 @@
+ 
+ RenderPassManager::RenderPassManager(VulkanRenderDevice* renderer) : renderer(renderer)
+ {
+-	CreateSceneBindlessPipelineLayout();
++	CreateScenePipelineLayout();
+ 	CreatePostprocessRenderPass();
+ 	CreatePresentPipelineLayout();
+ 	CreateScreenshotPipeline();
+@@ -20,12 +20,12 @@ RenderPassManager::~RenderPassManager()
+ {
+ }
+ 
+-void RenderPassManager::CreateSceneBindlessPipelineLayout()
++void RenderPassManager::CreateScenePipelineLayout()
+ {
+-	Scene.BindlessPipelineLayout = PipelineLayoutBuilder()
+-		.AddSetLayout(renderer->DescriptorSets->GetTextureBindlessLayout())
++	Scene.PipelineLayout = PipelineLayoutBuilder()
++		.AddSetLayout(renderer->DescriptorSets->GetTextureSetLayout())
+ 		.AddPushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ScenePushConstants))
+-		.DebugName("SceneBindlessPipelineLayout")
++		.DebugName("ScenePipelineLayout")
+ 		.Create(renderer->Device.get());
+ }
+ 
+@@ -98,7 +98,7 @@ void RenderPassManager::CreatePipelines()
+ 	const std::vector<uint32_t>& vertShader = renderer->Shaders->Scene.VertexShader;
+ 	const std::vector<uint32_t>& fragShader = renderer->Shaders->Scene.FragmentShader;
+ 	const std::vector<uint32_t>& fragShaderAlphaTest = renderer->Shaders->Scene.FragmentShaderAlphaTest;
+-	VulkanPipelineLayout* layout = Scene.BindlessPipelineLayout.get();
++	VulkanPipelineLayout* layout = Scene.PipelineLayout.get();
+ 	static const char* debugName = "ScenePipeline";
+ 
+ 	for (int i = 0; i < 33; i++)
+diff --git a/SurrealEngine/RenderDevice/Vulkan/RenderPassManager.h b/SurrealEngine/RenderDevice/Vulkan/RenderPassManager.h
+index 3a2bb93..00fef9b 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/RenderPassManager.h
++++ b/SurrealEngine/RenderDevice/Vulkan/RenderPassManager.h
+@@ -34,7 +34,7 @@ public:
+ 
+ 	struct
+ 	{
+-		std::unique_ptr<VulkanPipelineLayout> BindlessPipelineLayout;
++		std::unique_ptr<VulkanPipelineLayout> PipelineLayout;
+ 		std::unique_ptr<VulkanRenderPass> RenderPass;
+ 		std::unique_ptr<VulkanRenderPass> RenderPassContinue;
+ 		PipelineState Pipeline[33];
+@@ -67,7 +67,7 @@ public:
+ 	} Postprocess;
+ 
+ private:
+-	void CreateSceneBindlessPipelineLayout();
++	void CreateScenePipelineLayout();
+ 	void CreatePresentPipelineLayout();
+ 	void CreateBloomPipelineLayout();
+ 
+diff --git a/SurrealEngine/RenderDevice/Vulkan/SamplerManager.cpp b/SurrealEngine/RenderDevice/Vulkan/SamplerManager.cpp
+index b286e35..f20adac 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/SamplerManager.cpp
++++ b/SurrealEngine/RenderDevice/Vulkan/SamplerManager.cpp
+@@ -1,5 +1,4 @@
+ 
+-#include "Precomp.h"
+ #include "SamplerManager.h"
+ #include "VulkanRenderDevice.h"
+ #include <surrealgpu/vulkanbuilders.h>
+@@ -35,7 +34,7 @@ void SamplerManager::CreateSceneSamplers()
+ 		builder.Anisotropy(8.0f);
+ 		builder.MipLodBias(renderer->LODBias);
+ 
+-		if (i & 1)
++		if ((i & 1) != 0)
+ 		{
+ 			builder.MinFilter(VK_FILTER_NEAREST);
+ 			builder.MagFilter(VK_FILTER_NEAREST);
+@@ -48,7 +47,7 @@ void SamplerManager::CreateSceneSamplers()
+ 			builder.MipmapMode(VK_SAMPLER_MIPMAP_MODE_LINEAR);
+ 		}
+ 
+-		if (i & 2)
++		if ((i & 2) != 0)
+ 		{
+ 			builder.AddressMode(VK_SAMPLER_ADDRESS_MODE_MIRROR_CLAMP_TO_EDGE);
+ 		}
+diff --git a/SurrealEngine/RenderDevice/Vulkan/ShaderManager.cpp b/SurrealEngine/RenderDevice/Vulkan/ShaderManager.cpp
+index 940c228..8d3a639 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/ShaderManager.cpp
++++ b/SurrealEngine/RenderDevice/Vulkan/ShaderManager.cpp
+@@ -9,19 +9,25 @@ ShaderManager::ShaderManager(VulkanRenderDevice* renderer) : renderer(renderer)
+ {
+ 	GLSLCompiler::Init();
+ 
++	// Without descriptor indexing the scene shaders sample four bound samplers
++	// instead of indexing one unbounded array.
++	std::string sceneDefines = renderer->SupportsBindless ?
++		"#extension GL_EXT_nonuniform_qualifier : enable\r\n#define BINDLESS_TEXTURES\r\n" :
++		std::string();
++
+ 	Scene.VertexShader = GLSLCompiler()
+ 		.Type(ShaderType::Vertex)
+-		.AddSource("shaders/Scene.vert", LoadShaderCode("shaders/Scene.vert", "#extension GL_EXT_nonuniform_qualifier : enable\r\n"))
++		.AddSource("shaders/Scene.vert", LoadShaderCode("shaders/Scene.vert", sceneDefines))
+ 		.Compile(renderer->Device.get());
+ 
+ 	Scene.FragmentShader = GLSLCompiler()
+ 		.Type(ShaderType::Fragment)
+-		.AddSource("shaders/Scene.frag", LoadShaderCode("shaders/Scene.frag", "#extension GL_EXT_nonuniform_qualifier : enable\r\n#"))
++		.AddSource("shaders/Scene.frag", LoadShaderCode("shaders/Scene.frag", sceneDefines))
+ 		.Compile(renderer->Device.get());
+ 
+ 	Scene.FragmentShaderAlphaTest = GLSLCompiler()
+ 		.Type(ShaderType::Fragment)
+-		.AddSource("shaders/Scene.frag", LoadShaderCode("shaders/Scene.frag", "#extension GL_EXT_nonuniform_qualifier : enable\r\n#define ALPHATEST"))
++		.AddSource("shaders/Scene.frag", LoadShaderCode("shaders/Scene.frag", sceneDefines + "#define ALPHATEST\r\n"))
+ 		.Compile(renderer->Device.get());
+ 
+ 	Postprocess.VertexShader = GLSLCompiler()
+diff --git a/SurrealEngine/RenderDevice/Vulkan/TextureUploader.cpp b/SurrealEngine/RenderDevice/Vulkan/TextureUploader.cpp
+index c925f9a..5d7cc29 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/TextureUploader.cpp
++++ b/SurrealEngine/RenderDevice/Vulkan/TextureUploader.cpp
+@@ -1,14 +1,13 @@
+ 
+ #include "Precomp.h"
+ #include "TextureUploader.h"
+-#include "Packages/Engine/Resources/Textures/UTexture.h"
+ #include "RenderDevice/RenderDevice.h"
+ 
+ #ifdef USE_SSE2
+ #include <immintrin.h>
+ #endif
+ 
+-TextureUploader* TextureUploader::GetUploader(TextureFormat format)
++TextureUploader* TextureUploader::GetUploader(TextureFormat format, VkPhysicalDevice physicalDevice)
+ {
+ 	static std::map<TextureFormat, std::unique_ptr<TextureUploader>> Uploaders;
+ 	if (Uploaders.empty())
+@@ -172,7 +171,40 @@ TextureUploader* TextureUploader::GetUploader(TextureFormat format)
+ 
+ 	auto it = Uploaders.find(format);
+ 	if (it != Uploaders.end())
+-		return it->second.get();
++	{
++		if (physicalDevice == VK_NULL_HANDLE || !it->second)
++			return it->second.get();
++
++		// The canonical format exists, but the GPU may not be able to sample it.
++		// Desktop BCn formats and RGB8 are optional in Vulkan and missing on
++		// several mobile GPUs (the PowerVR Rogue GE8300, for one). Sampling an
++		// unsupported format is undefined behavior and produces garbage, so
++		// substitute a CPU decoder writing a format the device does support.
++		// A format that samples but cannot be linearly filtered is just as broken
++		// with the engine's linear samplers, so it falls back the same way (the
++		// GE8300 samples RGBA32F but cannot filter it, which turns every lightmap
++		// and fog map into speckle).
++		VkFormatProperties props = {};
++		vkGetPhysicalDeviceFormatProperties(physicalDevice, it->second->GetVkFormat(), &props);
++		if ((props.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT) &&
++			(props.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT))
++			return it->second.get();
++
++		static std::map<TextureFormat, std::unique_ptr<TextureUploader>> Decoders;
++		if (Decoders.empty())
++		{
++			Decoders[TextureFormat::BC1].reset(new TextureUploader_BC1_Decode());
++			Decoders[TextureFormat::BC1_PA].reset(new TextureUploader_BC1_Decode());
++			Decoders[TextureFormat::BC2].reset(new TextureUploader_BC2_Decode());
++			Decoders[TextureFormat::BC3].reset(new TextureUploader_BC3_Decode());
++			Decoders[TextureFormat::BC4].reset(new TextureUploader_BC4_Decode());
++			Decoders[TextureFormat::BC5].reset(new TextureUploader_BC5_Decode());
++			Decoders[TextureFormat::RGB8].reset(new TextureUploader_RGB8_Decode());
++			Decoders[TextureFormat::RGBA32_F].reset(new TextureUploader_RGBA32F_Decode());
++		}
++		auto dec = Decoders.find(format);
++		return dec != Decoders.end() ? dec->second.get() : nullptr;
++	}
+ 	else
+ 		return nullptr;
+ }
+@@ -471,3 +503,267 @@ void TextureUploader_2DBlock::UploadRect(void* d, UnrealMipmap* mip, int x, int
+ 		src += pitch;
+ 	}
+ }
++
++/////////////////////////////////////////////////////////////////////////////
++
++// CPU decoders for GPUs that cannot sample a format natively. Each writes a
++// simple unpacked format instead of the block compressed one.
++
++static void DecodeAlphaBlock(const uint8_t* src, uint8_t out[16])
++{
++	uint8_t a0 = src[0];
++	uint8_t a1 = src[1];
++	uint8_t p[8];
++	p[0] = a0;
++	p[1] = a1;
++	if (a0 > a1)
++	{
++		p[2] = (uint8_t)((6 * a0 + a1) / 7);
++		p[3] = (uint8_t)((5 * a0 + 2 * a1) / 7);
++		p[4] = (uint8_t)((4 * a0 + 3 * a1) / 7);
++		p[5] = (uint8_t)((3 * a0 + 4 * a1) / 7);
++		p[6] = (uint8_t)((2 * a0 + 5 * a1) / 7);
++		p[7] = (uint8_t)((a0 + 6 * a1) / 7);
++	}
++	else
++	{
++		p[2] = (uint8_t)((4 * a0 + a1) / 5);
++		p[3] = (uint8_t)((3 * a0 + 2 * a1) / 5);
++		p[4] = (uint8_t)((2 * a0 + 3 * a1) / 5);
++		p[5] = (uint8_t)((a0 + 4 * a1) / 5);
++		p[6] = 0;
++		p[7] = 255;
++	}
++	uint64_t idx = 0;
++	for (int i = 0; i < 6; i++)
++		idx |= (uint64_t)src[2 + i] << (8 * i);
++	for (int i = 0; i < 16; i++)
++		out[i] = p[(idx >> (3 * i)) & 7];
++}
++
++static void DecodeColorBlock(const uint8_t* src, uint8_t* dst, int dstWidth, bool oneBitAlpha)
++{
++	uint16_t c0 = src[0] | (src[1] << 8);
++	uint16_t c1 = src[2] | (src[3] << 8);
++	uint32_t idx = src[4] | (src[5] << 8) | (src[6] << 16) | ((uint32_t)src[7] << 24);
++
++	uint8_t r[4], g[4], b[4], a[4];
++	r[0] = (uint8_t)(((c0 >> 11) << 3) | ((c0 >> 11) >> 2));
++	g[0] = (uint8_t)((((c0 >> 5) & 63) << 2) | (((c0 >> 5) & 63) >> 4));
++	b[0] = (uint8_t)(((c0 & 31) << 3) | ((c0 & 31) >> 2));
++	r[1] = (uint8_t)(((c1 >> 11) << 3) | ((c1 >> 11) >> 2));
++	g[1] = (uint8_t)((((c1 >> 5) & 63) << 2) | (((c1 >> 5) & 63) >> 4));
++	b[1] = (uint8_t)(((c1 & 31) << 3) | ((c1 & 31) >> 2));
++
++	if (oneBitAlpha && c0 <= c1)
++	{
++		// DXTC1 transparency: index 3 is a fully transparent texel.
++		r[2] = (uint8_t)((r[0] + r[1]) / 2);
++		g[2] = (uint8_t)((g[0] + g[1]) / 2);
++		b[2] = (uint8_t)((b[0] + b[1]) / 2);
++		a[2] = 255;
++		r[3] = g[3] = b[3] = 0;
++		a[3] = 0;
++	}
++	else
++	{
++		r[2] = (uint8_t)((2 * r[0] + r[1]) / 3);
++		g[2] = (uint8_t)((2 * g[0] + g[1]) / 3);
++		b[2] = (uint8_t)((2 * b[0] + b[1]) / 3);
++		r[3] = (uint8_t)((r[0] + 2 * r[1]) / 3);
++		g[3] = (uint8_t)((g[0] + 2 * g[1]) / 3);
++		b[3] = (uint8_t)((b[0] + 2 * b[1]) / 3);
++		a[2] = a[3] = 255;
++	}
++	a[0] = a[1] = 255;
++
++	for (int i = 0; i < 16; i++)
++	{
++		int t = (idx >> (2 * i)) & 3;
++		dst[i * 4 + 0] = r[t];
++		dst[i * 4 + 1] = g[t];
++		dst[i * 4 + 2] = b[t];
++		dst[i * 4 + 3] = a[t];
++	}
++}
++
++// Decode a block compressed mip range into dst (texels, row pitch w * dstbytes).
++// x and y must be block aligned. outTexels gets one decoded texel per pixel.
++template<int DstBytes, typename BlockToTexels>
++static void UploadDecoded(void* d, UnrealMipmap* mip, int x, int y, int w, int h, int blockBytes, int blockX, int blockY, BlockToTexels blockToTexels)
++{
++	int bx0 = x / blockX;
++	int by0 = y / blockY;
++	int bx1 = (x + w + blockX - 1) / blockX;
++	int by1 = (y + h + blockY - 1) / blockY;
++	int blockCols = (mip->Width + blockX - 1) / blockX;
++	int pitch = blockCols * blockBytes;
++	uint8_t* dst = (uint8_t*)d;
++	for (int by = by0; by < by1; by++)
++	{
++		for (int bx = bx0; bx < bx1; bx++)
++		{
++			const uint8_t* block = mip->Data.data() + ((size_t)by * blockCols + bx) * blockBytes;
++			uint8_t texels[16 * 4]; // up to 4x4 RGBA8
++			blockToTexels(block, texels);
++			for (int ty = 0; ty < blockY; ty++)
++			{
++				int gy = by * blockY + ty - y;
++				if (gy < 0 || gy >= h) continue;
++				for (int tx = 0; tx < blockX; tx++)
++				{
++					int gx = bx * blockX + tx - x;
++					if (gx < 0 || gx >= w) continue;
++					memcpy(dst + ((size_t)gy * w + gx) * DstBytes, texels + ((size_t)ty * blockX + tx) * DstBytes, DstBytes);
++				}
++			}
++		}
++	}
++}
++
++/////////////////////////////////////////////////////////////////////////////
++
++int TextureUploader_BC1_Decode::GetUploadSize(int x, int y, int w, int h)
++{
++	return w * h * 4;
++}
++
++void TextureUploader_BC1_Decode::UploadRect(void* d, UnrealMipmap* mip, int x, int y, int w, int h, TextureColor* palette, bool masked)
++{
++	UploadDecoded<4>(d, mip, x, y, w, h, 8, 4, 4, [](const uint8_t* block, uint8_t* texels) {
++		DecodeColorBlock(block, texels, 4, true);
++	});
++}
++
++/////////////////////////////////////////////////////////////////////////////
++
++int TextureUploader_BC2_Decode::GetUploadSize(int x, int y, int w, int h)
++{
++	return w * h * 4;
++}
++
++void TextureUploader_BC2_Decode::UploadRect(void* d, UnrealMipmap* mip, int x, int y, int w, int h, TextureColor* palette, bool masked)
++{
++	UploadDecoded<4>(d, mip, x, y, w, h, 16, 4, 4, [](const uint8_t* block, uint8_t* texels)
++	{
++		DecodeColorBlock(block + 8, texels, 4, false);
++		// The first eight bytes hold four alpha bits per texel, low nibble first.
++		for (int i = 0; i < 16; i++)
++		{
++			uint8_t bits = block[i / 2];
++			texels[i * 4 + 3] = (i & 1) ? (bits >> 4) : (bits & 15);
++			texels[i * 4 + 3] = (uint8_t)((texels[i * 4 + 3] << 4) | texels[i * 4 + 3]);
++		}
++	});
++}
++
++/////////////////////////////////////////////////////////////////////////////
++
++int TextureUploader_BC3_Decode::GetUploadSize(int x, int y, int w, int h)
++{
++	return w * h * 4;
++}
++
++void TextureUploader_BC3_Decode::UploadRect(void* d, UnrealMipmap* mip, int x, int y, int w, int h, TextureColor* palette, bool masked)
++{
++	UploadDecoded<4>(d, mip, x, y, w, h, 16, 4, 4, [](const uint8_t* block, uint8_t* texels)
++	{
++		DecodeColorBlock(block + 8, texels, 4, false);
++		uint8_t alpha[16];
++		DecodeAlphaBlock(block, alpha);
++		for (int i = 0; i < 16; i++)
++			texels[i * 4 + 3] = alpha[i];
++	});
++}
++
++/////////////////////////////////////////////////////////////////////////////
++
++int TextureUploader_BC4_Decode::GetUploadSize(int x, int y, int w, int h)
++{
++	return w * h;
++}
++
++void TextureUploader_BC4_Decode::UploadRect(void* d, UnrealMipmap* mip, int x, int y, int w, int h, TextureColor* palette, bool masked)
++{
++	UploadDecoded<1>(d, mip, x, y, w, h, 8, 4, 4, [](const uint8_t* block, uint8_t* texels)
++	{
++		DecodeAlphaBlock(block, texels);
++	});
++}
++
++/////////////////////////////////////////////////////////////////////////////
++
++int TextureUploader_BC5_Decode::GetUploadSize(int x, int y, int w, int h)
++{
++	return w * h * 2;
++}
++
++void TextureUploader_BC5_Decode::UploadRect(void* d, UnrealMipmap* mip, int x, int y, int w, int h, TextureColor* palette, bool masked)
++{
++	UploadDecoded<2>(d, mip, x, y, w, h, 16, 4, 4, [](const uint8_t* block, uint8_t* texels)
++	{
++		uint8_t r[16], g[16];
++		DecodeAlphaBlock(block, r);
++		DecodeAlphaBlock(block + 8, g);
++		for (int i = 0; i < 16; i++)
++		{
++			texels[i * 2 + 0] = r[i];
++			texels[i * 2 + 1] = g[i];
++		}
++	});
++}
++
++/////////////////////////////////////////////////////////////////////////////
++
++int TextureUploader_RGB8_Decode::GetUploadSize(int x, int y, int w, int h)
++{
++	return w * h * 4;
++}
++
++void TextureUploader_RGB8_Decode::UploadRect(void* d, UnrealMipmap* mip, int x, int y, int w, int h, TextureColor* palette, bool masked)
++{
++	int pitch = mip->Width * 3;
++	uint8_t* src = mip->Data.data() + (size_t)x * 3 + (size_t)y * pitch;
++	uint8_t* dst = (uint8_t*)d;
++	for (int i = 0; i < h; i++)
++	{
++		for (int j = 0; j < w; j++)
++		{
++			dst[j * 4 + 0] = src[j * 3 + 0];
++			dst[j * 4 + 1] = src[j * 3 + 1];
++			dst[j * 4 + 2] = src[j * 3 + 2];
++			dst[j * 4 + 3] = 255;
++		}
++		dst += (size_t)w * 4;
++		src += pitch;
++	}
++}
++
++/////////////////////////////////////////////////////////////////////////////
++
++int TextureUploader_RGBA32F_Decode::GetUploadSize(int x, int y, int w, int h)
++{
++	return w * h * 4;
++}
++
++void TextureUploader_RGBA32F_Decode::UploadRect(void* d, UnrealMipmap* mip, int x, int y, int w, int h, TextureColor* palette, bool masked)
++{
++	int pitch = mip->Width * 16;
++	float* src = (float*)(mip->Data.data() + (size_t)x * 16 + (size_t)y * pitch);
++	uint8_t* dst = (uint8_t*)d;
++	for (int i = 0; i < h; i++)
++	{
++		for (int j = 0; j < w; j++)
++		{
++			const float* c = src + (size_t)j * 4;
++			for (int ch = 0; ch < 4; ch++)
++			{
++				float v = c[ch];
++				v = v < 0.0f ? 0.0f : (v > 1.0f ? 1.0f : v);
++				dst[j * 4 + ch] = (uint8_t)(v * 255.0f + 0.5f);
++			}
++		}
++		dst += (size_t)w * 4;
++		src = (float*)((uint8_t*)src + pitch);
++	}
++}
+diff --git a/SurrealEngine/RenderDevice/Vulkan/TextureUploader.h b/SurrealEngine/RenderDevice/Vulkan/TextureUploader.h
+index 8705efb..6d6162e 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/TextureUploader.h
++++ b/SurrealEngine/RenderDevice/Vulkan/TextureUploader.h
+@@ -18,7 +18,13 @@ public:
+ 
+ 	VkFormat GetVkFormat() const { return Format; }
+ 
+-	static TextureUploader* GetUploader(TextureFormat format);
++	// With physicalDevice == VK_NULL_HANDLE this returns the canonical uploader
++	// for the format. With a device it first checks that the GPU can actually
++	// sample the format (desktop BCn and RGB8 are not universally supported on
++	// mobile GPUs) and substitutes a CPU-decoding uploader where it can't. A
++	// format without a decoder returns nullptr, which the upload path turns
++	// into a white fallback texture.
++	static TextureUploader* GetUploader(TextureFormat format, VkPhysicalDevice physicalDevice = VK_NULL_HANDLE);
+ 
+ private:
+ 	VkFormat Format;
+@@ -106,3 +112,66 @@ private:
+ 	int BlockY;
+ 	int BytesPerBlock;
+ };
++
++// CPU-decoding uploaders for GPUs that cannot sample a format natively.
++// They all decode into simple unpacked formats mobile GPUs do support.
++
++class TextureUploader_BC1_Decode : public TextureUploader
++{
++public:
++	TextureUploader_BC1_Decode() : TextureUploader(VK_FORMAT_R8G8B8A8_UNORM) { }
++	int GetUploadSize(int x, int y, int w, int h) override;
++	void UploadRect(void* dst, UnrealMipmap* mip, int x, int y, int w, int h, TextureColor* palette, bool masked) override;
++};
++
++class TextureUploader_BC2_Decode : public TextureUploader
++{
++public:
++	TextureUploader_BC2_Decode() : TextureUploader(VK_FORMAT_R8G8B8A8_UNORM) { }
++	int GetUploadSize(int x, int y, int w, int h) override;
++	void UploadRect(void* dst, UnrealMipmap* mip, int x, int y, int w, int h, TextureColor* palette, bool masked) override;
++};
++
++class TextureUploader_BC3_Decode : public TextureUploader
++{
++public:
++	TextureUploader_BC3_Decode() : TextureUploader(VK_FORMAT_R8G8B8A8_UNORM) { }
++	int GetUploadSize(int x, int y, int w, int h) override;
++	void UploadRect(void* dst, UnrealMipmap* mip, int x, int y, int w, int h, TextureColor* palette, bool masked) override;
++};
++
++class TextureUploader_BC4_Decode : public TextureUploader
++{
++public:
++	TextureUploader_BC4_Decode() : TextureUploader(VK_FORMAT_R8_UNORM) { }
++	int GetUploadSize(int x, int y, int w, int h) override;
++	void UploadRect(void* dst, UnrealMipmap* mip, int x, int y, int w, int h, TextureColor* palette, bool masked) override;
++};
++
++class TextureUploader_BC5_Decode : public TextureUploader
++{
++public:
++	TextureUploader_BC5_Decode() : TextureUploader(VK_FORMAT_R8G8_UNORM) { }
++	int GetUploadSize(int x, int y, int w, int h) override;
++	void UploadRect(void* dst, UnrealMipmap* mip, int x, int y, int w, int h, TextureColor* palette, bool masked) override;
++};
++
++class TextureUploader_RGB8_Decode : public TextureUploader
++{
++public:
++	TextureUploader_RGB8_Decode() : TextureUploader(VK_FORMAT_R8G8B8A8_UNORM) { }
++	int GetUploadSize(int x, int y, int w, int h) override;
++	void UploadRect(void* dst, UnrealMipmap* mip, int x, int y, int w, int h, TextureColor* palette, bool masked) override;
++};
++
++class TextureUploader_RGBA32F_Decode : public TextureUploader
++{
++public:
++	// For GPUs that either cannot sample RGBA32F or cannot linearly filter it
++	// (both are required for correct results and the PowerVR Rogue has neither).
++	// Lightmaps and fog maps clamp their result to 0..1 in the shader, so the
++	// 8-bit decode loses nothing.
++	TextureUploader_RGBA32F_Decode() : TextureUploader(VK_FORMAT_R8G8B8A8_UNORM) { }
++	int GetUploadSize(int x, int y, int w, int h) override;
++	void UploadRect(void* dst, UnrealMipmap* mip, int x, int y, int w, int h, TextureColor* palette, bool masked) override;
++};
+diff --git a/SurrealEngine/RenderDevice/Vulkan/UploadManager.cpp b/SurrealEngine/RenderDevice/Vulkan/UploadManager.cpp
+index 4d7dcaf..09fbaae 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/UploadManager.cpp
++++ b/SurrealEngine/RenderDevice/Vulkan/UploadManager.cpp
+@@ -20,7 +20,7 @@ void UploadManager::ClearCache()
+ 
+ bool UploadManager::SupportsTextureFormat(TextureFormat Format) const
+ {
+-	return TextureUploader::GetUploader(Format);
++	return TextureUploader::GetUploader(Format, renderer->Device->PhysicalDevice.Device);
+ }
+ 
+ void UploadManager::UploadTexture(CachedTexture* tex, const TextureInfo& Info, bool masked)
+@@ -29,7 +29,7 @@ void UploadManager::UploadTexture(CachedTexture* tex, const TextureInfo& Info, b
+ 	int height = Info.VSize;
+ 	int mipcount = Info.NumMips;
+ 
+-	TextureUploader* uploader = TextureUploader::GetUploader(Info.Format);
++	TextureUploader* uploader = TextureUploader::GetUploader(Info.Format, renderer->Device->PhysicalDevice.Device);
+ 
+ 	if ((uint32_t)Info.USize > renderer->Device.get()->PhysicalDevice.Properties.Properties.limits.maxImageDimension2D ||
+ 		(uint32_t)Info.VSize > renderer->Device.get()->PhysicalDevice.Properties.Properties.limits.maxImageDimension2D ||
+@@ -69,7 +69,7 @@ void UploadManager::UploadTexture(CachedTexture* tex, const TextureInfo& Info, b
+ 
+ void UploadManager::UploadTextureRect(CachedTexture* tex, const TextureInfo& Info, int x, int y, int w, int h)
+ {
+-	TextureUploader* uploader = TextureUploader::GetUploader(Info.Format);
++	TextureUploader* uploader = TextureUploader::GetUploader(Info.Format, renderer->Device->PhysicalDevice.Device);
+ 	if (!uploader || Info.NumMips < 1 || x < 0 || y < 0 || w <= 0 || h <= 0 || x + w > Info.Mips[0].Width || y + h > Info.Mips[0].Height || Info.Mips[0].Data.empty())
+ 		return;
+ 
+diff --git a/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.cpp b/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.cpp
+index 0c7b3bb..c642bae 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.cpp
++++ b/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.cpp
+@@ -9,6 +9,7 @@
+ #include <surrealgpu/vulkansurface.h>
+ #include <surrealwidgets/core/widget.h>
+ #include <cmath>
++#include <cstdlib>
+ #include <stdexcept>
+ 
+ VulkanRenderDevice::VulkanRenderDevice(Widget* InViewport)
+@@ -31,18 +32,20 @@ VulkanRenderDevice::VulkanRenderDevice(Widget* InViewport)
+ 		deviceBuilder.OptionalDescriptorIndexing();
+ 		deviceBuilder.OptionalRayQuery();
+ 		deviceBuilder.Surface(surface);
+-		deviceBuilder.RequireExtension(VK_EXT_DESCRIPTOR_INDEXING_EXTENSION_NAME);
+ 		deviceBuilder.RequireExtension(VK_KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME);
+ 		deviceBuilder.SelectDevice(VkDeviceIndex);
+ 		Device = deviceBuilder.Create(surface->Instance);
+ 
+-		bool supportsBindless =
++		// Descriptor indexing is missing on several mobile GPUs (PowerVR Rogue, for one).
++		// Without it the renderer falls back to a descriptor set per texture combination.
++		SupportsBindless =
+ 			Device->EnabledFeatures.DescriptorIndexing.descriptorBindingPartiallyBound &&
+ 			Device->EnabledFeatures.DescriptorIndexing.runtimeDescriptorArray &&
+ 			Device->EnabledFeatures.DescriptorIndexing.shaderSampledImageArrayNonUniformIndexing;
+ 
+-		if (!supportsBindless)
+-			throw std::runtime_error("VulkanDrv requires a GPU that supports bindless textures!");
++		// SURREAL_VK_NO_BINDLESS exercises that fallback on hardware that doesn't need it.
++		if (std::getenv("SURREAL_VK_NO_BINDLESS"))
++			SupportsBindless = false;
+ 
+ 		Commands.reset(new CommandBufferManager(this));
+ 		Samplers.reset(new SamplerManager(this));
+@@ -73,6 +76,7 @@ VulkanRenderDevice::VulkanRenderDevice(Widget* InViewport)
+ 		LogMessage(std::string("Vulkan device: ") + props.deviceName);
+ 		LogMessage("Vulkan device type: " + deviceType);
+ 		LogMessage("Vulkan version: " + apiVersion + " (api) " + driverVersion + " (driver)");
++		LogMessage(std::string("Vulkan textures: ") + (SupportsBindless ? "bindless" : "per-batch descriptor sets (no descriptor indexing)"));
+ 	}
+ 	catch (const std::exception& e)
+ 	{
+@@ -110,7 +114,8 @@ void VulkanError(const char* text)
+ 
+ void VulkanRenderDevice::SubmitAndWait(bool present, int presentWidth, int presentHeight, bool presentFullscreen)
+ {
+-	DescriptorSets->UpdateBindlessSet();
++	if (SupportsBindless)
++		DescriptorSets->UpdateBindlessSet();
+ 
+ 	Commands->SubmitCommands(present, presentWidth, presentHeight, presentFullscreen);
+ 
+@@ -274,6 +279,7 @@ void VulkanRenderDevice::Unlock(bool Blit)
+ 	SubmitAndWait(Blit ? true : false, windowWidth, windowHeight, Viewport->IsFullscreen());
+ 
+ 	Batch.Pipeline = nullptr;
++	Batch.DescriptorSet = nullptr;
+ 
+ 	if (Samplers->LODBias != LODBias)
+ 	{
+@@ -348,9 +354,9 @@ void VulkanRenderDevice::DrawBatch(VulkanCommandBuffer* cmdbuffer)
+ 			cmdbuffer->setViewport(0, 1, &viewportdesc);
+ 		}
+ 
+-		auto layout = RenderPasses->Scene.BindlessPipelineLayout.get();
++		auto layout = RenderPasses->Scene.PipelineLayout.get();
+ 		cmdbuffer->bindPipeline(VK_PIPELINE_BIND_POINT_GRAPHICS, Batch.Pipeline->Pipeline.get());
+-		cmdbuffer->bindDescriptorSet(VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, DescriptorSets->GetBindlessSet());
++		cmdbuffer->bindDescriptorSet(VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, Batch.DescriptorSet);
+ 		cmdbuffer->pushConstants(layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(ScenePushConstants), &pushconstants);
+ 		cmdbuffer->setBlendConstants(Batch.BlendConstants);
+ 		cmdbuffer->drawIndexed((uint32_t)icount, 1, (uint32_t)Batch.SceneIndexStart, 0, 0);
+@@ -927,7 +933,6 @@ void VulkanRenderDevice::EndFlash()
+ 	{
+ 		vec4 color(FlashFog.x, FlashFog.y, FlashFog.z, 1.0f - std::min(FlashScale.x * 2.0f, 1.0f));
+ 		vec2 zero2(0.0f);
+-		ivec4 zero4(0);
+ 
+ 		DrawBatch(Commands->GetDrawCommands());
+ 		pushconstants.objectToProjection = mat4::identity();
+@@ -936,6 +941,9 @@ void VulkanRenderDevice::EndFlash()
+ 
+ 		SetPipeline(RenderPasses->GetEndFlashPipeline());
+ 
++		// Nothing is sampled here, but a set still has to be bound for the batch.
++		ivec4 zero4 = GetTextureIndexes(PF_Highlighted, nullptr);
++
+ 		auto alloc = ReserveVertices(4, 6);
+ 		if (alloc.vptr)
+ 		{
+@@ -1002,6 +1010,7 @@ void VulkanRenderDevice::PrecacheTexture(TextureInfo& Info, uint32_t PolyFlags)
+ 
+ void VulkanRenderDevice::ClearTextureCache()
+ {
++	Batch.DescriptorSet = nullptr;
+ 	DescriptorSets->ClearCache();
+ 	Textures->ClearCache();
+ 	Uploads->ClearCache();
+diff --git a/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.h b/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.h
+index d84b42b..a629e9f 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.h
++++ b/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.h
+@@ -47,6 +47,10 @@ public:
+ 
+ 	std::shared_ptr<VulkanDevice> Device;
+ 
++	// False on GPUs without descriptor indexing. The renderer then binds one
++	// descriptor set per texture combination instead of indexing a texture array.
++	bool SupportsBindless = false;
++
+ 	std::unique_ptr<CommandBufferManager> Commands;
+ 
+ 	std::unique_ptr<SamplerManager> Samplers;
+@@ -138,6 +142,8 @@ private:
+ 	bool IsLocked = false;
+ 
+ 	void SetPipeline(PipelineState* pipeline);
++	void SetTextureSet(VulkanDescriptorSet* descriptorSet);
++	VulkanDescriptorSet* GetTextureSet(uint32_t PolyFlags, CachedTexture* tex, CachedTexture* lightmap, CachedTexture* macrotex, CachedTexture* detailtex, bool clamp);
+ 	ivec4 GetTextureIndexes(uint32_t PolyFlags, CachedTexture* tex, bool clamp = false);
+ 	ivec4 GetTextureIndexes(uint32_t PolyFlags, CachedTexture* tex, CachedTexture* lightmap, CachedTexture* macrotex, CachedTexture* detailtex);
+ 	void DrawBatch(VulkanCommandBuffer* cmdbuffer);
+@@ -149,6 +155,7 @@ private:
+ 	{
+ 		size_t SceneIndexStart = 0;
+ 		PipelineState* Pipeline = nullptr;
++		VulkanDescriptorSet* DescriptorSet = nullptr;
+ 		float BlendConstants[4] = {};
+ 	} Batch;
+ 
+@@ -182,13 +189,47 @@ inline void VulkanRenderDevice::SetPipeline(PipelineState* pipeline)
+ 	}
+ }
+ 
++inline void VulkanRenderDevice::SetTextureSet(VulkanDescriptorSet* descriptorSet)
++{
++	if (descriptorSet != Batch.DescriptorSet)
++	{
++		DrawBatch(Commands->GetDrawCommands());
++		Batch.DescriptorSet = descriptorSet;
++	}
++}
++
++inline VulkanDescriptorSet* VulkanRenderDevice::GetTextureSet(uint32_t PolyFlags, CachedTexture* tex, CachedTexture* lightmap, CachedTexture* macrotex, CachedTexture* detailtex, bool clamp)
++{
++	if (DescriptorSets->IsTextureSetCacheFull())
++	{
++		// Dropping the cache frees sets the pending commands still reference, so drain first.
++		FlushDrawBatchAndWait();
++		DescriptorSets->ClearCache();
++		Batch.DescriptorSet = nullptr;
++	}
++	return DescriptorSets->GetTextureSet(PolyFlags, tex, lightmap, macrotex, detailtex, clamp);
++}
++
+ inline ivec4 VulkanRenderDevice::GetTextureIndexes(uint32_t PolyFlags, CachedTexture* tex, bool clamp)
+ {
++	if (!SupportsBindless)
++	{
++		SetTextureSet(GetTextureSet(PolyFlags, tex, nullptr, nullptr, nullptr, clamp));
++		return ivec4(0);
++	}
++
++	Batch.DescriptorSet = DescriptorSets->GetBindlessSet();
+ 	return ivec4(DescriptorSets->GetTextureArrayIndex(PolyFlags, tex, clamp), 0, 0, 0);
+ }
+ 
+ inline ivec4 VulkanRenderDevice::GetTextureIndexes(uint32_t PolyFlags, CachedTexture* tex, CachedTexture* lightmap, CachedTexture* macrotex, CachedTexture* detailtex)
+ {
++	if (!SupportsBindless)
++	{
++		SetTextureSet(GetTextureSet(PolyFlags, tex, lightmap, macrotex, detailtex, false));
++		return ivec4(0);
++	}
++
+ 	if (DescriptorSets->IsTextureArrayFull())
+ 	{
+ 		FlushDrawBatchAndWait();
+@@ -196,6 +237,8 @@ inline ivec4 VulkanRenderDevice::GetTextureIndexes(uint32_t PolyFlags, CachedTex
+ 		Textures->ClearAllBindlessIndexes();
+ 	}
+ 
++	Batch.DescriptorSet = DescriptorSets->GetBindlessSet();
++
+ 	ivec4 textureBinds;
+ 	textureBinds.x = DescriptorSets->GetTextureArrayIndex(PolyFlags, tex);
+ 	textureBinds.y = DescriptorSets->GetTextureArrayIndex(0, macrotex);
+-- 
+2.55.0
+
