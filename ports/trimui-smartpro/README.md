@@ -5,9 +5,9 @@ handheld (4× Cortex-A53, PowerVR GE8300) running spruceOS. Cross-built from a
 PC; the launcher is the app the spruceOS menu starts.
 
 **Status.** The launcher and the engine both run on the device. The intro plays
-at ~30 FPS; Liberty Island's opening firefight at 4.5 FPS (2.2 before engine
-patches 0004–0008), CPU-bound on NPC AI script and render CPU -- see
-[Performance](#performance).
+at ~30 FPS; Liberty Island's opening firefight at 4.7 FPS, 5.2 at 853×480 (2.2
+before engine patches 0004–0010), CPU-bound on NPC AI script and render CPU --
+see [Performance](#performance).
 
 | File | What it is |
 |---|---|
@@ -189,6 +189,7 @@ The System tab shows the engine and script logs on screen.
 | Deploy with checksums (2026-09-22) | `dx.sh deploy` built and staged, sent only the one changed file, kept the device's copy in `.prev-<date-time>` and verified all 13 files; `profile-map.sh` applied `launcher.ini`'s Overclock (four cores, 2.0 GHz) through `port-hooks.sh` and restored power-save after |
 | CPU/GPU overlap, engine patch 0004 (2026-09-22) | Liberty Island renders correctly mid-fight (framebuffer capture); GPU wait ~76 → ~0.2 ms. Synchronization validation clean on the desktop build, bindless and per-batch paths |
 | Lit-span lightmaps, engine patch 0005 (2026-09-22) | Liberty Island's dock pixel-identical before and after (framebuffer captures); lightmaps ~98 → ~11 ms. On the desktop, a temporary walk over every texel found none in reach outside a span |
+| Occlusion grid sized to the image, engine patch 0010 (2026-09-23) | The dock pixel-identical to the captures before it, at 1280×720 and at 853×480; ~830 surfaces pass visibility where ~740 did, all hidden by the depth test |
 | Render scale, engine patch 0009 (2026-09-23) | Liberty Island at 960×540 and 853×480 fills the panel, scaled up; the HUD draws larger (framebuffer captures). Synchronization validation clean on the desktop at scale 0.667 |
 | Script calls and Distant AI, engine patches 0006–0008 (2026-09-22) | Liberty Island runs, 4.2 → 4.5 FPS with Distant AI; ~38 pawns a frame skip their thinking and the scene renders normally (framebuffer capture). No script errors on the desktop. Whether out-of-sight NPCs still behave is **not yet judged by hand** |
 
@@ -212,8 +213,9 @@ Measured on the device with the frame-time instrumentation in
 run with `scripts/dx.sh profile trimui-smartpro [seconds] [label] [cpu] [turn]
 [map]`. The script applies the CPU mode `launcher.ini` names, through the
 app's own `port-hooks.sh`, so a profile measures what playing gets; its
-header lists the arguments, and `SHOT=<seconds>` brings the screen back as a
-PNG under `build/trimui-smartpro/profile/`:
+header lists the arguments. The whole log comes back to
+`build/trimui-smartpro/profile/perf-<label>.log`, and `SHOT=<seconds>` brings
+the screen back beside it as a PNG:
 
 | Scene, CPU mode | FPS | Frame | Game tick | Render CPU | GPU wait |
 | --- | --- | --- | --- | --- | --- |
@@ -231,34 +233,35 @@ PNG under `build/trimui-smartpro/profile/`:
 | The same, AI level of detail on (0008) | 4.5 | ~222 ms | ~104 | ~115 | ~0.2 |
 | The same at 960×540 (render scale 0.75, 0009) | 4.7 | ~214 ms | ~94 | ~118 | ~0.2 |
 | The same at 853×480 (render scale 0.667, 0009) | 4.8 | ~208 ms | ~90 | ~115 | ~0.2 |
+| Native, the occlusion grid sized to the image (0010) | 4.7 | ~213 ms | ~102 | ~108 | ~0.2 |
+| **853×480, the same** | **5.2** | **~191 ms** | **~87** | **~101** | **~0.2** |
 
 (Times in ms per frame, averaged over 60 frames. The performance-mode fight
 rows had the per-class or per-function hooks on, which add their own cost; the
 overclock rows (2026-09-22) had them off. Overclock is the owner's mode from
 then on.)
 
-The bold row is where the performance work started; each row after it is one
-engine patch, and what each found is in
-[`engine-patches/README.md`](../../engine-patches/README.md). The last two are
-the Video tab's Resolution below native: the GPU's time was already hidden, so
-the gain is the tick's, which shares memory with the GPU -- and not
-visibility's, which draws its occlusion buffer at a fixed 2048×1080 whatever
-the resolution. Where a frame goes at native resolution (~222 ms, facing the
-fight in overclock):
+The first bold row is where the performance work started, the last is the
+best so far; each row between is one engine patch, and what each found is in
+[`engine-patches/README.md`](../../engine-patches/README.md). The rows at
+960×540 and 853×480 are the Video tab's Resolution below native: the GPU's
+time was already hidden, so the gain is the tick's, which shares memory with
+the GPU, and, since patch 0010, the occlusion grid's. Where a frame goes at
+native resolution (~213 ms, facing the fight in overclock):
 
-- **Game tick ~104 ms**, almost all NPC AI -- Deus Ex's `ScriptedPawn` script.
+- **Game tick ~102 ms**, almost all NPC AI -- Deus Ex's `ScriptedPawn` script.
   ~61 ms runs under script calls (outermost `Frame::Call`; state code runs
   outside that, so script's real share is higher), about a third of it one
   function, `ScriptedPawn.CheckEnemyPresence`; ~13,500 VM calls a frame. The
   fight's 29 Terrorists cost the most. Pawns out of view think every third
   frame (Distant AI).
-- **Render CPU ~92 ms** besides lightmaps: visibility 34 ms (the BSP walk, and
-  `BspClipper`'s span buffer, which rasterises occluders on every scanline of
-  the viewport, so it scales with the render height); actor meshes ~23 ms for
-  ~30 in view (vertex animation on the CPU); BSP surfaces 14 ms for ~600
-  nodes; translucent 5.5; the sky portal 4; `PostRenderFlash` (script) 2.6;
-  the rest ~8.
-- **Lightmaps ~11 ms, texture uploads ~12 ms.** One `BarrelFire`, a dynamic
+- **Render CPU ~88 ms** besides lightmaps: visibility 30 ms (the BSP walk,
+  the actors' and surfaces' visibility tests, and `BspClipper`'s occlusion
+  grid, which has one row per image row); actor meshes ~26 ms for ~30 in view
+  (vertex animation on the CPU); BSP surfaces 13 ms for ~550 nodes;
+  translucent 5.6; the sky portal 3; `PostRenderFlash` (script) 2.7; the rest
+  ~7.
+- **Lightmaps ~10 ms, texture uploads ~11 ms.** One `BarrelFire`, a dynamic
   light with the fire waver effect, has 12 lightmaps rebuilt every frame (~13.5
   with the rest), and each goes back to the GPU whole, converted from float on the CPU (the GE8300
   cannot filter RGBA32F; engine patch 0002).

@@ -1,0 +1,87 @@
+From e9559491115d16f6224d7f6608885d8b6a7d62a4 Mon Sep 17 00:00:00 2001
+From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
+Date: Wed, 23 Sep 2026 07:03:29 -0500
+Subject: [PATCH] BspClipper: one occlusion row per row of the image
+
+FORK ONLY. This project ships a NO-AI Code Rule asking that LLM-written
+changes stay in a fork and are never PR'd upstream. These were written with
+Claude. Do not submit them.
+
+The visibility clipper rasterised occluders into a fixed 2048x1080 span
+buffer, whatever the size of the image. Its cost is per row -- every
+occluder and every box test walks the rows it covers -- so on a 720-line
+handheld it did half as much work again as the image needs, and a lower
+render resolution saved it nothing. VisibleFrame::Process now sizes the grid
+to the frame being drawn (BspClipper::SetViewportSize), capped at the old
+2048x1080: a grid finer than the image only costs, and one row per image row
+keeps what shows through a one-pixel gap. A portal's frame has the same
+size, so the spans it inherits stay in the same grid.
+---
+ SurrealEngine/Render/BspClipper.cpp   |  8 ++++++++
+ SurrealEngine/Render/BspClipper.h     | 10 ++++++++--
+ SurrealEngine/Render/VisibleFrame.cpp |  4 ++++
+ 3 files changed, 20 insertions(+), 2 deletions(-)
+
+diff --git a/SurrealEngine/Render/BspClipper.cpp b/SurrealEngine/Render/BspClipper.cpp
+index a7def1d..86b5052 100644
+--- a/SurrealEngine/Render/BspClipper.cpp
++++ b/SurrealEngine/Render/BspClipper.cpp
+@@ -16,6 +16,14 @@ BspClipper::~BspClipper()
+ {
+ }
+ 
++void BspClipper::SetViewportSize(int width, int height)
++{
++	ViewportWidth = std::clamp(width, 1, (int)MaxWidth);
++	ViewportHeight = std::clamp(height, 1, (int)MaxHeight);
++	if ((int)Viewport.size() != ViewportHeight)
++		Viewport.resize(ViewportHeight);
++}
++
+ void BspClipper::Setup(const mat4& world_to_projection, const Array<PortalSpan>& portalSpans, const vec4& portalPlane)
+ {
+ 	WorldToProjection = world_to_projection;
+diff --git a/SurrealEngine/Render/BspClipper.h b/SurrealEngine/Render/BspClipper.h
+index b25fbb0..386691d 100644
+--- a/SurrealEngine/Render/BspClipper.h
++++ b/SurrealEngine/Render/BspClipper.h
+@@ -26,6 +26,12 @@ public:
+ 	BspClipper();
+ 	~BspClipper();
+ 
++	// The occlusion grid's size. Its cost is per row, so it follows the image
++	// being drawn (VisibleFrame::Process) rather than a fixed 1080 rows:
++	// capped at MaxWidth x MaxHeight, which is what it always was.
++	void SetViewportSize(int width, int height);
++	enum { MaxWidth = 2048, MaxHeight = 1080 };
++
+ 	void Setup(const mat4& world_to_projection, const Array<PortalSpan>& portalSpans, const vec4& portalPlane);
+ 
+ 	bool CheckSurface(const vec3* vertices, uint32_t count, bool solid);
+@@ -68,6 +74,6 @@ private:
+ 	float weightsbuffer[max_additional_vertices * 3 * 2];
+ 	float* weights = nullptr;
+ 
+-	const int ViewportWidth = 2048;
+-	const int ViewportHeight = 1080;
++	int ViewportWidth = MaxWidth;
++	int ViewportHeight = MaxHeight;
+ };
+diff --git a/SurrealEngine/Render/VisibleFrame.cpp b/SurrealEngine/Render/VisibleFrame.cpp
+index 818aa65..8270736 100644
+--- a/SurrealEngine/Render/VisibleFrame.cpp
++++ b/SurrealEngine/Render/VisibleFrame.cpp
+@@ -25,6 +25,10 @@ void VisibleFrame::Process(const vec3& location, const mat4& worldToView, const
+ 	Clipper.numDrawSpans = 0;
+ 	Clipper.numSurfs = 0;
+ 	Clipper.numTris = 0;
++	// One grid row per row of the image: finer only costs, coarser could lose
++	// what shows through a one-pixel gap. A portal's frame is the same size,
++	// so the spans it inherits are in the same grid.
++	Clipper.SetViewportSize(Frame.X, Frame.Y);
+ 	Clipper.Setup(Frame.Projection * Frame.WorldToView * Frame.ObjectToWorld, portalSpans, portalPlane);
+ 
+ 	ViewLocation = vec4(location, 1.0f);
+-- 
+2.55.0
+

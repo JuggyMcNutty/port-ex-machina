@@ -16,10 +16,10 @@ engine, a fork of Surreal Engine.
   Its history was rewritten before publishing (2026-09-22) to drop the game's
   files and a personal email address.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; Liberty Island's opening
-  firefight **4.5 FPS** at native resolution, 4.8 at 853×480 (2.2 before engine
-  patches 0004–0009), still CPU-bound on NPC AI script and render CPU; the
+  firefight **4.7 FPS** at native resolution, 5.2 at 853×480 (2.2 before engine
+  patches 0004–0010), still CPU-bound on NPC AI script and render CPU; the
   target is ~20 FPS (Decided). The device has the current build: patches
-  0001–0009, Overclock, Distant AI on, native resolution.
+  0001–0010, Overclock, Distant AI on, native resolution.
 - **linux-x86_64**: launcher and engine build natively; the staged app's
   `run-game.sh` ran the engine into the intro level on the development PC.
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
@@ -72,10 +72,11 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
 
 1. **Smart Pro performance** (owner, 2026-09-22): the target is **~20 FPS on
    Liberty Island** (~50 ms a frame), and every trade-off below is accepted.
-   Now 4.5 FPS, ~222 ms, facing the fight in overclock. Where it goes is in
-   [its README](ports/trimui-smartpro/README.md#performance): game tick ~104 ms
-   (NPC AI, ~61 ms of it script), render CPU ~92 ms (visibility 34, actor
-   meshes 23, BSP surfaces 14), lightmaps and their uploads ~22 ms; the GPU
+   Now 4.7 FPS at native resolution (~213 ms) and 5.2 at 853×480, facing the
+   fight in overclock. Where it goes is in
+   [its README](ports/trimui-smartpro/README.md#performance): game tick ~102 ms
+   (NPC AI, ~61 ms of it script), render CPU ~88 ms (visibility 30, actor
+   meshes 26, BSP surfaces 13), lightmaps and their uploads ~20 ms; the GPU
    overlaps the tick. 20 FPS needs the script VM several times faster, so the
    deep VM work is in scope.
 
@@ -85,14 +86,15 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    needed); the script call path without casts (0006) or per-call set-up
    (0007); AI level of detail (0008, the Video tab's Distant AI, on by default
    here); render scale (0009, the Video tab's Resolution, owner's choice,
-   native by default: 853×480 gives 4.8 FPS). [engine-patches/README.md](engine-patches/README.md)
+   native by default); an occlusion grid the size of the image (0010). Native
+   4.7 FPS, 853×480 5.2 FPS. [engine-patches/README.md](engine-patches/README.md)
    has what each found.
 
    Next, in order, re-measuring after each:
-   - **Visibility** (34 ms): `BspClipper` rasterises occluders into a fixed
-     2048×1080 span buffer, whatever the resolution -- finer than the panel's
-     720 lines. Sizing it to the image (capped at 2048×1080) should save time
-     at native resolution and more below it.
+   - **Visibility** (30 ms at native, 28 at 853×480 after patch 0010): the
+     occlusion grid was only part of it. Profile `VisibleFrame::Process` on
+     the desktop for the rest: the BSP walk, the box tests, and each visible
+     actor's set-up.
    - **The script interpreter** (`Frame::Run`, `ExpressionEvaluator::Eval`,
      `ExpressionValue` copies), the large part of the tick; one function,
      `ScriptedPawn.CheckEnemyPresence`, is about a third of all script time.

@@ -43,6 +43,8 @@ per patch file:
   when `Settings.json` asks for it (`4222051`).
 - `0009-render-scale.patch` — the scene drawn smaller than the window and
   scaled up, when `Settings.json` asks for it (`2f0143b`).
+- `0010-clipper-sized-to-image.patch` — the visibility clipper's occlusion grid
+  has one row per row of the image (`e955949`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -446,8 +448,29 @@ pixels and cover more of the screen.
 
 The engine's own resolution (`FullscreenViewportX`/`Y`, `setres`) is the
 window's, snapped to the display's modes -- on the handheld only 1280×720 --
-which is why this is a separate setting. `BspClipper` sizes its occlusion
-buffer to neither: it is a fixed 2048×1080.
+which is why this is a separate setting. `BspClipper`'s occlusion grid
+followed neither until patch 0010.
+
+## Patch 0010 — an occlusion grid the size of the image
+
+Fork commit `e955949`. On the Smart Pro the fight went from ~222 to ~213 ms at
+native resolution and from ~208 to ~191 ms at 853×480 (5.2 FPS).
+
+### 27. One grid row per image row
+
+`BspClipper` decides what is hidden by rasterising occluders into per-row
+span lists, and it had a fixed 2048×1080 grid whatever the image. Its cost is
+per row -- every occluder and every box test walks the rows it covers -- so
+on a 720-line screen it did half as much work again as the image needs, and a
+lower render resolution saved it nothing. `VisibleFrame::Process` now sizes
+the grid to the frame it draws (`BspClipper::SetViewportSize`), capped at the
+old 2048×1080: finer than the image only costs, and one row per image row keeps
+what shows through a one-pixel gap. A portal's frame is the same size, so the
+spans it inherits stay in the same grid.
+
+The coarser grid is the more permissive one: at 720 rows the stats counted
+~830 visible surfaces where 1080 rows had ~740, all of them hidden by the
+depth test, and captures of the dock before and after match pixel for pixel.
 
 ## Running it headlessly
 
