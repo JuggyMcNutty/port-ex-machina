@@ -282,7 +282,8 @@ columns were measured at some steps only; its GPU wait stayed ~0.2 ms throughout
 | 0026 | 7.4 | ~136 | ~56 | ~75 | ~11 | 9.2 | ~109 | ~46 | ~61 |
 | 0027 | 7.3 | ~136 | ~53 | ~78 | ~14 | 9.3 | ~108 | ~44 | ~61 |
 | upstream `af860b3` | 7.3 | ~137 | ~55 | ~78 | ~13 | 9.2 | ~108 | ~45 | ~61 |
-| **0028** | **7.3** | **~137** | **~51** | **~81** | **~16** | **9.4** | **~106** | **~43** | **~60** |
+| 0028 | 7.3 | ~137 | ~51 | ~81 | ~16 | 9.4 | ~106 | ~43 | ~60 |
+| **0029** | **7.3** | **~136** | **~50** | **~82** | **~17** | **9.5** | **~105** | **~42** | **~61** |
 
 The upgrade to upstream `af860b3` (2026-09-23) measured the same as 0027 within
 the noise. After 0009, 960×540 (render scale 0.75) measured 4.7 FPS, ~214 ms, tick ~94,
@@ -304,18 +305,19 @@ frame is the CPU's work, and both count. Reaching ~20 FPS (~50 ms) at native
 resolution therefore also needs the GPU's ~72 ms under ~50, and it needs the
 script VM several times faster.
 
-- **Game tick ~51 ms**, almost all NPCs. The device's CPU samples split it:
-  - ~20 ms under script calls, ~11.5 of which is the interpreter's own work
+- **Game tick ~50 ms**, almost all NPCs. The device's CPU samples split it:
+  - ~19 ms under script calls, ~10 of which is the interpreter's own work
     (the self time of `ExpressionEvaluator`, `Frame` and `ExpressionValue`;
-    ~14 before patch 0028) over ~10,000 VM calls a frame: statements
-    (`Frame::Run`, `ExpressionEvaluator::Eval` ~2.9), the expressions the
-    typed and leaf paths do not cover (`ExpressionEvaluator::Value`,
-    `Expr`), calls (`ExpressionEvaluator::Call`, `Frame::Call`,
-    `CallScript`), the typed evaluators themselves (~2.5, mostly waiting on
-    memory for each node); ~4 is AI sight traces (`CanSee`, `FastTrace`).
+    ~14 before patches 0028–0029) over ~10,000 VM calls a frame: statements
+    (`Frame::Run` ~2), the expressions the typed and leaf paths do not cover
+    (`ExpressionEvaluator::Value`, `Expr`), calls (`ExpressionEvaluator::Call`,
+    `Frame::Call`, `CallScript`, `CallFastOperator`), the typed evaluators
+    themselves (~3); ~4 is AI sight traces (`CanSee`, `FastTrace`).
     `ScriptedPawn.CheckEnemyPresence` is still the costliest script function.
-    Next in the structure: statements without a full result each, and calls
-    without an `ExpressionValue` per argument.
+    Most of the interpreter's time is now the Cortex-A53 waiting on memory
+    for each expression node. Next in the structure: calls without an
+    `ExpressionValue` per argument; beyond that, a denser form of the code
+    itself.
   - ~6 ms of physics, mostly box sweeps for walking pawns (`TryMove`,
     `TryStepToGround`). With the sight traces, ~13.5 ms of collision traces
     in all, through `TraceAABBModel` and `TraceRayModel` (~21 before patches

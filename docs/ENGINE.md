@@ -290,6 +290,13 @@ With 0013, these took the Smart Pro's script time from ~125 ms a frame to
   → ~22.7 ms, tick ~54 → ~51 ms; at 853×480 the frame ~108.5 → ~106 ms.
   **Checked:** also a hash of every actor's state, frame by frame, with the
   frame time and random seeds fixed (the message has both checks).
+- [**0029**](../engine-patches/0029-vm-statements-in-place.patch)
+  `vm-statements-in-place` -- conditions, jumps, assignments to plain
+  variables, calls, `return;` and a foreach's next pass run by `Frame::Run`
+  in place, without an `ExpressionEvalResult` each; a jump keeps its target's
+  statement index. **Smart Pro:** script ~22.7 → ~21.4 ms, tick ~51 → ~50
+  ms; at 853×480 the frame ~106 → ~105 ms. **Checked:** the actor-state hash,
+  on Liberty Island and UNATCO HQ.
 
 ### Game tick
 

@@ -977,7 +977,7 @@ index 0000000..d72d2a3
 +	}
 +}
 diff --git a/SurrealEngine/VM/Frame.cpp b/SurrealEngine/VM/Frame.cpp
-index 3de80c2..727211f 100644
+index 3f0b18a..71e779b 100644
 --- a/SurrealEngine/VM/Frame.cpp
 +++ b/SurrealEngine/VM/Frame.cpp
 @@ -1,6 +1,7 @@
@@ -986,9 +986,9 @@ index 3de80c2..727211f 100644
  #include "Frame.h"
 +#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
  #include "Bytecode.h"
+ #include "Expression.h"
  #include "ExpressionEvaluator.h"
- #include "NativeFunc.h"
-@@ -267,14 +268,17 @@ ExpressionValue Frame::Call(UFunction* func, UObject* instance, CallArguments& a
+@@ -268,14 +269,17 @@ ExpressionValue Frame::Call(UFunction* func, UObject* instance, CallArguments& a
  	for (size_t i = args.size(); i < parms.size() && AllFlags(parms[i]->PropFlags, PropertyFlags::Parm | PropertyFlags::OptionalParm); i++)
  		args.push_back(ExpressionValue::NothingValue());
  

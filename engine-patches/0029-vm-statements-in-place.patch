@@ -1,0 +1,329 @@
+From 7e93fe7b86f0e449454db03d9d8eb02b55d6dcfd Mon Sep 17 00:00:00 2001
+From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
+Date: Wed, 23 Sep 2026 15:49:54 -0500
+Subject: [PATCH] VM: the commonest statements run in place
+
+FORK ONLY. This project ships a NO-AI Code Rule asking that LLM-written
+changes stay in a fork and are never PR'd upstream. These were written with
+Claude. Do not submit them.
+
+Every statement went through ExpressionEvaluator::Eval: a whole
+ExpressionEvalResult (a value, a label, an iterator, the control-flow
+fields) constructed and destructed, the breakpoint list walked, the
+statement visited, and for a jump a binary search for its target. On
+Liberty Island conditions are 45% of the statements, assignments 22%,
+calls 13%, return; 8%, a foreach's next pass 6% and jumps 3%.
+
+Frame::Run now runs those in place. A statement is classified when first
+run (Expression::StatementKind), and a jump keeps its target's statement
+index in its node. A condition, an assignment to a variable kind (the
+typed evaluators' Assign) and a call whose value is dropped are evaluated
+by an ExpressionEvaluator with no result of its own; return;, a jump and a
+foreach's next pass need no evaluation. Every other statement, and every
+statement while a breakpoint is set, takes Eval as before.
+
+What the frame does is the same:
+
+- Nothing these statements evaluate reports control flow to the frame;
+  only JumpIfNot's own jump, which Run makes.
+- A GotoState during a condition moves the frame to other code, and the
+  jump then looks its target up in that code, as before.
+- Only an object's state frame can lose its Func or wait on a latent
+  function, and what its Run returns is not used: those exits return an
+  empty result.
+
+Checked with the frame time and random seeds temporarily fixed: a hash of
+every actor's location, rotation, velocity, state and class matched the
+build before patch 0028, frame by frame, on Liberty Island for 4,300 frames
+and on UNATCO HQ for 30,000 -- every frame that build itself repeats
+identically -- and so did the logs.
+---
+ SurrealEngine/VM/Expression.h            |  12 +++
+ SurrealEngine/VM/ExpressionEvaluator.cpp |  40 +++++++-
+ SurrealEngine/VM/ExpressionEvaluator.h   |  14 +++
+ SurrealEngine/VM/Frame.cpp               | 111 +++++++++++++++++++++++
+ SurrealEngine/VM/Frame.h                 |   1 +
+ 5 files changed, 173 insertions(+), 5 deletions(-)
+
+diff --git a/SurrealEngine/VM/Expression.h b/SurrealEngine/VM/Expression.h
+index db4c53f..5ebc8d5 100644
+--- a/SurrealEngine/VM/Expression.h
++++ b/SurrealEngine/VM/Expression.h
+@@ -57,6 +57,16 @@ public:
+ 		EqualEqual_NameName, NotEqual_NameName
+ 	};
+ 	TypedKind Typed = TypedKind::Unknown;
++
++	// How Frame::Run runs this node as a statement: the commonest kinds in
++	// place (Frame::RunInPlace), without the ExpressionEvalResult
++	// ExpressionEvaluator::Eval makes; decided when first run
++	// (Frame::ClassifyStatement).
++	enum class StatementKind : uint8_t
++	{
++		Unknown, General, Jump, JumpIfNot, Let, LetBool, Call, ReturnNothing, IteratorNext
++	};
++	StatementKind Statement = StatementKind::Unknown;
+ };
+ 
+ class LocalVariableExpression : public Expression
+@@ -117,6 +127,7 @@ public:
+ 	void Visit(ExpressionVisitor* visitor) override { visitor->Expr(this); }
+ 
+ 	uint16_t Offset = 0;
++	int Target = -1; // Offset's statement index (Frame::ClassifyStatement)
+ };
+ 
+ class JumpIfNotExpression : public Expression
+@@ -125,6 +136,7 @@ public:
+ 	void Visit(ExpressionVisitor* visitor) override { visitor->Expr(this); }
+ 
+ 	uint16_t Offset = 0;
++	int Target = -1; // Offset's statement index (Frame::ClassifyStatement)
+ 	Expression* Condition = nullptr;
+ };
+ 
+diff --git a/SurrealEngine/VM/ExpressionEvaluator.cpp b/SurrealEngine/VM/ExpressionEvaluator.cpp
+index 903ef30..2c8a9f1 100644
+--- a/SurrealEngine/VM/ExpressionEvaluator.cpp
++++ b/SurrealEngine/VM/ExpressionEvaluator.cpp
+@@ -12,6 +12,11 @@
+ 
+ using TypedKind = Expression::TypedKind;
+ 
++static bool IsVariable(TypedKind kind)
++{
++	return kind >= TypedKind::LocalByte && kind <= TypedKind::InstanceBoolVariable;
++}
++
+ ExpressionEvalResult ExpressionEvaluator::Eval(Expression* expr, UObject* self, UObject* context, void* localVariables)
+ {
+ 	auto oldExpr = Frame::StepExpression;
+@@ -33,6 +38,36 @@ ExpressionEvalResult ExpressionEvaluator::Eval(Expression* expr, UObject* self,
+ 	return result;
+ }
+ 
++ExpressionEvalResult ExpressionEvaluator::NoResult;
++
++bool ExpressionEvaluator::Condition(JumpIfNotExpression* statement, UObject* self, void* localVariables)
++{
++	ExpressionEvaluator evaluator(self, localVariables);
++	return evaluator.EvalBool(statement->Condition);
++}
++
++void ExpressionEvaluator::Assignment(Expression* lhs, Expression* rhs, UObject* self, void* localVariables)
++{
++	ExpressionEvaluator evaluator(self, localVariables);
++	evaluator.Assign(lhs, rhs);
++}
++
++void ExpressionEvaluator::CallStatement(Expression* statement, UObject* self, void* localVariables)
++{
++	// No call's Expr reports anything to the frame: only its value, dropped
++	ExpressionEvaluator evaluator(self, localVariables);
++	ExpressionValue value;
++	evaluator.Out = &value;
++	statement->Visit(&evaluator);
++}
++
++bool ExpressionEvaluator::IsAssignable(Expression* lhs)
++{
++	if (lhs->Typed == TypedKind::Unknown)
++		Classify(lhs);
++	return IsVariable(lhs->Typed);
++}
++
+ ExpressionValue ExpressionEvaluator::Value(Expression* expr)
+ {
+ 	// The commonest leaves, made here as their Expr would make them. None can
+@@ -919,11 +954,6 @@ void ExpressionEvaluator::Expr(FunctionArgumentsExpression* expr)
+ // operand once all of them are evaluated, so a variable operand is read after
+ // the operand after it is evaluated (which might change it).
+ 
+-static bool IsVariable(TypedKind kind)
+-{
+-	return kind >= TypedKind::LocalByte && kind <= TypedKind::InstanceBoolVariable;
+-}
+-
+ // The type of value a typed kind yields; Nothing for Generic
+ static ExpressionValueType TypedValueType(TypedKind kind)
+ {
+diff --git a/SurrealEngine/VM/ExpressionEvaluator.h b/SurrealEngine/VM/ExpressionEvaluator.h
+index 6afed02..91c53c9 100644
+--- a/SurrealEngine/VM/ExpressionEvaluator.h
++++ b/SurrealEngine/VM/ExpressionEvaluator.h
+@@ -37,10 +37,24 @@ public:
+ 	// Evaluates a statement: its value, and what the frame does next
+ 	static ExpressionEvalResult Eval(Expression* expr, UObject* self, UObject* context, void* localVariables);
+ 
++	// Frame::RunInPlace's statements: JumpIfNot's condition, an assignment to
++	// a variable kind (Let, LetBool), a call whose value is dropped. Each
++	// reports nothing to the frame but whether JumpIfNot jumps.
++	static bool Condition(JumpIfNotExpression* statement, UObject* self, void* localVariables);
++	static void Assignment(Expression* lhs, Expression* rhs, UObject* self, void* localVariables);
++	static void CallStatement(Expression* statement, UObject* self, void* localVariables);
++	static bool IsAssignable(Expression* lhs); // Assign takes it
++
+ private:
+ 	ExpressionEvaluator(ExpressionEvalResult& result, UObject* self, UObject* context, void* localVariables)
+ 		: Result(result), Self(self), Context(context), LocalVariables(localVariables), Out(&result.Value) {}
+ 
++	// A statement run in place: nothing it evaluates is the statement's own
++	// value (IsStatement is false throughout), so NoResult is never written
++	ExpressionEvaluator(UObject* self, void* localVariables)
++		: Result(NoResult), Self(self), Context(self), LocalVariables(localVariables), Out(nullptr) {}
++	static ExpressionEvalResult NoResult;
++
+ 	// A nested expression's value, from this same evaluator. Only the statement
+ 	// says what the frame does next: whatever else a nested expression reports
+ 	// is dropped, as it was when every expression had an evaluator and a
+diff --git a/SurrealEngine/VM/Frame.cpp b/SurrealEngine/VM/Frame.cpp
+index 3de80c2..3f0b18a 100644
+--- a/SurrealEngine/VM/Frame.cpp
++++ b/SurrealEngine/VM/Frame.cpp
+@@ -2,6 +2,7 @@
+ #include "Precomp.h"
+ #include "Frame.h"
+ #include "Bytecode.h"
++#include "Expression.h"
+ #include "ExpressionEvaluator.h"
+ #include "NativeFunc.h"
+ #include "Packages/Core/UTextBuffer.h"
+@@ -504,6 +505,76 @@ ExpressionEvalResult Frame::Run()
+ 		}
+ 
+ 		Expression* statement = Func->Code->Statements[curStatementIndex];
++		if (statement->Statement == Expression::StatementKind::Unknown)
++			ClassifyStatement(statement, *Func->Code);
++
++		// The commonest statements -- conditions, jumps, assignments to plain
++		// variables, calls, return;, the next pass of a foreach -- run in
++		// place, without the ExpressionEvalResult Eval makes for each; the
++		// general path below does the same with each one's result. Only this
++		// object's state frame can lose its Func or wait on a latent function,
++		// and what its Run returns is not used.
++		if (statement->Statement != Expression::StatementKind::General && Breakpoints.empty())
++		{
++			switch (statement->Statement)
++			{
++			default:
++				break;
++			case Expression::StatementKind::Jump:
++				StatementIndex = static_cast<JumpExpression*>(statement)->Target;
++				break;
++			case Expression::StatementKind::JumpIfNot:
++				{
++					auto jump = static_cast<JumpIfNotExpression*>(statement);
++					UStruct* func = Func;
++					bool taken = !ExpressionEvaluator::Condition(jump, Object, Variables.Data);
++					if (!Func)
++						return {};
++					// A GotoState in the condition moves the frame to other code
++					if (taken)
++						StatementIndex = Func == func ? jump->Target : Func->Code->FindStatementIndex(jump->Offset);
++					break;
++				}
++			case Expression::StatementKind::Let:
++				ExpressionEvaluator::Assignment(static_cast<LetExpression*>(statement)->LeftSide, static_cast<LetExpression*>(statement)->RightSide, Object, Variables.Data);
++				if (!Func)
++					return {};
++				break;
++			case Expression::StatementKind::LetBool:
++				ExpressionEvaluator::Assignment(static_cast<LetBoolExpression*>(statement)->LeftSide, static_cast<LetBoolExpression*>(statement)->RightSide, Object, Variables.Data);
++				if (!Func)
++					return {};
++				break;
++			case Expression::StatementKind::Call:
++				ExpressionEvaluator::CallStatement(statement, Object, Variables.Data);
++				if (!Func)
++					return {};
++				break;
++			case Expression::StatementKind::ReturnNothing:
++				{
++					if (RunState == FrameRunState::StepOut && StepFrame == this)
++						StepFrame = nullptr;
++					ExpressionEvalResult result;
++					result.Result = StatementResult::Return;
++					return result;
++				}
++			case Expression::StatementKind::IteratorNext:
++				if (Iterators.empty())
++					ThrowException("Iterator next statement without an iterator in " + Object->Name.ToString() + "." + Func->Name.ToString());
++				if (Iterators.back()->Next())
++					StatementIndex = Iterators.back()->StartStatementIndex;
++				else
++					StatementIndex = Iterators.back()->EndStatementIndex;
++				break;
++			}
++
++			if (Object->StateFrame.get() == this && LatentState != LatentRunState::Continue)
++				return {};
++
++			instructionsRetired++;
++			continue;
++		}
++
+ 		ExpressionEvalResult result = ExpressionEvaluator::Eval(statement, Object, Object, Variables.Data);
+ 		if (!Func)
+ 			return result;
+@@ -612,6 +683,46 @@ ExpressionEvalResult Frame::Run()
+ 	}
+ }
+ 
++void Frame::ClassifyStatement(Expression* statement, const Bytecode& code)
++{
++	Expression::StatementKind kind = Expression::StatementKind::General;
++	if (auto jump = dynamic_cast<JumpExpression*>(statement))
++	{
++		jump->Target = code.FindStatementIndex(jump->Offset);
++		kind = Expression::StatementKind::Jump;
++	}
++	else if (auto jumpIfNot = dynamic_cast<JumpIfNotExpression*>(statement))
++	{
++		jumpIfNot->Target = code.FindStatementIndex(jumpIfNot->Offset);
++		kind = Expression::StatementKind::JumpIfNot;
++	}
++	else if (auto let = dynamic_cast<LetExpression*>(statement))
++	{
++		if (ExpressionEvaluator::IsAssignable(let->LeftSide))
++			kind = Expression::StatementKind::Let;
++	}
++	else if (auto letBool = dynamic_cast<LetBoolExpression*>(statement))
++	{
++		if (ExpressionEvaluator::IsAssignable(letBool->LeftSide))
++			kind = Expression::StatementKind::LetBool;
++	}
++	else if (dynamic_cast<VirtualFunctionExpression*>(statement) || dynamic_cast<FinalFunctionExpression*>(statement) ||
++		dynamic_cast<GlobalFunctionExpression*>(statement) || dynamic_cast<NativeFunctionExpression*>(statement))
++	{
++		kind = Expression::StatementKind::Call;
++	}
++	else if (auto ret = dynamic_cast<ReturnExpression*>(statement))
++	{
++		if (ret->Value && dynamic_cast<NothingExpression*>(ret->Value))
++			kind = Expression::StatementKind::ReturnNothing;
++	}
++	else if (dynamic_cast<IteratorNextExpression*>(statement))
++	{
++		kind = Expression::StatementKind::IteratorNext;
++	}
++	statement->Statement = kind;
++}
++
+ void Frame::ProcessSwitch(const ExpressionValue& condition)
+ {
+ 	SwitchExpression* switchexpr = static_cast<SwitchExpression*>(Func->Code->Statements[StatementIndex - 1]);
+diff --git a/SurrealEngine/VM/Frame.h b/SurrealEngine/VM/Frame.h
+index e545c62..811193f 100644
+--- a/SurrealEngine/VM/Frame.h
++++ b/SurrealEngine/VM/Frame.h
+@@ -186,6 +186,7 @@ public:
+ private:
+ 	ExpressionEvalResult Run();
+ 	void ProcessSwitch(const ExpressionValue& condition);
++	static void ClassifyStatement(Expression* statement, const Bytecode& code);
+ 
+ 	static ExpressionValue CallNative(UFunction* func, UObject* instance, CallArguments& args);
+ 	static ExpressionValue CallScript(UFunction* func, UObject* instance, CallArguments& args);
+-- 
+2.55.0
+
