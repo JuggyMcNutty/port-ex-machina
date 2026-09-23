@@ -16,10 +16,11 @@ engine, a fork of Surreal Engine.
   Its history was rewritten before publishing (2026-09-22) to drop the game's
   files and a personal email address.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; Liberty Island's opening
-  firefight **4.7 FPS** at native resolution, 5.2 at 853×480 (2.2 before engine
-  patches 0004–0010), still CPU-bound on NPC AI script and render CPU; the
-  target is ~20 FPS (Decided). The device has the current build: patches
-  0001–0010, Overclock, Distant AI on, native resolution.
+  firefight **5.3 FPS** at native resolution, 6.0 at 853×480 (2.2 before engine
+  patches 0004–0011), still CPU-bound on NPC AI script and render CPU; UNATCO
+  HQ indoors ~20. The target is ~20 FPS in the fight (Decided). The device
+  has the current build: patches 0001–0011, Overclock, Distant AI on, native
+  resolution.
 - **linux-x86_64**: launcher and engine build natively; the staged app's
   `run-game.sh` ran the engine into the intro level on the development PC.
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
@@ -72,12 +73,12 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
 
 1. **Smart Pro performance** (owner, 2026-09-22): the target is **~20 FPS on
    Liberty Island** (~50 ms a frame), and every trade-off below is accepted.
-   Now 4.7 FPS at native resolution (~213 ms) and 5.2 at 853×480, facing the
+   Now 5.3 FPS at native resolution (~190 ms) and 6.0 at 853×480, facing the
    fight in overclock. Where it goes is in
-   [its README](ports/trimui-smartpro/README.md#performance): game tick ~102 ms
-   (NPC AI, ~61 ms of it script), render CPU ~88 ms (visibility 30, actor
-   meshes 26, BSP surfaces 13), lightmaps and their uploads ~20 ms; the GPU
-   overlaps the tick. 20 FPS needs the script VM several times faster, so the
+   [its README](ports/trimui-smartpro/README.md#performance): game tick ~97 ms
+   (NPC AI, ~58 ms of it script), render CPU ~83 ms (actor meshes 27,
+   visibility ~21, BSP surfaces 11), lightmaps and their uploads ~8 ms; the
+   GPU overlaps the tick. 20 FPS needs the script VM several times faster, so the
    deep VM work is in scope.
 
    Done, one engine patch each, measured: CPU/GPU overlap (0004); lightmaps
@@ -86,28 +87,25 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    needed); the script call path without casts (0006) or per-call set-up
    (0007); AI level of detail (0008, the Video tab's Distant AI, on by default
    here); render scale (0009, the Video tab's Resolution, owner's choice,
-   native by default); an occlusion grid the size of the image (0010). Native
-   4.7 FPS, 853×480 5.2 FPS. [engine-patches/README.md](engine-patches/README.md)
-   has what each found.
+   native by default); an occlusion grid the size of the image (0010);
+   one-sided back faces skipped before the visibility test (0011).
+   [engine-patches/README.md](engine-patches/README.md) has what each found.
 
    Next, in order, re-measuring after each:
-   - **Visibility** (30 ms at native, 28 at 853×480 after patch 0010): the
-     occlusion grid was only part of it. Profile `VisibleFrame::Process` on
-     the desktop for the rest: the BSP walk, the box tests, and each visible
-     actor's set-up.
    - **The script interpreter** (`Frame::Run`, `ExpressionEvaluator::Eval`,
      `ExpressionValue` copies), the large part of the tick; one function,
      `ScriptedPawn.CheckEnemyPresence`, is about a third of all script time.
      Profile the desktop build with `perf`
      ([engine-patches/README.md](engine-patches/README.md#profiling-and-validating-on-the-desktop)).
-   - **Actor meshes** (~23 ms): vertex animation on the CPU
-     (`VisibleMesh::DrawLodMeshFaceDX`, the desktop profile's top render
-     function).
-   - **Lightmap uploads** (~12 ms, plus copying and converting): a rebuilt
-     lightmap is re-uploaded whole, though only the rows its lights reach
-     changed.
+   - **Actor meshes** (~27 ms, now the largest render item): vertex
+     animation on the CPU (`VisibleMesh::DrawLodMeshFaceDX`, the desktop
+     profile's top render function).
+   - **Visibility** (~21 ms): ~2,400 surface tests a frame against the
+     occlusion grid are most of it (the profile splits it by part).
    - A second tier of AI level of detail (every sixth frame beyond, say,
      4000 units).
+   - **Lightmap uploads** (~4 ms since patch 0011): a rebuilt lightmap is
+     re-uploaded whole, though only the rows its lights reach changed.
 2. **Renderers on aarch64** (owner, 2026-09-22): the goal is Vulkan, OpenGL ES
    and software rendering all selectable. Not now: Vulkan is the only one the
    engine has. GLES means porting Surreal's desktop OpenGL 3.2 renderer (the

@@ -130,14 +130,21 @@ cmd_perf() {
                 say "profiling hooks applied -- never commit them (scripts/engine.sh perf off)"
                 return 0
             fi
-            eng apply --3way "$p" || true
+            # A three-way merge needs the index to match the tree: it applies
+            # nothing over uncommitted changes to a file the hooks touch.
+            local rc=0
+            eng apply --3way "$p" || rc=$?
             eng reset -q
             local conflicts; conflicts="$(eng diff --name-only --diff-filter=U; eng grep -l '^<<<<<<< ' -- SurrealEngine 2>/dev/null || true)"
             [ -z "$conflicts" ] || die "the hooks conflict with the fork in: $(echo $conflicts) -- resolve, then scripts/engine.sh perf save"
+            eng grep -q 'TEMPORARY DEBUG TOOL' -- SurrealEngine 2>/dev/null ||
+                die "the hooks did not apply (git apply --3way: $rc) -- commit the engine's changes first, then perf on"
             say "profiling hooks applied by a three-way merge -- scripts/engine.sh perf save to re-base the patch"
             ;;
         off) eng apply -R "$p" && say "profiling hooks removed" ;;
         save)
+            ! eng grep -q '^<<<<<<< \|^>>>>>>> ' -- SurrealEngine 2>/dev/null ||
+                die "conflict markers in the engine tree -- resolve them before perf save"
             # New files (PerfLog.h) are untracked: record them for the diff only.
             local new; mapfile -t new < <(eng ls-files --others --exclude-standard -- SurrealEngine)
             [ ${#new[@]} -eq 0 ] || eng add -N -- "${new[@]}"

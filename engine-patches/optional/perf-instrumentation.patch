@@ -1,5 +1,5 @@
 diff --git a/SurrealEngine/Engine.cpp b/SurrealEngine/Engine.cpp
-index c766e46..b727d36 100644
+index 51be76f..e818e4d 100644
 --- a/SurrealEngine/Engine.cpp
 +++ b/SurrealEngine/Engine.cpp
 @@ -1,6 +1,7 @@
@@ -287,7 +287,7 @@ index f3fcef6..43b5045 100644
  
  void RenderSubsystem::DrawEditorViewport()
 diff --git a/SurrealEngine/Render/VisibleFrame.cpp b/SurrealEngine/Render/VisibleFrame.cpp
-index 818aa65..ce2144c 100644
+index 7568df4..b378505 100644
 --- a/SurrealEngine/Render/VisibleFrame.cpp
 +++ b/SurrealEngine/Render/VisibleFrame.cpp
 @@ -1,6 +1,7 @@
@@ -298,7 +298,73 @@ index 818aa65..ce2144c 100644
  #include "VisibleCorona.h"
  #include "RenderSubsystem.h"
  #include "RenderDevice/RenderDevice.h"
-@@ -340,6 +341,14 @@ int VisibleFrame::FindZoneAt(const vec4& location, BspNode* node, BspNode* nodes
+@@ -111,7 +112,11 @@ void VisibleFrame::ProcessNode(BspNode* node)
+ 	//	return;
+ 
+ 	// Skip node if its AABB is not visible
+-	if (node->RenderBound != -1 && !Clipper.IsAABBVisible(engine->Level->Model->Bounds[node->RenderBound]))
++	bool perfBoxVisible; // TEMPORARY DEBUG TOOL: time the box test
++	{ PerfLog::Scope perf(PerfLog::VisAabb); PerfLog::Counter(PerfLog::VisAabb)++;
++	perfBoxVisible = node->RenderBound == -1 || Clipper.IsAABBVisible(engine->Level->Model->Bounds[node->RenderBound]);
++	}
++	if (!perfBoxVisible)
+ 	{
+ 		return;
+ 	}
+@@ -124,6 +129,7 @@ void VisibleFrame::ProcessNode(BspNode* node)
+ 			actor->LastDrawFrame = FrameCounter;
+ 
+ 			VisibleActor visactor;
++			PerfLog::Scope perf(PerfLog::VisActor); PerfLog::Counter(PerfLog::VisActor)++; // TEMPORARY DEBUG TOOL
+ 			visactor.Process(this, actor);
+ 		}
+ 	}
+@@ -206,7 +212,9 @@ void VisibleFrame::ProcessNodeSurface(BspNode* node, bool front)
+ 			UZoneInfo* zoneInfo = engine->GetZoneActor(zone);
+ 			if (zoneInfo->SkyZone())
+ 			{
++				uint64_t perfPortal = PerfLog::Enabled() ? PerfLog::NowNs() : 0; // TEMPORARY DEBUG TOOL
+ 				Array<PortalSpan> spans = Clipper.CheckPortal(points, numverts);
++				if (perfPortal) PerfLog::Add(PerfLog::VisPortal, (PerfLog::NowNs() - perfPortal) / 1e6); // TEMPORARY DEBUG TOOL
+ 				if (!spans.empty())
+ 				{
+ 					USkyZoneInfo* skyZone = zoneInfo->SkyZone();
+@@ -236,7 +244,9 @@ void VisibleFrame::ProcessNodeSurface(BspNode* node, bool front)
+ 				UWarpZoneInfo* warpZone = UObject::TryCast<UWarpZoneInfo>(engine->GetZoneActor(portalZone));
+ 				if (warpZone)
+ 				{
+-					Array<PortalSpan> spans = Clipper.CheckPortal(points, numverts);
++					uint64_t perfPortal = PerfLog::Enabled() ? PerfLog::NowNs() : 0; // TEMPORARY DEBUG TOOL
++				Array<PortalSpan> spans = Clipper.CheckPortal(points, numverts);
++				if (perfPortal) PerfLog::Add(PerfLog::VisPortal, (PerfLog::NowNs() - perfPortal) / 1e6); // TEMPORARY DEBUG TOOL
+ 					if (!spans.empty())
+ 					{
+ 						for (auto& p : Portals)
+@@ -263,7 +273,9 @@ void VisibleFrame::ProcessNodeSurface(BspNode* node, bool front)
+ 			if (PortalDepth > 0) // To do: cull backfacing surfaces so we don't need this hack
+ 				return;
+ 
+-			Array<PortalSpan> spans = Clipper.CheckPortal(points, numverts);
++			uint64_t perfPortal = PerfLog::Enabled() ? PerfLog::NowNs() : 0; // TEMPORARY DEBUG TOOL
++				Array<PortalSpan> spans = Clipper.CheckPortal(points, numverts);
++				if (perfPortal) PerfLog::Add(PerfLog::VisPortal, (PerfLog::NowNs() - perfPortal) / 1e6); // TEMPORARY DEBUG TOOL
+ 			if (!spans.empty())
+ 			{
+ 				for (auto& p : Portals)
+@@ -297,7 +309,11 @@ void VisibleFrame::ProcessNodeSurface(BspNode* node, bool front)
+ 			return;
+ 	}
+ 
+-	if (!Clipper.CheckSurface(points, numverts, (PolyFlags & PF_NoOcclude) == 0))
++	bool perfSurfaceVisible; // TEMPORARY DEBUG TOOL: time the surface test
++	{ PerfLog::Scope perf(PerfLog::VisSurface); PerfLog::Counter(PerfLog::VisSurface)++;
++	perfSurfaceVisible = Clipper.CheckSurface(points, numverts, (PolyFlags & PF_NoOcclude) == 0);
++	}
++	if (!perfSurfaceVisible)
+ 		return;
+ 
+ 	/*if (PolyFlags & PF_Portal)
+@@ -356,6 +372,14 @@ int VisibleFrame::FindZoneAt(const vec4& location, BspNode* node, BspNode* nodes
  
  void VisibleFrame::Draw()
  {
@@ -387,10 +453,10 @@ index b869842..513994e 100644
  	}
 diff --git a/SurrealEngine/Utils/PerfLog.h b/SurrealEngine/Utils/PerfLog.h
 new file mode 100644
-index 0000000..7645f9d
+index 0000000..2abb8b8
 --- /dev/null
 +++ b/SurrealEngine/Utils/PerfLog.h
-@@ -0,0 +1,314 @@
+@@ -0,0 +1,322 @@
 +// TEMPORARY DEBUG TOOL -- revert before commit.
 +//
 +// Frame-time breakdown for profiling on the handheld. With SURREAL_PERF_LOG=1
@@ -424,7 +490,10 @@ index 0000000..7645f9d
 +		LightTick, Lock, PreRender, BspInfo, Visibility, Portals, Nodes, Actors, Translucent,
 +		Coronas, Overlays, Flash, PostRender, Unlock, VmTop,
 +		// Inside Lightmap: the static lights' pass and the dynamic lights' pass.
-+		LmStatic, LmDynamic, Count };
++		LmStatic, LmDynamic,
++		// Inside the visibility pass (all frames): box tests, surface tests,
++		// portal tests, actor set-up.
++		VisAabb, VisSurface, VisPortal, VisActor, Count };
 +
 +	inline bool Enabled()
 +	{
@@ -655,6 +724,11 @@ index 0000000..7645f9d
 +
 +		std::vector<std::pair<std::string, int>> causes(LmCauses().begin(), LmCauses().end());
 +		std::sort(causes.begin(), causes.end(), [](auto& a, auto& b) { return a.second > b.second; });
++		std::fprintf(stderr, "perf: visibility parts (all frames): box tests %.1f (%d), surface tests %.1f (%d), portal tests %.1f, actor set-up %.1f (%d)\n",
++			s.sum[VisAabb] / n, (int)(Counter(VisAabb) / n), s.sum[VisSurface] / n, (int)(Counter(VisSurface) / n),
++			s.sum[VisPortal] / n, s.sum[VisActor] / n, (int)(Counter(VisActor) / n));
++		Counter(VisAabb) = Counter(VisSurface) = Counter(VisActor) = 0;
++
 +		std::fprintf(stderr, "perf: lightmaps: static pass %.1f, dynamic pass %.1f | rebuilt by (per frame):",
 +			s.sum[LmStatic] / n, s.sum[LmDynamic] / n);
 +		for (size_t i = 0; i < causes.size() && i < 10; i++)

@@ -45,6 +45,8 @@ per patch file:
   scaled up, when `Settings.json` asks for it (`2f0143b`).
 - `0010-clipper-sized-to-image.patch` — the visibility clipper's occlusion grid
   has one row per row of the image (`e955949`).
+- `0011-cull-one-sided-back-faces.patch` — one-sided surfaces seen from behind
+  are skipped before the visibility test (`a8b5a2f`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -72,8 +74,9 @@ afterwards. The patch is against the fork's head, so a fork commit that
 touches the same lines moves them: `perf on` then falls back to a three-way
 merge (and stops if that leaves conflicts to resolve), and `perf save`
 rewrites the patch from the tree so the next `on` and `off` apply cleanly.
-Take the hooks off before changing the engine itself: a commit made with them
-on carries them.
+Take the hooks off before changing the engine itself -- a commit made with
+them on carries them -- and commit before putting them back: `perf on` cannot
+merge over uncommitted changes to a file the hooks touch, and says so.
 
 ## What the patches change
 
@@ -471,6 +474,30 @@ spans it inherits stay in the same grid.
 The coarser grid is the more permissive one: at 720 rows the stats counted
 ~830 visible surfaces where 1080 rows had ~740, all of them hidden by the
 depth test, and captures of the dock before and after match pixel for pixel.
+
+## Patch 0011 — one-sided back faces skipped
+
+Fork commit `a8b5a2f`. On the Smart Pro the fight went from ~213 to ~190 ms at
+native resolution (5.3 FPS) and from ~191 to ~168 ms at 853×480 (6.0 FPS).
+
+### 28. Back faces before the clipper
+
+`ProcessNodeSurface` ran the clipper's triangle test on every surface of every
+visible node. On Liberty Island's fight that was ~4,800 tests a frame (~22 ms
+on the Smart Pro), and ~2,700 of them were one-sided surfaces facing away
+from the camera -- ~5% of which came out visible, against ~22% of those facing
+it: back faces lie behind the front faces the front-to-back walk has already
+drawn. UE1 never drew a one-sided surface from behind, and in a closed level
+one hides nothing a front face does not, so they are now skipped before the
+test: not drawn, not occluding. Two-sided surfaces are tested as before, and
+so is everything in a mirror's frame, whose view comes from the reflected
+position; portals, skies and mirrors are handled before this point.
+
+Surface tests fell from ~4,800 to ~2,400 a frame and from ~22 to ~12 ms, and
+lightmaps from ~10 to ~4 ms with their uploads from ~11 to ~4 ms: most of the
+burning barrel's rebuilt lightmaps had belonged to back faces. Captures of
+Liberty Island and of UNATCO HQ's interior before and after differ only in the
+stats overlay's surface count.
 
 ## Running it headlessly
 

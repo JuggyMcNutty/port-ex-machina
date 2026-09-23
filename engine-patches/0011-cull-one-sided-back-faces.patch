@@ -1,0 +1,50 @@
+From a8b5a2fdb3b52dd3dc06ccf18638e07b9aec5092 Mon Sep 17 00:00:00 2001
+From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
+Date: Wed, 23 Sep 2026 07:26:25 -0500
+Subject: [PATCH] Visibility: skip one-sided surfaces seen from behind
+
+FORK ONLY. This project ships a NO-AI Code Rule asking that LLM-written
+changes stay in a fork and are never PR'd upstream. These were written with
+Claude. Do not submit them.
+
+ProcessNodeSurface ran the clipper's triangle test on every surface of every
+visible node. On Liberty Island's fight that was ~4,800 tests a frame, ~22 ms
+on the TrimUI Smart Pro, and ~2,700 of them were one-sided surfaces facing
+away from the camera, of which ~5% came out visible (against ~22% of those
+facing it): back faces are hidden behind the front faces the front-to-back
+walk has already drawn. UE1 never drew a one-sided surface from behind, and
+in a closed level one hides nothing a front face does not, so they are now
+skipped before the test -- not drawn, not occluding. Two-sided surfaces are
+tested as before, and so is everything in a mirror's frame, whose view comes
+from the reflected position; portals, skies and mirrors are handled before
+this point.
+---
+ SurrealEngine/Render/VisibleFrame.cpp | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/SurrealEngine/Render/VisibleFrame.cpp b/SurrealEngine/Render/VisibleFrame.cpp
+index 8270736..7568df4 100644
+--- a/SurrealEngine/Render/VisibleFrame.cpp
++++ b/SurrealEngine/Render/VisibleFrame.cpp
+@@ -285,6 +285,18 @@ void VisibleFrame::ProcessNodeSurface(BspNode* node, bool front)
+ 		}
+ 	}
+ 
++	// A one-sided surface seen from behind is never drawn (UE1 did not either),
++	// and in a closed level a front face drawn earlier already hides it, so it
++	// hides nothing either: skip the clipper's test, over half of the surfaces
++	// in view. Not in a mirror's frame, whose view comes from the reflected
++	// position; portals, skies and mirrors themselves returned above.
++	if (!MirrorFlag && !(PolyFlags & PF_TwoSided))
++	{
++		vec4 plane = { node->PlaneX, node->PlaneY, node->PlaneZ, -node->PlaneW };
++		if (dot(ViewLocation, plane) < 0.0f)
++			return;
++	}
++
+ 	if (!Clipper.CheckSurface(points, numverts, (PolyFlags & PF_NoOcclude) == 0))
+ 		return;
+ 
+-- 
+2.55.0
+
