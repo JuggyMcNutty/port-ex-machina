@@ -68,6 +68,8 @@ per patch file:
   did (`f7188e7`).
 - `0021-surface-points-on-demand.patch` — a surface's points gathered only
   when a visibility test needs them (`2d08d1d`).
+- `0022-ai-lod-far-tier.patch` — with AI level of detail, pawns out of sight
+  beyond 4000 units think every sixth frame (`da0fa3f`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -763,6 +765,22 @@ since patch 0011 over half the surfaces in view, one-sided back faces, are
 then skipped untested. The points are now gathered before a sky, warp zone
 or mirror's portal check and before the surface test, the only places that
 read them.
+
+## Patch 0022 — a far tier of AI level of detail
+
+Fork commit `da0fa3f`. On the Smart Pro the game tick went from ~65 to ~63
+ms at native resolution -- where the frame barely moved, the render waiting
+on the GPU instead -- and at 853×480 the fight went from 7.9 to 8.4 FPS.
+
+### 40. Every sixth frame when far
+
+With `Performance.AiLevelOfDetail` (patch 0008), a pawn out of the player's
+sight and not within 1500 units thinks every third frame. One also beyond
+4000 units (~76 m) now thinks every sixth, with all the time it skipped:
+the second tier the owner chose for the handheld, at the cost of such a
+pawn noticing things up to five frames late. On Liberty Island ~48 pawns a
+frame fall in that tier, ~8 of them thinking; ~9 fewer pawns think each
+frame than before. The launcher's Distant AI row says so.
 
 ## Running it headlessly
 

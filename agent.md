@@ -16,11 +16,11 @@ engine, a fork of Surreal Engine.
   Its history was rewritten before publishing (2026-09-22) to drop the game's
   files and a personal email address.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; Liberty Island's opening
-  firefight **7.0 FPS** at native resolution, 7.9 at 853×480 (2.2 before engine
-  patches 0004–0021), still CPU-bound on NPC AI and render CPU; UNATCO HQ
-  indoors ~20. The target is ~20 FPS in the fight (Decided). The device has
-  the current build: patches 0001–0021, Overclock, Distant AI on, native
-  resolution.
+  firefight **7.0 FPS** at native resolution, 8.4 at 853×480 (2.2 before engine
+  patches 0004–0022), still CPU-bound on NPC AI and render CPU, and at native
+  resolution held by the GPU too; UNATCO HQ indoors ~20. The target is ~20 FPS
+  in the fight (Decided). The device has the current build: patches
+  0001–0022, Overclock, Distant AI on, native resolution.
 - **linux-x86_64**: launcher and engine build natively; the staged app's
   `run-game.sh` ran the engine into the intro level on the development PC.
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
@@ -73,15 +73,18 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
 
 1. **Smart Pro performance** (owner, 2026-09-22): the target is **~20 FPS on
    Liberty Island** (~50 ms a frame), and every trade-off below is accepted.
-   Now 7.0 FPS at native resolution (~143 ms) and 7.9 at 853×480, facing the
+   Now 7.0 FPS at native resolution (~142 ms) and 8.4 at 853×480, facing the
    fight in overclock. Where it goes is in
-   [its README](ports/trimui-smartpro/README.md#performance): game tick ~65 ms
+   [its README](ports/trimui-smartpro/README.md#performance): game tick ~63 ms
    (NPC AI: ~27 ms under script calls, ~21 ms collision traces, ~12 ms
    per-actor work), render CPU ~62 ms (visibility ~16, actor meshes ~12, BSP
    surfaces 11), lightmaps and their uploads ~8 ms. The GPU (~76 ms)
    overlaps the tick, which is now the shorter of the two: at native
-   resolution the render waits ~4 ms for the GPU and tick savings show less
-   in the frame; at 853×480 they show in full. 20 FPS needs the script VM
+   resolution the render waits ~5 ms for the GPU and tick savings hardly
+   show in the frame (0022: tick -2.6 ms, frame -0.7), while at 853×480
+   they show in full. At native resolution, 20 FPS also needs the GPU's
+   ~76 ms a frame below ~50 -- something for the owner to weigh against the
+   Resolution default. 20 FPS needs the script VM
    several times faster, so the deep VM work is in scope.
 
    Done, one engine patch each, measured: CPU/GPU overlap (0004); lightmaps
@@ -102,7 +105,8 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    mesh faces handed to the device in runs (0019); the ARM build's clip
    test in the visibility clipper fixed -- an upstream bug that clipped
    every triangle on non-x86 builds (0020); surface points gathered only
-   for the surfaces tested (0021).
+   for the surfaces tested (0021); AI level of detail's far tier, every
+   sixth frame beyond 4000 units (0022).
    [engine-patches/README.md](engine-patches/README.md) has what each found.
 
    Next, in order, re-measuring after each:
@@ -118,7 +122,10 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    - Found 2026-09-23, not yet placed in this order by the owner: **collision
      traces** (~21 ms of the tick: walking pawns' physics, `TryMove` /
      `TryStepToGround` / `ShouldAbortJumping`, and AI sight, `CanSee` /
-     `FastTrace`, through `TraceAABBModel` and `TraceRayModel`), the
+     `FastTrace`, through `TraceAABBModel` and `TraceRayModel` -- leads: the
+     ray trace hands both children of every plane the whole segment rather
+     than splitting it there, and the box sweep allocates its planes on the
+     heap for every leaf it visits), the
      **per-actor work** around the scripts (~12 ms: `ULevel::TickActor`,
      animation and event lookups over ~2,500 actors a frame), and the audio
      update's scan of every actor for an ambient sound (~2 ms,
@@ -131,8 +138,8 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
      (`BspClipper::DrawSpan` ~3 ms), triangle set-up and rasterising (~3.5),
      the BSP walk itself (`ProcessNode`/`ProcessNodeSurface` ~5, cache
      misses), box tests (~2).
-   - A second tier of AI level of detail (every sixth frame beyond, say,
-     4000 units).
+   - A second tier of AI level of detail (done, 0022: every sixth frame
+     beyond 4000 units).
    - **Lightmap uploads** (~4 ms since patch 0011): a rebuilt lightmap is
      re-uploaded whole, though only the rows its lights reach changed.
 2. **Renderers on aarch64** (owner, 2026-09-22): the goal is Vulkan, OpenGL ES
@@ -145,7 +152,7 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
 
 1. **Verify by hand** (owner):
    - On the Smart Pro: that NPCs out of sight still behave (Distant AI on:
-     they think every third frame); the Video tab's Resolution at 960×540 and
+     they think every third frame, every sixth beyond 4000 units); the Video tab's Resolution at 960×540 and
      853×480 -- the look, and the menu pointer's speed; START opens the pause menu on the first
      press after skipping the intro; SELECT opens it too; B/Y/SELECT/START close menus; the
      Customize buttons screen; the retired-layout upgrade being written on

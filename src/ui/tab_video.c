@@ -213,9 +213,9 @@ static const dxl_row rows[] = {
       .reset = es_reset, .arg = DXL_ES_RENDER_SCALE },
     { .label = "Distant AI",
       .help = "On lets characters you cannot see, and who are not close, think every third "
-              "frame instead of every frame; they still move and animate every frame. Saves "
-              "much of the CPU the game's AI takes, at the cost of them reacting a little "
-              "later. Off thinks for everyone every frame.",
+              "frame instead of every frame, and every sixth when far away; they still move "
+              "and animate every frame. Saves much of the CPU the game's AI takes, at the "
+              "cost of them reacting a little later. Off thinks for everyone every frame.",
       .value = es_value, .step = es_step, .reset = es_reset, .arg = DXL_ES_AI_LOD },
     { .label = "Vertical sync",
       .help = "Waits for the display's refresh before showing a frame. Removes tearing, "

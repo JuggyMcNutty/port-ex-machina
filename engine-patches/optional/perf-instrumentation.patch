@@ -167,7 +167,7 @@ index 12619e4..3c36bfa 100644
  	for (UActor* light : lights)
  	{
 diff --git a/SurrealEngine/Packages/Engine/Actors/UActor.cpp b/SurrealEngine/Packages/Engine/Actors/UActor.cpp
-index 051f687..e0d3ca9 100644
+index 2226b8c..9082582 100644
 --- a/SurrealEngine/Packages/Engine/Actors/UActor.cpp
 +++ b/SurrealEngine/Packages/Engine/Actors/UActor.cpp
 @@ -16,6 +16,7 @@
@@ -178,13 +178,13 @@ index 051f687..e0d3ca9 100644
  
  UActor* UActor::Spawn(UClass* SpawnClass, std::optional<UActor*> SpawnOwner, std::optional<NameString> SpawnTag, std::optional<vec3> SpawnLocation, std::optional<Rotator> SpawnRotation)
  {
-@@ -246,6 +247,8 @@ bool UActor::ThinkThisFrame(float elapsed, float& thinkElapsed)
- 	UActor* player = engine->viewport->Actor();
- 	bool seen = LastVisibleFrame >= engine->render->SceneFrameStart;
- 	bool near = player && length(player->Location() - Location()) < nearDistance;
+@@ -249,6 +250,8 @@ bool UActor::ThinkThisFrame(float elapsed, float& thinkElapsed)
+ 	float distance = player ? length(player->Location() - Location()) : 0.0f;
+ 	bool near = player && distance < nearDistance;
+ 	int interval = (player && distance > farDistance) ? 6 : 3;
 +	if (PerfLog::Enabled()) // TEMPORARY DEBUG TOOL: why pawns think
-+		PerfLog::Tally()[seen ? (near ? "ai-seen+near" : "ai-seen") : near ? "ai-near" : AiFramesSinceThought >= 3 ? "ai-turn" : "ai-skip"]++;
- 	if (seen || near || AiFramesSinceThought >= 3)
++		PerfLog::Tally()[seen ? (near ? "ai-seen+near" : "ai-seen") : near ? "ai-near" : AiFramesSinceThought >= interval ? (interval == 6 ? "ai-far-turn" : "ai-turn") : (interval == 6 ? "ai-far-skip" : "ai-skip")]++;
+ 	if (seen || near || AiFramesSinceThought >= interval)
  	{
  		thinkElapsed = AiTimeSinceThought;
 diff --git a/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp b/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp

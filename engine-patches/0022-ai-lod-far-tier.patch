@@ -1,0 +1,60 @@
+From da0fa3fcd011378bcee887e72b866298d097f01a Mon Sep 17 00:00:00 2001
+From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
+Date: Wed, 23 Sep 2026 10:57:25 -0500
+Subject: [PATCH] AI level of detail: a second tier, every sixth frame when far
+
+FORK ONLY. This project ships a NO-AI Code Rule asking that LLM-written
+changes stay in a fork and are never PR'd upstream. These were written with
+Claude. Do not submit them.
+
+With Performance.AiLevelOfDetail, a pawn out of the player's sight and not
+close (1500 units) thinks every third frame. One also beyond 4000 units
+(~76 m) now thinks every sixth, with all the time it skipped, as the
+owner chose for the handheld: such a pawn notices things up to five
+frames late. Pawns in view or close still think every frame, and movement,
+physics, animation, timers and the engine's sight checks still run every
+frame for all.
+---
+ SurrealEngine/Packages/Engine/Actors/UActor.cpp | 7 +++++--
+ SurrealEngine/Packages/Engine/Actors/UActor.h   | 5 +++--
+ 2 files changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/SurrealEngine/Packages/Engine/Actors/UActor.cpp b/SurrealEngine/Packages/Engine/Actors/UActor.cpp
+index 051f687..2226b8c 100644
+--- a/SurrealEngine/Packages/Engine/Actors/UActor.cpp
++++ b/SurrealEngine/Packages/Engine/Actors/UActor.cpp
+@@ -243,10 +243,13 @@ bool UActor::ThinkThisFrame(float elapsed, float& thinkElapsed)
+ 	AiFramesSinceThought++;
+ 
+ 	constexpr float nearDistance = 1500.0f; // ~28 m: close enough to fight
++	constexpr float farDistance = 4000.0f; // ~76 m: beyond this, every sixth frame
+ 	UActor* player = engine->viewport->Actor();
+ 	bool seen = LastVisibleFrame >= engine->render->SceneFrameStart;
+-	bool near = player && length(player->Location() - Location()) < nearDistance;
+-	if (seen || near || AiFramesSinceThought >= 3)
++	float distance = player ? length(player->Location() - Location()) : 0.0f;
++	bool near = player && distance < nearDistance;
++	int interval = (player && distance > farDistance) ? 6 : 3;
++	if (seen || near || AiFramesSinceThought >= interval)
+ 	{
+ 		thinkElapsed = AiTimeSinceThought;
+ 		AiTimeSinceThought = 0.0f;
+diff --git a/SurrealEngine/Packages/Engine/Actors/UActor.h b/SurrealEngine/Packages/Engine/Actors/UActor.h
+index b9160b6..7b588dc 100644
+--- a/SurrealEngine/Packages/Engine/Actors/UActor.h
++++ b/SurrealEngine/Packages/Engine/Actors/UActor.h
+@@ -387,8 +387,9 @@ public:
+ 
+ 	// Whether the script Tick event and state code run this frame, and with
+ 	// how much time. With Performance.AiLevelOfDetail, a pawn out of the
+-	// player's sight and not close thinks every third frame, given the time
+-	// it skipped; movement, physics, animation and timers still run every frame.
++	// player's sight and not close thinks every third frame (every sixth when
++	// far), given the time it skipped; movement, physics, animation and
++	// timers still run every frame.
+ 	bool ThinkThisFrame(float elapsed, float& thinkElapsed);
+ 
+ 	void TickAnimation(float elapsed);
+-- 
+2.55.0
+
