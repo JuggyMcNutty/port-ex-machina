@@ -11,8 +11,8 @@ engine, a fork of Surreal Engine.
 **State (2026-09-22).**
 
 - **The repository is the project root** (it used to be the port/ directory,
-  briefly ports/aarch64-TSP), laid out as shared launcher + `ports/<id>/`. The work
-  is on branch `ports-framework`, four commits on top of `aarch64`, not merged.
+  briefly ports/aarch64-TSP), laid out as shared launcher + `ports/<id>/`. The
+  work is on branch `ports-framework`, on top of `aarch64`, not merged.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; **Liberty Island 2–3
   FPS**, CPU-bound on NPC AI and lightmap rebuilds -- measured, candidate fixes
   waiting on the owner's choice (Open decisions). The framework's build was
