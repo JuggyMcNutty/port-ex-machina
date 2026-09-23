@@ -41,6 +41,8 @@ per patch file:
   looked up once, plain-data locals zero-filled (`c4b46f1`).
 - `0008-ai-level-of-detail.patch` — pawns out of sight think every third frame,
   when `Settings.json` asks for it (`4222051`).
+- `0009-render-scale.patch` — the scene drawn smaller than the window and
+  scaled up, when `Settings.json` asks for it (`2f0143b`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -415,6 +417,37 @@ Liberty Island it called ~50 of 73 pawns visible.
 
 `LauncherSettings` reads and writes the `Performance` block like `Gamepad`:
 absent members keep their defaults.
+
+## Patch 0009 — render scale
+
+Fork commit `2f0143b`. `Settings.json` `Performance.RenderScale` (default 1)
+is the scene's size as a fraction of the window's -- the launcher's Video tab
+row Resolution, which offers the panel's own and the usual resolutions below
+it down to 480 lines. On the Smart Pro, 853×480 took the fight from 4.5 to
+4.8 FPS ([Performance](../ports/trimui-smartpro/README.md#performance)).
+
+### 26. The render size
+
+The Vulkan renderer already draws into offscreen images and scales the result
+to the swapchain (`DrawPresentTexture`, through a linear sampler), so drawing
+smaller is a matter of what size the game is told. `RenderDevice` gains
+`GetRenderScale`, `GetRenderWidth` and `GetRenderHeight`; only a device that
+`SupportsRenderScale` (Vulkan) applies the setting, so OpenGL and D3D11 keep
+drawing at the window's size. The render size replaces the window's wherever
+the game used it: `GameWindow`'s pixel size (and so the viewport rect and
+`getcurrentres`), the scene textures, `ReadPixels`, the widget canvas' frame.
+The swapchain stays at the window's size.
+
+Window positions and pointer deltas arrive in window pixels, so the UI scales
+them into render pixels (`URootWindow::OnWindowRawMouseMove`, the viewport's
+`WindowsMouseX`/`Y`); mouse look is untouched. Deus Ex's UI scale is
+`round(height / 600)`, at least 1, so at 540 and 480 lines the menus keep their
+pixels and cover more of the screen.
+
+The engine's own resolution (`FullscreenViewportX`/`Y`, `setres`) is the
+window's, snapped to the display's modes -- on the handheld only 1280×720 --
+which is why this is a separate setting. `BspClipper` sizes its occlusion
+buffer to neither: it is a fixed 2048×1080.
 
 ## Running it headlessly
 

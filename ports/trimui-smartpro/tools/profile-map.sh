@@ -7,11 +7,12 @@
 #
 #   scripts/engine.sh perf on
 #   scripts/dx.sh deploy trimui-smartpro      (builds and stages it too)
-#   ...profile...
+#   scripts/dx.sh profile trimui-smartpro [seconds] [label] [cpu] [turn] [map]
 #   scripts/engine.sh perf off
 #   scripts/dx.sh deploy trimui-smartpro
 #
-# Then copy this script to the device and run it over SSH:
+# dx.sh profile copies this script to the device's /tmp/dxl-test (a reboot
+# clears it) and runs it there:
 #
 #   profile-map.sh [seconds] [label] [cpu] [turn] [map]
 #

@@ -59,7 +59,7 @@ A home screen with four tabs, switched with L1/R1; START launches from any tab.
 | Tab | Contents |
 | --- | --- |
 | Play | Play / Quit; what will happen (renderer and GPU, controller and layout, game folder); a crash banner quoting the engine's last error when `Running.ini` survived; notes when the launcher repaired `DeusEx.ini` or changed the pad layout |
-| Video | Renderer (a picker listing the renderers in `renderers.ini` with why each can or cannot run), **CPU mode** (when the device offers modes), Distant AI (`Performance.AiLevelOfDetail`), VSync, Brightness, Lighting, Gamma curve, Bloom and its strength, Anti-aliasing (locked off on a PowerVR GPU, with the reason), Decals |
+| Video | Renderer (a picker listing the renderers in `renderers.ini` with why each can or cannot run), **CPU mode** (when the device offers modes), Resolution (`Performance.RenderScale`, down to 480 lines; Vulkan only), Distant AI (`Performance.AiLevelOfDetail`), VSync, Brightness, Lighting, Gamma curve, Bloom and its strength, Anti-aliasing (locked off on a PowerVR GPU, with the reason), Decals |
 | Controls | Controller detected, in-game pad support on/off, layout preset, **Customize buttons**, look speed X/Y, invert, dead zone, menu pointer speed |
 | System | Last run (from `run-game.log`), the engine log on screen, clear crash marker, reset video / controls / game configuration (each confirmed first), game files, version |
 

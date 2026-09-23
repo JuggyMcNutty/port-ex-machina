@@ -1,0 +1,256 @@
+From 2f0143bd9cb123666d038a8bc19297c7a66ff2fc Mon Sep 17 00:00:00 2001
+From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
+Date: Wed, 23 Sep 2026 06:53:16 -0500
+Subject: [PATCH] Render scale: draw the scene smaller than the window, present
+ it scaled up
+
+FORK ONLY. This project ships a NO-AI Code Rule asking that LLM-written
+changes stay in a fork and are never PR'd upstream. These were written with
+Claude. Do not submit them.
+
+Settings.json Performance.RenderScale (LauncherSettings, default 1) is the
+scene's size as a fraction of the window's, for hardware where fewer pixels
+pay: the Vulkan renderer already draws into offscreen images and scales the
+result to the swapchain in DrawPresentTexture, with a linear sampler.
+
+RenderDevice::GetRenderScale/GetRenderWidth/GetRenderHeight give the size to
+draw at; only a device that SupportsRenderScale (Vulkan) applies the
+setting, so OpenGL and D3D11 keep drawing at the window's size. The game
+sees the render size everywhere it used the window's: GameWindow's pixel
+size (the viewport rect, getcurrentres), the scene textures, ReadPixels, the
+widget canvas' frame. The swapchain stays at the window's size. Window
+positions and pointer deltas are scaled into render pixels for the UI
+(URootWindow, the viewport's WindowsMouse); mouse look is untouched.
+
+Deus Ex's UI scale is round(height / 600), at least 1: at 540 and 480 lines
+it stays 1, so menus keep their pixels and cover more of the screen.
+---
+ SurrealEngine/Engine.cpp                      |  5 ++--
+ SurrealEngine/GameWindow.cpp                  |  6 ++--
+ SurrealEngine/LauncherSettings.cpp            |  2 ++
+ SurrealEngine/LauncherSettings.h              |  1 +
+ .../Windows/TabGroup/URootWindow.cpp          |  5 +++-
+ SurrealEngine/RenderDevice/RenderDevice.cpp   | 30 +++++++++++++++----
+ SurrealEngine/RenderDevice/RenderDevice.h     |  9 ++++++
+ .../Vulkan/VulkanRenderDevice.cpp             | 13 ++++----
+ .../RenderDevice/Vulkan/VulkanRenderDevice.h  |  1 +
+ 9 files changed, 55 insertions(+), 17 deletions(-)
+
+diff --git a/SurrealEngine/Engine.cpp b/SurrealEngine/Engine.cpp
+index c766e46..51be76f 100644
+--- a/SurrealEngine/Engine.cpp
++++ b/SurrealEngine/Engine.cpp
+@@ -1643,8 +1643,9 @@ void Engine::OnWindowMouseMove(const Point& pos)
+ 
+ 	if (engine->LaunchInfo.ue1Version > 219)
+ 	{
+-		viewport->WindowsMouseX() = (float)(pos.x * window->GetDpiScale());
+-		viewport->WindowsMouseY() = (float)(pos.y * window->GetDpiScale());
++		float scale = (float)window->GetDpiScale() * window->GetRenderDevice()->GetRenderScale();
++		viewport->WindowsMouseX() = pos.x * scale;
++		viewport->WindowsMouseY() = pos.y * scale;
+ 	}
+ }
+ 
+diff --git a/SurrealEngine/GameWindow.cpp b/SurrealEngine/GameWindow.cpp
+index 878f7f0..f945e99 100644
+--- a/SurrealEngine/GameWindow.cpp
++++ b/SurrealEngine/GameWindow.cpp
+@@ -29,14 +29,16 @@ RenderDevice* GameWindow::GetRenderDevice()
+ 	return device.get();
+ }
+ 
++// The size the game draws at: the window's, unless the render device draws
++// the scene smaller and scales it up (RenderDevice::GetRenderScale).
+ int GameWindow::GetPixelWidth()
+ {
+-	return GetNativePixelWidth();
++	return device ? device->GetRenderWidth() : GetNativePixelWidth();
+ }
+ 
+ int GameWindow::GetPixelHeight()
+ {
+-	return GetNativePixelHeight();
++	return device ? device->GetRenderHeight() : GetNativePixelHeight();
+ }
+ 
+ void GameWindow::ToggleWindowFullscreen(Size newResolution)
+diff --git a/SurrealEngine/LauncherSettings.cpp b/SurrealEngine/LauncherSettings.cpp
+index dd8c09d..bc0886b 100644
+--- a/SurrealEngine/LauncherSettings.cpp
++++ b/SurrealEngine/LauncherSettings.cpp
+@@ -80,6 +80,7 @@ LauncherSettings::LauncherSettings()
+ 
+ 		const JsonValue& perf = settings["Performance"];
+ 		if (!perf["AiLevelOfDetail"].is_undefined()) Performance.AiLevelOfDetail = perf["AiLevelOfDetail"].to_boolean();
++		if (!perf["RenderScale"].is_undefined()) Performance.RenderScale = (float)perf["RenderScale"].to_number();
+ 	}
+ 	catch (...)
+ 	{
+@@ -145,6 +146,7 @@ void LauncherSettings::Save()
+ 
+ 	JsonValue perf = JsonValue::object();
+ 	perf["AiLevelOfDetail"] = JsonValue::boolean(Performance.AiLevelOfDetail);
++	perf["RenderScale"] = JsonValue::number(Performance.RenderScale);
+ 
+ 	JsonValue settings = JsonValue::object();
+ 	settings["RenderDevice"] = std::move(rendev);
+diff --git a/SurrealEngine/LauncherSettings.h b/SurrealEngine/LauncherSettings.h
+index c3600dc..ddaaf82 100644
+--- a/SurrealEngine/LauncherSettings.h
++++ b/SurrealEngine/LauncherSettings.h
+@@ -72,6 +72,7 @@ public:
+ 	struct
+ 	{
+ 		bool AiLevelOfDetail = false;
++		float RenderScale = 1.0f; // the scene's size as a fraction of the window's (RenderDevice::GetRenderScale)
+ 	} Performance;
+ 
+ private:
+diff --git a/SurrealEngine/Packages/Extension/Windows/TabGroup/URootWindow.cpp b/SurrealEngine/Packages/Extension/Windows/TabGroup/URootWindow.cpp
+index 981ba0d..fd52ba0 100644
+--- a/SurrealEngine/Packages/Extension/Windows/TabGroup/URootWindow.cpp
++++ b/SurrealEngine/Packages/Extension/Windows/TabGroup/URootWindow.cpp
+@@ -7,6 +7,8 @@
+ #include "Packages/Engine/Resources/Textures/UTexture.h"
+ #include "Packages/Extension/Windows/UGC.h"
+ #include "Engine.h"
++#include "GameWindow.h"
++#include "RenderDevice/RenderDevice.h"
+ 
+ void URootWindow::EnablePositionalSound(std::optional<bool> bEnable)
+ {
+@@ -366,7 +368,8 @@ bool URootWindow::OnWindowRawMouseMove(int dx, int dy)
+ {
+ 	if (IsCursorVisible())
+ 	{
+-		float mouseSpeed = 1.0f / GetVirtualScale();
++		// Deltas are window pixels; the UI is laid out in render pixels
++		float mouseSpeed = engine->window->GetRenderDevice()->GetRenderScale() / GetVirtualScale();
+ 		SetRootCursorPos(MouseX() + dx * mouseSpeed, MouseY() + dy * mouseSpeed);
+ 	}
+ 	return IsModalOpen();
+diff --git a/SurrealEngine/RenderDevice/RenderDevice.cpp b/SurrealEngine/RenderDevice/RenderDevice.cpp
+index e73270f..0bc3cb0 100644
+--- a/SurrealEngine/RenderDevice/RenderDevice.cpp
++++ b/SurrealEngine/RenderDevice/RenderDevice.cpp
+@@ -49,6 +49,24 @@ std::unique_ptr<RenderDevice> RenderDevice::Create(Widget* viewport, RenderAPI r
+ 	}
+ }
+ 
++float RenderDevice::GetRenderScale() const
++{
++	if (!SupportsRenderScale())
++		return 1.0f;
++	float scale = LauncherSettings::Get().Performance.RenderScale;
++	return std::isfinite(scale) ? std::clamp(scale, 0.25f, 1.0f) : 1.0f;
++}
++
++int RenderDevice::GetRenderWidth() const
++{
++	return std::max((int)std::lround(Viewport->GetNativePixelWidth() * GetRenderScale()), 1);
++}
++
++int RenderDevice::GetRenderHeight() const
++{
++	return std::max((int)std::lround(Viewport->GetNativePixelHeight() * GetRenderScale()), 1);
++}
++
+ ////////////////////////////////////////////////////////////////////////////
+ 
+ RenderDeviceCanvas::RenderDeviceCanvas(RenderDevice* device) : device(device)
+@@ -61,12 +79,12 @@ void RenderDeviceCanvas::begin(const Colorf& color)
+ 
+ 	frame.XB = 0;
+ 	frame.YB = 0;
+-	frame.X = device->Viewport->GetNativePixelWidth();
+-	frame.Y = device->Viewport->GetNativePixelHeight();
+-	frame.FX = (float)device->Viewport->GetNativePixelWidth();
+-	frame.FY = (float)device->Viewport->GetNativePixelHeight();
+-	frame.FX2 = (float)device->Viewport->GetNativePixelWidth() * 0.5f;
+-	frame.FY2 = (float)device->Viewport->GetNativePixelHeight() * 0.5f;
++	frame.X = device->GetRenderWidth();
++	frame.Y = device->GetRenderHeight();
++	frame.FX = (float)device->GetRenderWidth();
++	frame.FY = (float)device->GetRenderHeight();
++	frame.FX2 = (float)device->GetRenderWidth() * 0.5f;
++	frame.FY2 = (float)device->GetRenderHeight() * 0.5f;
+ 	frame.Viewport = device->Viewport;
+ 	frame.FovAngle = 90.0f;
+ 	frame.ObjectToWorld = mat4::identity();
+diff --git a/SurrealEngine/RenderDevice/RenderDevice.h b/SurrealEngine/RenderDevice/RenderDevice.h
+index 2e23b3c..ee8a97e 100644
+--- a/SurrealEngine/RenderDevice/RenderDevice.h
++++ b/SurrealEngine/RenderDevice/RenderDevice.h
+@@ -122,6 +122,15 @@ public:
+ 	virtual bool SupportsTextureFormat(TextureFormat Format) = 0;
+ 	virtual void UpdateTextureRect(TextureInfo& Info, int U, int V, int UL, int VL) = 0;
+ 
++	// A device that draws the scene offscreen and scales it to the window when
++	// presenting can draw it smaller than the window (Settings.json
++	// Performance.RenderScale). The game -- the viewport, the canvas, the UI --
++	// then sees the render size, not the window's.
++	virtual bool SupportsRenderScale() const { return false; }
++	float GetRenderScale() const;
++	int GetRenderWidth() const;
++	int GetRenderHeight() const;
++
+ 	bool ParseCommand(std::string* cmd, const std::string& keyword) { return false; }
+ 
+ 	Widget* Viewport = nullptr;
+diff --git a/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.cpp b/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.cpp
+index dd6e437..a78b258 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.cpp
++++ b/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.cpp
+@@ -192,11 +192,11 @@ void VulkanRenderDevice::Lock(vec4 InFlashScale, vec4 InFlashFog, vec4 ScreenCle
+ 	ForceHitIndex = -1;
+ 
+ 	// If frame textures no longer match the window or user settings, recreate them along with the swap chain
+-	if (!Textures->Scene || Textures->Scene->Width != Viewport->GetNativePixelWidth() || Textures->Scene->Height != Viewport->GetNativePixelHeight() ||Textures->Scene->Multisample != GetSettingsMultisample())
++	if (!Textures->Scene || Textures->Scene->Width != GetRenderWidth() || Textures->Scene->Height != GetRenderHeight() ||Textures->Scene->Multisample != GetSettingsMultisample())
+ 	{
+ 		Framebuffers->DestroySceneFramebuffer();
+ 		Textures->Scene.reset();
+-		Textures->Scene.reset(new SceneTextures(this, Viewport->GetNativePixelWidth(), Viewport->GetNativePixelHeight(), GetSettingsMultisample()));
++		Textures->Scene.reset(new SceneTextures(this, GetRenderWidth(), GetRenderHeight(), GetSettingsMultisample()));
+ 		RenderPasses->CreateRenderPass();
+ 		RenderPasses->CreatePipelines();
+ 		Framebuffers->CreateSceneFramebuffer();
+@@ -875,8 +875,8 @@ void VulkanRenderDevice::ReadPixels(TextureColor* Pixels)
+ 	// Convert from rgba16f to bgra8 using the GPU:
+ 	auto srcimage = Textures->Scene->PPImage[GammaCorrectScreenshots ? 1 : 0].get();
+ 
+-	int w = Viewport->GetNativePixelWidth();
+-	int h = Viewport->GetNativePixelHeight();
++	int w = GetRenderWidth();
++	int h = GetRenderHeight();
+ 	void* data = Pixels;
+ 
+ 	auto dstimage = ImageBuilder()
+@@ -1401,8 +1401,9 @@ PresentPushConstants VulkanRenderDevice::GetPresentPushConstants()
+ 
+ void VulkanRenderDevice::DrawPresentTexture(int width, int height)
+ {
+-	int vpWidth = Viewport->GetNativePixelWidth();
+-	int vpHeight = Viewport->GetNativePixelHeight();
++	// The scene's size: the image scales from it to the window's
++	int vpWidth = GetRenderWidth();
++	int vpHeight = GetRenderHeight();
+ 
+ 	PresentPushConstants pushconstants = GetPresentPushConstants();
+ 
+diff --git a/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.h b/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.h
+index 17d0a25..634a3ef 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.h
++++ b/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.h
+@@ -43,6 +43,7 @@ public:
+ 	void SetHitLocation();
+ 
+ 	bool SupportsTextureFormat(TextureFormat Format) override;
++	bool SupportsRenderScale() const override { return true; }
+ 	void UpdateTextureRect(TextureInfo& Info, int U, int V, int UL, int VL) override;
+ 
+ 	std::shared_ptr<VulkanDevice> Device;
+-- 
+2.55.0
+

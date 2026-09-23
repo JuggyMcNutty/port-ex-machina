@@ -16,9 +16,10 @@ engine, a fork of Surreal Engine.
   Its history was rewritten before publishing (2026-09-22) to drop the game's
   files and a personal email address.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; Liberty Island's opening
-  firefight **4.5 FPS** (2.2 before engine patches 0004–0008), still CPU-bound
-  on NPC AI script and render CPU; the target is ~20 FPS (Decided). The device
-  has the current build: patches 0001–0008, Overclock, Distant AI on.
+  firefight **4.5 FPS** at native resolution, 4.8 at 853×480 (2.2 before engine
+  patches 0004–0009), still CPU-bound on NPC AI script and render CPU; the
+  target is ~20 FPS (Decided). The device has the current build: patches
+  0001–0009, Overclock, Distant AI on, native resolution.
 - **linux-x86_64**: launcher and engine build natively; the staged app's
   `run-game.sh` ran the engine into the intro level on the development PC.
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
@@ -83,23 +84,15 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    animated light over whole surfaces, not flashes, so that trade-off was not
    needed); the script call path without casts (0006) or per-call set-up
    (0007); AI level of detail (0008, the Video tab's Distant AI, on by default
-   here). [engine-patches/README.md](engine-patches/README.md) has what each
-   found.
+   here); render scale (0009, the Video tab's Resolution, owner's choice,
+   native by default: 853×480 gives 4.8 FPS). [engine-patches/README.md](engine-patches/README.md)
+   has what each found.
 
    Next, in order, re-measuring after each:
-   - **Render resolution**, chosen by the user on the launcher's Video tab
-     (owner, 2026-09-22) and scaled up to the panel; the default stays native.
-     The engine already draws each frame into an offscreen image and scales it
-     when presenting (`VulkanRenderDevice::DrawPresentTexture`); a fork patch
-     lets that image be smaller than the window. The game's own resolution menu
-     refuses anything under 640×480 (`MenuChoice_Resolution` in `DeusEx.u`),
-     so 480 lines is the floor on a 16:9 panel: 1280×720, 960×540, 854×480 on
-     the Smart Pro. Still to settle when it is built: a new `Settings.json`
-     field, or the engine's own `FullscreenViewportX` and `Y`, which the in-game
-     menu writes too. A softer image, HUD included.
-   - **Visibility** (34 ms): `BspClipper` rasterises occluders on every
-     scanline of the viewport, so the render resolution shrinks it; the
-     clipper could also run coarser than the image.
+   - **Visibility** (34 ms): `BspClipper` rasterises occluders into a fixed
+     2048×1080 span buffer, whatever the resolution -- finer than the panel's
+     720 lines. Sizing it to the image (capped at 2048×1080) should save time
+     at native resolution and more below it.
    - **The script interpreter** (`Frame::Run`, `ExpressionEvaluator::Eval`,
      `ExpressionValue` copies), the large part of the tick; one function,
      `ScriptedPawn.CheckEnemyPresence`, is about a third of all script time.
@@ -123,7 +116,8 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
 
 1. **Verify by hand** (owner):
    - On the Smart Pro: that NPCs out of sight still behave (Distant AI on:
-     they think every third frame); START opens the pause menu on the first
+     they think every third frame); the Video tab's Resolution at 960×540 and
+     853×480 -- the look, and the menu pointer's speed; START opens the pause menu on the first
      press after skipping the intro; SELECT opens it too; B/Y/SELECT/START close menus; the
      Customize buttons screen; the retired-layout upgrade being written on
      Play/Quit; CPU mode chosen from the Video tab; stick speeds -- look

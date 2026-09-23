@@ -49,3 +49,28 @@ port_deploy() {
         dx_ssh "cd '$d' && LD_LIBRARY_PATH=/usr/trimui/lib:/usr/lib:/lib ./deusex-launcher ${args[*]:-} 2>&1; echo \"exit=\$?\""
     fi
 }
+
+#   scripts/dx.sh profile trimui-smartpro [seconds] [label] [cpu] [turn] [map]
+#
+# Runs tools/profile-map.sh on the device (its arguments; the engine there must
+# be a `scripts/engine.sh perf on` build) and prints its summary. The script is
+# copied over every time: the device's /tmp does not survive a reboot. SHOT and
+# SURREAL_PERF_DETAIL pass through; with SHOT the screen comes back as
+# build/trimui-smartpro/profile/fb-<label>.png (needs ImageMagick).
+port_profile() {
+    local label="${2:-run}"
+    dx_ssh "mkdir -p /tmp/dxl-test && cat > /tmp/dxl-test/profile-map.sh && chmod +x /tmp/dxl-test/profile-map.sh" \
+        < "$PORT_DIR/tools/profile-map.sh"
+    dx_ssh "SHOT='${SHOT:-}' SURREAL_PERF_DETAIL='${SURREAL_PERF_DETAIL:-}' /tmp/dxl-test/profile-map.sh $*"
+    if [ -n "${SHOT:-}" ]; then
+        local out="$BUILD/profile"
+        mkdir -p "$out"
+        dx_ssh "cat /tmp/dxl-test/fb-$label.gz" | gunzip -c 2>/dev/null | head -c $((1280 * 720 * 4)) > "$out/fb-$label.bgra" || true
+        if command -v magick >/dev/null; then
+            magick -size 1280x720 -depth 8 "bgra:$out/fb-$label.bgra" -alpha off "$out/fb-$label.png" &&
+                rm -f "$out/fb-$label.bgra" && say "screen: $out/fb-$label.png"
+        else
+            say "screen (raw BGRA, 1280x720): $out/fb-$label.bgra"
+        fi
+    fi
+}

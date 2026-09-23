@@ -22,7 +22,8 @@
     "Layout": "modern"
   },
   "Performance": {
-    "AiLevelOfDetail": true
+    "AiLevelOfDetail": true,
+    "RenderScale": 1
   },
   "Games": {
     "SearchList": [],

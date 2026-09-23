@@ -46,7 +46,19 @@ static const dxl_es_info fields[DXL_ES_FIELD_COUNT] = {
 
     /* Off unless the port's packaged default turns it on: a desktop has the CPU. */
     [DXL_ES_AI_LOD]            = { PF, "AiLevelOfDetail",   DXL_ES_BOOL,   NULL, NULL, 0,    0, 1, 1 },
+    /* The engine clamps to 0.25..1; the UI offers dxl_es_render_heights. */
+    [DXL_ES_RENDER_SCALE]      = { PF, "RenderScale",       DXL_ES_NUMBER, NULL, NULL, 1.00, 0.25, 1.00, 0.05 },
 };
+
+int dxl_es_render_heights(int panel_h, int *heights, int max) {
+    static const int usual[] = { 2160, 1440, 1080, 900, 720, 540, DXL_ES_MIN_RENDER_LINES };
+    int n = 0;
+    if (max < 1 || panel_h < 1) return 0;
+    heights[n++] = panel_h;
+    for (size_t i = 0; i < sizeof usual / sizeof *usual && n < max; i++)
+        if (usual[i] < panel_h) heights[n++] = usual[i];
+    return n;
+}
 
 const dxl_es_info *dxl_es_describe(dxl_es_field f) {
     return (f >= 0 && f < DXL_ES_FIELD_COUNT) ? &fields[f] : NULL;

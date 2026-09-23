@@ -10,6 +10,7 @@
  */
 #include "screens_internal.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -164,11 +165,52 @@ static int bloom_on(dxl_session *s, const dxl_row *r, char *why, size_t n) {
     return 0;
 }
 
+/* Render resolution: Performance.RenderScale, offered as the panel's own
+ * resolution and the usual ones below it (dxl_es_render_heights). */
+static int render_heights(int *h, int max) {
+    return dxl_es_render_heights(dxl_target_get()->panel_h, h, max);
+}
+static int render_current(dxl_session *s, const int *h, int count) {
+    double scale = dxl_es_number(s->app->es, DXL_ES_RENDER_SCALE);
+    int panel_h = dxl_target_get()->panel_h, best = -1;
+    for (int i = 0; i < count; i++)
+        if (fabs(scale - (double)h[i] / panel_h) < 0.002) best = i;
+    return best;
+}
+static void render_value(dxl_session *s, const dxl_row *r, char *out, size_t n) {
+    int h[8], count = render_heights(h, 8), i = render_current(s, h, count);
+    const dxl_target *t = dxl_target_get();
+    if (i < 0)
+        snprintf(out, n, "%d%%", (int)(dxl_es_number(s->app->es, DXL_ES_RENDER_SCALE) * 100 + 0.5));
+    else
+        snprintf(out, n, "%dx%d%s", (int)((double)t->panel_w * h[i] / t->panel_h + 0.5), h[i],
+                 i == 0 ? " (native)" : "");
+}
+static void render_step(dxl_session *s, const dxl_row *r, int dir) {
+    int h[8], count = render_heights(h, 8), i = render_current(s, h, count);
+    i = i < 0 ? 0 : i + dir;          /* right: fewer lines */
+    if (i < 0 || i >= count) return;
+    dxl_es_set_number(s->app->es, DXL_ES_RENDER_SCALE, (double)h[i] / dxl_target_get()->panel_h);
+}
+static int render_enabled(dxl_session *s, const dxl_row *r, char *why, size_t n) {
+    if (!strcmp(dxl_es_choice(s->app->es, DXL_ES_RENDER_TYPE), "Vulkan")) return 1;
+    snprintf(why, n, "Only the Vulkan renderer can draw below the screen's resolution; "
+             "this one draws at the screen's own.");
+    return 0;
+}
+
 static const dxl_row rows[] = {
     { .label = "Renderer", .value = renderer_value, .step = renderer_step,
       .activate = renderer_activate, .reset = renderer_reset, .describe = renderer_describe },
     { .label = "CPU mode", .visible = cpu_visible, .value = cpu_value, .step = cpu_step,
       .reset = cpu_reset, .describe = cpu_describe },
+    { .label = "Resolution",
+      .help = "The resolution the game is drawn at, scaled up to fill the screen. Fewer "
+              "pixels are faster -- the GPU's work, and a share of the CPU's -- and softer, "
+              "the HUD and menus included, which also draw larger. The lowest is 480 "
+              "lines, the least the game's menus fit in.",
+      .enabled = render_enabled, .value = render_value, .step = render_step,
+      .reset = es_reset, .arg = DXL_ES_RENDER_SCALE },
     { .label = "Distant AI",
       .help = "On lets characters you cannot see, and who are not close, think every third "
               "frame instead of every frame; they still move and animate every frame. Saves "

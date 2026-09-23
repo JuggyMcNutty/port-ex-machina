@@ -14,7 +14,7 @@ patches 0004–0008), CPU-bound on NPC AI script and render CPU -- see
 | `port.cmake` | links the device's vendor SDL2 from the sysroot; glibc ceiling 2.33 |
 | `toolchain-c.cmake`, `toolchain-cxx.cmake` | Bootlin GCC 9.3 (launcher, C11) and GCC 10.3 (engine, C++20) |
 | `engine.cmake` | the engine for this device: SDL2 only, no X11/Wayland |
-| `port.sh` | `deps` (both toolchains + the sysroot), `deploy` over SSH, the device's address |
+| `port.sh` | `deps` (both toolchains + the sysroot), `deploy` over SSH, `profile` on the device, the device's address |
 | `fetch-sysroot.sh` | the link sysroot: libraries off the device, pinned headers |
 | `target.c` | the device profile: fonts, spruceOS CPU modes, the pad note |
 | `packaging/` | the spruceOS app (`config.json`, `launch.sh`, icon), `port-hooks.sh` (vendor library path, CPU mode), `launcher.ini`, `renderers.ini`, `engine-settings.json.default` |
@@ -157,6 +157,8 @@ and vsync would hold it to 30 or 20). It also turns on
 `Performance.AiLevelOfDetail` (the Video tab's Distant AI, engine patch 0008):
 characters out of sight and not close think every third frame. An install
 whose `Settings.json` predates the field gets it from this default.
+`Performance.RenderScale` is 1: the game draws at the panel's 1280×720 unless
+the Video tab's Resolution asks for 960×540 or 853×480 (engine patch 0009).
 
 ## Diagnosing
 
@@ -187,6 +189,7 @@ The System tab shows the engine and script logs on screen.
 | Deploy with checksums (2026-09-22) | `dx.sh deploy` built and staged, sent only the one changed file, kept the device's copy in `.prev-<date-time>` and verified all 13 files; `profile-map.sh` applied `launcher.ini`'s Overclock (four cores, 2.0 GHz) through `port-hooks.sh` and restored power-save after |
 | CPU/GPU overlap, engine patch 0004 (2026-09-22) | Liberty Island renders correctly mid-fight (framebuffer capture); GPU wait ~76 → ~0.2 ms. Synchronization validation clean on the desktop build, bindless and per-batch paths |
 | Lit-span lightmaps, engine patch 0005 (2026-09-22) | Liberty Island's dock pixel-identical before and after (framebuffer captures); lightmaps ~98 → ~11 ms. On the desktop, a temporary walk over every texel found none in reach outside a span |
+| Render scale, engine patch 0009 (2026-09-23) | Liberty Island at 960×540 and 853×480 fills the panel, scaled up; the HUD draws larger (framebuffer captures). Synchronization validation clean on the desktop at scale 0.667 |
 | Script calls and Distant AI, engine patches 0006–0008 (2026-09-22) | Liberty Island runs, 4.2 → 4.5 FPS with Distant AI; ~38 pawns a frame skip their thinking and the scene renders normally (framebuffer capture). No script errors on the desktop. Whether out-of-sight NPCs still behave is **not yet judged by hand** |
 
 Verified with the earlier wizard build, on code paths unchanged since: install
@@ -205,9 +208,12 @@ out; `DXL_NO_HOME=1`; the messenger half of the single-instance handoff.
 Measured on the device with the frame-time instrumentation in
 `engine-patches/optional/perf-instrumentation.patch` and
 [`tools/profile-map.sh`](tools/profile-map.sh) (start a map directly with
-`--url=<map>`; the hooks are never committed -- `scripts/engine.sh perf on|off`).
-The script applies the CPU mode `launcher.ini` names, through the app's own
-`port-hooks.sh`, so a profile measures what playing gets:
+`--url=<map>`; the hooks are never committed -- `scripts/engine.sh perf on|off`),
+run with `scripts/dx.sh profile trimui-smartpro [seconds] [label] [cpu] [turn]
+[map]`. The script applies the CPU mode `launcher.ini` names, through the
+app's own `port-hooks.sh`, so a profile measures what playing gets; its
+header lists the arguments, and `SHOT=<seconds>` brings the screen back as a
+PNG under `build/trimui-smartpro/profile/`:
 
 | Scene, CPU mode | FPS | Frame | Game tick | Render CPU | GPU wait |
 | --- | --- | --- | --- | --- | --- |
@@ -223,6 +229,8 @@ The script applies the CPU mode `launcher.ini` names, through the app's own
 | The same, script calls without casting (0006) | 4.0 | ~252 ms | ~135 | ~115 | ~0.2 |
 | The same, less work per script call (0007) | 4.2 | ~240 ms | ~124 | ~113 | ~0.2 |
 | The same, AI level of detail on (0008) | 4.5 | ~222 ms | ~104 | ~115 | ~0.2 |
+| The same at 960×540 (render scale 0.75, 0009) | 4.7 | ~214 ms | ~94 | ~118 | ~0.2 |
+| The same at 853×480 (render scale 0.667, 0009) | 4.8 | ~208 ms | ~90 | ~115 | ~0.2 |
 
 (Times in ms per frame, averaged over 60 frames. The performance-mode fight
 rows had the per-class or per-function hooks on, which add their own cost; the
@@ -231,8 +239,12 @@ then on.)
 
 The bold row is where the performance work started; each row after it is one
 engine patch, and what each found is in
-[`engine-patches/README.md`](../../engine-patches/README.md). Where a frame
-goes now (the last row, ~222 ms, facing the fight in overclock):
+[`engine-patches/README.md`](../../engine-patches/README.md). The last two are
+the Video tab's Resolution below native: the GPU's time was already hidden, so
+the gain is the tick's, which shares memory with the GPU -- and not
+visibility's, which draws its occlusion buffer at a fixed 2048×1080 whatever
+the resolution. Where a frame goes at native resolution (~222 ms, facing the
+fight in overclock):
 
 - **Game tick ~104 ms**, almost all NPC AI -- Deus Ex's `ScriptedPawn` script.
   ~61 ms runs under script calls (outermost `Frame::Call`; state code runs
@@ -306,7 +318,7 @@ more tools serve this device:
   SSH-launched engines survive sloppy kills, and two engines fight over the
   display.
 - **The screen can only be seen over SSH by dumping the framebuffer**
-  (`SHOT=<seconds>` makes `tools/profile-map.sh` do it mid-profile):
+  (`SHOT=<seconds> scripts/dx.sh profile ...` does it mid-profile):
   `cat /dev/fb0 > /tmp/fb.raw` (64 MB), gzip it before copying, decode the
   first 1280×720 as BGRA (`magick -size 1280x720 -depth 8 bgra:frame -alpha off`).
 - **busybox has no `timeout` and no `nohup`.** Use `setsid` with all three fds

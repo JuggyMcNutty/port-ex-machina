@@ -7,6 +7,7 @@
 #   scripts/dx.sh stage   <port>              build/<port>/app: exactly what ships
 #   scripts/dx.sh deploy  <port> [args]       build, stage, send the app to the device (port-specific)
 #   scripts/dx.sh run     <port> [args]       run the staged app here (native ports)
+#   scripts/dx.sh profile <port> [args]       frame-time profile on the device (port-specific)
 #   scripts/dx.sh test                        host build + unit tests
 #   scripts/dx.sh check                       docs paths, engine patches, ABI, port files
 #
@@ -14,7 +15,7 @@
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
-usage() { sed -n '2,13p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,14p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 
 load_port() {
     PORT="${1:-}"
@@ -31,6 +32,7 @@ load_port() {
     port_stage()  { :; }
     port_deploy() { die "$PORT has no deploy step; its app is $APP"; }
     port_run()    { die "$PORT does not run on this machine; deploy it instead"; }
+    port_profile() { die "$PORT has no profile step"; }
     # shellcheck source=/dev/null
     . "$PORT_DIR/port.sh"
 }
@@ -173,6 +175,7 @@ case "$cmd" in
     run)    load_port "${1:-}"; shift || true
             [ -x "$APP/deusex-launcher" ] || die "nothing staged -- scripts/dx.sh stage $PORT"
             port_run "$@" ;;
+    profile) load_port "${1:-}"; shift || true; port_profile "$@" ;;
     test)   cmd_test ;;
     check)  cmd_check ;;
     -h|--help|help) usage ;;

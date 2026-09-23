@@ -46,6 +46,7 @@ typedef enum {
     DXL_ES_PAD_LAYOUT,          /* which preset the launcher last applied */
     /* Performance -- the fork's speed-for-fidelity choices */
     DXL_ES_AI_LOD,              /* pawns out of sight think every third frame */
+    DXL_ES_RENDER_SCALE,        /* the scene's size as a fraction of the window's */
     DXL_ES_FIELD_COUNT
 } dxl_es_field;
 
@@ -95,6 +96,14 @@ double      dxl_es_number(const dxl_engine_settings *s, dxl_es_field f);
 int  dxl_es_set_choice(dxl_engine_settings *s, dxl_es_field f, const char *v);
 void dxl_es_set_bool  (dxl_engine_settings *s, dxl_es_field f, int v);
 void dxl_es_set_number(dxl_engine_settings *s, dxl_es_field f, double v);
+
+/* Render resolutions to offer on a panel panel_h lines tall: its own height,
+ * then the usual heights below it down to 480 lines -- the least Deus Ex's
+ * menus fit in (its resolution menu refuses anything under 640x480).
+ * Tallest first; returns how many were written. Performance.RenderScale for
+ * one is its height over panel_h. */
+#define DXL_ES_MIN_RENDER_LINES 480
+int dxl_es_render_heights(int panel_h, int *heights, int max);
 
 /* One field, or every field in a section ("RenderDevice", "Gamepad",
  * "Performance"), back to its default. */

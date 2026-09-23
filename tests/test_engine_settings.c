@@ -167,6 +167,31 @@ static void test_new_field_takes_the_packaged_default(void) {
     teardown();
 }
 
+/* The resolutions the Video tab offers: the panel's own, then the usual ones
+ * below it, never under the 480 lines Deus Ex's menus need. */
+static void test_render_heights(void) {
+    int h[8];
+    CHECK_INT(dxl_es_render_heights(720, h, 8), 3);
+    CHECK_INT(h[0], 720); CHECK_INT(h[1], 540); CHECK_INT(h[2], 480);
+    CHECK_INT(dxl_es_render_heights(1080, h, 8), 5);
+    CHECK_INT(h[0], 1080); CHECK_INT(h[1], 900); CHECK_INT(h[4], 480);
+    CHECK_INT(dxl_es_render_heights(768, h, 8), 4);   /* a 1366x768 laptop */
+    CHECK_INT(h[0], 768); CHECK_INT(h[1], 720);
+    CHECK_INT(dxl_es_render_heights(480, h, 8), 1);
+    CHECK_INT(dxl_es_render_heights(400, h, 8), 1);   /* smaller than the floor: native only */
+    CHECK_INT(h[0], 400);
+    CHECK_INT(dxl_es_render_heights(1080, h, 2), 2);  /* never past max */
+
+    /* RenderScale defaults to 1 (native) and stays in the engine's range. */
+    setup("scale");
+    dxl_engine_settings *s = dxl_es_open(in_dir("Settings.json"), NULL);
+    CHECK(dxl_es_number(s, DXL_ES_RENDER_SCALE) == 1.0);
+    dxl_es_set_number(s, DXL_ES_RENDER_SCALE, 0.1);
+    CHECK(dxl_es_number(s, DXL_ES_RENDER_SCALE) == 0.25);
+    dxl_es_free(s);
+    teardown();
+}
+
 static void test_save_creates_the_directory(void) {
     setup("mkdir");
     dxl_engine_settings *s = dxl_es_open(in_dir("sub/deeper/Settings.json"), NULL);
@@ -201,6 +226,7 @@ TEST_MAIN_BEGIN
     RUN(test_setters_validate);
     RUN(test_reset_uses_packaged_default);
     RUN(test_new_field_takes_the_packaged_default);
+    RUN(test_render_heights);
     RUN(test_save_creates_the_directory);
     RUN(test_clean_file_is_not_dirty);
 TEST_MAIN_END
