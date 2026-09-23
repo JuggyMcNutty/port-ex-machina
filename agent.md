@@ -71,15 +71,17 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
 1. **Smart Pro performance** (owner, 2026-09-22): the target is **~20 FPS on
    Liberty Island**, and every trade-off below is accepted. 20 FPS needs the
    script VM several times faster, so the deep VM work is in scope. Where the
-   time goes is in [its README](ports/trimui-smartpro/README.md#performance):
-   game tick ~40% (NPC AI through a slow script VM), lightmap rebuilds ~20%
-   (muzzle flashes re-light surfaces on the CPU), other render CPU ~20% (not yet
-   broken down), GPU ~15% and serialised with the CPU. Order of work,
-   re-measuring after each:
-   - Break down the ~100 ms of "other render CPU" (a measurement; the device
-     must be awake).
+   time goes is in [its README](ports/trimui-smartpro/README.md#performance)
+   (overclock, facing the fight: 2.2 FPS, ~450 ms): game tick ~38% (NPC AI
+   through a slow script VM), lightmaps ~24% (muzzle flashes re-light surfaces
+   on the CPU), other render CPU ~21% (visibility 34 ms, actor meshes 25, BSP
+   surfaces 14), GPU ~17% and serialised with the CPU. Order of work, by
+   payoff for effort, re-measuring after each:
    - Let CPU and GPU overlap: `CommandBufferManager::SubmitCommands` waits on
-     the fence right after submit. No visible cost.
+     the fence right after submit. No visible cost; hides up to ~76 ms.
+   - Lightmaps: don't re-light for short-lived flashes; spread rebuilds over
+     the four cores. Flashes light characters, not walls. ~110 ms in the
+     fight, re-uploads included.
    - VM call path: `Frame::Call`, `CallScript` and `CallNative` (the
      engine's `Frame.cpp`) walk the function's parameter list two or three times
      per call, casting every field, and take the arguments in a freshly built
@@ -87,8 +89,9 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
      interpreter itself, which is the large part.
    - AI level of detail: tick far/unseen pawns every 2–4 frames. Distant AI
      reacts slightly later.
-   - Lightmaps: don't re-light for short-lived flashes; spread rebuilds over
-     the four cores. Flashes light characters, not walls.
+   - Visibility (34 ms): `BspClipper` rasterises occluders on every scanline
+     of the viewport. The render resolution below shrinks it; the clipper
+     could also run coarser than the image.
    - Render resolution, **chosen by the user on the launcher's Video tab**
      (owner, 2026-09-22) and scaled up to the panel; the default stays native.
      The engine already draws each frame into an offscreen image and scales it

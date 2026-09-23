@@ -1,8 +1,295 @@
+diff --git a/SurrealEngine/Engine.cpp b/SurrealEngine/Engine.cpp
+index c766e46..b727d36 100644
+--- a/SurrealEngine/Engine.cpp
++++ b/SurrealEngine/Engine.cpp
+@@ -1,6 +1,7 @@
+ 
+ #include "Precomp.h"
+ #include "Engine.h"
++#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
+ #include "Utils/File.h"
+ #include "Utils/StrTools.h"
+ #include "Utils/SHA1Sum.h"
+@@ -193,10 +194,14 @@ void Engine::Run()
+ 		LevelInfo->Second() = timedesc->tm_sec;
+ 		LevelInfo->Millisecond() = 0; // No timedesc equivalent for LevelInfo->Millisecond()
+ 
++		{ PerfLog::Scope perf(PerfLog::Input); // TEMPORARY DEBUG TOOL
+ 		UpdateInput(realTimeElapsed);
++		}
+ 
+ 		SetPause(!LevelInfo->Pauser().empty());
+ 
++		{ PerfLog::Section perfTick(PerfLog::Tick); // TEMPORARY DEBUG TOOL
++
+ 		// Do NOT pause this Tick event otherwise some messages will stay on screen forever.
+ 		CallEvent(console, EventName::Tick, { ExpressionValue::FloatValue(levelElapsed) });
+ 
+@@ -213,6 +218,9 @@ void Engine::Run()
+ 
+ 		if (dxRootWindow)
+ 			dxRootWindow->Tick(levelElapsed); // Should this maybe be realTimeElapsed?
++		} // TEMPORARY DEBUG TOOL: end of the tick scope
++
++		{ PerfLog::Scope perfView(PerfLog::View); // TEMPORARY DEBUG TOOL
+ 
+ 		// To do: improve CallEvent so parameter passing isn't this painful
+ 		UFunction* funcPlayerCalcView = viewport->Actor() ? FindEventFunction(viewport->Actor(), "PlayerCalcView") : nullptr;
+@@ -232,9 +240,13 @@ void Engine::Run()
+ 		}
+ 
+ 		UpdateAudio();
++		} // TEMPORARY DEBUG TOOL: end of the view scope
+ 
+ 		viewport->SetViewportRect(0, 0, engine->window->GetPixelWidth(), engine->window->GetPixelHeight());
++		{ PerfLog::Scope perfRender(PerfLog::Render); // TEMPORARY DEBUG TOOL
+ 		render->DrawGame(levelElapsed);
++		}
++		PerfLog::EndFrame(); // TEMPORARY DEBUG TOOL
+ 
+ 		// Save the game if there is a request for it
+ 		if (SaveGameInfo.SaveGameSlot != DONT_SAVE_GAME)
+@@ -1558,6 +1570,9 @@ void Engine::UpdateInput(float timeElapsed)
+ 	if (!viewport->Actor())
+ 		return;
+ 
++	if (PerfLog::TurnSpeed() != 0.0f) // TEMPORARY DEBUG TOOL
++		activeInputAxes["aBaseX"] = { PerfLog::TurnSpeed(), IK_None };
++
+ 	for (auto& it : activeInputButtons)
+ 		viewport->Actor()->SetBool(it.first, true);
+ 	for (auto& it : activeInputAxes)
+diff --git a/SurrealEngine/Light/LightSystem_Light.cpp b/SurrealEngine/Light/LightSystem_Light.cpp
+index 2c1f7f5..423199f 100644
+--- a/SurrealEngine/Light/LightSystem_Light.cpp
++++ b/SurrealEngine/Light/LightSystem_Light.cpp
+@@ -1,6 +1,7 @@
+ 
+ #include "Precomp.h"
+ #include "LightSystem.h"
++#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
+ #include "RenderDevice/RenderDevice.h"
+ #include "Engine.h"
+ #include "Render/RenderSubsystem.h"
+@@ -159,6 +160,7 @@ TextureInfo LightSystem::GetLightmap(UModel* model, int lightmapIndex, const Coo
+ 	auto& lmtexture = lmtextures[cacheID];
+ 	if (!lmtexture || lmtexture->LastStaticUpdate != lastStaticUpdate || lmtexture->LastDynamicUpdate != lastDynamicUpdate)
+ 	{
++		PerfLog::Scope perfLm(PerfLog::Lightmap); PerfLog::Counter(PerfLog::Lightmap)++; // TEMPORARY DEBUG TOOL
+ 		engine->render->Stats.LightmapsUpdated++;
+ 
+ 		Builder.Setup(model, coords, lightmapIndex);
+diff --git a/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp b/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp
+index 28e61f2..820cc16 100644
+--- a/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp
++++ b/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp
+@@ -1,5 +1,7 @@
+ 
+ #include "Precomp.h"
++#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
++#include "Packages/Core/UClass.h" // TEMPORARY DEBUG TOOL
+ #include "ULevel.h"
+ #include "Packages/Engine/Actors/Info/ULevelInfo.h"
+ #include "Packages/Engine/Actors/Pawn/UPlayerPawn.h"
+@@ -74,7 +76,10 @@ void ULevel::TickActor(float elapsed, UActor* actor)
+ 	actor->bTicked() = ticked;
+ 
+ 	// Tick the actor for this turn
++	uint64_t perfStart = PerfLog::Detail() ? PerfLog::NowNs() : 0; // TEMPORARY DEBUG TOOL
+ 	actor->Tick(elapsed);
++	if (perfStart) // TEMPORARY DEBUG TOOL
++		PerfLog::AddClass(actor->Class->Name.ToString(), (PerfLog::NowNs() - perfStart) / 1e6);
+ 
+ 	// Destroy the actor if its time
+ 	if (actor->Role() >= ROLE_SimulatedProxy && actor->LifeSpan() != 0.0f)
+diff --git a/SurrealEngine/Render/RenderScene.cpp b/SurrealEngine/Render/RenderScene.cpp
+index 0d0b3ba..437d19f 100644
+--- a/SurrealEngine/Render/RenderScene.cpp
++++ b/SurrealEngine/Render/RenderScene.cpp
+@@ -1,5 +1,6 @@
+ 
+ #include "Precomp.h"
++#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
+ #include "RenderSubsystem.h"
+ #include "RenderDevice/RenderDevice.h"
+ #include "GameWindow.h"
+@@ -19,16 +20,22 @@ void RenderSubsystem::DrawScene()
+ 	TextureFrameCounter++;
+ 
+ 	// Make sure all actors are at the right location in the BSP
++	{ PerfLog::Section perf(PerfLog::BspInfo); // TEMPORARY DEBUG TOOL
+ 	for (UActor* actor : engine->Level->Actors)
+ 	{
+ 		if (actor)
+ 			actor->UpdateBspInfo();
+ 	}
++	}
+ 
+ 	mat4 worldToView = Coords::ViewToRenderDev().ToMatrix() * Coords::Rotation(engine->CameraRotation).Inverse().ToMatrix() * Coords::Location(engine->CameraLocation).ToMatrix();
++	{ PerfLog::Section perf(PerfLog::Visibility); // TEMPORARY DEBUG TOOL
+ 	MainFrame.Process(engine->CameraLocation, worldToView, Coords::Rotation(engine->CameraRotation));
++	}
+ 	MainFrame.Draw();
++	{ PerfLog::Section perf(PerfLog::Coronas); // TEMPORARY DEBUG TOOL
+ 	MainFrame.DrawCoronas();
++	}
+ }
+ 
+ void RenderSubsystem::DrawViewport(UViewportWindow* viewport)
+diff --git a/SurrealEngine/Render/RenderSubsystem.cpp b/SurrealEngine/Render/RenderSubsystem.cpp
+index f3fcef6..43b5045 100644
+--- a/SurrealEngine/Render/RenderSubsystem.cpp
++++ b/SurrealEngine/Render/RenderSubsystem.cpp
+@@ -1,5 +1,6 @@
+ 
+ #include "Precomp.h"
++#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
+ #include "RenderSubsystem.h"
+ #include "RenderDevice/RenderDevice.h"
+ #include "GameWindow.h"
+@@ -21,7 +22,9 @@ void RenderSubsystem::DrawGame(float levelTimeElapsed)
+ {
+ 	LevelTimeElapsed = levelTimeElapsed;
+ 	AutoUV += levelTimeElapsed * 64.0f;
++	{ PerfLog::Section perf(PerfLog::LightTick); // TEMPORARY DEBUG TOOL
+ 	engine->Level->Light.Tick(levelTimeElapsed);
++	}
+ 
+ 	Stats.Frames = 0;
+ 	Stats.Surfaces = 0;
+@@ -39,23 +42,35 @@ void RenderSubsystem::DrawGame(float levelTimeElapsed)
+ 	}
+ 
+ 	Device->Brightness = engine->client->Brightness;
++	{ PerfLog::Section perf(PerfLog::Lock); // TEMPORARY DEBUG TOOL
+ 	Device->Lock(vec4(flashScale, 1.0f), vec4(flashFog, 1.0f), vec4(0.0f), nullptr, nullptr);
++	}
+ 
+ 	ResetCanvas();
++	{ PerfLog::Section perf(PerfLog::PreRender); // TEMPORARY DEBUG TOOL
+ 	PreRender();
++	}
+ 
+ 	if (engine->LaunchInfo.ue1Version <= 219 || engine->console->bNoDrawWorld() == false)
+ 	{
+ 		DrawScene();
++		{ PerfLog::Section perf(PerfLog::Overlays); // TEMPORARY DEBUG TOOL
+ 		RenderOverlays();
++		}
+ 		if (engine->LaunchInfo.IsDeusEx())
++		{ PerfLog::Section perf(PerfLog::Flash); // TEMPORARY DEBUG TOOL
+ 			PostRenderFlash();
++		}
+ 		Device->EndFlash();
+ 	}
+ 
++	{ PerfLog::Section perf(PerfLog::PostRender); // TEMPORARY DEBUG TOOL
+ 	PostRender();
++	}
+ 
++	{ PerfLog::Section perf(PerfLog::Unlock); // TEMPORARY DEBUG TOOL
+ 	Device->Unlock(true);
++	}
+ }
+ 
+ void RenderSubsystem::DrawEditorViewport()
+diff --git a/SurrealEngine/Render/VisibleFrame.cpp b/SurrealEngine/Render/VisibleFrame.cpp
+index 818aa65..ce2144c 100644
+--- a/SurrealEngine/Render/VisibleFrame.cpp
++++ b/SurrealEngine/Render/VisibleFrame.cpp
+@@ -1,6 +1,7 @@
+ 
+ #include "Precomp.h"
+ #include "VisibleFrame.h"
++#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
+ #include "VisibleCorona.h"
+ #include "RenderSubsystem.h"
+ #include "RenderDevice/RenderDevice.h"
+@@ -340,6 +341,14 @@ int VisibleFrame::FindZoneAt(const vec4& location, BspNode* node, BspNode* nodes
+ 
+ void VisibleFrame::Draw()
+ {
++	if (PortalDepth == 0) // TEMPORARY DEBUG TOOL: the top-level frame, by section
++	{
++		{ PerfLog::Section perf(PerfLog::Portals); DrawPortals(); }
++		{ PerfLog::Section perf(PerfLog::Nodes); PerfLog::Counter(PerfLog::Nodes) += (int)OpaqueNodes.size(); DrawOpaqueNodes(); }
++		{ PerfLog::Section perf(PerfLog::Actors); PerfLog::Counter(PerfLog::Actors) += (int)Actors.size(); DrawOpaqueActors(); }
++		{ PerfLog::Section perf(PerfLog::Translucent); SortTranslucent(); DrawTranslucent(); }
++		return;
++	}
+ 	DrawPortals();
+ 	DrawOpaqueNodes();
+ 	DrawOpaqueActors();
+diff --git a/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp b/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp
+index 118f3de..bf71562 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp
++++ b/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp
+@@ -1,6 +1,7 @@
+ 
+ #include "Precomp.h"
+ #include "CommandBufferManager.h"
++#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
+ #include "VulkanRenderDevice.h"
+ #include <surrealgpu/vulkanswapchain.h>
+ 
+@@ -44,6 +45,7 @@ void CommandBufferManager::WaitForTransfer()
+ 			.AddCommandBuffer(TransferCommands.get())
+ 			.Execute(renderer->Device.get(), renderer->Device.get()->GraphicsQueue, RenderFinishedFence.get());
+ 
++		PerfLog::Scope perf(PerfLog::UploadWait); // TEMPORARY DEBUG TOOL
+ 		VkResult result = vkWaitForFences(renderer->Device.get()->device, 1, &RenderFinishedFence->fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+ 		if (result != VK_SUCCESS)
+ 			throw std::runtime_error("vkWaitForFences failed");
+@@ -78,7 +80,9 @@ void CommandBufferManager::SubmitCommands(bool present, int presentWidth, int pr
+ 			}
+ 		}
+ 
++		{ PerfLog::Scope perf(PerfLog::Acquire); // TEMPORARY DEBUG TOOL
+ 		PresentImageIndex = SwapChain->AcquireImage(ImageAvailableSemaphore.get());
++		}
+ 		if (PresentImageIndex != -1)
+ 		{
+ 			renderer->DrawPresentTexture(presentWidth, presentHeight);
+@@ -119,6 +123,7 @@ void CommandBufferManager::SubmitCommands(bool present, int presentWidth, int pr
+ 		SwapChain->QueuePresent(PresentImageIndex, RenderFinishedSemaphores[PresentImageIndex].get());
+ 	}
+ 
++	PerfLog::Scope perfWait(PerfLog::GpuWait); // TEMPORARY DEBUG TOOL
+ 	VkResult result = vkWaitForFences(renderer->Device.get()->device, 1, &RenderFinishedFence->fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+ 	if (result != VK_SUCCESS)
+ 		throw std::runtime_error("vkWaitForFences failed");
+diff --git a/SurrealEngine/RenderDevice/Vulkan/TextureManager.cpp b/SurrealEngine/RenderDevice/Vulkan/TextureManager.cpp
+index b869842..513994e 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/TextureManager.cpp
++++ b/SurrealEngine/RenderDevice/Vulkan/TextureManager.cpp
+@@ -1,6 +1,7 @@
+ 
+ #include "Precomp.h"
+ #include "TextureManager.h"
++#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
+ #include "VulkanRenderDevice.h"
+ #include "CachedTexture.h"
+ #include "Packages/Engine/Resources/Level/UModel.h"
+@@ -40,11 +41,13 @@ CachedTexture* TextureManager::GetTexture(TextureInfo* info, bool masked)
+ 	std::unique_ptr<CachedTexture>& tex = TextureCache[(int)masked][info->CacheID];
+ 	if (!tex)
+ 	{
++		PerfLog::Scope perf(PerfLog::TexUpload); PerfLog::Counter(PerfLog::TexUpload)++; // TEMPORARY DEBUG TOOL
+ 		tex.reset(new CachedTexture());
+ 		renderer->Uploads->UploadTexture(tex.get(), *info, masked);
+ 	}
+ 	else if (info->bRealtimeChanged)
+ 	{
++		PerfLog::Scope perf(PerfLog::TexUpload); PerfLog::Counter(PerfLog::TexUpload)++; // TEMPORARY DEBUG TOOL
+ 		info->bRealtimeChanged = 0;
+ 		renderer->Uploads->UploadTexture(tex.get(), *info, masked);
+ 	}
 diff --git a/SurrealEngine/Utils/PerfLog.h b/SurrealEngine/Utils/PerfLog.h
 new file mode 100644
+index 0000000..e9f707c
 --- /dev/null
 +++ b/SurrealEngine/Utils/PerfLog.h
-@@ -0,0 +1,189 @@
+@@ -0,0 +1,277 @@
 +// TEMPORARY DEBUG TOOL -- revert before commit.
 +//
 +// Frame-time breakdown for profiling on the handheld. With SURREAL_PERF_LOG=1
@@ -10,7 +297,14 @@ new file mode 100644
 +// game tick, camera/audio, and rendering -- with rendering split into the
 +// time the CPU spends waiting on the GPU (fence), on the swapchain (acquire)
 +// and on texture uploads. CPU-bound shows as a big tick/render with a small
-+// gpu-wait; GPU-bound as a big gpu-wait.
++// gpu-wait; GPU-bound as a big gpu-wait. A second line splits the render CPU
++// into sections (the top-level frame only: a sky or warp portal's nested frame
++// counts under "portals"), each exclusive of the waits, lightmap builds and
++// texture uploads inside it, with the share spent under script calls.
++//
++// SURREAL_PERF_DETAIL=1 adds tick by actor class and script functions by self
++// time. Those hooks run on every actor tick and every VM call, so they inflate
++// what they measure: leave them off when the frame time itself matters.
 +#pragma once
 +
 +#include <chrono>
@@ -24,7 +318,10 @@ new file mode 100644
 +
 +namespace PerfLog
 +{
-+	enum Slot { Input, Tick, View, Render, GpuWait, Acquire, UploadWait, Lightmap, TexUpload, Count };
++	enum Slot { Input, Tick, View, Render, GpuWait, Acquire, UploadWait, Lightmap, TexUpload,
++		// Render sections (Section scopes), then time under top-level VM calls.
++		LightTick, Lock, PreRender, BspInfo, Visibility, Portals, Nodes, Actors, Translucent,
++		Coronas, Overlays, Flash, PostRender, Unlock, VmTop, Count };
 +
 +	inline bool Enabled()
 +	{
@@ -37,6 +334,17 @@ new file mode 100644
 +		return enabled == 1;
 +	}
 +
++	inline bool Detail()
++	{
++		static int detail = -1;
++		if (detail < 0)
++		{
++			const char* v = std::getenv("SURREAL_PERF_DETAIL");
++			detail = (Enabled() && v && v[0] == '1') ? 1 : 0;
++		}
++		return detail == 1;
++	}
++
 +	inline uint64_t NowNs()
 +	{
 +		return (uint64_t)std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -47,6 +355,7 @@ new file mode 100644
 +	{
 +		double sum[Count] = {};
 +		double worst[Count] = {};
++		double script[Count] = {};
 +		double frameSum = 0.0, frameWorst = 0.0;
 +		uint64_t frameStart = 0;
 +		int frames = 0;
@@ -84,7 +393,7 @@ new file mode 100644
 +	{
 +		const void* key;
 +		uint64_t start;
-+		FuncScope(const void* k) : key(k), start(Enabled() ? NowNs() : 0)
++		FuncScope(const void* k) : key(k), start(Detail() ? NowNs() : 0)
 +		{
 +			if (start) ChildStack().push_back(0.0);
 +		}
@@ -136,6 +445,44 @@ new file mode 100644
 +		~Scope() { if (start) Add(slot, (NowNs() - start) / 1e6); }
 +	};
 +
++	// Time inside the outermost Frame::Call only: what script costs, with
++	// everything it calls, without a per-call hook's overhead.
++	inline int& VmDepth() { static int d; return d; }
++	struct VmTopScope
++	{
++		uint64_t start = 0;
++		bool on;
++		VmTopScope() : on(Enabled()) { if (on && VmDepth()++ == 0) start = NowNs(); }
++		~VmTopScope() { if (on) { VmDepth()--; if (start) Add(VmTop, (NowNs() - start) / 1e6); } }
++	};
++
++	// The slots a Section subtracts: they are timed where they happen.
++	inline double Nested()
++	{
++		State& s = Get();
++		return s.sum[GpuWait] + s.sum[Acquire] + s.sum[UploadWait] + s.sum[Lightmap] + s.sum[TexUpload];
++	}
++
++	// A Scope that excludes the Nested() slots inside it and records how much
++	// of it ran under script calls.
++	struct Section
++	{
++		int slot;
++		uint64_t start;
++		double nested = 0.0, vm = 0.0;
++		explicit Section(int s) : slot(s), start(Enabled() ? NowNs() : 0)
++		{
++			if (start) { nested = Nested(); vm = Get().sum[VmTop]; }
++		}
++		~Section()
++		{
++			if (!start) return;
++			State& st = Get();
++			Add(slot, (NowNs() - start) / 1e6 - (Nested() - nested));
++			st.script[slot] += st.sum[VmTop] - vm;
++		}
++	};
++
 +	// Called once per main-loop iteration.
 +	inline void EndFrame()
 +	{
@@ -168,6 +515,34 @@ new file mode 100644
 +			 s.sum[Lightmap] - s.sum[TexUpload]) / n);
 +		Counter(Lightmap) = Counter(TexUpload) = 0;
 +
++		static const int sections[] = { LightTick, Lock, PreRender, BspInfo, Visibility, Portals, Nodes,
++			Actors, Translucent, Coronas, Overlays, Flash, PostRender, Unlock };
++		static const char* names[] = { "light-tick", "lock", "prerender", "bsp-info", "visibility", "portals",
++			"bsp-surfaces", "actors", "translucent", "coronas", "overlays", "flash", "postrender", "unlock" };
++		double accounted = 0.0;
++		std::fprintf(stderr, "perf: script %.1f (in tick %.1f) | render split, ms excl. waits/lightmaps/uploads (script):",
++			s.sum[VmTop] / n, s.script[Tick] / n);
++		for (size_t i = 0; i < sizeof(sections) / sizeof(*sections); i++)
++		{
++			int slot = sections[i];
++			accounted += s.sum[slot];
++			std::fprintf(stderr, " %s %.1f", names[i], s.sum[slot] / n);
++			if (s.script[slot] >= 0.05 * n)
++				std::fprintf(stderr, " (%.1f)", s.script[slot] / n);
++		}
++		double renderExcl = s.sum[Render] - (s.sum[GpuWait] + s.sum[Acquire] + s.sum[UploadWait] + s.sum[Lightmap] + s.sum[TexUpload]);
++		std::fprintf(stderr, " | rest %.1f | %.0f actors, %.0f bsp nodes drawn\n",
++			(renderExcl - accounted) / n, Counter(Actors) / n, Counter(Nodes) / n);
++		Counter(Actors) = Counter(Nodes) = 0;
++
++		if (!Detail())
++		{
++			std::fflush(stderr);
++			s = State();
++			s.frameStart = now;
++			return;
++		}
++
 +		std::vector<std::pair<std::string, ClassCost>> top(Classes().begin(), Classes().end());
 +		std::sort(top.begin(), top.end(), [](auto& a, auto& b) { return a.second.ms > b.second.ms; });
 +		std::fprintf(stderr, "perf: tick by class (ms/frame, actors):");
@@ -192,66 +567,8 @@ new file mode 100644
 +		s.frameStart = now;
 +	}
 +}
-diff --git a/SurrealEngine/Engine.cpp b/SurrealEngine/Engine.cpp
---- a/SurrealEngine/Engine.cpp
-+++ b/SurrealEngine/Engine.cpp
-@@ -1,6 +1,7 @@
- 
- #include "Precomp.h"
- #include "Engine.h"
-+#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
- #include "Utils/File.h"
- #include "Utils/StrTools.h"
- #include "Utils/SHA1Sum.h"
-@@ -193,9 +194,13 @@
- 		LevelInfo->Second() = timedesc->tm_sec;
- 		LevelInfo->Millisecond() = 0; // No timedesc equivalent for LevelInfo->Millisecond()
- 
-+		{ PerfLog::Scope perf(PerfLog::Input); // TEMPORARY DEBUG TOOL
- 		UpdateInput(realTimeElapsed);
-+		}
- 
- 		SetPause(!LevelInfo->Pauser().empty());
-+
-+		{ PerfLog::Scope perfTick(PerfLog::Tick); // TEMPORARY DEBUG TOOL
- 
- 		// Do NOT pause this Tick event otherwise some messages will stay on screen forever.
- 		CallEvent(console, EventName::Tick, { ExpressionValue::FloatValue(levelElapsed) });
-@@ -213,6 +218,9 @@
- 
- 		if (dxRootWindow)
- 			dxRootWindow->Tick(levelElapsed); // Should this maybe be realTimeElapsed?
-+		} // TEMPORARY DEBUG TOOL: end of the tick scope
-+
-+		{ PerfLog::Scope perfView(PerfLog::View); // TEMPORARY DEBUG TOOL
- 
- 		// To do: improve CallEvent so parameter passing isn't this painful
- 		UFunction* funcPlayerCalcView = viewport->Actor() ? FindEventFunction(viewport->Actor(), "PlayerCalcView") : nullptr;
-@@ -232,9 +240,13 @@
- 		}
- 
- 		UpdateAudio();
-+		} // TEMPORARY DEBUG TOOL: end of the view scope
- 
- 		viewport->SetViewportRect(0, 0, engine->window->GetPixelWidth(), engine->window->GetPixelHeight());
-+		{ PerfLog::Scope perfRender(PerfLog::Render); // TEMPORARY DEBUG TOOL
- 		render->DrawGame(levelElapsed);
-+		}
-+		PerfLog::EndFrame(); // TEMPORARY DEBUG TOOL
- 
- 		// Save the game if there is a request for it
- 		if (SaveGameInfo.SaveGameSlot != DONT_SAVE_GAME)
-@@ -1557,6 +1569,9 @@
- 
- 	if (!viewport->Actor())
- 		return;
-+
-+	if (PerfLog::TurnSpeed() != 0.0f) // TEMPORARY DEBUG TOOL
-+		activeInputAxes["aBaseX"] = { PerfLog::TurnSpeed(), IK_None };
- 
- 	for (auto& it : activeInputButtons)
- 		viewport->Actor()->SetBool(it.first, true);
 diff --git a/SurrealEngine/VM/Frame.cpp b/SurrealEngine/VM/Frame.cpp
+index 20a008a..11027b9 100644
 --- a/SurrealEngine/VM/Frame.cpp
 +++ b/SurrealEngine/VM/Frame.cpp
 @@ -1,6 +1,7 @@
@@ -262,7 +579,7 @@ diff --git a/SurrealEngine/VM/Frame.cpp b/SurrealEngine/VM/Frame.cpp
  #include "Bytecode.h"
  #include "ExpressionEvaluator.h"
  #include "NativeFunc.h"
-@@ -230,14 +231,16 @@
+@@ -230,14 +231,17 @@ ExpressionValue Frame::Call(UFunction* func, UObject* instance, Array<Expression
  		}
  	}
  
@@ -274,7 +591,8 @@ diff --git a/SurrealEngine/VM/Frame.cpp b/SurrealEngine/VM/Frame.cpp
 -	{
 -		return CallScript(func, instance, std::move(args));
 -	}
-+	// TEMPORARY DEBUG TOOL: per-function profiling
++	// TEMPORARY DEBUG TOOL: script time, and per-function profiling
++	PerfLog::VmTopScope perfVm;
 +	PerfLog::FuncScope perfScope(func);
 +	bool perfNative = AllFlags(func->FuncFlags, FunctionFlags::Native);
 +	ExpressionValue perfResult = perfNative ? CallNative(func, instance, std::move(args))
@@ -287,106 +605,3 @@ diff --git a/SurrealEngine/VM/Frame.cpp b/SurrealEngine/VM/Frame.cpp
  }
  
  ExpressionValue Frame::CallScript(UFunction* func, UObject* instance, Array<ExpressionValue> args)
-diff --git a/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp b/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp
---- a/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp
-+++ b/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp
-@@ -1,5 +1,7 @@
- 
- #include "Precomp.h"
-+#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
-+#include "Packages/Core/UClass.h" // TEMPORARY DEBUG TOOL
- #include "ULevel.h"
- #include "Packages/Engine/Actors/Info/ULevelInfo.h"
- #include "Packages/Engine/Actors/Pawn/UPlayerPawn.h"
-@@ -74,7 +76,10 @@
- 	actor->bTicked() = ticked;
- 
- 	// Tick the actor for this turn
-+	uint64_t perfStart = PerfLog::Enabled() ? PerfLog::NowNs() : 0; // TEMPORARY DEBUG TOOL
- 	actor->Tick(elapsed);
-+	if (perfStart) // TEMPORARY DEBUG TOOL
-+		PerfLog::AddClass(actor->Class->Name.ToString(), (PerfLog::NowNs() - perfStart) / 1e6);
- 
- 	// Destroy the actor if its time
- 	if (actor->Role() >= ROLE_SimulatedProxy && actor->LifeSpan() != 0.0f)
-diff --git a/SurrealEngine/Light/LightSystem_Light.cpp b/SurrealEngine/Light/LightSystem_Light.cpp
---- a/SurrealEngine/Light/LightSystem_Light.cpp
-+++ b/SurrealEngine/Light/LightSystem_Light.cpp
-@@ -1,6 +1,7 @@
- 
- #include "Precomp.h"
- #include "LightSystem.h"
-+#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
- #include "RenderDevice/RenderDevice.h"
- #include "Engine.h"
- #include "Render/RenderSubsystem.h"
-@@ -159,6 +160,7 @@
- 	auto& lmtexture = lmtextures[cacheID];
- 	if (!lmtexture || lmtexture->LastStaticUpdate != lastStaticUpdate || lmtexture->LastDynamicUpdate != lastDynamicUpdate)
- 	{
-+		PerfLog::Scope perfLm(PerfLog::Lightmap); PerfLog::Counter(PerfLog::Lightmap)++; // TEMPORARY DEBUG TOOL
- 		engine->render->Stats.LightmapsUpdated++;
- 
- 		Builder.Setup(model, coords, lightmapIndex);
-diff --git a/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp b/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp
---- a/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp
-+++ b/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp
-@@ -1,6 +1,7 @@
- 
- #include "Precomp.h"
- #include "CommandBufferManager.h"
-+#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
- #include "VulkanRenderDevice.h"
- #include <surrealgpu/vulkanswapchain.h>
- 
-@@ -44,6 +45,7 @@
- 			.AddCommandBuffer(TransferCommands.get())
- 			.Execute(renderer->Device.get(), renderer->Device.get()->GraphicsQueue, RenderFinishedFence.get());
- 
-+		PerfLog::Scope perf(PerfLog::UploadWait); // TEMPORARY DEBUG TOOL
- 		VkResult result = vkWaitForFences(renderer->Device.get()->device, 1, &RenderFinishedFence->fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
- 		if (result != VK_SUCCESS)
- 			throw std::runtime_error("vkWaitForFences failed");
-@@ -78,7 +80,9 @@
- 			}
- 		}
- 
-+		{ PerfLog::Scope perf(PerfLog::Acquire); // TEMPORARY DEBUG TOOL
- 		PresentImageIndex = SwapChain->AcquireImage(ImageAvailableSemaphore.get());
-+		}
- 		if (PresentImageIndex != -1)
- 		{
- 			renderer->DrawPresentTexture(presentWidth, presentHeight);
-@@ -119,6 +123,7 @@
- 		SwapChain->QueuePresent(PresentImageIndex, RenderFinishedSemaphores[PresentImageIndex].get());
- 	}
- 
-+	PerfLog::Scope perfWait(PerfLog::GpuWait); // TEMPORARY DEBUG TOOL
- 	VkResult result = vkWaitForFences(renderer->Device.get()->device, 1, &RenderFinishedFence->fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
- 	if (result != VK_SUCCESS)
- 		throw std::runtime_error("vkWaitForFences failed");
-diff --git a/SurrealEngine/RenderDevice/Vulkan/TextureManager.cpp b/SurrealEngine/RenderDevice/Vulkan/TextureManager.cpp
---- a/SurrealEngine/RenderDevice/Vulkan/TextureManager.cpp
-+++ b/SurrealEngine/RenderDevice/Vulkan/TextureManager.cpp
-@@ -1,6 +1,7 @@
- 
- #include "Precomp.h"
- #include "TextureManager.h"
-+#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
- #include "VulkanRenderDevice.h"
- #include "CachedTexture.h"
- #include "Packages/Engine/Resources/Level/UModel.h"
-@@ -40,11 +41,13 @@
- 	std::unique_ptr<CachedTexture>& tex = TextureCache[(int)masked][info->CacheID];
- 	if (!tex)
- 	{
-+		PerfLog::Scope perf(PerfLog::TexUpload); PerfLog::Counter(PerfLog::TexUpload)++; // TEMPORARY DEBUG TOOL
- 		tex.reset(new CachedTexture());
- 		renderer->Uploads->UploadTexture(tex.get(), *info, masked);
- 	}
- 	else if (info->bRealtimeChanged)
- 	{
-+		PerfLog::Scope perf(PerfLog::TexUpload); PerfLog::Counter(PerfLog::TexUpload)++; // TEMPORARY DEBUG TOOL
- 		info->bRealtimeChanged = 0;
- 		renderer->Uploads->UploadTexture(tex.get(), *info, masked);
- 	}

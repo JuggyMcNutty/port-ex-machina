@@ -208,26 +208,36 @@ The script applies the CPU mode `launcher.ini` names, through the app's own
 | Liberty Island start (a firefight), power-save, turning | ~2 | ~500 ms | ~330 | ~250 | ~45 |
 | Liberty Island start, performance, turning | 3.0–3.3 | ~300–340 ms | 170–200 | 80–170 | ~45 |
 | Liberty Island start, performance, facing the fight | ~2 | 485–535 ms | 190–245 | 210–295 | ~75 |
+| Liberty Island start, overclock, turning | 3.7 | ~272 ms | ~142 | ~81 | ~46 |
+| **Liberty Island start, overclock, facing the fight** | **2.2** | **~450 ms** | **165–177** | **~205** | **~76** |
 
-(Times in ms per frame, averaged over 60 frames. The last row's runs also had
-the per-class or per-function hooks on, which add their own cost.)
+(Times in ms per frame, averaged over 60 frames. The performance-mode fight
+rows had the per-class or per-function hooks on, which add their own cost; the
+overclock rows (2026-09-22) had them off. Overclock is the owner's mode from
+then on.)
 
-On Liberty Island:
+On Liberty Island, facing the fight in overclock (the bold row):
 
-- **Game tick ≈ 40%**, almost all NPC AI: 29 Terrorists ~3 ms each, 10 UNATCO
-  troops, thugs, bots. Surreal's UnrealScript VM costs microseconds per
-  trivial operation on this CPU (14–20k VM calls per frame; every call copies
-  its argument array and re-walks the function's parameters). The single worst
+- **Game tick ≈ 38%** (~170 ms), almost all NPC AI: 29 Terrorists ~3 ms each,
+  10 UNATCO troops, thugs, bots. ~110 ms of it runs under script calls
+  (outermost `Frame::Call`; state code runs outside that, so script's real
+  share is higher). Surreal's UnrealScript VM costs microseconds per trivial
+  operation on this CPU (14–20k VM calls per frame; every call copies its
+  argument array and re-walks the function's parameters). The single worst
   native was `CycleActors` (see engine-patches, patch 0003); with it fixed,
   `ScriptedPawn.CheckEnemyPresence`/`Tick` and general VM overhead dominate.
-- **Lightmap rebuilds ~100 ms/frame** during the firefight: muzzle flashes are
-  dynamic lights, and Surreal re-lights every surface they touch on the CPU,
-  ~13–19 rebuilds per frame.
-- **Other render CPU ~100 ms** — not yet broken down (likely vertex animation of
-  ~50 character meshes and visibility).
-- **GPU ~75 ms**, and it does not overlap the CPU: `CommandBufferManager::SubmitCommands`
-  waits on the frame's fence right after submitting, so a frame costs CPU + GPU,
-  not the larger of the two.
+- **Lightmaps ≈ 24%**: ~13.5 rebuilt per frame at ~7 ms each (~98 ms), plus
+  ~12 ms re-uploading them (a rebuilt lightmap, like a fog map, is flagged for
+  upload). Muzzle flashes are dynamic lights, and Surreal re-lights every
+  surface they touch on the CPU. Turned away from the fight it is ~4 per frame.
+- **Other render CPU ≈ 21%** (~95 ms), by section: visibility 34 ms (the BSP
+  walk, and `BspClipper`'s span buffer, which rasterises occluders on every
+  scanline of the viewport, so it scales with the render height); actor meshes
+  25 ms for ~30 actors in view; BSP surfaces 14 ms for ~600 nodes; translucent
+  5.5; the sky portal 4; `PostRenderFlash` (all script) 3.5; the rest ~8.
+- **GPU ≈ 17%** (~76 ms), and it does not overlap the CPU:
+  `CommandBufferManager::SubmitCommands` waits on the frame's fence right after
+  submitting, so a frame costs CPU + GPU, not the larger of the two.
 
 The fixes chosen, their order and the target are in
 [`agent.md`](../../agent.md#decided-not-started). The OpenGL ES backend would
@@ -264,8 +274,10 @@ more tools serve this device:
   not on a PC.
 - [`tools/profile-map.sh`](tools/profile-map.sh), with the engine built with
   `scripts/engine.sh perf on`, splits a map's frame time into input, tick,
-  render CPU, GPU wait, lightmaps and texture uploads; tick by actor class;
-  script functions by self time (Performance above).
+  render CPU, GPU wait, lightmaps and texture uploads; the render CPU by
+  section; the time under script calls. `SURREAL_PERF_DETAIL=1` adds tick by
+  actor class and script functions by self time, at a cost to the frame time
+  (Performance above).
 
 ## Gotchas on this device
 
