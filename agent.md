@@ -12,7 +12,9 @@ engine, a fork of Surreal Engine.
 
 - **The repository is the project root** (it used to be the port/ directory,
   briefly ports/aarch64-TSP), laid out as shared launcher + `ports/<id>/`. The
-  work is on `main`.
+  work is on `main`, public at https://github.com/JuggyMcNutty/port-ex-machina.
+  Its history was rewritten before publishing (2026-09-22) to drop the game's
+  files and a personal email address.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; **Liberty Island 2–3
   FPS**, CPU-bound on NPC AI and lightmap rebuilds -- measured, candidate fixes
   waiting on the owner's choice (Open decisions). The framework's build was
@@ -93,23 +95,14 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
      into a game, a pad in game. The desktop defaults (4x MSAA, VSync on) are
      chosen by reasoning.
    - linux-aarch64 on any real device.
-4. **Publishing on GitHub** as `port-ex-machina` (the name is explained in the
-   README; the licence is zlib). The history holds none of the game's files
-   (rewritten 2026-09-22 to take out the retail ini/int test fixtures, and the
-   owner's personal email address from every commit). Left:
-   creating the repository and pushing `main` -- the owner's call.
-   `aarch64` and `ports-framework` are merged into `main` and need not be
-   published. The checkout directory is still named
-   `deusex-launcher`; renaming it means deleting `build/` (see the CMake
-   gotcha below).
-5. **Release polish** (owner's request, deferred): the home screen is
+4. **Release polish** (owner's request, deferred): the home screen is
    deliberately verbose for development; a final build needs a declutter pass,
    and Surreal Engine's always-on Deus Ex stats overlay (FPS/actors/surfaces,
    `RenderCanvas.cpp` `DrawTimedemoStats`) hidden behind an option.
-6. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
+5. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
    engine's libraries, as the Smart Pro has); Android (its README lists the
    work, starting with an in-process hand-over).
-7. **Cleanups**: `core/strings.{c,h}` (Startup.int reading) is no longer used
+6. **Cleanups**: `core/strings.{c,h}` (Startup.int reading) is no longer used
    by the app, only by `test_strings`; `dxl_config_set_render_device` and the
    `DescFlags` accessors are only used by tests. Remove or keep deliberately.
 
