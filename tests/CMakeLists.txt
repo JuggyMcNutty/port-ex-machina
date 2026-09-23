@@ -41,3 +41,10 @@ foreach(src ${DXL_PORT_TARGETS})
     target_compile_definitions(${name} PRIVATE DXL_PORT_ID="${id}" DXL_PORT_DIR="${dir}")
     add_test(NAME ${name} COMMAND ${name})
 endforeach()
+
+# Docs drift: every repository path a doc names must exist (docs/PORTING.md).
+find_program(DXL_BASH bash)
+find_program(DXL_GIT git)
+if(DXL_BASH AND DXL_GIT)
+    add_test(NAME docs_paths COMMAND "${DXL_BASH}" "${DXL_ROOT}/scripts/check-docs.sh")
+endif()

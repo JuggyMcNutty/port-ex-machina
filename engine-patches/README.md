@@ -34,19 +34,27 @@ per patch file:
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
-them in order onto `UPSTREAM-BASE.txt` and reproduces the fork's tree exactly
-— checked that way. After committing a change:
+them in order onto `UPSTREAM-BASE.txt` and reproduces the fork's tree exactly.
+`scripts/engine.sh` keeps it that way:
 
 ```sh
-cd engine/SurrealEngine
-git format-patch -1 <commit> --stdout > \
-    ../../port/engine-patches/000N-<name>.patch
+scripts/engine.sh fetch                     # clone upstream at the base, git am the patches
+scripts/engine.sh check                     # the fork's commits == these files, in order
+scripts/engine.sh export <commit> 000N-name # after committing a change in the fork
+scripts/engine.sh build <port>              # build/<port>/engine, from ports/<port>/engine.cmake
 ```
+
+The fork itself lives in `engine/SurrealEngine` (branch `deusex-handheld`), a
+separate clone the main repository ignores. Builds go to `build/<port>/engine`,
+never into the clone. (Patch 0001's commit message points at the README under
+port/ -- what this repository's directory was called then. Rewording it would
+change the fork's commit ids.)
 
 Temporary debugging hooks never go into a patch. They carry a
 `TEMPORARY DEBUG TOOL` comment and are reverted before committing; the
-frame-time profiling hooks live in `port/tools/perf-instrumentation.patch` so
-they can be re-applied (`git apply`, and `git apply -R` afterwards).
+frame-time profiling hooks live in `optional/perf-instrumentation.patch` so
+they can be re-applied: `scripts/engine.sh perf on`, and `perf off`
+afterwards.
 
 ## What the patches change
 
@@ -101,7 +109,9 @@ desktop build.
 4. **`zipdir` must run on the build machine.** It packs the resource zip during
    the build, so a cross build produces an aarch64 binary that cannot execute.
    `ZIPDIR_EXECUTABLE` now points at a host-built one, and the in-tree target is
-   skipped when it is set.
+   skipped when it is set. `scripts/engine.sh build` does this for any port
+   whose `engine.cmake` names a cross toolchain, building the host `zipdir`
+   once into `build/host-tools/`.
 
 5. **System font lookup without a desktop.** `resourcedata_unix.cpp` asked
    GSettings for the GNOME UI font and resolved it with fontconfig. Neither
@@ -159,7 +169,7 @@ back to CPU decoders writing a format the device does support:
 
 Formats with no decoder (BC6H, BC7, ETC, ASTC) keep the existing white
 fallback. The probe that produced the format table is
-`port/tools/probe-texture-formats.c`.
+`tools/probes/probe-texture-formats.c`.
 
 On-device result: the intro previously rendered as dense speckle garbage
 (BCn sampled in unsupported formats, then lightmap/fog speckle from the
@@ -170,10 +180,10 @@ missing filter bit). With the decoders it renders clean.
 With the texture path fixed, 4x MSAA — the engine default when there is no
 `Settings.json` — still produced edge speckle from the PowerVR resolve. The
 launcher writes `Settings.json` before every launch with `Antialias: Off` and
-turns it off again if it finds anything else on a PowerVR GPU;
-`engine-settings.json.default` (seeded by `run-game.sh` and `deploy.sh` when
-the file is missing) says `Off` too. Host AMD was never affected because its
-settings file already said `Off`.
+turns it off again if it finds anything else on a PowerVR GPU; the Smart Pro
+port's `engine-settings.json.default` (seeded by `run-game.sh` and by
+`scripts/dx.sh deploy` when the file is missing) says `Off` too. Host AMD was
+never affected because its settings file already said `Off`.
 
 ## Patch 0003 — controller support, and two Deus Ex fixes
 
