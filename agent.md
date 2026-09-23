@@ -12,7 +12,7 @@ engine, a fork of Surreal Engine.
 
 - **The repository is the project root** (it used to be the port/ directory,
   briefly ports/aarch64-TSP), laid out as shared launcher + `ports/<id>/`. The
-  work is on branch `ports-framework`, on top of `aarch64`, not merged.
+  work is on `main`.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; **Liberty Island 2–3
   FPS**, CPU-bound on NPC AI and lightmap rebuilds -- measured, candidate fixes
   waiting on the owner's choice (Open decisions). The framework's build was
@@ -95,10 +95,10 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    - linux-aarch64 on any real device.
 4. **Publishing on GitHub** as `port-ex-machina` (the name is explained in the
    README; the licence is zlib). The history holds none of the game's files
-   (rewritten 2026-09-22 to take out the retail ini/int test fixtures). Left
-   before it goes public: merging `ports-framework` into `aarch64`/`main` --
-   the owner's call; the branch name `aarch64` no longer describes the
-   repository. The checkout directory is still named
+   (rewritten 2026-09-22 to take out the retail ini/int test fixtures). Left:
+   creating the repository and pushing `main` -- the owner's call.
+   `aarch64` and `ports-framework` are merged into `main` and need not be
+   published. The checkout directory is still named
    `deusex-launcher`; renaming it means deleting `build/` (see the CMake
    gotcha below).
 5. **Release polish** (owner's request, deferred): the home screen is
