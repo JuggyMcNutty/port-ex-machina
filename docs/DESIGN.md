@@ -174,7 +174,8 @@ round-trip on the shipped files; the three command-line parsers including the
 `appStrfind` surprises; the entry matrix; config seeding, stub repair and the
 `SE-` file targeting; the JSON model and `Settings.json` rules (corrupt file
 replaced, every member written, choices validated, a member an older file
-lacks taken from the packaged default); renderer resolution and
+lacks taken from the packaged default, the render resolutions offered);
+renderer resolution and
 the PowerVR MSAA rule; layouts, per-button remapping and retired-layout
 detection; argv construction for the exec; the device profiles -- the generic
 one, and each port's checked against its own `port-hooks.sh` (every CPU mode it
