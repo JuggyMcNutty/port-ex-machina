@@ -48,7 +48,7 @@ belongs to the device's owner: `deploy` installs it only when missing (from
 [Launcher]
 GameDir=/mnt/SDCARD/Roms/PORTS/DeusEx
 GameCommand=./run-game.sh
-CpuMode=Performance
+CpuMode=Overclock
 ```
 
 **Access.** `spruce@192.168.1.211`, password `happygaming` -- the stock
@@ -133,8 +133,9 @@ launcher.
 The spruceOS menu leaves the handheld in power-save -- cores 0 and 3,
 `conservative`, at most 1.49 GHz -- which costs the game about a third of its
 frame rate. The Video tab offers spruceOS's own three modes (`target.c`), kept
-in `launcher.ini` `CpuMode`: Smart, Performance (the default: all four cores at
-1.8 GHz) and Overclock (2.0 GHz). `packaging/port-hooks.sh` applies the mode
+in `launcher.ini` `CpuMode`: Smart, Performance (all four cores at 1.8 GHz)
+and Overclock (2.0 GHz, the default since 2026-09-22: the game is CPU-bound
+and needs every cycle). `packaging/port-hooks.sh` applies the mode
 with spruceOS's helpers -- the ones its Ports launcher uses -- just before the
 engine starts, and restores the exact previous state (online cores, governor,
 min/max) when it exits.

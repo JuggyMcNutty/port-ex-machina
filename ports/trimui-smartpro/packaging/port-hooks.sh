@@ -16,20 +16,27 @@ PORT_LIB_PATH="/usr/trimui/lib:/usr/lib:/lib"
 CPU=/sys/devices/system/cpu
 HELPERS=/mnt/SDCARD/spruce/scripts/helperFunctions.sh
 cpu_saved=""
+# When launcher.ini names no mode, or one this script does not know. The same
+# as target.c's cpu_mode_default (tests/test_target_port.c checks).
+CPU_MODE_DEFAULT=Overclock
 
 port_before_game() {
     cpu_mode=$(sed -n 's/^[[:space:]]*CpuMode[[:space:]]*=[[:space:]]*//p' "$APPDIR/launcher.ini" 2>/dev/null | tr -d '\r' | head -n 1)
+    case "$cpu_mode" in
+        Smart|Performance|Overclock) ;;
+        *) cpu_mode=$CPU_MODE_DEFAULT ;;
+    esac
     [ -f "$HELPERS" ] || return 0
     cpu_saved="$(cat $CPU/online) $(cat $CPU/cpu0/cpufreq/scaling_governor) $(cat $CPU/cpu0/cpufreq/scaling_min_freq) $(cat $CPU/cpu0/cpufreq/scaling_max_freq)"
     (
         . "$HELPERS" >/dev/null 2>&1
         case "$cpu_mode" in
-            Smart)     set_smart       >/dev/null 2>&1 ;;
-            Overclock) set_overclock   >/dev/null 2>&1 ;;
-            *)         set_performance >/dev/null 2>&1 ;;
+            Smart)       set_smart       >/dev/null 2>&1 ;;
+            Performance) set_performance >/dev/null 2>&1 ;;
+            Overclock)   set_overclock   >/dev/null 2>&1 ;;
         esac
     )
-    echo "cpu mode: ${cpu_mode:-Performance} (online $(cat $CPU/online), $(cat $CPU/cpu0/cpufreq/scaling_governor) up to $(cat $CPU/cpu0/cpufreq/scaling_max_freq))" >> "$LOG"
+    echo "cpu mode: $cpu_mode (online $(cat $CPU/online), $(cat $CPU/cpu0/cpufreq/scaling_governor) up to $(cat $CPU/cpu0/cpufreq/scaling_max_freq))" >> "$LOG"
 }
 
 port_after_game() {

@@ -54,9 +54,9 @@ drift guards; `scripts/dx.sh test` the unit tests.
 off the network when it sleeps: ask the owner to wake it. Every deploy keeps
 the device's previous copy of each file it replaces in a `.prev-<date>`
 directory of `/mnt/SDCARD/App/DeusEx/` (named by the device's clock, newest
-last): copying one back is a rollback. The owner runs it in the **Overclock**
-CPU mode (2026-09-22), and profiling runs use whatever mode `launcher.ini`
-names. `Running.ini` is present in the game's `System/` there
+last): copying one back is a rollback. Profiling runs use the CPU mode
+`launcher.ini` names -- Overclock, the port's default since 2026-09-22.
+`Running.ini` is present in the game's `System/` there
 (profiling runs killed with SIGKILL), so the launcher shows a crash banner
 until the next clean exit or "Clear crash marker".
 

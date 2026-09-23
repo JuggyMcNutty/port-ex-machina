@@ -34,6 +34,14 @@ static void test_cpu_modes_are_handled_by_the_hooks(void) {
         CHECK(strstr(hooks, t->cpu_modes[i].name) != NULL);
     }
     CHECK(strstr(hooks, "CpuMode") != NULL);
+
+    /* With no CpuMode in launcher.ini the hooks fall back to a mode of their
+     * own; it must be the one the Video tab shows as the default. */
+    char want[128];
+    snprintf(want, sizeof want, "CPU_MODE_DEFAULT=%s\n", t->cpu_mode_default);
+    if (!strstr(hooks, want))
+        fprintf(stderr, "  port-hooks.sh does not set %s", want);
+    CHECK(strstr(hooks, want) != NULL);
     free(hooks);
 }
 
