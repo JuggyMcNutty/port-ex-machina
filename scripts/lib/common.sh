@@ -135,15 +135,16 @@ dx_fetch_debs() {
     done
 }
 
-# ---- Arch Linux packages (for pinned, architecture-independent headers) ----
-# dx_fetch_arch_pkg <dest> <name> <version> <arch>
+# ---- Arch Linux packages (pinned headers, host tools) -----------------------
+# dx_fetch_arch_pkg <dest> <name> <version> <arch> [path in the package]...
 #   e.g. dx_fetch_arch_pkg "$tmp" vulkan-headers 1:1.4.357.0-1 any
 #
 # Unpacks one exact package version from archive.archlinux.org, which keeps
 # every version ever published -- so a header set pinned by version comes back
-# byte for byte. Downloads are cached in deps/cache/.
+# byte for byte. Only the paths given are unpacked (usr/include by default).
+# Downloads are cached in deps/cache/.
 dx_fetch_arch_pkg() {
-    local dest="$1" name="$2" ver="$3" arch="$4"
+    local dest="$1" name="$2" ver="$3" arch="$4"; shift 4
     local file="$name-$ver-$arch.pkg.tar.zst"
     local cache="$DX_DEPS/cache/archlinux"
     mkdir -p "$cache" "$dest"
@@ -152,5 +153,5 @@ dx_fetch_arch_pkg() {
         curl -fsSL --retry 3 -o "$cache/$file" \
             "https://archive.archlinux.org/packages/${name:0:1}/$name/${file//:/%3A}"
     fi
-    tar -C "$dest" --zstd -xf "$cache/$file" usr/include
+    tar -C "$dest" --zstd -xf "$cache/$file" "${@:-usr/include}"
 }

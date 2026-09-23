@@ -74,7 +74,7 @@ tests/               host unit tests -- no display needed
 tools/               shots.c (dxl-shots: every screen as .bmp), probes/ (device probes)
 engine-patches/      the Surreal Engine fork's patches, and why they stay in a fork
 docs/                DESIGN.md, PORTING.md, re/ (the reverse-engineering spec)
-scripts/             dx.sh, engine.sh, check-abi.sh, check-docs.sh, lib/common.sh
+scripts/             dx.sh, engine.sh, check-abi.sh, check-docs.sh, host-tools.sh, lib/common.sh
 ports/common/        what every port ships unless it overrides it: run-game.sh, defaults
 ports/<port>/        one device: see docs/PORTING.md
 
