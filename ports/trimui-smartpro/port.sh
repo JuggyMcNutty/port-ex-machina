@@ -55,16 +55,23 @@ port_deploy() {
 # Runs tools/profile-map.sh on the device (its arguments; the engine there must
 # be a `scripts/engine.sh perf on` build) and prints its summary. The script is
 # copied over every time: the device's /tmp does not survive a reboot. The whole
-# log comes back as build/trimui-smartpro/profile/perf-<label>.log. SHOT and
-# SURREAL_PERF_DETAIL pass through; with SHOT the screen comes back as
-# fb-<label>.png beside it (needs ImageMagick).
+# log comes back as build/trimui-smartpro/profile/perf-<label>.log. SHOT,
+# SAMPLE and SURREAL_PERF_DETAIL pass through; with SHOT the screen comes back
+# as fb-<label>.png beside it (needs ImageMagick), with SAMPLE=1 the CPU
+# samples as samples-<label> and samples-<label>.maps, for
+# scripts/sample-report.py.
 port_profile() {
     local label="${2:-run}" out="$BUILD/profile"
     mkdir -p "$out"
     dx_ssh "mkdir -p /tmp/dxl-test && cat > /tmp/dxl-test/profile-map.sh && chmod +x /tmp/dxl-test/profile-map.sh" \
         < "$PORT_DIR/tools/profile-map.sh"
-    dx_ssh "SHOT='${SHOT:-}' SURREAL_PERF_DETAIL='${SURREAL_PERF_DETAIL:-}' /tmp/dxl-test/profile-map.sh $*"
+    dx_ssh "SHOT='${SHOT:-}' SAMPLE='${SAMPLE:-}' SURREAL_PERF_DETAIL='${SURREAL_PERF_DETAIL:-}' /tmp/dxl-test/profile-map.sh $*"
     dx_ssh "cat /tmp/dxl-test/perf-$label.log" > "$out/perf-$label.log" && say "log: $out/perf-$label.log"
+    if [ "${SAMPLE:-}" = 1 ]; then
+        dx_ssh "cat /tmp/dxl-test/samples-$label" > "$out/samples-$label" &&
+            dx_ssh "cat /tmp/dxl-test/samples-$label.maps" > "$out/samples-$label.maps" &&
+            say "samples: $out/samples-$label (scripts/sample-report.py)"
+    fi
     if [ -n "${SHOT:-}" ]; then
         dx_ssh "cat /tmp/dxl-test/fb-$label.gz" | gunzip -c 2>/dev/null | head -c $((1280 * 720 * 4)) > "$out/fb-$label.bgra" || true
         if command -v magick >/dev/null; then

@@ -28,7 +28,9 @@
 #            takes --url=<map>; "-u <map>" silently loads the default map.
 #
 # SURREAL_PERF_DETAIL=1 in the environment adds tick by actor class and script
-# functions by self time; those hooks slow what they measure. SHOT=<seconds>
+# functions by self time; those hooks slow what they measure. SAMPLE=1 samples
+# the main thread's CPU every millisecond into /tmp/dxl-test/samples-<label>
+# (and .maps), for scripts/sample-report.py on the PC. SHOT=<seconds>
 # (a multiple of 5) saves the screen at that point to
 # /tmp/dxl-test/fb-<label>.gz -- the raw framebuffer, gzipped; its first
 # 1280x720 is BGRA (magick -size 1280x720 -depth 8 bgra:fb -alpha off out.png).
@@ -58,6 +60,8 @@ cd /mnt/SDCARD/Roms/PORTS/DeusEx || exit 1
 export HOME=$APPDIR/home
 export LD_LIBRARY_PATH=$APPDIR:/usr/trimui/lib:/usr/lib:/lib
 export SURREALWIDGETS_DISPLAY_BACKEND=SDL2 SURREAL_PERF_LOG=1 SURREAL_PERF_TURN=$TURN
+rm -f /tmp/dxl-test/samples-$LABEL /tmp/dxl-test/samples-$LABEL.maps
+[ "${SAMPLE:-}" = 1 ] && export SURREAL_PERF_SAMPLE=/tmp/dxl-test/samples-$LABEL
 setsid $APPDIR/SurrealEngine --no-launcher /mnt/SDCARD/Roms/PORTS/DeusEx "--url=$MAP" </dev/null >>$OUT 2>&1 &
 PID=$!
 i=0

@@ -5,9 +5,9 @@ handheld (4× Cortex-A53, PowerVR GE8300) running spruceOS. Cross-built from a
 PC; the launcher is the app the spruceOS menu starts.
 
 **Status.** The launcher and the engine both run on the device. The intro plays
-at ~30 FPS; Liberty Island's opening firefight at 5.3 FPS, 6.0 at 853×480 (2.2
-before engine patches 0004–0011), CPU-bound on NPC AI script and render CPU --
-see [Performance](#performance). Indoors, UNATCO HQ shows ~20.
+at ~30 FPS; Liberty Island's opening firefight at 5.9 FPS, 6.8 at 853×480 (2.2
+before engine patches 0004–0014), CPU-bound on NPC AI and render CPU -- see
+[Performance](#performance). Indoors, UNATCO HQ shows ~20.
 
 | File | What it is |
 |---|---|
@@ -77,6 +77,7 @@ Probed over SSH on 2026-09-21/22, not assumed. `tools/probes/probe-sdl.c` and
 | Pad controls | A B X Y, L1 R1, SELECT START MENU, d-pad (a hat), two sticks. **L2/R2 are digital**, though the mapping puts them on axes `a2`/`a5`. **No L3/R3**: the mapping lists `leftstick:b9`/`rightstick:b10`, but the sticks do not click. (Controls per the device's owner, 2026-09-22; mapping from `probe-sdl.c --pad`.) MENU belongs to spruceOS |
 | Fonts | `/usr/trimui/res/regular.ttf`, `full.ttf`; `/mnt/SDCARD/spruce/Font Files/Noto.ttf` |
 | Storage | SD is **exFAT** — case-insensitive, no meaningful permission bits |
+| Profiling | no `perf`: the kernel is built without perf events (`CONFIG_PERF_EVENTS` off). CPU-time timers fire only on the scheduler tick, every 4 ms (2026-09-23) |
 
 ## Why the toolchain choice is load-bearing
 
@@ -189,6 +190,7 @@ The System tab shows the engine and script logs on screen.
 | Deploy with checksums (2026-09-22) | `dx.sh deploy` built and staged, sent only the one changed file, kept the device's copy in `.prev-<date-time>` and verified all 13 files; `profile-map.sh` applied `launcher.ini`'s Overclock (four cores, 2.0 GHz) through `port-hooks.sh` and restored power-save after |
 | CPU/GPU overlap, engine patch 0004 (2026-09-22) | Liberty Island renders correctly mid-fight (framebuffer capture); GPU wait ~76 → ~0.2 ms. Synchronization validation clean on the desktop build, bindless and per-batch paths |
 | Lit-span lightmaps, engine patch 0005 (2026-09-22) | Liberty Island's dock pixel-identical before and after (framebuffer captures); lightmaps ~98 → ~11 ms. On the desktop, a temporary walk over every texel found none in reach outside a span |
+| Script evaluator, actor iterators and calls, engine patches 0012–0014 (2026-09-23) | Liberty Island's fight runs; the engine's log is the same as before them, bar a window address. On the desktop, temporary checks ran the old code beside the new ([engine-patches/README.md](../../engine-patches/README.md)) |
 | One-sided back faces skipped, engine patch 0011 (2026-09-23) | Captures of Liberty Island and of UNATCO HQ's interior (`01_NYC_UNATCOHQ.dx`) before and after differ only in the stats overlay's surface count |
 | Occlusion grid sized to the image, engine patch 0010 (2026-09-23) | The dock pixel-identical to the captures before it, at 1280×720 and at 853×480; ~830 surfaces pass visibility where ~740 did, all hidden by the depth test |
 | Render scale, engine patch 0009 (2026-09-23) | Liberty Island at 960×540 and 853×480 fills the panel, scaled up; the HUD draws larger (framebuffer captures). Synchronization validation clean on the desktop at scale 0.667 |
@@ -216,7 +218,20 @@ run with `scripts/dx.sh profile trimui-smartpro [seconds] [label] [cpu] [turn]
 app's own `port-hooks.sh`, so a profile measures what playing gets; its
 header lists the arguments. The whole log comes back to
 `build/trimui-smartpro/profile/perf-<label>.log`, and `SHOT=<seconds>` brings
-the screen back beside it as a PNG:
+the screen back beside it as a PNG. `SAMPLE=1` also samples the main thread's
+CPU (the hooks' profiler, in
+[engine-patches/README.md](../../engine-patches/README.md#base)) and brings
+the samples back beside the log, for the report:
+
+```sh
+SAMPLE=1 scripts/dx.sh profile trimui-smartpro 90 mylabel
+NM=deps/toolchains/aarch64--glibc--bleeding-edge-2021.05-1/bin/aarch64-linux-nm \
+    scripts/sample-report.py build/trimui-smartpro/profile/samples-mylabel \
+    build/trimui-smartpro/engine/SurrealEngine --sysroot deps/sysroots/trimui-smartpro \
+    --root ULevel::Tick
+```
+
+The frame times:
 
 | Scene, CPU mode | FPS | Frame | Game tick | Render CPU | GPU wait |
 | --- | --- | --- | --- | --- | --- |
@@ -237,12 +252,18 @@ the screen back beside it as a PNG:
 | Native, the occlusion grid sized to the image (0010) | 4.7 | ~213 ms | ~102 | ~108 | ~0.2 |
 | 853×480, the same | 5.2 | ~191 ms | ~87 | ~101 | ~0.2 |
 | Native, one-sided back faces skipped (0011) | 5.3 | ~190 ms | ~97 | ~90 | ~0.2 |
-| **853×480, the same** | **6.0** | **~168 ms** | **~80** | **~85** | **~0.2** |
+| 853×480, the same | 6.0 | ~168 ms | ~80 | ~85 | ~0.2 |
+| Native, one evaluator per script statement (0012) | 5.4 | ~187 ms | ~94 | ~90 | ~0.2 |
+| The same, actors of a class from an index (0013) | 5.8 | ~172 ms | ~78 | ~91 | ~0.2 |
+| The same, script calls without allocations (0014) | 5.9 | ~169 ms | ~75 | ~91 | ~0.2 |
+| **853×480, the same** | **6.8** | **~147 ms** | **~59** | **~85** | **~0.2** |
 
 (Times in ms per frame, averaged over 60 frames. The performance-mode fight
 rows had the per-class or per-function hooks on, which add their own cost; the
 overclock rows (2026-09-22) had them off. Overclock is the owner's mode from
-then on.)
+then on. From patch 0013 on, the hooks build with frame pointers, for the
+sampling profiler, which costs ~1%: patch 0012 measured 5.4 FPS without them
+and 5.3 with.)
 
 The first bold row is where the performance work started, the last is the
 best so far; each row between is one engine patch, and what each found is in
@@ -250,14 +271,18 @@ best so far; each row between is one engine patch, and what each found is in
 960×540 and 853×480 are the Video tab's Resolution below native: the GPU's
 time was already hidden, so the gain is the tick's, which shares memory with
 the GPU, and, since patch 0010, the occlusion grid's. Where a frame goes at
-native resolution (~190 ms, facing the fight in overclock):
+native resolution (~169 ms, facing the fight in overclock):
 
-- **Game tick ~97 ms**, almost all NPC AI -- Deus Ex's `ScriptedPawn` script.
-  ~58 ms runs under script calls (outermost `Frame::Call`; state code runs
-  outside that, so script's real share is higher), about a third of it one
-  function, `ScriptedPawn.CheckEnemyPresence`; ~13,500 VM calls a frame. The
-  fight's 29 Terrorists cost the most. Pawns out of view think every third
-  frame (Distant AI).
+- **Game tick ~75 ms**, almost all NPCs. The device's CPU samples split it:
+  ~32 ms under script calls, ~20 ms of which is the interpreter's own work
+  (evaluating expressions, making calls, moving values) and ~9 ms AI sight
+  traces (`CanSee`, `FastTrace`); ~17 ms physics, mostly collision traces for
+  walking pawns (`TryMove`, `TryStepToGround`, `ShouldAbortJumping`) -- ~21 ms
+  of collision traces in all, through `TraceAABBModel` and `TraceRayModel`;
+  and ~12 ms of per-actor work around the scripts for the level's ~2,500
+  actors (`ULevel::TickActor`, animation, event lookups). ~10,000 VM calls a
+  frame; `ScriptedPawn.CheckEnemyPresence` is still the costliest script
+  function. Pawns out of view think every third frame (Distant AI).
 - **Render CPU ~83 ms** besides lightmaps: actor meshes ~27 ms for ~30 in view
   (vertex animation on the CPU); visibility ~21 ms (the BSP walk, ~3,800 box
   tests and ~2,400 surface tests a frame against `BspClipper`'s occlusion
@@ -309,7 +334,8 @@ more tools serve this device:
   render CPU, GPU wait, lightmaps and texture uploads; the render CPU by
   section, and the visibility pass by part; the time under script calls. `SURREAL_PERF_DETAIL=1` adds tick by
   actor class and script functions by self time, at a cost to the frame time
-  (Performance above).
+  (Performance above); `SAMPLE=1`, CPU samples of the main thread for
+  [`scripts/sample-report.py`](../../scripts/sample-report.py).
 
 ## Gotchas on this device
 

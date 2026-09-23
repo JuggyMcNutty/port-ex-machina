@@ -1,5 +1,21 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 8f1ccbe..7a66dd9 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -29,6 +29,11 @@ endif()
+ 
+ project(SurrealEngine)
+ 
++# TEMPORARY DEBUG TOOL: frame pointers, for SURREAL_PERF_SAMPLE's stack walk (Utils/PerfLog.h)
++if(NOT MSVC)
++	add_compile_options(-fno-omit-frame-pointer)
++endif()
++
+ set(SURREALCOMMON_SOURCES
+ 	SurrealEngine/Precomp.cpp
+ 	SurrealEngine/Precomp.h
 diff --git a/SurrealEngine/Engine.cpp b/SurrealEngine/Engine.cpp
-index 51be76f..e818e4d 100644
+index 68dcbae..101cd04 100644
 --- a/SurrealEngine/Engine.cpp
 +++ b/SurrealEngine/Engine.cpp
 @@ -1,6 +1,7 @@
@@ -49,7 +65,7 @@ index 51be76f..e818e4d 100644
  
  		// Save the game if there is a request for it
  		if (SaveGameInfo.SaveGameSlot != DONT_SAVE_GAME)
-@@ -1558,6 +1570,9 @@ void Engine::UpdateInput(float timeElapsed)
+@@ -1559,6 +1571,9 @@ void Engine::UpdateInput(float timeElapsed)
  	if (!viewport->Actor())
  		return;
  
@@ -151,7 +167,7 @@ index 12619e4..3c36bfa 100644
  	for (UActor* light : lights)
  	{
 diff --git a/SurrealEngine/Packages/Engine/Actors/UActor.cpp b/SurrealEngine/Packages/Engine/Actors/UActor.cpp
-index 462099b..d1fd689 100644
+index 051f687..e0d3ca9 100644
 --- a/SurrealEngine/Packages/Engine/Actors/UActor.cpp
 +++ b/SurrealEngine/Packages/Engine/Actors/UActor.cpp
 @@ -16,6 +16,7 @@
@@ -162,7 +178,7 @@ index 462099b..d1fd689 100644
  
  UActor* UActor::Spawn(UClass* SpawnClass, std::optional<UActor*> SpawnOwner, std::optional<NameString> SpawnTag, std::optional<vec3> SpawnLocation, std::optional<Rotator> SpawnRotation)
  {
-@@ -243,6 +244,8 @@ bool UActor::ThinkThisFrame(float elapsed, float& thinkElapsed)
+@@ -246,6 +247,8 @@ bool UActor::ThinkThisFrame(float elapsed, float& thinkElapsed)
  	UActor* player = engine->viewport->Actor();
  	bool seen = LastVisibleFrame >= engine->render->SceneFrameStart;
  	bool near = player && length(player->Location() - Location()) < nearDistance;
@@ -172,7 +188,7 @@ index 462099b..d1fd689 100644
  	{
  		thinkElapsed = AiTimeSinceThought;
 diff --git a/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp b/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp
-index 28e61f2..820cc16 100644
+index 1b50756..9f6bf5e 100644
 --- a/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp
 +++ b/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp
 @@ -1,5 +1,7 @@
@@ -453,10 +469,10 @@ index b869842..513994e 100644
  	}
 diff --git a/SurrealEngine/Utils/PerfLog.h b/SurrealEngine/Utils/PerfLog.h
 new file mode 100644
-index 0000000..2abb8b8
+index 0000000..d72d2a3
 --- /dev/null
 +++ b/SurrealEngine/Utils/PerfLog.h
-@@ -0,0 +1,322 @@
+@@ -0,0 +1,505 @@
 +// TEMPORARY DEBUG TOOL -- revert before commit.
 +//
 +// Frame-time breakdown for profiling on the handheld. With SURREAL_PERF_LOG=1
@@ -472,6 +488,16 @@ index 0000000..2abb8b8
 +// SURREAL_PERF_DETAIL=1 adds tick by actor class and script functions by self
 +// time. Those hooks run on every actor tick and every VM call, so they inflate
 +// what they measure: leave them off when the frame time itself matters.
++//
++// SURREAL_PERF_SAMPLE=<file> is a sampling profiler for devices without perf
++// (the handheld's kernel has no perf events). The main thread's CPU time is
++// sampled every millisecond, or every scheduler tick where CPU-time timers
++// are only checked that often (every 4 ms on the handheld: each block records
++// the thread's CPU time, so the report scales). Each sample's program
++// counter, then the return addresses a frame-pointer walk finds, is appended
++// to <file> at every report, one block per report; /proc/self/maps goes to
++// <file>.maps once. scripts/sample-report.py symbolises them on the PC.
++// CMakeLists.txt builds with frame pointers while these hooks are on.
 +#pragma once
 +
 +#include <chrono>
@@ -482,9 +508,174 @@ index 0000000..2abb8b8
 +#include <string>
 +#include <unordered_map>
 +#include <vector>
++#include <atomic>
++#include <csignal>
++#include <ctime>
++#include <pthread.h>
++#include <sys/syscall.h>
++#include <ucontext.h>
++#include <unistd.h>
 +
 +namespace PerfLog
 +{
++	namespace Sampler
++	{
++		constexpr int MaxDepth = 48;
++		struct Sample { uint32_t depth; uintptr_t pc[MaxDepth]; };
++
++		struct Data
++		{
++			std::vector<Sample> buf;
++			std::atomic<size_t> count { 0 };
++			uintptr_t stackTop = 0;
++			uint64_t cpuStart = 0;
++			FILE* out = nullptr;
++			uint64_t dropped = 0;
++			int block = 0;
++		};
++		inline Data& D() { static Data d; return d; }
++
++		// Runs on the main thread only (a thread CPU-time timer aimed at it).
++		inline void Handler(int, siginfo_t*, void* context)
++		{
++			Data& d = D();
++			size_t i = d.count.load(std::memory_order_relaxed);
++			if (i >= d.buf.size())
++			{
++				d.dropped++;
++				return;
++			}
++			const ucontext_t* uc = static_cast<const ucontext_t*>(context);
++			uintptr_t pc, fp, sp;
++#if defined(__aarch64__)
++			pc = uc->uc_mcontext.pc; fp = uc->uc_mcontext.regs[29]; sp = uc->uc_mcontext.sp;
++#elif defined(__x86_64__)
++			pc = uc->uc_mcontext.gregs[REG_RIP]; fp = uc->uc_mcontext.gregs[REG_RBP]; sp = uc->uc_mcontext.gregs[REG_RSP];
++#else
++			return;
++#endif
++			Sample& s = d.buf[i];
++			uint32_t n = 0;
++			s.pc[n++] = pc;
++			// A frame record is {caller's record, return address}. Only records
++			// between the stack pointer and the stack's top are read, each above
++			// the last, so a register that is not a frame pointer ends the walk.
++			while (n < (uint32_t)MaxDepth && fp >= sp && fp + 16 <= d.stackTop && (fp & 7) == 0)
++			{
++				const uintptr_t* record = reinterpret_cast<const uintptr_t*>(fp);
++				if (!record[1])
++					break;
++				s.pc[n++] = record[1];
++				if (record[0] <= fp)
++					break;
++				fp = record[0];
++			}
++			s.depth = n;
++			d.count.store(i + 1, std::memory_order_relaxed);
++		}
++
++		inline uint64_t ThreadCpuNs()
++		{
++			timespec ts = {};
++			clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
++			return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
++		}
++
++		inline void Start(const char* path)
++		{
++			Data& d = D();
++			d.out = std::fopen(path, "wb");
++			if (!d.out)
++			{
++				std::fprintf(stderr, "perf: cannot write %s -- no sampling\n", path);
++				return;
++			}
++			std::string mapsPath = std::string(path) + ".maps";
++			if (FILE* maps = std::fopen("/proc/self/maps", "rb"))
++			{
++				if (FILE* copy = std::fopen(mapsPath.c_str(), "wb"))
++				{
++					char chunk[4096];
++					size_t len;
++					while ((len = std::fread(chunk, 1, sizeof(chunk), maps)) > 0)
++						std::fwrite(chunk, 1, len, copy);
++					std::fclose(copy);
++				}
++				std::fclose(maps);
++			}
++
++			pthread_attr_t attr;
++			if (pthread_getattr_np(pthread_self(), &attr) == 0)
++			{
++				void* addr = nullptr;
++				size_t size = 0;
++				pthread_attr_getstack(&attr, &addr, &size);
++				d.stackTop = reinterpret_cast<uintptr_t>(addr) + size;
++				pthread_attr_destroy(&attr);
++			}
++			d.buf.resize(32768);
++
++			struct sigaction sa = {};
++			sa.sa_sigaction = Handler;
++			sa.sa_flags = SA_SIGINFO | SA_RESTART;
++			sigemptyset(&sa.sa_mask);
++			sigaction(SIGPROF, &sa, nullptr);
++
++			// Raw syscalls: timer_create lives in librt before glibc 2.34.
++			struct sigevent sev = {};
++			sev.sigev_notify = SIGEV_THREAD_ID;
++			sev.sigev_signo = SIGPROF;
++			sev._sigev_un._tid = (pid_t)syscall(SYS_gettid);
++			int timer = 0;
++			if (syscall(SYS_timer_create, CLOCK_THREAD_CPUTIME_ID, &sev, &timer) != 0)
++			{
++				std::fprintf(stderr, "perf: timer_create failed -- no sampling\n");
++				return;
++			}
++			struct itimerspec its = {};
++			its.it_interval.tv_nsec = 1000000;
++			its.it_value.tv_nsec = 1000000;
++			syscall(SYS_timer_settime, timer, 0, &its, nullptr);
++			d.cpuStart = ThreadCpuNs();
++			std::fprintf(stderr, "perf: sampling the main thread every 1 ms into %s\n", path);
++		}
++
++		// A block: "DXSB", block number, frames, samples, dropped (uint32 each),
++		// the thread's CPU time over the block in ns (uint64); then per sample
++		// its depth and addresses (uint64 each).
++		inline void Flush(int frames)
++		{
++			Data& d = D();
++			if (!d.out)
++				return;
++			sigset_t block, old;
++			sigemptyset(&block);
++			sigaddset(&block, SIGPROF);
++			pthread_sigmask(SIG_BLOCK, &block, &old);
++			uint32_t header[5] = { 0x42535844, (uint32_t)d.block++, (uint32_t)frames, (uint32_t)d.count.load(), (uint32_t)d.dropped };
++			std::fwrite(header, sizeof(header), 1, d.out);
++			uint64_t cpu = ThreadCpuNs();
++			uint64_t cpuNs = cpu - d.cpuStart;
++			d.cpuStart = cpu;
++			std::fwrite(&cpuNs, sizeof(cpuNs), 1, d.out);
++			for (size_t i = 0, count = d.count.load(); i < count; i++)
++			{
++				const Sample& s = d.buf[i];
++				uint64_t depth = s.depth;
++				std::fwrite(&depth, sizeof(depth), 1, d.out);
++				for (uint32_t j = 0; j < s.depth; j++)
++				{
++					uint64_t pc = s.pc[j];
++					std::fwrite(&pc, sizeof(pc), 1, d.out);
++				}
++			}
++			std::fflush(d.out);
++			d.count.store(0);
++			d.dropped = 0;
++			pthread_sigmask(SIG_SETMASK, &old, nullptr);
++		}
++	}
++
 +	enum Slot { Input, Tick, View, Render, GpuWait, Acquire, UploadWait, Lightmap, TexUpload,
 +		// Render sections (Section scopes), then time under top-level VM calls.
 +		LightTick, Lock, PreRender, BspInfo, Visibility, Portals, Nodes, Actors, Translucent,
@@ -675,6 +866,13 @@ index 0000000..2abb8b8
 +	{
 +		if (!Enabled())
 +			return;
++		static bool samplerStarted = false;
++		if (!samplerStarted)
++		{
++			samplerStarted = true;
++			if (const char* path = std::getenv("SURREAL_PERF_SAMPLE"); path && path[0])
++				Sampler::Start(path);
++		}
 +		State& s = Get();
 +		uint64_t now = NowNs();
 +		if (s.frameStart)
@@ -688,6 +886,7 @@ index 0000000..2abb8b8
 +
 +		if (s.frames < 60)
 +			return;
++		Sampler::Flush(s.frames);
 +		double n = s.frames;
 +		double avg = s.frameSum / n;
 +		std::fprintf(stderr,
@@ -780,7 +979,7 @@ index 0000000..2abb8b8
 +	}
 +}
 diff --git a/SurrealEngine/VM/Frame.cpp b/SurrealEngine/VM/Frame.cpp
-index be0df56..a709de5 100644
+index 3de80c2..727211f 100644
 --- a/SurrealEngine/VM/Frame.cpp
 +++ b/SurrealEngine/VM/Frame.cpp
 @@ -1,6 +1,7 @@
@@ -791,24 +990,24 @@ index be0df56..a709de5 100644
  #include "Bytecode.h"
  #include "ExpressionEvaluator.h"
  #include "NativeFunc.h"
-@@ -243,14 +244,17 @@ ExpressionValue Frame::Call(UFunction* func, UObject* instance, Array<Expression
- 			argindex++;
- 	}
+@@ -267,14 +268,17 @@ ExpressionValue Frame::Call(UFunction* func, UObject* instance, CallArguments& a
+ 	for (size_t i = args.size(); i < parms.size() && AllFlags(parms[i]->PropFlags, PropertyFlags::Parm | PropertyFlags::OptionalParm); i++)
+ 		args.push_back(ExpressionValue::NothingValue());
  
 -	if (AllFlags(func->FuncFlags, FunctionFlags::Native))
 -	{
--		return CallNative(func, instance, std::move(args));
+-		return CallNative(func, instance, args);
 -	}
 -	else
 -	{
--		return CallScript(func, instance, std::move(args));
+-		return CallScript(func, instance, args);
 -	}
 +	// TEMPORARY DEBUG TOOL: script time, and per-function profiling
 +	PerfLog::VmTopScope perfVm;
 +	PerfLog::FuncScope perfScope(func);
 +	bool perfNative = AllFlags(func->FuncFlags, FunctionFlags::Native);
-+	ExpressionValue perfResult = perfNative ? CallNative(func, instance, std::move(args))
-+	                                        : CallScript(func, instance, std::move(args));
++	ExpressionValue perfResult = perfNative ? CallNative(func, instance, args)
++	                                        : CallScript(func, instance, args);
 +	perfScope.End(perfNative, [&]() {
 +		// First caller's class: approximate for inherited functions, enough to point at hot spots.
 +		return func->Name.ToString() + "[" + (instance->Class ? instance->Class->Name.ToString() : std::string("?")) + "]";
@@ -816,4 +1015,4 @@ index be0df56..a709de5 100644
 +	return perfResult;
  }
  
- ExpressionValue Frame::CallScript(UFunction* func, UObject* instance, Array<ExpressionValue> args)
+ ExpressionValue Frame::CallScript(UFunction* func, UObject* instance, CallArguments& args)

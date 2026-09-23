@@ -33,7 +33,7 @@ builds it.
 |---|---|---|---|
 | [`linux-x86_64`](ports/linux-x86_64/) | desktop Linux | natively | the engine runs the game on the development PC; also the build for tests and `dxl-shots` |
 | [`linux-aarch64`](ports/linux-aarch64/) | aarch64 devices with an ordinary distro | cross (launcher) or natively | the launcher cross-builds; not yet run on a device |
-| [`trimui-smartpro`](ports/trimui-smartpro/) | TrimUI Smart Pro, spruceOS | cross | runs: the intro at ~30 FPS, Liberty Island's opening fight at 5.3 FPS (6.0 at 853×480; CPU-bound, the target is ~20) |
+| [`trimui-smartpro`](ports/trimui-smartpro/) | TrimUI Smart Pro, spruceOS | cross | runs: the intro at ~30 FPS, Liberty Island's opening fight at 5.9 FPS (6.8 at 853×480; CPU-bound, the target is ~20) |
 | [`android`](ports/android/) | Android | -- | planned: what it needs is in its README |
 
 A port is a directory of the few things that differ for one device -- its
@@ -75,7 +75,8 @@ tests/               host unit tests -- no display needed
 tools/               shots.c (dxl-shots: every screen as .bmp), probes/ (device probes)
 engine-patches/      the Surreal Engine fork's patches, and why they stay in a fork
 docs/                DESIGN.md, PORTING.md, re/ (the reverse-engineering spec)
-scripts/             dx.sh, engine.sh, check-abi.sh, check-docs.sh, host-tools.sh, lib/common.sh
+scripts/             dx.sh, engine.sh, check-abi.sh, check-docs.sh, host-tools.sh, lib/common.sh,
+                     sample-report.py (CPU samples from a device without perf)
 ports/common/        what every port ships unless it overrides it: run-game.sh, defaults
 ports/<port>/        one device: see docs/PORTING.md
 

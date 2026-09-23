@@ -47,6 +47,12 @@ per patch file:
   has one row per row of the image (`e955949`).
 - `0011-cull-one-sided-back-faces.patch` — one-sided surfaces seen from behind
   are skipped before the visibility test (`a8b5a2f`).
+- `0012-vm-evaluator-per-statement.patch` — one expression evaluator per
+  statement, nested values returned directly (`fdf89ce`).
+- `0013-actor-iterators-by-class.patch` — the actor iterators find a class's
+  actors from an index instead of a scan of the level (`e5ae2ca`).
+- `0014-vm-calls-without-allocation.patch` — script calls without heap
+  allocations or walks over every local (`4d5b8e7`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -77,6 +83,19 @@ rewrites the patch from the tree so the next `on` and `off` apply cleanly.
 Take the hooks off before changing the engine itself -- a commit made with
 them on carries them -- and commit before putting them back: `perf on` cannot
 merge over uncommitted changes to a file the hooks touch, and says so.
+
+The hooks also build the engine with frame pointers (~1% slower on the
+handheld) and carry a sampling profiler for devices without `perf`:
+`SURREAL_PERF_SAMPLE=<file>` samples the main thread's CPU time with a
+thread CPU-time timer, recording each sample's program counter and the
+return addresses a frame-pointer walk finds, one block per 60-frame report,
+with `/proc/self/maps` beside it. [`scripts/sample-report.py`](../scripts/sample-report.py)
+(Python 3, and the port toolchain's `nm` for a cross build) turns that into
+self and inclusive time per function, optionally under one caller
+(`--root ULevel::Tick`: the game tick) or with the callers of one
+(`--callers`). A leaf function keeps no frame record, so its samples show
+its caller's caller as the next frame. Running it on the handheld is in
+[its README](../ports/trimui-smartpro/README.md#performance).
 
 ## What the patches change
 
@@ -499,6 +518,97 @@ burning barrel's rebuilt lightmaps had belonged to back faces. Captures of
 Liberty Island and of UNATCO HQ's interior before and after differ only in the
 stats overlay's surface count.
 
+## Patch 0012 — one evaluator per statement
+
+Fork commit `fdf89ce`. On the Smart Pro, script time went from ~60 to
+~55 ms a frame and the fight from 5.2 to 5.4 FPS
+([Performance](../ports/trimui-smartpro/README.md#performance)).
+
+### 29. Nested expressions without results of their own
+
+Every expression node -- each constant, variable read and operator argument
+-- was evaluated by a new `ExpressionEvaluator` holding a whole
+`ExpressionEvalResult` (a value, a label, an iterator, the control-flow
+fields), checked against the breakpoint list and copied out twice. A
+statement now gets one evaluator and one result, and nested expressions
+are evaluated by that evaluator into a value their caller owns
+(`ExpressionEvaluator::Value`). Only the statement decides what the frame
+does next: a nested expression's control flow (a None context's
+AccessedNone) is dropped as before, and Skip, Context and ClassContext
+still pass their inner expression's through. Breakpoints are only ever set
+on statements, so only statements are checked. `ExpressionValue` gains a
+move assignment, since every value is now handed up by assignment.
+
+A jump found its target in a `std::map` of every expression in the
+function; statements are read in offset order, so a binary search over
+their offsets gives the same index. A temporary check compared the two for
+6.2 million offsets across every function loaded on Liberty Island: all
+equal.
+
+## Patch 0013 — the actors of a class from an index
+
+Fork commit `e5ae2ca`. On the Smart Pro, script time went from ~56 to
+~39 ms a frame and the fight from 5.3 to 5.8 FPS (both measured with the
+frame pointers the hooks now build with).
+
+### 30. Actor iterators without a scan of the level
+
+The actor iterators found the actors of a class by testing every actor in
+the level: ~2,500 on Liberty Island, a cache miss each on the handheld's
+Cortex-A53. Every NPC's `ScriptedPawn.CheckEnemyPresence` steps through the
+pawns with `CycleActors` each tick, and a CPU sample of the device's game
+tick put `CycleActorsIterator::Next` at 17.6% of it, ~16 ms a frame (on
+the desktop it was ~6%). The name tests of `AllActors`, `RadiusActors` and
+`VisibleActors` (`UObject::IsA`) came next.
+
+The level now keeps, for each class asked for, the slots of `Actors` that
+hold one (`ULevelBase::ActorsByClass` by class pointer, as `CycleActors`
+tests it since patch 0003; `ActorsByClassName` by name, as the others
+test it), rebuilt when `ActorsVersion` has moved -- load, the GameInfo,
+`Spawn`, `Destroy` and the compaction below bump it. `CycleActors`
+binary-searches the next slot after its position, going round, and counts
+the slots the scan would have passed, so its lap ends where the scan's did;
+`AllActors` steps through the slots from its position; `RadiusActors` and
+`VisibleActors` build their lists from them. Destroyed actors stay in an
+index and are skipped where they were skipped. Temporary checks ran the
+scans beside the indexes from the same state: 2.9 million `CycleActors`
+steps, 36,000 `AllActors` steps and 1,800 lists of each of the other two,
+all the same. On Liberty Island the index was rebuilt 68 times in 8,571
+frames.
+
+### 31. Compaction only after a Destroy
+
+`ULevel::Tick` rebuilt the actor list every frame to drop nulled slots,
+rewriting every actor's `Index`. It now does so only when a `Destroy` has
+nulled a slot since (and once after loading, as before); without holes the
+result was the same list.
+
+## Patch 0014 — calls without allocations
+
+Fork commit `4d5b8e7`. On the Smart Pro, script time went from ~39 to
+~35 ms a frame and the fight from 5.8 to 5.9 FPS.
+
+### 32. Parameters, arguments and locals
+
+- `Frame::Call`, `CallScript` and `CallNative` walked the function's
+  `Properties` -- every local, a cache miss per property object on the
+  handheld -- three or four times a call to find its parameters.
+  `UFunction::CallParms` keeps the parameters in order and `ReturnParm` the
+  return value, gathered at the first call. A temporary sweep of all 7,673
+  functions loaded on Liberty Island found every return value also a
+  parameter and none with two, so the lists say what the walks did.
+- The arguments were an `Array` on the heap, grown again when a native's
+  return value was appended. `CallArguments` keeps up to eight on the
+  stack, with room made up front for what `Frame::Call` appends; the
+  `Array` overload of `Frame::Call`, for native callers, moves into one.
+- A script call allocated a `LocalVariables` and then its data. The frame
+  now holds its `LocalVariables`, whose data lives in a 256-byte buffer
+  inside it when the function's locals fit.
+- Every call looked up the object's state name and disabled-event set,
+  though almost no object disables anything; the lookups are skipped when
+  `DisabledEvents` is empty, and `EnableEvent` removes a state's entry when
+  its set empties so that it stays so.
+
 ## Running it headlessly
 
 ```sh
@@ -518,12 +628,15 @@ warning.
 
 ## Profiling and validating on the desktop
 
-The handheld has no profiler and no Vulkan validation layer, so both run
-against the desktop build (`scripts/dx.sh build linux-x86_64 engine`), whose
-CPU hot spots on the script and render paths are the handheld's too; timing
-on the device is `optional/perf-instrumentation.patch`'s job.
-`scripts/host-tools.sh` unpacks pinned copies of Linux `perf` and the Khronos
-validation layer into `deps/` without installing anything:
+The handheld has no `perf` and no Vulkan validation layer, so validation runs
+against the desktop build (`scripts/dx.sh build linux-x86_64 engine`), and so
+can a quick CPU profile -- but the desktop's proportions are not the
+handheld's. Its Cortex-A53 pays far more for a cache miss: `CycleActors` was
+~6% of the desktop's game tick and ~18% of the handheld's. What to work on
+next is decided by the handheld's own samples (`SURREAL_PERF_SAMPLE`, in
+[Base](#base)); timing on the device is `optional/perf-instrumentation.patch`'s
+job. `scripts/host-tools.sh` unpacks pinned copies of Linux `perf` and the
+Khronos validation layer into `deps/` without installing anything:
 
 ```sh
 scripts/host-tools.sh

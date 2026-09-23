@@ -1,0 +1,982 @@
+From fdf89cec2edf83c22d5be4a1263cfbaad9ab496f Mon Sep 17 00:00:00 2001
+From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
+Date: Wed, 23 Sep 2026 08:57:55 -0500
+Subject: [PATCH] VM: one evaluator per statement, nested values returned
+ directly
+
+FORK ONLY. This project ships a NO-AI Code Rule asking that LLM-written
+changes stay in a fork and are never PR'd upstream. These were written with
+Claude. Do not submit them.
+
+Every expression node -- every constant, variable read and operator
+argument -- was evaluated by a new ExpressionEvaluator holding a whole
+ExpressionEvalResult (a value, a label, an iterator, the control-flow
+fields), checked against the breakpoint list, and moved out through two
+more copies of its value. Profiling Liberty Island's game tick on the
+desktop (perf with frame pointers, samples under ULevel::Tick) put the
+interpreter's own overhead at over half of the tick.
+
+- A statement gets one evaluator and one result. Nested expressions are
+  evaluated by that same evaluator into a value the caller owns
+  (ExpressionEvaluator::Value), which comes back without copies.
+- Only the statement says what the frame does next. A nested expression's
+  control flow (a None context's AccessedNone, say) is dropped exactly as
+  it was when it had a result of its own; Skip, Context and ClassContext
+  still pass their inner statement's through.
+- Breakpoints are only ever set on statements, so only statements are
+  checked against them. Frame::StepExpression is kept per node as before.
+- ExpressionValue gains a move assignment: every value is handed up by
+  assignment, and a copy would duplicate strings and structs.
+- A jump found its target statement in a std::map of every expression in
+  the function. Statements are read in offset order, so a binary search
+  over their offsets gives the same index; a temporary check compared the
+  two for every expression offset and 1 in 97 of all others in every
+  function loaded on Liberty Island: 6.2 million lookups, all equal.
+- NameToBool compared against the spelling "None", a hash lookup per
+  test; None is name index 0.
+
+On the desktop, script time on Liberty Island went from ~2.3 to ~1.95 ms a
+frame. Its log is the same as before.
+---
+ SurrealEngine/VM/Bytecode.cpp            |   1 +
+ SurrealEngine/VM/Bytecode.h              |   8 +-
+ SurrealEngine/VM/ExpressionEvaluator.cpp | 330 +++++++++++++----------
+ SurrealEngine/VM/ExpressionEvaluator.h   |  20 +-
+ SurrealEngine/VM/ExpressionValue.h       |  36 +++
+ 5 files changed, 254 insertions(+), 141 deletions(-)
+
+diff --git a/SurrealEngine/VM/Bytecode.cpp b/SurrealEngine/VM/Bytecode.cpp
+index baf0c26..8e49f89 100644
+--- a/SurrealEngine/VM/Bytecode.cpp
++++ b/SurrealEngine/VM/Bytecode.cpp
+@@ -9,6 +9,7 @@ Bytecode::Bytecode(const Array<uint8_t>& bytecode, Package* package)
+ 	BytecodeStream stream(bytecode.data(), bytecode.size(), package);
+ 	while (!stream.IsEnd())
+ 	{
++		StatementOffsets.push_back(stream.GetOffset());
+ 		Statements.push_back(ReadToken(&stream, 0));
+ 		Statements.back()->StatementIndex = (int)Statements.size() - 1;
+ 	}
+diff --git a/SurrealEngine/VM/Bytecode.h b/SurrealEngine/VM/Bytecode.h
+index 2c643f2..b3a087a 100644
+--- a/SurrealEngine/VM/Bytecode.h
++++ b/SurrealEngine/VM/Bytecode.h
+@@ -4,6 +4,7 @@
+ #include "Packages/Core/Properties/UProperty.h"
+ #include "Package/Package.h"
+ #include "Expression.h"
++#include <algorithm>
+ 
+ class BytecodeStream;
+ 
+@@ -12,10 +13,12 @@ class Bytecode
+ public:
+ 	Bytecode(const Array<uint8_t>& bytecode, Package* package);
+ 
++	// Every jump lands here. Statements are read in order, so their offsets
++	// are sorted: a binary search over them, not the map of every expression.
+ 	int FindStatementIndex(uint16_t offset) const
+ 	{
+-		auto it = OffsetToExpression.find(offset);
+-		return it != OffsetToExpression.end() ? it->second->StatementIndex : -1;
++		auto it = std::lower_bound(StatementOffsets.begin(), StatementOffsets.end(), offset);
++		return it != StatementOffsets.end() && *it == offset ? (int)(it - StatementOffsets.begin()) : -1;
+ 	}
+ 
+ 	int FindOffset(int statementIndex) const
+@@ -57,6 +60,7 @@ private:
+ 	}
+ 
+ 	std::map<uint16_t, Expression*> OffsetToExpression;
++	Array<uint16_t> StatementOffsets;
+ 	Array<std::unique_ptr<Expression>> Allocations;
+ };
+ 
+diff --git a/SurrealEngine/VM/ExpressionEvaluator.cpp b/SurrealEngine/VM/ExpressionEvaluator.cpp
+index 1762bec..454cef7 100644
+--- a/SurrealEngine/VM/ExpressionEvaluator.cpp
++++ b/SurrealEngine/VM/ExpressionEvaluator.cpp
+@@ -14,6 +14,7 @@ ExpressionEvalResult ExpressionEvaluator::Eval(Expression* expr, UObject* self,
+ 	auto oldExpr = Frame::StepExpression;
+ 	Frame::StepExpression = expr;
+ 
++	// Breakpoints are set on statements only, so nested expressions need no check
+ 	for (const Breakpoint& bp : Frame::Breakpoints)
+ 	{
+ 		if (bp.Expr == expr && bp.Enabled)
+@@ -22,57 +23,97 @@ ExpressionEvalResult ExpressionEvaluator::Eval(Expression* expr, UObject* self,
+ 		}
+ 	}
+ 
+-	ExpressionEvaluator evaluator;
+-	evaluator.Self = self;
+-	evaluator.Context = context;
+-	evaluator.LocalVariables = localVariables;
++	ExpressionEvalResult result;
++	ExpressionEvaluator evaluator(result, self, context, localVariables);
+ 	expr->Visit(&evaluator);
+ 	Frame::StepExpression = oldExpr;
+-	return std::move(evaluator.Result);
++	return result;
++}
++
++ExpressionValue ExpressionEvaluator::Value(Expression* expr)
++{
++	auto oldExpr = Frame::StepExpression;
++	Frame::StepExpression = expr;
++
++	ExpressionValue value;
++	ExpressionValue* out = Out;
++	Out = &value;
++	expr->Visit(this);
++	Out = out;
++
++	Frame::StepExpression = oldExpr;
++	return value;
++}
++
++ExpressionValue ExpressionEvaluator::Value(Expression* expr, UObject* context)
++{
++	UObject* oldContext = Context;
++	Context = context;
++	ExpressionValue value = Value(expr);
++	Context = oldContext;
++	return value;
++}
++
++void ExpressionEvaluator::PassThrough(Expression* expr, UObject* context)
++{
++	auto oldExpr = Frame::StepExpression;
++	Frame::StepExpression = expr;
++
++	UObject* oldContext = Context;
++	Context = context;
++	expr->Visit(this);
++	Context = oldContext;
++
++	Frame::StepExpression = oldExpr;
+ }
+ 
+ void ExpressionEvaluator::Expr(LocalVariableExpression* expr)
+ {
+-	Result.Value = ExpressionValue::Variable(LocalVariables, expr->Variable);
++	*Out = ExpressionValue::Variable(LocalVariables, expr->Variable);
+ }
+ 
+ void ExpressionEvaluator::Expr(InstanceVariableExpression* expr)
+ {
+-	Result.Value = ExpressionValue::Variable(Context->PropertyData.Data, expr->Variable);
++	*Out = ExpressionValue::Variable(Context->PropertyData.Data, expr->Variable);
+ }
+ 
+ void ExpressionEvaluator::Expr(DefaultVariableExpression* expr)
+ {
+ 	if (UObject::TryCast<UClass>(Context))
+-		Result.Value = ExpressionValue::Variable(Context->PropertyData.Data, expr->Variable);
++		*Out = ExpressionValue::Variable(Context->PropertyData.Data, expr->Variable);
+ 	else
+-		Result.Value = ExpressionValue::Variable(Context->Class->GetDefaultObject<UObject>()->PropertyData.Data, expr->Variable);
++		*Out = ExpressionValue::Variable(Context->Class->GetDefaultObject<UObject>()->PropertyData.Data, expr->Variable);
+ }
+ 
+ void ExpressionEvaluator::Expr(ReturnExpression* expr)
+ {
+ 	if (expr->Value)
+-		Result.Value = Eval(expr->Value).Value;
++		*Out = Value(expr->Value);
+ 	else
+-		Result.Value = ExpressionValue::NothingValue();
+-	Result.Result = StatementResult::Return;
++		*Out = ExpressionValue::NothingValue();
++	if (IsStatement())
++		Result.Result = StatementResult::Return;
+ }
+ 
+ void ExpressionEvaluator::Expr(SwitchExpression* expr)
+ {
+-	Result.Value = Eval(expr->Condition).Value;
+-	Result.Result = StatementResult::Switch;
++	*Out = Value(expr->Condition);
++	if (IsStatement())
++		Result.Result = StatementResult::Switch;
+ }
+ 
+ void ExpressionEvaluator::Expr(JumpExpression* expr)
+ {
+-	Result.Result = StatementResult::Jump;
+-	Result.JumpAddress = expr->Offset;
++	if (IsStatement())
++	{
++		Result.Result = StatementResult::Jump;
++		Result.JumpAddress = expr->Offset;
++	}
+ }
+ 
+ void ExpressionEvaluator::Expr(JumpIfNotExpression* expr)
+ {
+-	if (!Eval(expr->Condition).Value.ToBool())
++	if (!Value(expr->Condition).ToBool() && IsStatement())
+ 	{
+ 		Result.Result = StatementResult::Jump;
+ 		Result.JumpAddress = expr->Offset;
+@@ -81,12 +122,13 @@ void ExpressionEvaluator::Expr(JumpIfNotExpression* expr)
+ 
+ void ExpressionEvaluator::Expr(StopExpression* expr)
+ {
+-	Result.Result = StatementResult::Stop;
++	if (IsStatement())
++		Result.Result = StatementResult::Stop;
+ }
+ 
+ void ExpressionEvaluator::Expr(AssertExpression* expr)
+ {
+-	if (!Eval(expr->Condition).Value.ToBool())
++	if (!Value(expr->Condition).ToBool())
+ 	{
+ 		Frame::ThrowException("Script assert failed for " + Self->Name.ToString() + " line " + std::to_string(expr->Line));
+ 	}
+@@ -94,12 +136,12 @@ void ExpressionEvaluator::Expr(AssertExpression* expr)
+ 
+ void ExpressionEvaluator::Expr(CaseExpression* expr)
+ {
+-	Result.Value = ExpressionValue::NothingValue();
++	*Out = ExpressionValue::NothingValue();
+ }
+ 
+ void ExpressionEvaluator::Expr(NothingExpression* expr)
+ {
+-	Result.Value = ExpressionValue::NothingValue();
++	*Out = ExpressionValue::NothingValue();
+ }
+ 
+ void ExpressionEvaluator::Expr(LabelTableExpression* expr)
+@@ -110,60 +152,64 @@ void ExpressionEvaluator::Expr(LabelTableExpression* expr)
+ 
+ void ExpressionEvaluator::Expr(GotoLabelExpression* expr)
+ {
+-	Result.Result = StatementResult::GotoLabel;
+-	Result.Label = Eval(expr->Value).Value.ToName();
++	NameString label = Value(expr->Value).ToName();
++	if (IsStatement())
++	{
++		Result.Result = StatementResult::GotoLabel;
++		Result.Label = label;
++	}
+ }
+ 
+ void ExpressionEvaluator::Expr(EatStringExpression* expr)
+ {
+-	Eval(expr->Value);
+-	Result.Value = ExpressionValue::NothingValue();
++	Value(expr->Value);
++	*Out = ExpressionValue::NothingValue();
+ }
+ 
+ void ExpressionEvaluator::Expr(LetExpression* expr)
+ {
+-	ExpressionValue lvalue = Eval(expr->LeftSide).Value;
+-	ExpressionValue rvalue = Eval(expr->RightSide).Value;
++	ExpressionValue lvalue = Value(expr->LeftSide);
++	ExpressionValue rvalue = Value(expr->RightSide);
+ 	if (lvalue.GetType() != ExpressionValueType::Nothing)
+ 	{
+ 		lvalue.Store(rvalue);
+-		Result.Value = std::move(lvalue);
++		*Out = std::move(lvalue);
+ 	}
+ 	else
+ 	{
+-		Result.Value = std::move(rvalue);
++		*Out = std::move(rvalue);
+ 	}
+ }
+ 
+ void ExpressionEvaluator::Expr(LetBoolExpression* expr)
+ {
+-	ExpressionValue lvalue = Eval(expr->LeftSide).Value;
+-	ExpressionValue rvalue = Eval(expr->RightSide).Value;
++	ExpressionValue lvalue = Value(expr->LeftSide);
++	ExpressionValue rvalue = Value(expr->RightSide);
+ 	if (lvalue.GetType() != ExpressionValueType::Nothing)
+ 	{
+ 		lvalue.Store(rvalue);
+-		Result.Value = std::move(lvalue);
++		*Out = std::move(lvalue);
+ 	}
+ 	else
+ 	{
+-		Result.Value = std::move(rvalue);
++		*Out = std::move(rvalue);
+ 	}
+ }
+ 
+ void ExpressionEvaluator::Expr(DynArrayElementExpression* expr)
+ {
+-	int index = Eval(expr->Index).Value.ToInt();
+-	auto arrayval = Eval(expr->Array).Value;
++	int index = Value(expr->Index).ToInt();
++	auto arrayval = Value(expr->Array);
+ 	if (arrayval.IsVariable())
+ 	{
+ 		if (index < 0)
+ 		{
+ 			LogMessage("Negative index used");
+-			Result.Value = ExpressionValue::NothingValue();
++			*Out = ExpressionValue::NothingValue();
+ 		}
+ 		else
+ 		{
+-			Result.Value = arrayval.DynArrayItemAt(index);
++			*Out = arrayval.DynArrayItemAt(index);
+ 		}
+ 	}
+ 	else
+@@ -174,10 +220,10 @@ void ExpressionEvaluator::Expr(DynArrayElementExpression* expr)
+ 
+ void ExpressionEvaluator::Expr(NewExpression* expr)
+ {
+-	ExpressionValue outer = Eval(expr->ParentExpr).Value;
+-	ExpressionValue name = Eval(expr->NameExpr).Value;
+-	ExpressionValue flags = Eval(expr->FlagsExpr).Value;
+-	UClass* cls = UObject::Cast<UClass>(Eval(expr->ClassExpr).Value.ToObject());
++	ExpressionValue outer = Value(expr->ParentExpr);
++	ExpressionValue name = Value(expr->NameExpr);
++	ExpressionValue flags = Value(expr->FlagsExpr);
++	UClass* cls = UObject::Cast<UClass>(Value(expr->ClassExpr).ToObject());
+ 
+ 	// To do: package needs to be grabbed from outer, or the "transient package" if it is None, a virtual package for runtime objects
+ 	Package* package = engine->packages->GetPackage("Engine");
+@@ -191,16 +237,16 @@ void ExpressionEvaluator::Expr(NewExpression* expr)
+ 	if (outer.GetType() != ExpressionValueType::Nothing)
+ 		newObj->Outer() = outer.ToObject();
+ 
+-	Result.Value = ExpressionValue::ObjectValue(newObj);
++	*Out = ExpressionValue::ObjectValue(newObj);
+ }
+ 
+ void ExpressionEvaluator::Expr(ClassContextExpression* expr)
+ {
+-	ExpressionValue object = Eval(expr->ObjectExpr).Value;
++	ExpressionValue object = Value(expr->ObjectExpr);
+ 	UClass* cls = UObject::TryCast<UClass>(object.ToObject());
+ 	if (cls)
+ 	{
+-		Result = Eval(expr->ContextExpr, Self, cls->GetDefaultObject<UObject>(), LocalVariables);
++		PassThrough(expr->ContextExpr, cls->GetDefaultObject<UObject>());
+ 	}
+ 	else
+ 	{
+@@ -210,7 +256,7 @@ void ExpressionEvaluator::Expr(ClassContextExpression* expr)
+ 
+ void ExpressionEvaluator::Expr(MetaCastExpression* expr)
+ {
+-	UObject* value = Eval(expr->Value).Value.ToObject();
++	UObject* value = Value(expr->Value).ToObject();
+ 	if (value && value != expr->Class)
+ 	{
+ 		UClass* cls = UObject::TryCast<UClass>(value);
+@@ -223,35 +269,35 @@ void ExpressionEvaluator::Expr(MetaCastExpression* expr)
+ 		if (!cls)
+ 			value = nullptr;
+ 	}
+-	Result.Value = ExpressionValue::ObjectValue(value);
++	*Out = ExpressionValue::ObjectValue(value);
+ }
+ 
+ void ExpressionEvaluator::Expr(Unknown0x15Expression* expr)
+ {
+ 	// Klingon honor guard has this! (UE 251)
+ 	//Frame::ThrowException("Unknown0x15 expression encountered");
+-	Result.Result = StatementResult::Stop;
++	if (IsStatement())
++		Result.Result = StatementResult::Stop;
+ }
+ 
+ void ExpressionEvaluator::Expr(SelfExpression* expr)
+ {
+-	Result.Value = ExpressionValue::ObjectValue(Self);
++	*Out = ExpressionValue::ObjectValue(Self);
+ }
+ 
+ void ExpressionEvaluator::Expr(SkipExpression* expr)
+ {
+-	Result = Eval(expr->Value);
++	PassThrough(expr->Value, Context);
+ }
+ 
+ void ExpressionEvaluator::Expr(ContextExpression* expr)
+ {
+-	auto value = Eval(expr->ObjectExpr).Value;
+-	UObject* context = value.ToObject();
++	UObject* context = Value(expr->ObjectExpr).ToObject();
+ 	if (context)
+ 	{
+-		Result = Eval(expr->ContextExpr, Self, context, LocalVariables);
++		PassThrough(expr->ContextExpr, context);
+ 	}
+-	else
++	else if (IsStatement())
+ 	{
+ 		Result.Result = StatementResult::AccessedNone;
+ 	}
+@@ -259,11 +305,11 @@ void ExpressionEvaluator::Expr(ContextExpression* expr)
+ 
+ void ExpressionEvaluator::Expr(ArrayElementExpression* expr)
+ {
+-	int index = Eval(expr->Index).Value.ToInt();
+-	auto arrayval = Eval(expr->Array).Value;
++	int index = Value(expr->Index).ToInt();
++	auto arrayval = Value(expr->Array);
+ 	if (arrayval.IsVariable())
+ 	{
+-		Result.Value = arrayval.ItemAt(index);
++		*Out = arrayval.ItemAt(index);
+ 	}
+ 	else
+ 	{
+@@ -273,62 +319,62 @@ void ExpressionEvaluator::Expr(ArrayElementExpression* expr)
+ 
+ void ExpressionEvaluator::Expr(IntConstExpression* expr)
+ {
+-	Result.Value = ExpressionValue::IntValue(expr->Value);
++	*Out = ExpressionValue::IntValue(expr->Value);
+ }
+ 
+ void ExpressionEvaluator::Expr(FloatConstExpression* expr)
+ {
+-	Result.Value = ExpressionValue::FloatValue(expr->Value);
++	*Out = ExpressionValue::FloatValue(expr->Value);
+ }
+ 
+ void ExpressionEvaluator::Expr(StringConstExpression* expr)
+ {
+-	Result.Value = ExpressionValue::StringValue(expr->Value);
++	*Out = ExpressionValue::StringValue(expr->Value);
+ }
+ 
+ void ExpressionEvaluator::Expr(ObjectConstExpression* expr)
+ {
+-	Result.Value = ExpressionValue::ObjectValue(expr->Object);
++	*Out = ExpressionValue::ObjectValue(expr->Object);
+ }
+ 
+ void ExpressionEvaluator::Expr(NameConstExpression* expr)
+ {
+-	Result.Value = ExpressionValue::NameValue(expr->Value);
++	*Out = ExpressionValue::NameValue(expr->Value);
+ }
+ 
+ void ExpressionEvaluator::Expr(RotationConstExpression* expr)
+ {
+-	Result.Value = ExpressionValue::RotatorValue({ expr->Pitch, expr->Yaw, expr->Roll });
++	*Out = ExpressionValue::RotatorValue({ expr->Pitch, expr->Yaw, expr->Roll });
+ }
+ 
+ void ExpressionEvaluator::Expr(VectorConstExpression* expr)
+ {
+-	Result.Value = ExpressionValue::VectorValue({ expr->X, expr->Y, expr->Z });
++	*Out = ExpressionValue::VectorValue({ expr->X, expr->Y, expr->Z });
+ }
+ 
+ void ExpressionEvaluator::Expr(ByteConstExpression* expr)
+ {
+-	Result.Value = ExpressionValue::ByteValue(expr->Value);
++	*Out = ExpressionValue::ByteValue(expr->Value);
+ }
+ 
+ void ExpressionEvaluator::Expr(IntZeroExpression* expr)
+ {
+-	Result.Value = ExpressionValue::IntValue(0);
++	*Out = ExpressionValue::IntValue(0);
+ }
+ 
+ void ExpressionEvaluator::Expr(IntOneExpression* expr)
+ {
+-	Result.Value = ExpressionValue::IntValue(1);
++	*Out = ExpressionValue::IntValue(1);
+ }
+ 
+ void ExpressionEvaluator::Expr(TrueExpression* expr)
+ {
+-	Result.Value = ExpressionValue::BoolValue(true);
++	*Out = ExpressionValue::BoolValue(true);
+ }
+ 
+ void ExpressionEvaluator::Expr(FalseExpression* expr)
+ {
+-	Result.Value = ExpressionValue::BoolValue(false);
++	*Out = ExpressionValue::BoolValue(false);
+ }
+ 
+ void ExpressionEvaluator::Expr(NativeParmExpression* expr)
+@@ -338,68 +384,74 @@ void ExpressionEvaluator::Expr(NativeParmExpression* expr)
+ 
+ void ExpressionEvaluator::Expr(NoObjectExpression* expr)
+ {
+-	Result.Value = ExpressionValue::ObjectValue(nullptr);
++	*Out = ExpressionValue::ObjectValue(nullptr);
+ }
+ 
+ void ExpressionEvaluator::Expr(Unknown0x2bExpression* expr)
+ {
+-	Result = Eval(expr->Value); // This may have been a truncating instruction from back when strings had a fixed size (package version 61 and earlier)
++	PassThrough(expr->Value, Context); // This may have been a truncating instruction from back when strings had a fixed size (package version 61 and earlier)
+ }
+ 
+ void ExpressionEvaluator::Expr(IntConstByteExpression* expr)
+ {
+-	Result.Value = ExpressionValue::ByteValue(expr->Value);
++	*Out = ExpressionValue::ByteValue(expr->Value);
+ }
+ 
+ void ExpressionEvaluator::Expr(BoolVariableExpression* expr)
+ {
+-	Result.Value = Eval(expr->Variable).Value;
++	*Out = Value(expr->Variable);
+ }
+ 
+ void ExpressionEvaluator::Expr(DynamicCastExpression* expr)
+ {
+-	UObject* value = Eval(expr->Value).Value.ToObject();
++	UObject* value = Value(expr->Value).ToObject();
+ 	if (value && !value->IsA(expr->Class->Name))
+ 		value = nullptr;
+-	Result.Value = ExpressionValue::ObjectValue(value);
++	*Out = ExpressionValue::ObjectValue(value);
+ }
+ 
+ void ExpressionEvaluator::Expr(IteratorExpression* expr)
+ {
+-	Eval(expr->Value);
+-	Result.Result = StatementResult::Iterator;
+-	Result.Iter = std::move(Frame::CreatedIterator);
+-	Result.JumpAddress = expr->Offset;
++	Value(expr->Value);
++	std::unique_ptr<Iterator> iter = std::move(Frame::CreatedIterator);
++	if (IsStatement())
++	{
++		Result.Result = StatementResult::Iterator;
++		Result.Iter = std::move(iter);
++		Result.JumpAddress = expr->Offset;
++	}
+ }
+ 
+ void ExpressionEvaluator::Expr(IteratorPopExpression* expr)
+ {
+-	Result.Result = StatementResult::IteratorPop;
++	if (IsStatement())
++		Result.Result = StatementResult::IteratorPop;
+ }
+ 
+ void ExpressionEvaluator::Expr(IteratorNextExpression* expr)
+ {
+-	Result.Result = StatementResult::IteratorNext;
++	if (IsStatement())
++		Result.Result = StatementResult::IteratorNext;
+ }
+ 
+ void ExpressionEvaluator::Expr(StructCmpEqExpression* expr)
+ {
+-	ExpressionValue val1 = Eval(expr->Value1).Value;
+-	ExpressionValue val2 = Eval(expr->Value2).Value;
+-	Result.Value = ExpressionValue::BoolValue(val1.IsEqual(val2));
++	ExpressionValue val1 = Value(expr->Value1);
++	ExpressionValue val2 = Value(expr->Value2);
++	*Out = ExpressionValue::BoolValue(val1.IsEqual(val2));
+ }
+ 
+ void ExpressionEvaluator::Expr(StructCmpNeExpression* expr)
+ {
+-	ExpressionValue val1 = Eval(expr->Value1).Value;
+-	ExpressionValue val2 = Eval(expr->Value2).Value;
+-	Result.Value = ExpressionValue::BoolValue(!val1.IsEqual(val2));
++	ExpressionValue val1 = Value(expr->Value1);
++	ExpressionValue val2 = Value(expr->Value2);
++	*Out = ExpressionValue::BoolValue(!val1.IsEqual(val2));
+ }
+ 
+ void ExpressionEvaluator::Expr(StructMemberExpression* expr)
+ {
+ 	if (expr->Field)
+-		Result.Value = Eval(expr->Value).Value.Member(expr->Field);
++		*Out = Value(expr->Value).Member(expr->Field);
+ 	else
+ 		Frame::ThrowException("Null field encountered in struct member expression");
+ }
+@@ -410,73 +462,73 @@ void ExpressionEvaluator::Expr(UnicodeStringConstExpression* expr)
+ 	s.reserve(expr->Value.size());
+ 	for (wchar_t c : expr->Value)
+ 		s.push_back(c < 128 ? c : '?');
+-	Result.Value = ExpressionValue::StringValue(s);
++	*Out = ExpressionValue::StringValue(s);
+ }
+ 
+ void ExpressionEvaluator::Expr(RotatorToVectorExpression* expr)
+ {
+-	Rotator rot = Eval(expr->Value).Value.ToRotator();
+-	Result.Value = ExpressionValue::VectorValue(Coords::Rotation(rot).XAxis);
++	Rotator rot = Value(expr->Value).ToRotator();
++	*Out = ExpressionValue::VectorValue(Coords::Rotation(rot).XAxis);
+ }
+ 
+ void ExpressionEvaluator::Expr(ByteToIntExpression* expr)
+ {
+-	Result.Value = ExpressionValue::IntValue(Eval(expr->Value).Value.ToByte());
++	*Out = ExpressionValue::IntValue(Value(expr->Value).ToByte());
+ }
+ 
+ void ExpressionEvaluator::Expr(ByteToBoolExpression* expr)
+ {
+-	Result.Value = ExpressionValue::BoolValue(Eval(expr->Value).Value.ToByte() != 0);
++	*Out = ExpressionValue::BoolValue(Value(expr->Value).ToByte() != 0);
+ }
+ 
+ void ExpressionEvaluator::Expr(ByteToFloatExpression* expr)
+ {
+-	Result.Value = ExpressionValue::FloatValue(Eval(expr->Value).Value.ToByte());
++	*Out = ExpressionValue::FloatValue(Value(expr->Value).ToByte());
+ }
+ 
+ void ExpressionEvaluator::Expr(IntToByteExpression* expr)
+ {
+-	Result.Value = ExpressionValue::ByteValue(Eval(expr->Value).Value.ToInt());
++	*Out = ExpressionValue::ByteValue(Value(expr->Value).ToInt());
+ }
+ 
+ void ExpressionEvaluator::Expr(IntToBoolExpression* expr)
+ {
+-	Result.Value = ExpressionValue::BoolValue(Eval(expr->Value).Value.ToInt());
++	*Out = ExpressionValue::BoolValue(Value(expr->Value).ToInt());
+ }
+ 
+ void ExpressionEvaluator::Expr(IntToFloatExpression* expr)
+ {
+-	Result.Value = ExpressionValue::FloatValue((float)Eval(expr->Value).Value.ToInt());
++	*Out = ExpressionValue::FloatValue((float)Value(expr->Value).ToInt());
+ }
+ 
+ void ExpressionEvaluator::Expr(BoolToByteExpression* expr)
+ {
+-	Result.Value = ExpressionValue::ByteValue(Eval(expr->Value).Value.ToBool());
++	*Out = ExpressionValue::ByteValue(Value(expr->Value).ToBool());
+ }
+ 
+ void ExpressionEvaluator::Expr(BoolToIntExpression* expr)
+ {
+-	Result.Value = ExpressionValue::IntValue(Eval(expr->Value).Value.ToBool());
++	*Out = ExpressionValue::IntValue(Value(expr->Value).ToBool());
+ }
+ 
+ void ExpressionEvaluator::Expr(BoolToFloatExpression* expr)
+ {
+-	Result.Value = ExpressionValue::FloatValue(Eval(expr->Value).Value.ToBool());
++	*Out = ExpressionValue::FloatValue(Value(expr->Value).ToBool());
+ }
+ 
+ void ExpressionEvaluator::Expr(FloatToByteExpression* expr)
+ {
+-	Result.Value = ExpressionValue::ByteValue((int)Eval(expr->Value).Value.ToFloat());
++	*Out = ExpressionValue::ByteValue((int)Value(expr->Value).ToFloat());
+ }
+ 
+ void ExpressionEvaluator::Expr(FloatToIntExpression* expr)
+ {
+-	Result.Value = ExpressionValue::IntValue((int)Eval(expr->Value).Value.ToFloat());
++	*Out = ExpressionValue::IntValue((int)Value(expr->Value).ToFloat());
+ }
+ 
+ void ExpressionEvaluator::Expr(FloatToBoolExpression* expr)
+ {
+-	Result.Value = ExpressionValue::BoolValue((bool)Eval(expr->Value).Value.ToFloat());
++	*Out = ExpressionValue::BoolValue((bool)Value(expr->Value).ToFloat());
+ }
+ 
+ void ExpressionEvaluator::Expr(Unknown0x46Expression* expr)
+@@ -486,132 +538,132 @@ void ExpressionEvaluator::Expr(Unknown0x46Expression* expr)
+ 
+ void ExpressionEvaluator::Expr(ObjectToBoolExpression* expr)
+ {
+-	Result.Value = ExpressionValue::BoolValue(Eval(expr->Value).Value.ToObject() != nullptr);
++	*Out = ExpressionValue::BoolValue(Value(expr->Value).ToObject() != nullptr);
+ }
+ 
+ void ExpressionEvaluator::Expr(NameToBoolExpression* expr)
+ {
+-	Result.Value = ExpressionValue::BoolValue(Eval(expr->Value).Value.ToName() != "None");
++	*Out = ExpressionValue::BoolValue(Value(expr->Value).ToName().IsNone() == false); // "None" is name index 0: no lookup by spelling
+ }
+ 
+ void ExpressionEvaluator::Expr(StringToByteExpression* expr)
+ {
+-	Result.Value = ExpressionValue::ByteValue(std::atoi(Eval(expr->Value).Value.ToString().c_str()));
++	*Out = ExpressionValue::ByteValue(std::atoi(Value(expr->Value).ToString().c_str()));
+ }
+ 
+ void ExpressionEvaluator::Expr(StringToIntExpression* expr)
+ {
+-	Result.Value = ExpressionValue::IntValue(std::atoi(Eval(expr->Value).Value.ToString().c_str()));
++	*Out = ExpressionValue::IntValue(std::atoi(Value(expr->Value).ToString().c_str()));
+ }
+ 
+ void ExpressionEvaluator::Expr(StringToBoolExpression* expr)
+ {
+-	Result.Value = ExpressionValue::BoolValue(std::atoi(Eval(expr->Value).Value.ToString().c_str()));
++	*Out = ExpressionValue::BoolValue(std::atoi(Value(expr->Value).ToString().c_str()));
+ }
+ 
+ void ExpressionEvaluator::Expr(StringToFloatExpression* expr)
+ {
+-	Result.Value = ExpressionValue::FloatValue((float)std::atof(Eval(expr->Value).Value.ToString().c_str()));
++	*Out = ExpressionValue::FloatValue((float)std::atof(Value(expr->Value).ToString().c_str()));
+ }
+ 
+ void ExpressionEvaluator::Expr(StringToVectorExpression* expr)
+ {
+-	std::string v = Eval(expr->Value).Value.ToString();
++	std::string v = Value(expr->Value).ToString();
+ 	auto pos1 = v.find_first_of(',');
+ 	auto pos2 = v.find_first_of(',', pos1 + 1);
+ 	if (pos1 != std::string::npos && pos2 != std::string::npos)
+ 	{
+-		Result.Value = ExpressionValue::VectorValue({ (float)std::atof(v.substr(0, pos1).c_str()), (float)std::atof(v.substr(pos1 + 1, pos2 - pos1 - 1).c_str()), (float)std::atof(v.substr(pos2 + 1).c_str()) });
++		*Out = ExpressionValue::VectorValue({ (float)std::atof(v.substr(0, pos1).c_str()), (float)std::atof(v.substr(pos1 + 1, pos2 - pos1 - 1).c_str()), (float)std::atof(v.substr(pos2 + 1).c_str()) });
+ 	}
+ 	else
+ 	{
+-		Result.Value = ExpressionValue::VectorValue({ 0.0f });
++		*Out = ExpressionValue::VectorValue({ 0.0f });
+ 	}
+ }
+ 
+ void ExpressionEvaluator::Expr(StringToRotatorExpression* expr)
+ {
+-	std::string v = Eval(expr->Value).Value.ToString();
++	std::string v = Value(expr->Value).ToString();
+ 	auto pos1 = v.find_first_of(',');
+ 	auto pos2 = v.find_first_of(',', pos1 + 1);
+ 	if (pos1 != std::string::npos && pos2 != std::string::npos)
+ 	{
+-		Result.Value = ExpressionValue::RotatorValue({ std::atoi(v.substr(0, pos1).c_str()), std::atoi(v.substr(pos1 + 1, pos2 - pos1 - 1).c_str()), std::atoi(v.substr(pos2 + 1).c_str()) });
++		*Out = ExpressionValue::RotatorValue({ std::atoi(v.substr(0, pos1).c_str()), std::atoi(v.substr(pos1 + 1, pos2 - pos1 - 1).c_str()), std::atoi(v.substr(pos2 + 1).c_str()) });
+ 	}
+ 	else
+ 	{
+-		Result.Value = ExpressionValue::RotatorValue({ 0, 0, 0 });
++		*Out = ExpressionValue::RotatorValue({ 0, 0, 0 });
+ 	}
+ }
+ 
+ void ExpressionEvaluator::Expr(VectorToBoolExpression* expr)
+ {
+-	Result.Value = ExpressionValue::BoolValue(Eval(expr->Value).Value.ToVector() != vec3(0.0f));
++	*Out = ExpressionValue::BoolValue(Value(expr->Value).ToVector() != vec3(0.0f));
+ }
+ 
+ void ExpressionEvaluator::Expr(VectorToRotatorExpression* expr)
+ {
+-	Result.Value = ExpressionValue::RotatorValue(Rotator::FromVector(Eval(expr->Value).Value.ToVector()));
++	*Out = ExpressionValue::RotatorValue(Rotator::FromVector(Value(expr->Value).ToVector()));
+ }
+ 
+ void ExpressionEvaluator::Expr(RotatorToBoolExpression* expr)
+ {
+-	Result.Value = ExpressionValue::BoolValue(Eval(expr->Value).Value.ToRotator() != Rotator(0, 0, 0));
++	*Out = ExpressionValue::BoolValue(Value(expr->Value).ToRotator() != Rotator(0, 0, 0));
+ }
+ 
+ void ExpressionEvaluator::Expr(ByteToStringExpression* expr)
+ {
+-	Result.Value = ExpressionValue::StringValue(std::to_string(Eval(expr->Value).Value.ToByte()));
++	*Out = ExpressionValue::StringValue(std::to_string(Value(expr->Value).ToByte()));
+ }
+ 
+ void ExpressionEvaluator::Expr(IntToStringExpression* expr)
+ {
+-	Result.Value = ExpressionValue::StringValue(std::to_string(Eval(expr->Value).Value.ToInt()));
++	*Out = ExpressionValue::StringValue(std::to_string(Value(expr->Value).ToInt()));
+ }
+ 
+ void ExpressionEvaluator::Expr(BoolToStringExpression* expr)
+ {
+-	Result.Value = ExpressionValue::StringValue(std::to_string(Eval(expr->Value).Value.ToBool()));
++	*Out = ExpressionValue::StringValue(std::to_string(Value(expr->Value).ToBool()));
+ }
+ 
+ void ExpressionEvaluator::Expr(FloatToStringExpression* expr)
+ {
+-	Result.Value = ExpressionValue::StringValue(std::to_string(Eval(expr->Value).Value.ToFloat()));
++	*Out = ExpressionValue::StringValue(std::to_string(Value(expr->Value).ToFloat()));
+ }
+ 
+ void ExpressionEvaluator::Expr(ObjectToStringExpression* expr)
+ {
+-	UObject* obj = Eval(expr->Value).Value.ToObject();
+-	Result.Value = ExpressionValue::StringValue(obj ? obj->package->GetPackageName().ToString() + "." + obj->Name.ToString() : "None");
++	UObject* obj = Value(expr->Value).ToObject();
++	*Out = ExpressionValue::StringValue(obj ? obj->package->GetPackageName().ToString() + "." + obj->Name.ToString() : "None");
+ }
+ 
+ void ExpressionEvaluator::Expr(NameToStringExpression* expr)
+ {
+-	Result.Value = ExpressionValue::StringValue(Eval(expr->Value).Value.ToName().ToString());
++	*Out = ExpressionValue::StringValue(Value(expr->Value).ToName().ToString());
+ }
+ 
+ void ExpressionEvaluator::Expr(VectorToStringExpression* expr)
+ {
+-	vec3 v = Eval(expr->Value).Value.ToVector();
+-	Result.Value = ExpressionValue::StringValue(std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z));
++	vec3 v = Value(expr->Value).ToVector();
++	*Out = ExpressionValue::StringValue(std::to_string(v.x) + "," + std::to_string(v.y) + "," + std::to_string(v.z));
+ }
+ 
+ void ExpressionEvaluator::Expr(RotatorToStringExpression* expr)
+ {
+-	Rotator v = Eval(expr->Value).Value.ToRotator();
+-	Result.Value = ExpressionValue::StringValue(std::to_string(v.Pitch & 0xffff) + "," + std::to_string(v.Yaw & 0xffff) + "," + std::to_string(v.Roll & 0xffff));
++	Rotator v = Value(expr->Value).ToRotator();
++	*Out = ExpressionValue::StringValue(std::to_string(v.Pitch & 0xffff) + "," + std::to_string(v.Yaw & 0xffff) + "," + std::to_string(v.Roll & 0xffff));
+ }
+ 
+ void ExpressionEvaluator::Expr(StringToNameExpression* expr)
+ {
+-	std::string v = Eval(expr->Value).Value.ToString();
+-	Result.Value = ExpressionValue::NameValue(v);
++	std::string v = Value(expr->Value).ToString();
++	*Out = ExpressionValue::NameValue(v);
+ }
+ 
+ void ExpressionEvaluator::Expr(DynArrayToIntExpression* expr)
+ {
+-	size_t count = Eval(expr->Value).Value.ToArray().GetSize();
+-	Result.Value = ExpressionValue::IntValue((int)count);
++	size_t count = Value(expr->Value).ToArray().GetSize();
++	*Out = ExpressionValue::IntValue((int)count);
+ }
+ 
+ static UFunction* FindVirtualFunction(UClass* contextClass, const NameString& stateName, const NameString& name)
+@@ -713,23 +765,27 @@ void ExpressionEvaluator::Call(UFunction* func, const Array<Expression*>& exprAr
+ {
+ 	if (func->NativeFuncIndex == 130)
+ 	{
+-		Result.Value = ExpressionValue::BoolValue(Eval(exprArgs[0], Self, Self, LocalVariables).Value.ToBool() && Eval(exprArgs[1], Self, Self, LocalVariables).Value.ToBool());
++		*Out = ExpressionValue::BoolValue(Value(exprArgs[0], Self).ToBool() && Value(exprArgs[1], Self).ToBool());
+ 	}
+ 	else if (func->NativeFuncIndex == 132)
+ 	{
+-		Result.Value = ExpressionValue::BoolValue(Eval(exprArgs[0], Self, Self, LocalVariables).Value.ToBool() || Eval(exprArgs[1], Self, Self, LocalVariables).Value.ToBool());
++		*Out = ExpressionValue::BoolValue(Value(exprArgs[0], Self).ToBool() || Value(exprArgs[1], Self).ToBool());
+ 	}
+ 	else
+ 	{
++		// Arguments are evaluated in the caller's own context; the call is made in this one
+ 		Array<ExpressionValue> args;
+ 		args.reserve(exprArgs.size());
++		UObject* context = Context;
++		Context = Self;
+ 		for (Expression* arg : exprArgs)
+-			args.push_back(Eval(arg, Self, Self, LocalVariables).Value);
+-		Result.Value = Frame::Call(func, Context, std::move(args));
++			args.push_back(Value(arg));
++		Context = context;
++		*Out = Frame::Call(func, Context, std::move(args));
+ 	}
+ }
+ 
+ void ExpressionEvaluator::Expr(FunctionArgumentsExpression* expr)
+ {
+-	Result.Value = ExpressionValue::NothingValue();
++	*Out = ExpressionValue::NothingValue();
+ }
+diff --git a/SurrealEngine/VM/ExpressionEvaluator.h b/SurrealEngine/VM/ExpressionEvaluator.h
+index 485779d..2959f52 100644
+--- a/SurrealEngine/VM/ExpressionEvaluator.h
++++ b/SurrealEngine/VM/ExpressionEvaluator.h
+@@ -33,10 +33,25 @@ struct ExpressionEvalResult
+ class ExpressionEvaluator : ExpressionVisitor
+ {
+ public:
++	// Evaluates a statement: its value, and what the frame does next
+ 	static ExpressionEvalResult Eval(Expression* expr, UObject* self, UObject* context, void* localVariables);
+ 
+ private:
+-	ExpressionEvalResult Eval(Expression* expr) { return Eval(expr, Self, Context, LocalVariables); }
++	ExpressionEvaluator(ExpressionEvalResult& result, UObject* self, UObject* context, void* localVariables)
++		: Result(result), Self(self), Context(context), LocalVariables(localVariables), Out(&result.Value) {}
++
++	// A nested expression's value, from this same evaluator. Only the statement
++	// says what the frame does next: whatever else a nested expression reports
++	// is dropped, as it was when every expression had an evaluator and a
++	// result of its own.
++	ExpressionValue Value(Expression* expr);
++	ExpressionValue Value(Expression* expr, UObject* context);
++
++	// Evaluates expr as this expression (Skip, Context): its value is this
++	// one's, and so is what it says the frame does next.
++	void PassThrough(Expression* expr, UObject* context);
++
++	bool IsStatement() const { return Out == &Result.Value; }
+ 
+ 	void Expr(LocalVariableExpression* expr) override;
+ 	void Expr(InstanceVariableExpression* expr) override;
+@@ -132,8 +147,9 @@ private:
+ 
+ 	void Call(UFunction* func, const Array<Expression*>& exprArgs);
+ 
+-	ExpressionEvalResult Result;
++	ExpressionEvalResult& Result;
+ 	UObject* Self = nullptr;
+ 	UObject* Context = nullptr;
+ 	void* LocalVariables = nullptr;
++	ExpressionValue* Out = nullptr; // where the expression being visited leaves its value
+ };
+diff --git a/SurrealEngine/VM/ExpressionValue.h b/SurrealEngine/VM/ExpressionValue.h
+index 908adb9..6446fa1 100644
+--- a/SurrealEngine/VM/ExpressionValue.h
++++ b/SurrealEngine/VM/ExpressionValue.h
+@@ -100,6 +100,42 @@ public:
+ 		return *this;
+ 	}
+ 
++	// The evaluator hands every value up by assignment: a copy would duplicate strings and structs
++	ExpressionValue& operator=(ExpressionValue&& v)
++	{
++		if (this != &v)
++		{
++			Deinit();
++
++			Type = v.Type;
++			if (!v.VariableProperty)
++			{
++				Ptr = (Type != ExpressionValueType::Nothing) ? &Buffer : nullptr;
++				switch (Type)
++				{
++				default: Buffer = v.Buffer; break;
++				case ExpressionValueType::ValueVector: new(PtrByte) vec3(std::move(*v.PtrVector)); break;
++				case ExpressionValueType::ValueRotator: new(PtrByte) Rotator(std::move(*v.PtrRotator)); break;
++				case ExpressionValueType::ValueString: new(PtrByte) std::string(std::move(*v.PtrString)); break;
++				case ExpressionValueType::ValueName: new(PtrByte) NameString(std::move(*v.PtrName)); break;
++				case ExpressionValueType::ValueColor: new(PtrByte) Color(std::move(*v.PtrColor)); break;
++				case ExpressionValueType::ValueStruct: new(PtrByte) StructValue(std::move(*v.GetStructValue())); Ptr = GetStructValue()->Ptr; break;
++				case ExpressionValueType::ValueArray: new(PtrByte) ArrayValue(std::move(*v.GetArrayValue())); Ptr = GetArrayValue()->Ptr; break;
++				case ExpressionValueType::ValueCoords: new(PtrByte) Coords(std::move(*v.PtrCoords)); break;
++				case ExpressionValueType::ValueQuat: new(PtrByte) quaternion(std::move(*v.PtrQuat)); break;
++				}
++			}
++			else
++			{
++				VariableProperty = v.VariableProperty;
++				Ptr = v.Ptr;
++			}
++			BoolInfo.Ptr = (uint32_t*)Ptr;
++			BoolInfo.Mask = v.BoolInfo.Mask;
++		}
++		return *this;
++	}
++
+ 	~ExpressionValue()
+ 	{
+ 		Deinit();
+-- 
+2.55.0
+

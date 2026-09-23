@@ -1,0 +1,519 @@
+From 4d5b8e793bca31830f8be2d164e90fc06b3a1956 Mon Sep 17 00:00:00 2001
+From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
+Date: Wed, 23 Sep 2026 09:40:14 -0500
+Subject: [PATCH] VM: calls without heap allocations or walks over every local
+
+FORK ONLY. This project ships a NO-AI Code Rule asking that LLM-written
+changes stay in a fork and are never PR'd upstream. These were written with
+Claude. Do not submit them.
+
+Frame::Call was the costliest VM function on the handheld after the
+evaluator itself (3.6 ms of the game tick's self time a frame), for work
+that does not depend on the call:
+
+- Parameters: Frame::Call, CallScript and CallNative each walked the
+  function's Properties -- every local, a cache miss per property object
+  on the Cortex-A53 -- to find its parameters, three or four walks a call.
+  UFunction::CallParms keeps the Parm properties in order and ReturnParm
+  the return value, gathered at the first call. A temporary sweep of all
+  7,673 functions loaded on Liberty Island found every return value also
+  a Parm and none with two, so the two lists say what the walks did.
+- Arguments: an Array on the heap, grown again when a native's return
+  value was appended. CallArguments keeps up to eight on the stack, with
+  room made up front for what Frame::Call appends (CallArguments::Room);
+  the Array overload of Frame::Call, for native callers, moves into one.
+- Locals: a LocalVariables allocated for each script call, and its data
+  allocated again. The frame holds its LocalVariables, whose data lives in
+  a 256-byte buffer inside it when the function's locals fit.
+- Disabled events: every call looked up the object's state name and its
+  disabled set, though almost no object disables anything. The lookups
+  are skipped when DisabledEvents is empty, and EnableEvent now removes a
+  state's entry when its set empties, so that stays true.
+
+Liberty Island's log is the same as before.
+---
+ .../Commandlet/VM/LocalsCommandlet.cpp        |   2 +-
+ .../Commandlet/VM/PrintCommandlet.cpp         |   2 +-
+ SurrealEngine/Packages/Core/UFunction.h       |   7 +
+ SurrealEngine/Packages/Core/UObject.cpp       |   5 +
+ SurrealEngine/Packages/Core/UObject.h         |  11 +-
+ SurrealEngine/VM/ExpressionEvaluator.cpp      |   5 +-
+ SurrealEngine/VM/Frame.cpp                    | 130 ++++++++++--------
+ SurrealEngine/VM/Frame.h                      |  92 ++++++++++++-
+ 8 files changed, 181 insertions(+), 73 deletions(-)
+
+diff --git a/SurrealEngine/Commandlet/VM/LocalsCommandlet.cpp b/SurrealEngine/Commandlet/VM/LocalsCommandlet.cpp
+index 0f59081..6359fc9 100644
+--- a/SurrealEngine/Commandlet/VM/LocalsCommandlet.cpp
++++ b/SurrealEngine/Commandlet/VM/LocalsCommandlet.cpp
+@@ -17,7 +17,7 @@ void LocalsCommandlet::OnCommand(DebuggerApp* console, const std::string& args)
+ 	{
+ 		for (UProperty* prop : frame->Func->Properties)
+ 		{
+-			void* ptr = (uint8_t*)frame->Variables->Data + prop->DataOffset.DataOffset;
++			void* ptr = (uint8_t*)frame->Variables.Data + prop->DataOffset.DataOffset;
+ 			for (int i = 0; i < prop->ArrayDimension; i++)
+ 			{
+ 				std::string name = prop->Name.ToString();
+diff --git a/SurrealEngine/Commandlet/VM/PrintCommandlet.cpp b/SurrealEngine/Commandlet/VM/PrintCommandlet.cpp
+index 89ecc92..ad682b5 100644
+--- a/SurrealEngine/Commandlet/VM/PrintCommandlet.cpp
++++ b/SurrealEngine/Commandlet/VM/PrintCommandlet.cpp
+@@ -60,7 +60,7 @@ std::vector<std::pair<std::string, std::string>> PrintCommandlet::FindProperties
+ 		{
+ 			if (prop->Name == chunks[0])
+ 			{
+-				void* ptr = (uint8_t*)frame->Variables->Data + prop->DataOffset.DataOffset;
++				void* ptr = (uint8_t*)frame->Variables.Data + prop->DataOffset.DataOffset;
+ 				if (UObject::TryCast<UObjectProperty>(prop) || UObject::TryCast<UClassProperty>(prop))
+ 				{
+ 					obj = *(UObject**)ptr;
+diff --git a/SurrealEngine/Packages/Core/UFunction.h b/SurrealEngine/Packages/Core/UFunction.h
+index 385f065..c318206 100644
+--- a/SurrealEngine/Packages/Core/UFunction.h
++++ b/SurrealEngine/Packages/Core/UFunction.h
+@@ -49,4 +49,11 @@ public:
+ 	// Frame::Call's NameStringToEventName(Name), done once: the EventName, or
+ 	// -1 when the function is not an event, or -2 before the first call.
+ 	int EventIndex = -2;
++
++	// Frame::Call's parameters, gathered from Properties at the first call so
++	// that a call walks these rather than every local: the Parm properties in
++	// order (the return value among them), and the return value.
++	bool CallParmsReady = false;
++	Array<UProperty*> CallParms;
++	UProperty* ReturnParm = nullptr;
+ };
+diff --git a/SurrealEngine/Packages/Core/UObject.cpp b/SurrealEngine/Packages/Core/UObject.cpp
+index b855e7c..9307d04 100644
+--- a/SurrealEngine/Packages/Core/UObject.cpp
++++ b/SurrealEngine/Packages/Core/UObject.cpp
+@@ -382,6 +382,9 @@ bool UObject::IsEventEnabled(const NameString& name) const
+ 
+ bool UObject::IsNonEventEnabled(const NameString& name) const
+ {
++	// Every script call asks: most objects have nothing disabled
++	if (DisabledEvents.empty())
++		return true;
+ 	NameString stateName = GetStateName();
+ 	auto it = DisabledEvents.find(stateName);
+ 	return it == DisabledEvents.end() || it->second.find(name) == it->second.end();
+@@ -420,6 +423,8 @@ bool UObject::IsEventEnabled(EventName name) const
+ 			return false;
+ 	}
+ 
++	if (DisabledEvents.empty())
++		return true;
+ 	NameString stateName = GetStateName();
+ 	auto it = DisabledEvents.find(stateName);
+ 	return it == DisabledEvents.end() || it->second.find(ToNameString(name)) == it->second.end();
+diff --git a/SurrealEngine/Packages/Core/UObject.h b/SurrealEngine/Packages/Core/UObject.h
+index 6057c58..f270264 100644
+--- a/SurrealEngine/Packages/Core/UObject.h
++++ b/SurrealEngine/Packages/Core/UObject.h
+@@ -317,8 +317,15 @@ public:
+ 
+ 	void EnableEvent(const NameString& name)
+ 	{
+-		NameString stateName = GetStateName();
+-		DisabledEvents[stateName].erase(name);
++		// A state with nothing disabled has no entry, so an object with nothing
++		// disabled anywhere has an empty DisabledEvents
++		auto it = DisabledEvents.find(GetStateName());
++		if (it != DisabledEvents.end())
++		{
++			it->second.erase(name);
++			if (it->second.empty())
++				DisabledEvents.erase(it);
++		}
+ 	}
+ 
+ 	void DisableEvent(const NameString& name)
+diff --git a/SurrealEngine/VM/ExpressionEvaluator.cpp b/SurrealEngine/VM/ExpressionEvaluator.cpp
+index 454cef7..5ae69ad 100644
+--- a/SurrealEngine/VM/ExpressionEvaluator.cpp
++++ b/SurrealEngine/VM/ExpressionEvaluator.cpp
+@@ -774,14 +774,13 @@ void ExpressionEvaluator::Call(UFunction* func, const Array<Expression*>& exprAr
+ 	else
+ 	{
+ 		// Arguments are evaluated in the caller's own context; the call is made in this one
+-		Array<ExpressionValue> args;
+-		args.reserve(exprArgs.size());
++		CallArguments args(CallArguments::Room(func, exprArgs.size()));
+ 		UObject* context = Context;
+ 		Context = Self;
+ 		for (Expression* arg : exprArgs)
+ 			args.push_back(Value(arg));
+ 		Context = context;
+-		*Out = Frame::Call(func, Context, std::move(args));
++		*Out = Frame::Call(func, Context, args);
+ 	}
+ }
+ 
+diff --git a/SurrealEngine/VM/Frame.cpp b/SurrealEngine/VM/Frame.cpp
+index be0df56..3de80c2 100644
+--- a/SurrealEngine/VM/Frame.cpp
++++ b/SurrealEngine/VM/Frame.cpp
+@@ -39,7 +39,7 @@ Frame::Frame(UObject* instance, UStruct* func)
+ void Frame::SetState(UStruct* func)
+ {
+ 	Func = func;
+-	Variables = std::make_unique<LocalVariables>(func);
++	Variables.Init(func);
+ }
+ 
+ bool Frame::AddBreakpoint(const NameString& clsName, const NameString& funcName, const NameString& stateName, int statementIndex)
+@@ -208,7 +208,38 @@ std::string Frame::GetCallstack()
+ 	return result;
+ }
+ 
++const Array<UProperty*>& Frame::CallParms(UFunction* func)
++{
++	if (!func->CallParmsReady)
++	{
++		// A function's Properties are its UProperty children in order, collected at load
++		for (UProperty* prop : func->Properties)
++		{
++			if (AllFlags(prop->PropFlags, PropertyFlags::Parm))
++				func->CallParms.push_back(prop);
++			if (!func->ReturnParm && AllFlags(prop->PropFlags, PropertyFlags::Parm | PropertyFlags::ReturnParm))
++				func->ReturnParm = prop;
++		}
++		func->CallParmsReady = true;
++	}
++	return func->CallParms;
++}
++
++size_t CallArguments::Room(UFunction* func, size_t passed)
++{
++	// Frame::Call adds optional parameters up to the last, then a native's return value
++	return std::max(passed, Frame::CallParms(func).size()) + 1;
++}
++
+ ExpressionValue Frame::Call(UFunction* func, UObject* instance, Array<ExpressionValue> args)
++{
++	CallArguments callArgs(CallArguments::Room(func, args.size()));
++	for (ExpressionValue& arg : args)
++		callArgs.push_back(std::move(arg));
++	return Call(func, instance, callArgs);
++}
++
++ExpressionValue Frame::Call(UFunction* func, UObject* instance, CallArguments& args)
+ {
+ 	if (!instance)
+ 	{
+@@ -232,45 +263,30 @@ ExpressionValue Frame::Call(UFunction* func, UObject* instance, Array<Expression
+ 	}
+ 
+ 	// Trailing optional args may be missing. Add nothing values so the args list matches the function signature.
+-	// (A function's Properties are its UProperty children in order, collected at load: no casting per call.)
+-	int argindex = 0;
+-	for (UProperty* prop : func->Properties)
+-	{
+-		if (argindex == args.size() && AllFlags(prop->PropFlags, PropertyFlags::Parm | PropertyFlags::OptionalParm))
+-			args.push_back(ExpressionValue::NothingValue());
+-
+-		if (AllFlags(prop->PropFlags, PropertyFlags::Parm))
+-			argindex++;
+-	}
++	const Array<UProperty*>& parms = CallParms(func);
++	for (size_t i = args.size(); i < parms.size() && AllFlags(parms[i]->PropFlags, PropertyFlags::Parm | PropertyFlags::OptionalParm); i++)
++		args.push_back(ExpressionValue::NothingValue());
+ 
+ 	if (AllFlags(func->FuncFlags, FunctionFlags::Native))
+ 	{
+-		return CallNative(func, instance, std::move(args));
++		return CallNative(func, instance, args);
+ 	}
+ 	else
+ 	{
+-		return CallScript(func, instance, std::move(args));
++		return CallScript(func, instance, args);
+ 	}
+ }
+ 
+-ExpressionValue Frame::CallScript(UFunction* func, UObject* instance, Array<ExpressionValue> args)
++ExpressionValue Frame::CallScript(UFunction* func, UObject* instance, CallArguments& args)
+ {
+ 	Frame frame(instance, func);
++	const Array<UProperty*>& parms = func->CallParms;
+ 
+ 	// Store args in function frame local variables
+-	int argindex = 0;
+-	for (UProperty* prop : func->Properties)
++	for (size_t i = 0; i < parms.size() && i < args.size(); i++)
+ 	{
+-		if (AllFlags(prop->PropFlags, PropertyFlags::Parm))
+-		{
+-			if (argindex < args.size())
+-			{
+-				ExpressionValue lvalue = ExpressionValue::Variable(frame.Variables->Data, prop);
+-				lvalue.Store(args[argindex]);
+-			}
+-
+-			argindex++;
+-		}
++		ExpressionValue lvalue = ExpressionValue::Variable(frame.Variables.Data, parms[i]);
++		lvalue.Store(args[i]);
+ 	}
+ 
+ 	// Run the function
+@@ -280,43 +296,29 @@ ExpressionValue Frame::CallScript(UFunction* func, UObject* instance, Array<Expr
+ 	result.Load();
+ 
+ 	// Copy out params from frame local variables
+-	argindex = 0;
+-	for (UProperty* prop : func->Properties)
++	for (size_t i = 0; i < parms.size() && i < args.size(); i++)
+ 	{
+-		if (AllFlags(prop->PropFlags, PropertyFlags::Parm | PropertyFlags::OutParm) && argindex < args.size())
+-		{
+-			ExpressionValue lvalue = ExpressionValue::Variable(frame.Variables->Data, prop);
+-			args[argindex].Store(lvalue);
+-		}
+-
+-		if (AllFlags(prop->PropFlags, PropertyFlags::ReturnParm) && result.GetType() == ExpressionValueType::Nothing)
++		if (AllFlags(parms[i]->PropFlags, PropertyFlags::OutParm))
+ 		{
+-			result = ExpressionValue::DefaultValue(prop);
++			ExpressionValue lvalue = ExpressionValue::Variable(frame.Variables.Data, parms[i]);
++			args[i].Store(lvalue);
+ 		}
++	}
+ 
+-		if (AllFlags(prop->PropFlags, PropertyFlags::Parm))
+-			argindex++;
++	if (func->ReturnParm && result.GetType() == ExpressionValueType::Nothing)
++	{
++		result = ExpressionValue::DefaultValue(func->ReturnParm);
+ 	}
+ 
+ 	return result;
+ }
+ 
+-ExpressionValue Frame::CallNative(UFunction* func, UObject* instance, Array<ExpressionValue> args)
++ExpressionValue Frame::CallNative(UFunction* func, UObject* instance, CallArguments& args)
+ {
+ 	// Native functions expect the last parameter to be the return value
+-	bool returnparmfound = false;
+-	int argindex = 0;
+-	for (UProperty* prop : func->Properties)
+-	{
+-		if (AllFlags(prop->PropFlags, PropertyFlags::Parm | PropertyFlags::ReturnParm))
+-		{
+-			ExpressionValue retval = ExpressionValue::PropertyValue(prop);
+-			args.push_back(std::move(retval));
+-			returnparmfound = true;
+-		}
+-		if (AllFlags(prop->PropFlags, PropertyFlags::Parm))
+-			argindex++;
+-	}
++	bool returnparmfound = func->ReturnParm != nullptr;
++	if (returnparmfound)
++		args.push_back(ExpressionValue::PropertyValue(func->ReturnParm));
+ 
+ 	if (func->NativeFuncIndex != 0)
+ 	{
+@@ -376,7 +378,7 @@ ExpressionValue Frame::CallNative(UFunction* func, UObject* instance, Array<Expr
+ 	return returnparmfound ? std::move(args.back()) : ExpressionValue::NothingValue();
+ }
+ 
+-void Frame::TraceCall(UFunction* func, UObject* instance, const Array<ExpressionValue>& args)
++void Frame::TraceCall(UFunction* func, UObject* instance, const CallArguments& args)
+ {
+ #if 0 // To do: create a commandlet that lets us do this
+ 	static NameString TraceActorClass = "CTFGame";
+@@ -502,7 +504,7 @@ ExpressionEvalResult Frame::Run()
+ 		}
+ 
+ 		Expression* statement = Func->Code->Statements[curStatementIndex];
+-		ExpressionEvalResult result = ExpressionEvaluator::Eval(statement, Object, Object, Variables->Data);
++		ExpressionEvalResult result = ExpressionEvaluator::Eval(statement, Object, Object, Variables.Data);
+ 		if (!Func)
+ 			return result;
+ 		switch (result.Result)
+@@ -558,7 +560,7 @@ ExpressionEvalResult Frame::Run()
+ 					UProperty* prop = UObject::TryCast<UProperty>(field);
+ 					if (prop && AllFlags(prop->PropFlags, PropertyFlags::Parm | PropertyFlags::ReturnParm))
+ 					{
+-						result.Value = ExpressionValue::Variable(Variables->Data, prop);
++						result.Value = ExpressionValue::Variable(Variables.Data, prop);
+ 						result.Value.Load();
+ 						break;
+ 					}
+@@ -618,7 +620,7 @@ void Frame::ProcessSwitch(const ExpressionValue& condition)
+ 		CaseExpression* caseexpr = static_cast<CaseExpression*>(Func->Code->Statements[StatementIndex++]);
+ 		if (caseexpr->Value)
+ 		{
+-			ExpressionValue casevalue = ExpressionEvaluator::Eval(caseexpr->Value, Object, Object, Variables->Data).Value;
++			ExpressionValue casevalue = ExpressionEvaluator::Eval(caseexpr->Value, Object, Object, Variables.Data).Value;
+ 			if (condition.IsEqual(casevalue))
+ 				break;
+ 			else
+@@ -655,11 +657,16 @@ static bool IsPlainData(UStruct* s)
+ 	return true;
+ }
+ 
+-LocalVariables::LocalVariables(UStruct* func) : Func(func)
++void LocalVariables::Init(UStruct* func)
+ {
++	Reset();
++	Func = func;
+ 	if (func)
+ 	{
+-		Data = AlignedAlloc(func->StructAlignment, func->StructSize);
++		if (func->StructSize <= sizeof(Inline) && func->StructAlignment <= 16)
++			Data = Inline;
++		else
++			Data = AlignedAlloc(func->StructAlignment, func->StructSize);
+ 
+ 		// Most functions' locals are plain data, and constructing them one
+ 		// virtual call at a time was a measurable part of every script call
+@@ -680,7 +687,7 @@ LocalVariables::LocalVariables(UStruct* func) : Func(func)
+ 	}
+ }
+ 
+-LocalVariables::~LocalVariables()
++void LocalVariables::Reset()
+ {
+ 	if (Func && Data && !Func->PlainDataLocals)
+ 	{
+@@ -690,5 +697,8 @@ LocalVariables::~LocalVariables()
+ 		}
+ 	}
+ 
+-	AlignedFree(Data);
++	if (Data != Inline)
++		AlignedFree(Data);
++	Func = nullptr;
++	Data = nullptr;
+ }
+diff --git a/SurrealEngine/VM/Frame.h b/SurrealEngine/VM/Frame.h
+index ddf44d2..e545c62 100644
+--- a/SurrealEngine/VM/Frame.h
++++ b/SurrealEngine/VM/Frame.h
+@@ -48,17 +48,97 @@ struct Breakpoint
+ class LocalVariables
+ {
+ public:
+-	LocalVariables(UStruct* func);
+-	~LocalVariables();
++	LocalVariables() = default;
++	LocalVariables(const LocalVariables&) = delete;
++	LocalVariables& operator=(const LocalVariables&) = delete;
++	~LocalVariables() { Reset(); }
++
++	// Constructs the locals of func, after destructing any there were
++	void Init(UStruct* func);
++	void Reset();
+ 
+ 	UStruct* Func = nullptr;
+ 	void* Data = nullptr;
++
++private:
++	// Most functions' locals fit here, so a script call allocates nothing for them
++	alignas(16) uint8_t Inline[256];
++};
++
++// A call's arguments: the caller's, then what Frame::Call adds -- Nothing for
++// trailing optional parameters left out, a native's return value. Up to
++// InlineCount live on the stack, which covers nearly every call; Room says
++// how many a call to a function can need.
++class CallArguments
++{
++public:
++	explicit CallArguments(size_t capacity)
++	{
++		if (capacity > InlineCount)
++		{
++			Values = static_cast<ExpressionValue*>(::operator new(capacity * sizeof(ExpressionValue)));
++			Capacity = capacity;
++		}
++	}
++
++	~CallArguments()
++	{
++		for (size_t i = 0; i < Count; i++)
++			Values[i].~ExpressionValue();
++		if (Values != reinterpret_cast<ExpressionValue*>(Inline))
++			::operator delete(Values);
++	}
++
++	CallArguments(const CallArguments&) = delete;
++	CallArguments& operator=(const CallArguments&) = delete;
++
++	static size_t Room(UFunction* func, size_t passed);
++
++	void push_back(ExpressionValue&& value)
++	{
++		if (Count == Capacity)
++			Grow();
++		new (Values + Count) ExpressionValue(std::move(value));
++		Count++;
++	}
++
++	ExpressionValue* data() { return Values; }
++	size_t size() const { return Count; }
++	ExpressionValue& operator[](size_t index) { return Values[index]; }
++	const ExpressionValue& operator[](size_t index) const { return Values[index]; }
++	ExpressionValue& back() { return Values[Count - 1]; }
++	const ExpressionValue* begin() const { return Values; }
++	const ExpressionValue* end() const { return Values + Count; }
++
++private:
++	void Grow()
++	{
++		size_t capacity = Capacity * 2 + 1;
++		ExpressionValue* values = static_cast<ExpressionValue*>(::operator new(capacity * sizeof(ExpressionValue)));
++		for (size_t i = 0; i < Count; i++)
++		{
++			new (values + i) ExpressionValue(std::move(Values[i]));
++			Values[i].~ExpressionValue();
++		}
++		if (Values != reinterpret_cast<ExpressionValue*>(Inline))
++			::operator delete(Values);
++		Values = values;
++		Capacity = capacity;
++	}
++
++	static const size_t InlineCount = 8;
++	alignas(ExpressionValue) uint8_t Inline[InlineCount * sizeof(ExpressionValue)];
++	ExpressionValue* Values = reinterpret_cast<ExpressionValue*>(Inline);
++	size_t Count = 0;
++	size_t Capacity = InlineCount;
+ };
+ 
+ class Frame
+ {
+ public:
+ 	static ExpressionValue Call(UFunction* func, UObject* instance, Array<ExpressionValue> args);
++	static ExpressionValue Call(UFunction* func, UObject* instance, CallArguments& args);
++	static const Array<UProperty*>& CallParms(UFunction* func);
+ 	static std::string GetCallstack();
+ 	static std::string GetDisassembly(Expression* statement);
+ 
+@@ -97,7 +177,7 @@ public:
+ 
+ 	LatentRunState LatentState = LatentRunState::Continue;
+ 
+-	std::unique_ptr<LocalVariables> Variables;
++	LocalVariables Variables;
+ 	UObject* Object = nullptr;
+ 	UStruct* Func = nullptr;
+ 	size_t StatementIndex = 0;
+@@ -107,9 +187,9 @@ private:
+ 	ExpressionEvalResult Run();
+ 	void ProcessSwitch(const ExpressionValue& condition);
+ 
+-	static ExpressionValue CallNative(UFunction* func, UObject* instance, Array<ExpressionValue> args);
+-	static ExpressionValue CallScript(UFunction* func, UObject* instance, Array<ExpressionValue> args);
+-	static void TraceCall(UFunction* func, UObject* instance, const Array<ExpressionValue>& args);
++	static ExpressionValue CallNative(UFunction* func, UObject* instance, CallArguments& args);
++	static ExpressionValue CallScript(UFunction* func, UObject* instance, CallArguments& args);
++	static void TraceCall(UFunction* func, UObject* instance, const CallArguments& args);
+ 
+ 	struct ActiveCallStackFrame
+ 	{
+-- 
+2.55.0
+
