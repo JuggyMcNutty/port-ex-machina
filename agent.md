@@ -16,11 +16,11 @@ engine, a fork of Surreal Engine.
   Its history was rewritten before publishing (2026-09-22) to drop the game's
   files and a personal email address.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; Liberty Island's opening
-  firefight **7.3 FPS** at native resolution, 8.9 at 853×480 (2.2 before engine
-  patches 0004–0024), still CPU-bound on NPC AI and render CPU, and at native
+  firefight **7.3 FPS** at native resolution, 9.3 at 853×480 (2.2 before engine
+  patches 0004–0027), still CPU-bound on NPC AI and render CPU, and at native
   resolution held by the GPU too; UNATCO HQ indoors ~20. The target is ~20 FPS
   in the fight (Decided). The device has the current build: patches
-  0001–0024, Overclock, Distant AI on, native resolution.
+  0001–0027, Overclock, Distant AI on, native resolution.
 - **linux-x86_64**: launcher and engine build natively; the staged app's
   `run-game.sh` ran the engine into the intro level on the development PC.
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
@@ -73,10 +73,10 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
 
 1. **Smart Pro performance** (owner, 2026-09-22): the target is **~20 FPS on
    Liberty Island** (~50 ms a frame), and every trade-off below is accepted.
-   Now 7.3 FPS at native resolution (~138 ms) and 8.9 at 853×480, facing the
+   Now 7.3 FPS at native resolution (~136 ms) and 9.3 at 853×480, facing the
    fight in overclock. Where it goes is in
-   [its README](ports/trimui-smartpro/README.md#performance): game tick ~62 ms
-   (NPC AI: ~27 ms under script calls, ~21 ms collision traces, ~12 ms
+   [its README](ports/trimui-smartpro/README.md#performance): game tick ~53 ms
+   (NPC AI: ~22 ms under script calls, ~13.5 ms collision traces, ~12 ms
    per-actor work), render CPU ~59 ms (visibility ~16, actor meshes ~12, BSP
    surfaces ~8), lightmaps and their uploads ~6 ms. The GPU (~76 ms)
    overlaps the tick, which is now the shorter of the two, so at native
@@ -109,7 +109,10 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    for the surfaces tested (0021); AI level of detail's far tier, every
    sixth frame beyond 4000 units (0022); the light tree, and each surface's
    lights from it, kept while no light changes (0023); the lightmaps'
-   conversion for the GPU in NEON (0024).
+   conversion for the GPU in NEON (0024); ray traces split at each BSP
+   plane (0025); sight lines testing only the collision cells they cross,
+   hull planes on the stack (0026); a walking pawn's step down made with
+   its dry run's trace (0027).
    [engine-patches/README.md](engine-patches/README.md) has what each found.
 
    Next, in order, re-measuring after each:
@@ -122,13 +125,14 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
      (values without the 88-byte variant; statements without a full result
      each). Profile on the device (`SAMPLE=1`, [its README](ports/trimui-smartpro/README.md#performance)):
      the desktop's proportions are not the device's.
-   - Found 2026-09-23, not yet placed in this order by the owner: **collision
-     traces** (~21 ms of the tick: walking pawns' physics, `TryMove` /
-     `TryStepToGround` / `ShouldAbortJumping`, and AI sight, `CanSee` /
-     `FastTrace`, through `TraceAABBModel` and `TraceRayModel` -- leads: the
-     ray trace hands both children of every plane the whole segment rather
-     than splitting it there, and the box sweep allocates its planes on the
-     heap for every leaf it visits), the
+   - **Collision traces** (owner, 2026-09-23: next after the list above; done
+     so far, 0025–0027: ~21 → ~13.5 ms of the tick). Left: the sight rays'
+     polygon tests (`NodeRayIntersect` ~3.7 ms), the box sweeps' BSP walk
+     (`TraceAABBModel::Trace` ~3.1 ms, ~380 short sweeps a frame, ~20 nodes
+     each), the actor passes (~2.4 ms), and two `dynamic_cast`s a move
+     (`TraceMove`/`FinishMove` asking whether the mover is a player or a
+     projectile).
+   - Found 2026-09-23, not yet placed in this order by the owner: the
      **per-actor work** around the scripts (~12 ms: `ULevel::TickActor`,
      animation and event lookups over ~2,500 actors a frame), and the audio
      update's scan of every actor for an ambient sound (~2 ms,

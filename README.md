@@ -33,7 +33,7 @@ builds it.
 |---|---|---|---|
 | [`linux-x86_64`](ports/linux-x86_64/) | desktop Linux | natively | the engine runs the game on the development PC; also the build for tests and `dxl-shots` |
 | [`linux-aarch64`](ports/linux-aarch64/) | aarch64 devices with an ordinary distro | cross (launcher) or natively | the launcher cross-builds; not yet run on a device |
-| [`trimui-smartpro`](ports/trimui-smartpro/) | TrimUI Smart Pro, spruceOS | cross | runs: the intro at ~30 FPS, Liberty Island's opening fight at 7.3 FPS (8.9 at 853×480; CPU-bound, the target is ~20) |
+| [`trimui-smartpro`](ports/trimui-smartpro/) | TrimUI Smart Pro, spruceOS | cross | runs: the intro at ~30 FPS, Liberty Island's opening fight at 7.3 FPS (9.3 at 853×480; CPU-bound, the target is ~20) |
 | [`android`](ports/android/) | Android | -- | planned: what it needs is in its README |
 
 A port is a directory of the few things that differ for one device -- its

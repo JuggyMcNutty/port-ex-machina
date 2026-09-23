@@ -74,6 +74,12 @@ per patch file:
   from it, kept while no light changes (`f3ee690`).
 - `0024-lightmap-neon-conversion.patch` — the lightmaps' float-to-byte
   conversion for the GPU in NEON on ARM (`edb0ecb`).
+- `0025-ray-trace-segment-split.patch` — a ray trace hands each BSP child only
+  its own part of the segment (`8937b8a`).
+- `0026-sight-line-cells.patch` — sight lines test the actors of only the
+  collision cells they cross; hull planes on the stack (`85642be`).
+- `0027-step-down-one-trace.patch` — a walking pawn's step to the ground made
+  with the trace its dry run made (`60471a5`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -823,6 +829,66 @@ truncation now run on four channels at once. A test on the device, built
 with the engine's flags, compared it with the scalar loop for every float
 from 0 to 1 (1,073,741,824 values) and for negatives, overflows, infinities
 and NaNs: all the same; a 256×128 lightmap takes ~0.77 ms instead of ~1.72.
+
+## Patch 0025 — ray traces split at each plane
+
+Fork commit `8937b8a`. On the Smart Pro the game tick went from ~61.5 to
+~58 ms (at native resolution the frame barely moved: the render waited on
+the GPU instead).
+
+### 43. Each child its own part of the segment
+
+Ray traces through the level's BSP -- AI sight (`CanSee`, `FastTrace`),
+texture traces -- were ~11 ms a frame of `TraceRayModel::NodeRayIntersect`
+on the handheld. The traversal handed a plane's children the whole segment
+whenever it touched their side, so further down it touched both sides of
+plane after plane. A child now gets only the part of its parent's part
+that lies in its half-space, widened by `SplitMargin` (1 unit) so that a
+polygon whose edge lies on the plane is still reached from either side; the
+old whole-segment test stays, so the nodes visited are a subset of those it
+visited, in the same order. A node's polygons are skipped when the node's
+part stays more than the margin clear of their plane. A temporary check ran
+every trace on Liberty Island both ways: 250,000 full traces with the same
+hits in the same order, 400,000 any-hit traces with the same answer; nodes
+visited fell from ~36 to ~21 a full trace and ~32 to ~22 an any-hit one.
+
+## Patch 0026 — sight lines through their own cells
+
+Fork commit `85642be`. On the Smart Pro the game tick went from ~58 to ~56
+ms, and at 853×480 the fight from 8.9 to 9.2 FPS (with patch 0025).
+
+### 44. Only the cells a sight line crosses
+
+`TraceTester::TraceAnyHit`, the actor half of every sight check, looked up
+every cell of the collision grid in the segment's bounding box. An actor
+is in every cell its collision box touches, so the cells the segment
+passes through hold every actor it can hit: they are now walked slab by
+slab along its longest axis, each slab's cells on the other two axes found
+from where the segment enters and leaves it, a unit wider each way. The
+answer is a yes or no, so the order does not matter. A temporary check ran
+both ways: 400,000 traces, the same answer, ~6.9 cells a trace instead of
+~23.4.
+
+### 45. Hull planes on the stack
+
+`TraceAABBModel::Trace` gathered each hull's planes into a heap `Array` for
+every hull a box sweep reached (sweeps are ~380 a frame on Liberty Island);
+up to 32 now go on the stack.
+
+## Patch 0027 — the step down made with one trace
+
+Fork commit `60471a5`. On the Smart Pro the game tick went from ~56 to ~53
+ms, and at 853×480 the fight to 9.3 FPS.
+
+### 46. The dry run's trace reused
+
+`UActor::TryStepToGround`, which walking pawns call twice a movement step,
+traced the step down as a dry run and, finding a floor, called `TryMove`
+again -- which traced the same box sweep from the same place before
+stepping. `TryMove` is now two halves, `TraceMove` (what the move would hit)
+and `FinishMove` (the move given that), and a dry run can keep its hits;
+the step down is made with the dry run's. A temporary check traced it
+again the old way before each move: 500,000 steps, the same hits each time.
 
 ## Running it headlessly
 

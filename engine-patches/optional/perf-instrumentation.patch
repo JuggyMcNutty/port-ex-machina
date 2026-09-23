@@ -76,7 +76,7 @@ index 68dcbae..101cd04 100644
  		viewport->Actor()->SetBool(it.first, true);
  	for (auto& it : activeInputAxes)
 diff --git a/SurrealEngine/Light/LightSystem_Light.cpp b/SurrealEngine/Light/LightSystem_Light.cpp
-index 2c1f7f5..503dd5d 100644
+index fc731ff..2a8c44a 100644
 --- a/SurrealEngine/Light/LightSystem_Light.cpp
 +++ b/SurrealEngine/Light/LightSystem_Light.cpp
 @@ -1,6 +1,8 @@
@@ -88,7 +88,7 @@ index 2c1f7f5..503dd5d 100644
  #include "RenderDevice/RenderDevice.h"
  #include "Engine.h"
  #include "Render/RenderSubsystem.h"
-@@ -159,6 +161,29 @@ TextureInfo LightSystem::GetLightmap(UModel* model, int lightmapIndex, const Coo
+@@ -183,6 +185,29 @@ TextureInfo LightSystem::GetLightmap(UModel* model, int lightmapIndex, const Coo
  	auto& lmtexture = lmtextures[cacheID];
  	if (!lmtexture || lmtexture->LastStaticUpdate != lastStaticUpdate || lmtexture->LastDynamicUpdate != lastDynamicUpdate)
  	{
@@ -118,7 +118,7 @@ index 2c1f7f5..503dd5d 100644
  		engine->render->Stats.LightmapsUpdated++;
  
  		Builder.Setup(model, coords, lightmapIndex);
-@@ -178,6 +203,7 @@ TextureInfo LightSystem::GetLightmap(UModel* model, int lightmapIndex, const Coo
+@@ -202,6 +227,7 @@ TextureInfo LightSystem::GetLightmap(UModel* model, int lightmapIndex, const Coo
  		}
  		else if (lmtexture->LastStaticUpdate != lastStaticUpdate)
  		{
@@ -126,7 +126,7 @@ index 2c1f7f5..503dd5d 100644
  			Builder.SetAmbientLight(zoneActor);
  			Builder.AddStaticLights(model, lightmapIndex);
  			Builder.SaveStaticLight(lmtexture->StaticLightColors);
-@@ -187,7 +213,9 @@ TextureInfo LightSystem::GetLightmap(UModel* model, int lightmapIndex, const Coo
+@@ -211,7 +237,9 @@ TextureInfo LightSystem::GetLightmap(UModel* model, int lightmapIndex, const Coo
  			Builder.LoadStaticLight(lmtexture->StaticLightColors);
  		}
  
