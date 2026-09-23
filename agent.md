@@ -17,8 +17,8 @@ engine, a fork of Surreal Engine.
   files and a personal email address.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; **Liberty Island 2–3
   FPS**, CPU-bound on NPC AI and lightmap rebuilds. The fixes and a ~20 FPS
-  target are decided (Decided); the first, CPU/GPU overlap (engine patch
-  0004), took the fight from 2.2 to 2.5 FPS. The framework's build was
+  target are decided (Decided); CPU/GPU overlap and lit-span lightmaps
+  (engine patches 0004, 0005) took the fight from 2.2 to 3.3 FPS. The framework's build was
   deployed and started the game on the device.
 - **linux-x86_64**: launcher and engine build natively; the staged app's
   `run-game.sh` ran the engine into the intro level on the development PC.
@@ -73,16 +73,18 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    Liberty Island**, and every trade-off below is accepted. 20 FPS needs the
    script VM several times faster, so the deep VM work is in scope. Where the
    time goes is in [its README](ports/trimui-smartpro/README.md#performance)
-   (overclock, facing the fight: 2.2 FPS, ~450 ms): game tick ~38% (NPC AI
-   through a slow script VM), lightmaps ~24% (muzzle flashes re-light surfaces
-   on the CPU), other render CPU ~21% (visibility 34 ms, actor meshes 25, BSP
-   surfaces 14), GPU ~17% and serialised with the CPU. Order of work, by
-   payoff for effort, re-measuring after each:
+   (overclock, facing the fight, now 3.3 FPS, ~299 ms): game tick ~180 ms (NPC
+   AI through a slow script VM, ~125 ms of it under script calls), other
+   render CPU ~95 ms (visibility 34, actor meshes 25, BSP surfaces 14),
+   lightmaps and their uploads ~22 ms; the GPU now overlaps the tick. Order of
+   work, by payoff for effort, re-measuring after each:
    - ~~Let CPU and GPU overlap~~ -- done, engine patch 0004: 2.2 → 2.5 FPS.
      The GPU wait is gone, but the tick grew ~20 ms (shared memory).
-   - Lightmaps: don't re-light for short-lived flashes; spread rebuilds over
-     the four cores. Flashes light characters, not walls. ~110 ms in the
-     fight, re-uploads included.
+   - ~~Lightmaps~~ -- done, engine patch 0005, with no trade-off: the cost was
+     a burning barrel's animated light computed over every texel of twelve
+     large surfaces, not flashes. 2.5 → 3.3 FPS. Left: ~22 ms of whole-surface
+     copying, conversion and upload per frame; a rebuild could upload only its
+     changed rows.
    - VM call path: `Frame::Call`, `CallScript` and `CallNative` (the
      engine's `Frame.cpp`) walk the function's parameter list two or three times
      per call, casting every field, and take the arguments in a freshly built

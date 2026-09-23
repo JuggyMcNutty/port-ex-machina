@@ -182,6 +182,7 @@ The System tab shows the engine and script logs on screen.
 | The ports framework (2026-09-22) | `dx.sh deploy` put exactly the staged files on the device (checksums); `dxl-cli --dry-run --probe` ran there; the shared `run-game.sh` with this port's hooks started the out-of-tree engine build, the intro rendered at 31 FPS, and the CPU mode was applied and restored |
 | Deploy with checksums (2026-09-22) | `dx.sh deploy` built and staged, sent only the one changed file, kept the device's copy in `.prev-<date-time>` and verified all 13 files; `profile-map.sh` applied `launcher.ini`'s Overclock (four cores, 2.0 GHz) through `port-hooks.sh` and restored power-save after |
 | CPU/GPU overlap, engine patch 0004 (2026-09-22) | Liberty Island renders correctly mid-fight (framebuffer capture); GPU wait ~76 → ~0.2 ms. Synchronization validation clean on the desktop build, bindless and per-batch paths |
+| Lit-span lightmaps, engine patch 0005 (2026-09-22) | Liberty Island's dock pixel-identical before and after (framebuffer captures); lightmaps ~98 → ~11 ms. On the desktop, a temporary walk over every texel found none in reach outside a span |
 
 Verified with the earlier wizard build, on code paths unchanged since: install
 validation naming each missing file; `Running.ini` created at commit and
@@ -213,6 +214,7 @@ The script applies the CPU mode `launcher.ini` names, through the app's own
 | Liberty Island start, overclock, turning | 3.7 | ~272 ms | ~142 | ~81 | ~46 |
 | **Liberty Island start, overclock, facing the fight** | **2.2** | **~450 ms** | **165–177** | **~205** | **~76** |
 | The same, CPU and GPU in parallel (engine patch 0004) | 2.5 | ~400 ms | ~192 | ~205 | ~0.2 |
+| The same, lightmaps lit only where lights reach (0005) | 3.3 | ~299 ms | ~180 | ~117 | ~0.2 |
 
 (Times in ms per frame, averaged over 60 frames. The performance-mode fight
 rows had the per-class or per-function hooks on, which add their own cost; the
@@ -231,8 +233,12 @@ On Liberty Island, facing the fight in overclock (the bold row):
   `ScriptedPawn.CheckEnemyPresence`/`Tick` and general VM overhead dominate.
 - **Lightmaps ≈ 24%**: ~13.5 rebuilt per frame at ~7 ms each (~98 ms), plus
   ~12 ms re-uploading them (a rebuilt lightmap, like a fog map, is flagged for
-  upload). Muzzle flashes are dynamic lights, and Surreal re-lights every
-  surface they touch on the CPU. Turned away from the fight it is ~4 per frame.
+  upload). Not muzzle flashes, as first assumed: 12 of the 13.5 are one
+  `BarrelFire`, a dynamic light with the fire waver effect, which re-lights
+  every surface it touches every frame -- and every light was computed over
+  every texel of a surface, ~300,000 a frame for ~550 in reach. Engine patch
+  0005 lights only the texels in reach: ~11 ms, plus the same ~12 ms of
+  uploads.
 - **Other render CPU ≈ 21%** (~95 ms), by section: visibility 34 ms (the BSP
   walk, and `BspClipper`'s span buffer, which rasterises occluders on every
   scanline of the viewport, so it scales with the render height); actor meshes

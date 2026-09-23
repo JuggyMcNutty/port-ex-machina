@@ -33,6 +33,8 @@ per patch file:
   fixes (`e84d3e8`).
 - `0004-vulkan-frame-overlap.patch` — the game tick runs while the GPU draws
   the previous frame (`0bfde8a`).
+- `0005-lightmap-lit-spans.patch` — lightmaps are lit only where a light
+  reaches (`c42fae4`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -284,6 +286,39 @@ validation layer's `VUID-vkDestroySwapchainKHR-swapchain-01282` and
 It now calls `vkDeviceWaitIdle` first; the path runs only on a rebuild.
 Synchronization validation is clean on Liberty Island with the patch, on both
 the bindless and the per-batch descriptor set path (`SURREAL_VK_NO_BINDLESS=1`).
+
+## Patch 0005 — lightmaps lit only where a light reaches
+
+Fork commit `c42fae4`. On Liberty Island's fight, lightmaps went from ~98 to
+~11 ms a frame on the Smart Pro
+([Performance](../ports/trimui-smartpro/README.md#performance)).
+
+### 19. Lit spans
+
+Every light's effect (`LightEffect::Run`) and contribution
+(`LightmapBuilder::AddLightContribution`) ran over every texel of a lightmap,
+though every effect but the cylinder gives exactly zero beyond the light's
+radius. The cost showed on Liberty Island, where a burning barrel -- a dynamic
+light with the fire waver effect, which re-lights what it touches every frame --
+had twelve large surfaces rebuilt per frame: ~300,000 texels walked for ~7
+lights each, ~550 texel-light pairs actually in reach.
+
+`LightmapBuilder::FindLitSpans` now finds, row by row, the texels within the
+light's radius, and both passes work on those spans only. A row of texel
+positions is a line -- `CalcWorldLocations` interpolates between the row's ends
+-- so a row's span is where that line is inside the light's sphere, plus a
+texel of margin. The lightmap as a whole is *not* an affine grid (its
+positions are extrapolated from a small triangle, and rows drift up to ~100
+units from a plane), which is why this is per row: a first, per-rectangle
+version missed 124 of 3.3 million texels in reach. The per-row version missed
+none of 3.1 million, across 232,000 light passes; the check was a temporary
+walk over every texel, not part of the patch.
+
+Static lights skip their shadow map when nothing is in reach. Cylinder lights
+and one-texel-wide lightmaps still cover the whole lightmap. The values are
+the same, save that a texel can now land in a vector loop's scalar tail or
+the other way round (rounding at 1e-7); screenshots of the dock before and
+after match pixel for pixel.
 
 ## Running it headlessly
 

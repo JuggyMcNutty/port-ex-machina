@@ -60,25 +60,96 @@ index c766e46..b727d36 100644
  		viewport->Actor()->SetBool(it.first, true);
  	for (auto& it : activeInputAxes)
 diff --git a/SurrealEngine/Light/LightSystem_Light.cpp b/SurrealEngine/Light/LightSystem_Light.cpp
-index 2c1f7f5..423199f 100644
+index 2c1f7f5..503dd5d 100644
 --- a/SurrealEngine/Light/LightSystem_Light.cpp
 +++ b/SurrealEngine/Light/LightSystem_Light.cpp
-@@ -1,6 +1,7 @@
+@@ -1,6 +1,8 @@
  
  #include "Precomp.h"
  #include "LightSystem.h"
 +#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
++#include "Packages/Core/UClass.h" // TEMPORARY DEBUG TOOL
  #include "RenderDevice/RenderDevice.h"
  #include "Engine.h"
  #include "Render/RenderSubsystem.h"
-@@ -159,6 +160,7 @@ TextureInfo LightSystem::GetLightmap(UModel* model, int lightmapIndex, const Coo
+@@ -159,6 +161,29 @@ TextureInfo LightSystem::GetLightmap(UModel* model, int lightmapIndex, const Coo
  	auto& lmtexture = lmtextures[cacheID];
  	if (!lmtexture || lmtexture->LastStaticUpdate != lastStaticUpdate || lmtexture->LastDynamicUpdate != lastDynamicUpdate)
  	{
 +		PerfLog::Scope perfLm(PerfLog::Lightmap); PerfLog::Counter(PerfLog::Lightmap)++; // TEMPORARY DEBUG TOOL
++		if (PerfLog::Enabled()) // TEMPORARY DEBUG TOOL: what made this lightmap stale
++		{
++			auto describe = [](const char* kind, UActor* l) {
++				return std::string(kind) + ":" + l->Class->Name.ToString() + "/t" + std::to_string(l->LightType()) + "e" + std::to_string(l->LightEffect());
++			};
++			std::string cause;
++			if (!lmtexture)
++				cause = "new";
++			else if (lmtexture->LastStaticUpdate != lastStaticUpdate && lmindex.LightActors >= 0)
++			{
++				for (UActor** l = &model->Lights[lmindex.LightActors]; *l; l++)
++					if ((*l)->Light.LastUpdate == lastStaticUpdate) { cause = describe("static", *l); break; }
++			}
++			else
++			{
++				for (UActor* l : TempDynLightList)
++					if (l->Light.LastUpdate == lastDynamicUpdate) { cause = describe("dynamic", l); break; }
++			}
++			if (cause.empty())
++				cause = dynamicMover ? "mover" : "other";
++			PerfLog::LmCauses()[cause]++;
++		}
  		engine->render->Stats.LightmapsUpdated++;
  
  		Builder.Setup(model, coords, lightmapIndex);
+@@ -178,6 +203,7 @@ TextureInfo LightSystem::GetLightmap(UModel* model, int lightmapIndex, const Coo
+ 		}
+ 		else if (lmtexture->LastStaticUpdate != lastStaticUpdate)
+ 		{
++			PerfLog::Scope perfStatic(PerfLog::LmStatic); // TEMPORARY DEBUG TOOL
+ 			Builder.SetAmbientLight(zoneActor);
+ 			Builder.AddStaticLights(model, lightmapIndex);
+ 			Builder.SaveStaticLight(lmtexture->StaticLightColors);
+@@ -187,7 +213,9 @@ TextureInfo LightSystem::GetLightmap(UModel* model, int lightmapIndex, const Coo
+ 			Builder.LoadStaticLight(lmtexture->StaticLightColors);
+ 		}
+ 
++		{ PerfLog::Scope perfDynamic(PerfLog::LmDynamic); // TEMPORARY DEBUG TOOL
+ 		Builder.AddDynamicLights(model, lightmapIndex, TempDynLightList);
++		}
+ 
+ 		UnrealMipmap& lmmip = lmtexture->Mip;
+ 		vec4* dest = (vec4*)lmmip.Data.data();
+diff --git a/SurrealEngine/Light/LightmapBuilder.cpp b/SurrealEngine/Light/LightmapBuilder.cpp
+index 12619e4..3c36bfa 100644
+--- a/SurrealEngine/Light/LightmapBuilder.cpp
++++ b/SurrealEngine/Light/LightmapBuilder.cpp
+@@ -1,4 +1,5 @@
+ 
++#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
+ #include "Precomp.h"
+ #include "LightmapBuilder.h"
+ #include "Packages/Engine/Resources/UPalette.h"
+@@ -92,6 +93,19 @@ void LightmapBuilder::AddStaticLights(UModel* model, int lightMap)
+ void LightmapBuilder::AddDynamicLights(UModel* model, int lightMap, const Array<UActor*>& lights)
+ {
+ 	size_t count = (size_t)width * height;
++	if (PerfLog::Detail()) // TEMPORARY DEBUG TOOL: texels per rebuild, and how many each light reaches
++	{
++		PerfLog::LmCauses()["~texels"] += (int)count;
++		PerfLog::LmCauses()["~dynlights"] += (int)lights.size();
++		for (UActor* l : lights)
++		{
++			vec3 c = l->Location();
++			float r2 = l->WorldLightRadius() * l->WorldLightRadius();
++			int lit = 0;
++			for (size_t i = 0; i < count; i++) { vec3 d = points[i] - c; if (dot(d, d) < r2) lit++; }
++			PerfLog::LmCauses()["~in-radius"] += lit;
++		}
++	}
+ 	Shadow.Clear(model, lightMap);
+ 	for (UActor* light : lights)
+ 	{
 diff --git a/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp b/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp
 index 28e61f2..820cc16 100644
 --- a/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp
@@ -294,10 +365,10 @@ index b869842..513994e 100644
  	}
 diff --git a/SurrealEngine/Utils/PerfLog.h b/SurrealEngine/Utils/PerfLog.h
 new file mode 100644
-index 0000000..e9f707c
+index 0000000..63ec138
 --- /dev/null
 +++ b/SurrealEngine/Utils/PerfLog.h
-@@ -0,0 +1,277 @@
+@@ -0,0 +1,296 @@
 +// TEMPORARY DEBUG TOOL -- revert before commit.
 +//
 +// Frame-time breakdown for profiling on the handheld. With SURREAL_PERF_LOG=1
@@ -329,7 +400,9 @@ index 0000000..e9f707c
 +	enum Slot { Input, Tick, View, Render, GpuWait, Acquire, UploadWait, Lightmap, TexUpload,
 +		// Render sections (Section scopes), then time under top-level VM calls.
 +		LightTick, Lock, PreRender, BspInfo, Visibility, Portals, Nodes, Actors, Translucent,
-+		Coronas, Overlays, Flash, PostRender, Unlock, VmTop, Count };
++		Coronas, Overlays, Flash, PostRender, Unlock, VmTop,
++		// Inside Lightmap: the static lights' pass and the dynamic lights' pass.
++		LmStatic, LmDynamic, Count };
 +
 +	inline bool Enabled()
 +	{
@@ -421,6 +494,14 @@ index 0000000..e9f707c
 +			TotalCalls()++;
 +		}
 +	};
++
++	// Why lightmaps were rebuilt: "static"/"dynamic"/"new" and the light that
++	// changed (class, LightType, LightEffect), counted per interval.
++	inline std::unordered_map<std::string, int>& LmCauses()
++	{
++		static std::unordered_map<std::string, int> c;
++		return c;
++	}
 +
 +	// Events per interval: lightmaps rebuilt, textures uploaded.
 +	inline int& Counter(int slot) { static int c[Count]; return c[slot]; }
@@ -542,6 +623,15 @@ index 0000000..e9f707c
 +		std::fprintf(stderr, " | rest %.1f | %.0f actors, %.0f bsp nodes drawn\n",
 +			(renderExcl - accounted) / n, Counter(Actors) / n, Counter(Nodes) / n);
 +		Counter(Actors) = Counter(Nodes) = 0;
++
++		std::vector<std::pair<std::string, int>> causes(LmCauses().begin(), LmCauses().end());
++		std::sort(causes.begin(), causes.end(), [](auto& a, auto& b) { return a.second > b.second; });
++		std::fprintf(stderr, "perf: lightmaps: static pass %.1f, dynamic pass %.1f | rebuilt by (per frame):",
++			s.sum[LmStatic] / n, s.sum[LmDynamic] / n);
++		for (size_t i = 0; i < causes.size() && i < 10; i++)
++			std::fprintf(stderr, " %s %.1f", causes[i].first.c_str(), causes[i].second / n);
++		std::fprintf(stderr, "\n");
++		LmCauses().clear();
 +
 +		if (!Detail())
 +		{
