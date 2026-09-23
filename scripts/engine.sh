@@ -5,6 +5,9 @@
 #   scripts/engine.sh fetch                   clone upstream and apply engine-patches/ (if absent)
 #   scripts/engine.sh build <port>            build/<port>/engine from ports/<port>/engine.cmake
 #   scripts/engine.sh check                   the fork's commits are exactly engine-patches/*.patch
+#   scripts/engine.sh status                  the pin, and how far upstream has moved past it
+#   scripts/engine.sh upgrade [<ref>]         move the pin to an upstream commit (default: its latest);
+#                             --continue|--abort   after resolving conflicts, or to give up
 #   scripts/engine.sh export <commit> <NNNN-name>   write a fork commit to engine-patches/
 #   scripts/engine.sh perf on|off|save        apply/revert engine-patches/optional/perf-instrumentation.patch;
 #                                             save writes it from the tree (after re-basing the hooks)
@@ -16,11 +19,27 @@ set -euo pipefail
 ENGINE_DIR="${ENGINE_DIR:-$DX_ROOT/engine/SurrealEngine}"
 PATCHES="$DX_ROOT/engine-patches"
 UPSTREAM="https://github.com/dpjudas/SurrealEngine.git"
+UPSTREAM_REF=origin/master          # upstream's own branch, as the clone fetches it
 BRANCH=deusex-handheld
 
-usage() { sed -n '2,12p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,14p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 base() { awk 'NR == 1 { print $1 }' "$PATCHES/UPSTREAM-BASE.txt"; }
 eng() { git -C "$ENGINE_DIR" "$@"; }
+
+need_clone() { [ -d "$ENGINE_DIR/.git" ] || die "no engine clone -- scripts/engine.sh fetch"; }
+
+# Applies engine-patches/ in order onto the current branch. Each fork commit
+# was committed by its author at its author date, so applying a patch with
+# that identity and date reproduces the commit id the patch records -- on any
+# machine, whatever its git identity.
+apply_patches() {
+    local p from
+    for p in "$PATCHES"/[0-9][0-9][0-9][0-9]-*.patch; do
+        from=$(sed -n 's/^From: //p' "$p" | head -n 1)
+        GIT_COMMITTER_NAME="${from% <*}" GIT_COMMITTER_EMAIL="$(printf '%s' "$from" | sed 's/.*<\(.*\)>.*/\1/')" \
+            eng am --quiet --committer-date-is-author-date "$p"
+    done
+}
 
 cmd_fetch() {
     if [ -d "$ENGINE_DIR/.git" ]; then
@@ -30,15 +49,7 @@ cmd_fetch() {
     mkdir -p "$(dirname "$ENGINE_DIR")"
     git clone "$UPSTREAM" "$ENGINE_DIR"
     eng checkout -b "$BRANCH" "$(base)"
-    # Each fork commit was committed by its author at its author date, so
-    # applying a patch with that identity and date reproduces the commit id
-    # the patch records -- on any machine, whatever its git identity.
-    local p from
-    for p in "$PATCHES"/[0-9][0-9][0-9][0-9]-*.patch; do
-        from=$(sed -n 's/^From: //p' "$p" | head -n 1)
-        GIT_COMMITTER_NAME="${from% <*}" GIT_COMMITTER_EMAIL="$(printf '%s' "$from" | sed 's/.*<\(.*\)>.*/\1/')" \
-            eng am --committer-date-is-author-date "$p"
-    done
+    apply_patches
     say "engine ready: $ENGINE_DIR ($BRANCH at $(eng rev-parse --short HEAD))"
 }
 
@@ -84,7 +95,7 @@ cmd_build() {
 normalize() { sed -e '1d' -e '/^index [0-9a-f]*\.\.[0-9a-f]*/d' -e '/^-- $/,$d'; }
 
 cmd_check() {
-    [ -d "$ENGINE_DIR/.git" ] || die "no engine clone -- scripts/engine.sh fetch"
+    need_clone
     local b; b="$(base)"
     eng cat-file -e "$b^{commit}" 2>/dev/null || die "upstream base $b is not in the clone"
     mapfile -t commits < <(eng rev-list --reverse "$b..$BRANCH")
@@ -109,6 +120,130 @@ cmd_check() {
     dirty=$(eng status --porcelain --untracked-files=no)
     [ -z "$dirty" ] || say "note: uncommitted changes in the engine tree (not in any patch):"$'\n'"$dirty"
     return "$rc"
+}
+
+# ---- the pin, and moving it ------------------------------------------------
+# The engine follows upstream only when someone asks: "upgrade" rebases the
+# fork onto the upstream commit it is given, writes each rebased commit back
+# to its own patch file, moves UPSTREAM-BASE.txt, and rebuilds the branch from
+# the patches as "fetch" would, so the commit ids stay reproducible.
+
+oneline() { eng log -1 --format='%h  %cs  %s' "$1"; }
+commits() { if [ "$1" = 1 ]; then echo "1 commit"; else echo "$1 commits"; fi; }
+
+cmd_status() {
+    need_clone
+    eng fetch --quiet --force --tags origin
+    local b n; b="$(base)"
+    printf 'pinned    %s\n' "$(oneline "$b")"
+    printf 'upstream  %s  (%s)\n' "$(oneline "$UPSTREAM_REF")" "$UPSTREAM_REF"
+    n=$(eng rev-list --count "$b..$UPSTREAM_REF")
+    if [ "$n" = 0 ]; then
+        echo "the pin is upstream's latest"
+    else
+        echo "upstream is $(commits "$n") past the pin -- scripts/engine.sh upgrade takes them in"
+    fi
+    if cmd_check >/dev/null 2>&1; then
+        echo "the fork matches engine-patches/ ($(eng rev-list --count "$b..$BRANCH") patches)"
+    else
+        echo "the fork does not match engine-patches/ -- scripts/engine.sh check"
+    fi
+    [ ! -f "$(upgrade_state)" ] || echo "an upgrade is in progress -- scripts/engine.sh upgrade --continue or --abort"
+}
+
+upgrade_state() { printf '%s/dx-upgrade\n' "$(eng rev-parse --absolute-git-dir)"; }
+rebasing() {
+    local g; g="$(eng rev-parse --absolute-git-dir)"
+    [ -d "$g/rebase-merge" ] || [ -d "$g/rebase-apply" ]
+}
+
+# The subject a patch file records, unfolded, without its [PATCH] tag.
+patch_subject() {
+    awk '/^Subject: / { s = substr($0, 10); sub(/^\[PATCH[^]]*\] /, "", s)
+                        while ((getline l) > 0 && l ~ /^[ \t]/) s = s l
+                        print s; exit }' "$1"
+}
+
+cmd_upgrade() {
+    need_clone
+    local state; state="$(upgrade_state)"
+    case "${1:-}" in
+        --continue)
+            [ -f "$state" ] || die "no upgrade in progress"
+            if rebasing; then
+                eng -c core.editor=true rebase --continue ||
+                    die "still conflicts -- resolve them in $ENGINE_DIR, then scripts/engine.sh upgrade --continue"
+            fi
+            upgrade_finish "$(cat "$state")"
+            return ;;
+        --abort)
+            [ -f "$state" ] || die "no upgrade in progress"
+            if rebasing; then eng rebase --abort; fi
+            rm -f "$state"
+            say "upgrade abandoned: $BRANCH is as it was, the pin unchanged"
+            return ;;
+        -*) die "upgrade [<upstream ref>] | --continue | --abort" ;;
+    esac
+    [ ! -f "$state" ] || die "an upgrade is in progress -- scripts/engine.sh upgrade --continue or --abort"
+    [ "$(eng rev-parse --abbrev-ref HEAD)" = "$BRANCH" ] || die "the engine clone is not on $BRANCH"
+    [ -z "$(eng status --porcelain --untracked-files=no)" ] ||
+        die "uncommitted changes in the engine tree (the profiling hooks? scripts/engine.sh perf off)"
+    cmd_check >/dev/null || die "the fork does not match engine-patches/ -- scripts/engine.sh check"
+
+    local ref="${1:-$UPSTREAM_REF}" b target
+    b="$(eng rev-parse "$(base)^{commit}")"
+    eng fetch --quiet --force --tags origin
+    target="$(eng rev-parse --verify --quiet "$ref^{commit}")" || die "no such commit in the engine clone: $ref"
+    if [ "$target" = "$b" ]; then
+        say "already pinned at $ref ($(eng rev-parse --short "$b"))"
+        return 0
+    fi
+    eng merge-base --is-ancestor "$b" "$target" ||
+        say "note: $ref does not descend from the pin -- upstream's history was rewritten, or it is older"
+    say "upgrading over $(commits "$(eng rev-list --count "$b..$target")") of upstream, $(eng rev-parse --short "$b") -> $(eng rev-parse --short "$target")"
+    printf '%s\n' "$target" > "$state"
+    if ! eng rebase --onto "$target" "$b" "$BRANCH"; then
+        say "the patches conflict with upstream: resolve them in $ENGINE_DIR (git add each file),"
+        say "then scripts/engine.sh upgrade --continue -- or --abort to leave everything as it was"
+        return 1
+    fi
+    upgrade_finish "$target"
+}
+
+upgrade_finish() {
+    local target="$1" state; state="$(upgrade_state)"
+    [ "$(eng rev-parse --abbrev-ref HEAD)" = "$BRANCH" ] && eng merge-base --is-ancestor "$target" HEAD ||
+        die "$BRANCH is not on $(eng rev-parse --short "$target") yet -- finish the rebase in $ENGINE_DIR"
+    local commits files keep=() dropped=() f i=0
+    mapfile -t commits < <(eng rev-list --reverse "$target..$BRANCH")
+    mapfile -t files < <(ls "$PATCHES"/[0-9][0-9][0-9][0-9]-*.patch)
+    # A patch the rebase has no commit for became empty: upstream has it now.
+    for f in "${files[@]}"; do
+        if [ "$i" -lt "${#commits[@]}" ] && [ "$(eng log -1 --format=%s "${commits[$i]}")" = "$(patch_subject "$f")" ]; then
+            keep+=("$f"); i=$((i + 1))
+        else
+            dropped+=("$f")
+        fi
+    done
+    [ "$i" = "${#commits[@]}" ] ||
+        die "$BRANCH's commits over the new base do not line up with engine-patches/ -- sort it out by hand, then upgrade --continue"
+    for i in "${!commits[@]}"; do eng format-patch -1 "${commits[$i]}" --stdout > "${keep[$i]}"; done
+    for f in "${dropped[@]}"; do
+        rm -f -- "$f"
+        say "dropped $(basename "$f"): upstream's new commits make it empty"
+    done
+    printf '%s %s\n' "$target" "$(eng log -1 --format=%s "$target")" > "$PATCHES/UPSTREAM-BASE.txt"
+    # Rebuilt as fetch builds it, so the commit ids are reproducible, then
+    # exported once more so the patch files record those ids.
+    eng checkout --quiet -B "$BRANCH" "$target"
+    apply_patches
+    mapfile -t commits < <(eng rev-list --reverse "$target..$BRANCH")
+    for i in "${!commits[@]}"; do eng format-patch -1 "${commits[$i]}" --stdout > "${keep[$i]}"; done
+    rm -f "$state"
+    cmd_check >/dev/null
+    say "pinned at $(eng rev-parse --short "$target"); ${#keep[@]} patches re-exported, ${#dropped[@]} dropped. Next:"
+    say "  build and run linux-x86_64; scripts/engine.sh perf on (then perf save if the hooks moved);"
+    say "  profile on the devices; commit engine-patches/ with docs/ENGINE.md brought up to date."
 }
 
 cmd_export() {
@@ -162,6 +297,8 @@ case "$cmd" in
     fetch)  cmd_fetch ;;
     build)  cmd_build "$@" ;;
     check)  cmd_check ;;
+    status) cmd_status ;;
+    upgrade) cmd_upgrade "$@" ;;
     export) cmd_export "$@" ;;
     perf)   cmd_perf "$@" ;;
     -h|--help|help) usage ;;

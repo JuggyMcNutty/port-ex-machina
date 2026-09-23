@@ -28,7 +28,7 @@ machine. That pair is the engine's version; no other engine source is kept here.
 -- and these patches were written with Claude. A change worth upstreaming would
 need rewriting by a person from the problem statement, not adapting from a
 diff. Nor do we follow upstream: its new commits reach the fork only when
-someone chooses to upgrade (owner, 2026-09-23). Using and building the engine is
+someone chooses to [upgrade](#upgrading-surreal-engine) (owner, 2026-09-23). Using and building the engine is
 permitted by its own licence, which grants use "for any purpose".
 
 ## Commands
@@ -36,6 +36,8 @@ permitted by its own licence, which grants use "for any purpose".
 ```sh
 scripts/engine.sh fetch                     # clone upstream at the pin, apply the patches
 scripts/engine.sh check                     # the fork's commits == engine-patches/*.patch, in order
+scripts/engine.sh status                    # the pin, and how far upstream has moved past it
+scripts/engine.sh upgrade [<ref>]           # move the pin (below); --continue, --abort
 scripts/engine.sh export <commit> NNNN-name # write a fork commit to engine-patches/
 scripts/engine.sh build <port>              # build/<port>/engine, from ports/<port>/engine.cmake
 scripts/engine.sh perf on|off|save          # the profiling hooks (below)
@@ -79,6 +81,31 @@ function, optionally under one caller (`--root ULevel::Tick`: the game tick) or
 with the callers of one (`--callers`). A leaf function keeps no frame record,
 so its samples show its caller's caller as the next frame. Profiling the
 handheld: [its README](../ports/trimui-smartpro/README.md#performance).
+
+## Upgrading Surreal Engine
+
+Only when someone decides to. `scripts/engine.sh status` fetches upstream and
+says how many commits it is past the pin. To take them in:
+
+```sh
+scripts/engine.sh perf off                  # if the profiling hooks are on
+scripts/engine.sh upgrade                   # upstream's latest; or upgrade <sha|tag|branch>
+```
+
+`upgrade` needs the fork to match `engine-patches/` and its tree to be clean.
+It rebases the fork's commits onto the chosen upstream commit. If a patch
+conflicts it stops: resolve the files in `engine/SurrealEngine`, `git add`
+them, then `scripts/engine.sh upgrade --continue` -- or `--abort`, which leaves
+the fork and the pin as they were. Once the rebase is through, each commit is
+written back to its own patch file, a patch that upstream's new commits made
+empty is deleted (and named), `UPSTREAM-BASE.txt` moves, and the branch is
+rebuilt from the patches exactly as `fetch` builds it, so the commit ids stay
+reproducible.
+
+Then, before committing `engine-patches/`: build and run linux-x86_64, check
+the Vulkan validation layer ([below](#profiling-and-validating-on-the-desktop)),
+`perf on` (and `perf save` if the hooks moved), profile on the devices, and
+bring [what the fork changes](#what-the-fork-changes) up to date.
 
 ## Running it
 

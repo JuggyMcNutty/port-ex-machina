@@ -14,8 +14,9 @@ no facts of its own beyond those; each lives in one doc, and the
 - **The launcher** runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2).
 - **The engine** is pinned at `engine-patches/UPSTREAM-BASE.txt` (upstream as of
-  2026-09-20) plus the patches in `engine-patches/`. Upstream has moved on since;
-  whether and when to take it in is the owner's call.
+  2026-09-20) plus the patches in `engine-patches/`. Upstream has moved on since
+  (`scripts/engine.sh status`); whether and when to take it in
+  (`scripts/engine.sh upgrade`) is the owner's call.
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
   app ran the engine into the intro level on the development PC.
 - **trimui-smartpro**: the game runs; the performance work is in progress
