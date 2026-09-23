@@ -26,11 +26,11 @@ Applied on top of the upstream commit in `UPSTREAM-BASE.txt`, one fork commit
 per patch file:
 
 - `0001-headless-and-embedded-support.patch` — headless/desktop-less support and
-  the aarch64 cross build (fork commit `2328c37`).
+  the aarch64 cross build (fork commit `f764c27`).
 - `0002-nonbindless-fallback-and-format-support.patch` — the texture path
-  (`e5c9935`).
+  (`868e8d2`).
 - `0003-gamepad-and-deusex-fixes.patch` — controller support and two Deus Ex
-  fixes (`73c8c51`).
+  fixes (`e84d3e8`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -187,7 +187,7 @@ never affected because its settings file already said `Off`.
 
 ## Patch 0003 — controller support, and two Deus Ex fixes
 
-Fork commit `73c8c51`, built and running on the device.
+Fork commit `e84d3e8`, built and running on the device.
 
 ### 12. Gamepad as a polled device
 

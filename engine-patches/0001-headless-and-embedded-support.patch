@@ -1,4 +1,4 @@
-From 2328c37bdfe0b023a662dfb0f4c99e641234aab5 Mon Sep 17 00:00:00 2001
+From f764c2733fdd36e530ea87fe2d31549d156d5fe7 Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Mon, 21 Sep 2026 22:20:24 -0500
 Subject: [PATCH] Headless and embedded aarch64 support

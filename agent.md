@@ -95,7 +95,8 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    - linux-aarch64 on any real device.
 4. **Publishing on GitHub** as `port-ex-machina` (the name is explained in the
    README; the licence is zlib). The history holds none of the game's files
-   (rewritten 2026-09-22 to take out the retail ini/int test fixtures). Left:
+   (rewritten 2026-09-22 to take out the retail ini/int test fixtures, and the
+   owner's personal email address from every commit). Left:
    creating the repository and pushing `main` -- the owner's call.
    `aarch64` and `ports-framework` are merged into `main` and need not be
    published. The checkout directory is still named
@@ -139,6 +140,11 @@ are in its README. These apply everywhere:
   intro.
 - **The engine ignores SIGTERM**; stop it with SIGKILL. That leaves
   `Running.ini` behind like any crash.
+- **Commit as JuggyMcNutty** (`11588877+JuggyMcNutty@users.noreply.github.com`),
+  never the machine's global git identity, which is a personal address. This
+  clone and the engine clone set it in their local git config; a fresh clone
+  needs it before its first commit. The engine patches' `From:` lines carry
+  it, and `scripts/engine.sh fetch` commits with it.
 - **Never commit the game's files** -- not an ini, not a `.int`. The
   repository is public; `tests/fixtures` are written stand-ins, and
   `test_gamefiles` reads the real ones from `gamefiles/` in place.
