@@ -18,24 +18,26 @@ port_deps() {
 
 #   scripts/dx.sh deploy trimui-smartpro [--no-engine] [--run [-- launcher args]]
 #
-# Sends build/trimui-smartpro/app to the device. launcher.ini belongs to the
-# device's owner (it holds the path to their game files): it is installed only
-# when missing, from launcher.ini.default. exFAT has no permission bits worth
-# trusting, so everything is tarred in and chmod'ed on arrival.
+# Sends build/trimui-smartpro/app (built and staged by dx.sh just before) with
+# dx_ssh_sync: changed files only, the device's previous copies kept in
+# .prev-<date-time>, every file verified. launcher.ini belongs to the device's
+# owner (it holds the path to their game files): it is installed only when
+# missing, from launcher.ini.default. exFAT has no permission bits worth
+# trusting, so the executables are chmod'ed on arrival.
 port_deploy() {
-    local run=0 args=() excl=(--exclude=./launcher.ini --exclude=./home --exclude=./run-game.log)
+    local run=0 args=() skip=(./launcher.ini)
     while [ $# -gt 0 ]; do
         case "$1" in
             --run)       run=1; shift ;;
-            --no-engine) excl+=(--exclude=./SurrealEngine --exclude=./libSurrealVideo.so --exclude=./SurrealEngine.pk3); shift ;;
+            --no-engine) skip+=(./SurrealEngine ./libSurrealVideo.so ./SurrealEngine.pk3); shift ;;
             --)          shift; args=("$@"); break ;;
             *)           die "unknown option: $1" ;;
         esac
     done
     local d="$DEVICE_APPDIR"
     say "deploying $APP to $DEVICE_USER@$DEVICE:$d ..."
-    dx_ssh "mkdir -p '$d'"
-    tar -C "$APP" "${excl[@]}" -cf - . | dx_ssh "tar -C '$d' -xf - && chmod +x '$d'/deusex-launcher '$d'/dxl-cli '$d'/*.sh && { [ ! -f '$d/SurrealEngine' ] || chmod +x '$d/SurrealEngine'; }"
+    dx_ssh_sync "$APP" "$d" "${skip[@]}"
+    dx_ssh "chmod +x '$d'/deusex-launcher '$d'/dxl-cli '$d'/*.sh && { [ ! -f '$d/SurrealEngine' ] || chmod +x '$d/SurrealEngine'; }"
     dx_ssh "[ -s '$d/launcher.ini' ] || cp '$d/launcher.ini.default' '$d/launcher.ini'"
     # MSAA must be off on the PowerVR GE8300 (speckle). The launcher writes
     # Settings.json before every launch and run-game.sh seeds it; this is the

@@ -51,7 +51,7 @@ scripts/dx.sh deps   <port>                # toolchains and sysroot, if the port
 scripts/dx.sh build  <port>                # launcher, then engine
 scripts/dx.sh stage  <port>                # build/<port>/app: exactly what ships
 scripts/dx.sh run    <port>                # native ports
-scripts/dx.sh deploy <port>                # device ports
+scripts/dx.sh deploy <port>                # device ports: builds and stages first
 
 scripts/dx.sh check                        # drift guards: docs, engine patches, ports, ABI
 ```

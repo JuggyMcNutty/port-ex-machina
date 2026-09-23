@@ -27,6 +27,52 @@ dx_ssh() {
     SSHPASS="$DEVICE_PASS" sshpass -e ssh "${DX_SSHOPTS[@]}" "$DEVICE_USER@$DEVICE" "$@"
 }
 
+# dx_ssh_sync <local dir> <device dir> [./path to leave alone]...
+#
+# Makes the device's copy of a staged app match it, and proves it did. Only
+# files whose checksum differs are sent. The device's copies of those files are
+# kept first in <device dir>/.prev-<device date-time>, so any deploy can be
+# rolled back by copying one back. Afterwards every file is checksummed on the
+# device against the staged one. Nothing on the device is deleted, and the
+# paths to leave alone (the owner's own files) are never sent.
+dx_ssh_sync() {
+    local src="$1" dst="$2"; shift 2
+    local f s files=() changed=()
+    while IFS= read -r -d '' f; do
+        for s in "$@"; do [ "$f" = "$s" ] && continue 2; done
+        files+=("$f")
+    done < <(cd "$src" && find . -type f -print0 | sort -z)
+    [ ${#files[@]} -gt 0 ] || die "nothing to send in $src"
+    local manifest; manifest="$(cd "$src" && md5sum "${files[@]}")"
+
+    # busybox sh on the far side; the scripts use no single quotes.
+    local differs='cd "$1" && while read -r sum f; do
+        [ -f "$f" ] && [ "$(md5sum "$f" | cut -d" " -f1)" = "$sum" ] || echo "$f"
+    done'
+    local keep='cd "$1" && p=.prev-$(date +%Y%m%d-%H%M%S) && n=0 && while read -r f; do
+        [ -f "$f" ] || continue
+        mkdir -p "$p/$(dirname "$f")" && cp -p "$f" "$p/$f" && n=$((n + 1))
+    done; if [ $n -gt 0 ]; then echo "$p"; fi'
+
+    mapfile -t changed < <(printf '%s\n' "$manifest" | dx_ssh "mkdir -p '$dst' && sh -c '$differs' sh '$dst'")
+    if [ ${#changed[@]} -eq 0 ]; then
+        say "the device already has this build (${#files[@]} files)"
+    else
+        local prev
+        prev="$(printf '%s\n' "${changed[@]}" | dx_ssh "sh -c '$keep' sh '$dst'")"
+        (cd "$src" && tar -cf - "${changed[@]}") | dx_ssh "tar -C '$dst' -xf -"
+        say "sent ${#changed[@]} of ${#files[@]} files: ${changed[*]#./}"
+        [ -z "$prev" ] || say "the device's previous copies: $dst/$prev"
+    fi
+
+    local sums; sums="$(printf '%s\n' "${files[@]}" | dx_ssh "cd '$dst' && xargs md5sum")"
+    if [ "$sums" != "$manifest" ]; then
+        diff <(printf '%s\n' "$manifest") <(printf '%s\n' "$sums") >&2 || true
+        die "the device's copy does not match $src"
+    fi
+    say "verified ${#files[@]} files on the device"
+}
+
 # ---- Bootlin toolchains -----------------------------------------------------
 # dx_fetch_bootlin <name> <glibc-max>, e.g. aarch64--glibc--stable-2020.08-1 2.33
 #

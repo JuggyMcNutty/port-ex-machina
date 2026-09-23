@@ -24,7 +24,7 @@ A port directory holds **only what differs** from the common ground:
 | File | Purpose | Required |
 |---|---|---|
 | `port.cmake` | Included by the root `CMakeLists.txt` when `DXL_PORT=<id>`. Sets `DXL_PORT_SDL` (`system`: pkg-config; `sysroot`: the device's own SDL2 from `DXL_PORT_SYSROOT`), `DXL_PORT_GLIBC_MAX` (turns on the post-build `scripts/check-abi.sh`) and `DXL_PORT_LINK_OPTIONS` | yes |
-| `port.sh` | Sourced by `scripts/dx.sh`. `PORT_DESC`; `PORT_ENGINE=1` if the engine builds for this port here; hooks `port_deps` (fetch toolchains/sysroot), `port_stage` (adjust the staged app), `port_deploy` (send it to the device), `port_run` (run it here). Unset hooks have safe defaults | yes |
+| `port.sh` | Sourced by `scripts/dx.sh`. `PORT_DESC`; `PORT_ENGINE=1` if the engine builds for this port here; hooks `port_deps` (fetch toolchains/sysroot), `port_stage` (adjust the staged app), `port_deploy` (send it to the device; over SSH, `dx_ssh_sync` in `scripts/lib/common.sh` sends only what changed, keeps the device's previous copies and verifies), `port_run` (run it here). Unset hooks have safe defaults | yes |
 | `toolchain-c.cmake`, `toolchain-cxx.cmake` | Cross toolchains, referenced by the port's preset (C) and `engine.cmake` (C++). A toolchain file that `return()`s early when the host already is the target arch makes the same preset build natively | cross ports |
 | `engine.cmake` | A CMake initial cache (`cmake -C`) for building the engine: its toolchain and `ENABLE_*` switches, each set with `FORCE` so an edit reaches an existing build too | if it builds the engine |
 | `target.c` | The device profile, a `dxl_target`: fonts to try first, the panel size, the CPU modes the port's hooks can apply (with their help text), a note about the built-in pad, the About line, and the GPU `dxl-shots` should pretend to have. Without one the build uses `src/platform/target_default.c`, a generic desktop | optional |
@@ -41,7 +41,7 @@ scripts/dx.sh deps   <port>        # port_deps: toolchains and sysroot into deps
 scripts/engine.sh fetch            # once: clone the engine fork (upstream + engine-patches/)
 scripts/dx.sh build  <port>        # the launcher preset, then scripts/engine.sh build <port>
 scripts/dx.sh stage  <port>        # build/<port>/app, exactly what ships
-scripts/dx.sh deploy <port>        # port_deploy
+scripts/dx.sh deploy <port>        # build, stage, then port_deploy
 scripts/dx.sh run    <port>        # port_run
 scripts/dx.sh check                # the drift guards (below)
 ```

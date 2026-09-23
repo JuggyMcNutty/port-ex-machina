@@ -45,15 +45,18 @@ it from nothing.
 **Cold start.** Nothing depends on state from a previous session: toolchains
 and sysroots are fetched by `scripts/dx.sh deps <port>` (the Smart Pro's
 sysroot needs the device awake), the engine by `scripts/engine.sh fetch`, then
-`scripts/dx.sh build`, `stage`, `deploy`/`run`. `scripts/dx.sh check` runs the
+`scripts/dx.sh build`, `stage` and `run` -- or `deploy`, which builds and
+stages first. `scripts/dx.sh check` runs the
 drift guards; `scripts/dx.sh test` the unit tests.
 
 **The device.** Address, login and the ways it bites are in
 [`ports/trimui-smartpro/README.md`](ports/trimui-smartpro/README.md). It drops
-off the network when it sleeps: ask the owner to wake it. Earlier builds'
-files are in `.prev-<date>` directories of `/mnt/SDCARD/App/DeusEx/` on the
-device (named by the device's clock, newest last), should a rollback be
-wanted. `Running.ini` is present in the game's `System/` there
+off the network when it sleeps: ask the owner to wake it. Every deploy keeps
+the device's previous copy of each file it replaces in a `.prev-<date>`
+directory of `/mnt/SDCARD/App/DeusEx/` (named by the device's clock, newest
+last): copying one back is a rollback. The owner runs it in the **Overclock**
+CPU mode (2026-09-22), and profiling runs use whatever mode `launcher.ini`
+names. `Running.ini` is present in the game's `System/` there
 (profiling runs killed with SIGKILL), so the launcher shows a crash banner
 until the next clean exit or "Clear crash marker".
 

@@ -6,43 +6,55 @@
 # comments). From the repository root:
 #
 #   scripts/engine.sh perf on
-#   scripts/dx.sh build trimui-smartpro engine && scripts/dx.sh stage trimui-smartpro
-#   scripts/dx.sh deploy trimui-smartpro
+#   scripts/dx.sh deploy trimui-smartpro      (builds and stages it too)
 #   ...profile...
-#   scripts/engine.sh perf off     (then rebuild, stage and deploy again)
+#   scripts/engine.sh perf off
+#   scripts/dx.sh deploy trimui-smartpro
 #
 # Then copy this script to the device and run it over SSH:
 #
-#   profile-map.sh [seconds] [label] [perf|none] [turn] [map]
+#   profile-map.sh [seconds] [label] [cpu] [turn] [map]
 #
 #   seconds  how long to run (default 60)
 #   label    names the log: /tmp/dxl-test/perf-<label>.log
-#   perf     switch spruceOS to performance mode first, restore power-save after
+#   cpu      "launcher" (default): the CPU mode launcher.ini's CpuMode names,
+#            applied and restored by the app's port-hooks.sh exactly as a
+#            launch does, so a profile measures what playing gets. "none"
+#            leaves the CPU as the menu has it (power-save).
 #   turn     aBaseX to turn the player on the spot (3000 = keyboard turn speed),
 #            so an unattended run still brings new surfaces into view
 #   map      default 01_NYC_UNATCOIsland.dx (Liberty Island). The engine only
 #            takes --url=<map>; "-u <map>" silently loads the default map.
 #
+# SURREAL_PERF_DETAIL=1 in the environment adds tick by actor class and script
+# functions by self time; those hooks slow what they measure.
+#
 # The spruceOS menu is paused while the engine runs (two programs drawing to
 # one framebuffer fight) and resumed on exit. The engine ignores SIGTERM, so
 # it is stopped with SIGKILL; that leaves Running.ini like any crash.
-SECS=${1:-60}; LABEL=${2:-run}; MODE=${3:-none}; TURN=${4:-0}; MAP=${5:-01_NYC_UNATCOIsland.dx}
+SECS=${1:-60}; LABEL=${2:-run}; MODE=${3:-launcher}; TURN=${4:-0}; MAP=${5:-01_NYC_UNATCOIsland.dx}
+APPDIR=/mnt/SDCARD/App/DeusEx
 OUT=/tmp/dxl-test/perf-$LABEL.log
+LOG=$OUT    # where port-hooks.sh reports the CPU mode
 mkdir -p /tmp/dxl-test
+: > $OUT
 M=$(pidof MainUI)
 [ -n "$M" ] && kill -STOP $M
-restore() { [ -n "$M" ] && kill -CONT $M; }
+cpu_after() { :; }
+restore() { cpu_after; [ -n "$M" ] && kill -CONT $M; }
 trap restore EXIT INT TERM HUP
-if [ "$MODE" = "perf" ]; then
-    ( . /mnt/SDCARD/spruce/scripts/helperFunctions.sh >/dev/null 2>&1; set_performance >/dev/null 2>&1 )
+if [ "$MODE" = "launcher" ]; then
+    . $APPDIR/port-hooks.sh
+    port_before_game
+    cpu_after() { port_after_game; cpu_after() { :; }; }
 fi
 C=/sys/devices/system/cpu
-echo "cpu: online=$(cat $C/online) gov=$(cat $C/cpu0/cpufreq/scaling_governor) max=$(cat $C/cpu0/cpufreq/scaling_max_freq) map=$MAP" > $OUT
+echo "cpu: online=$(cat $C/online) gov=$(cat $C/cpu0/cpufreq/scaling_governor) max=$(cat $C/cpu0/cpufreq/scaling_max_freq) map=$MAP" >> $OUT
 cd /mnt/SDCARD/Roms/PORTS/DeusEx || exit 1
-export HOME=/mnt/SDCARD/App/DeusEx/home
-export LD_LIBRARY_PATH=/mnt/SDCARD/App/DeusEx:/usr/trimui/lib:/usr/lib:/lib
+export HOME=$APPDIR/home
+export LD_LIBRARY_PATH=$APPDIR:/usr/trimui/lib:/usr/lib:/lib
 export SURREALWIDGETS_DISPLAY_BACKEND=SDL2 SURREAL_PERF_LOG=1 SURREAL_PERF_TURN=$TURN
-setsid /mnt/SDCARD/App/DeusEx/SurrealEngine --no-launcher /mnt/SDCARD/Roms/PORTS/DeusEx "--url=$MAP" </dev/null >>$OUT 2>&1 &
+setsid $APPDIR/SurrealEngine --no-launcher /mnt/SDCARD/Roms/PORTS/DeusEx "--url=$MAP" </dev/null >>$OUT 2>&1 &
 PID=$!
 i=0
 while [ $i -lt "$SECS" ]; do
@@ -52,7 +64,5 @@ done
 kill -9 $PID 2>/dev/null
 sleep 1
 echo "engines left: $(pidof SurrealEngine | wc -w)" >> $OUT
-if [ "$MODE" = "perf" ]; then
-    ( . /mnt/SDCARD/spruce/scripts/helperFunctions.sh >/dev/null 2>&1; set_powersave >/dev/null 2>&1 )
-fi
-grep -E "^cpu:|^perf:|engines left" $OUT
+cpu_after
+grep -E "^cpu|^perf:|engines left" $OUT

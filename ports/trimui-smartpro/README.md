@@ -24,10 +24,15 @@ rebuilds -- see [Performance](#performance).
 ```sh
 scripts/dx.sh deps   trimui-smartpro       # toolchains + sysroot (the device must be awake)
 scripts/engine.sh fetch                    # once: the engine fork
-scripts/dx.sh build  trimui-smartpro       # launcher, then engine
-scripts/dx.sh stage  trimui-smartpro       # build/trimui-smartpro/app
-scripts/dx.sh deploy trimui-smartpro       # --no-engine to skip the 16 MB engine, --run to start it over SSH
+scripts/dx.sh deploy trimui-smartpro       # build, stage, send; --no-engine, --run to start it over SSH
 ```
+
+`deploy` builds (incrementally) and stages before sending, so what reaches the
+device is always the current tree; it warns when the engine carries
+uncommitted changes, such as the profiling hooks. It sends only the files whose
+checksum differs, keeps the device's previous copies of those in
+`.prev-<date-time>` in the app directory (the device's clock; nothing is ever
+deleted there), and checksums every file on the device afterwards.
 
 The build is warning-free with GCC 9.3, which is stricter than a current host
 compiler about `-Wshadow` and `-Wformat-truncation`: build this port as well as
@@ -37,6 +42,7 @@ On the device the app lives in `/mnt/SDCARD/App/DeusEx` and the game data in
 `/mnt/SDCARD/Roms/PORTS/DeusEx` (all 38 `.u` packages). `launcher.ini`
 belongs to the device's owner: `deploy` installs it only when missing (from
 `launcher.ini.default`), and never touches `home/` or `run-game.log`.
+`--no-engine` leaves the engine's three files out.
 
 ```ini
 [Launcher]
@@ -173,6 +179,7 @@ The System tab shows the engine and script logs on screen.
 | Home screen on the panel | renders with the device font; detected `X360 Controller`; recognised the retired layout |
 | Pad in game | moving, looking and firing work (owner, first build); START was swallowed after skipping the intro — fixed since, **not yet re-verified** |
 | The ports framework (2026-09-22) | `dx.sh deploy` put exactly the staged files on the device (checksums); `dxl-cli --dry-run --probe` ran there; the shared `run-game.sh` with this port's hooks started the out-of-tree engine build, the intro rendered at 31 FPS, and the CPU mode was applied and restored |
+| Deploy with checksums (2026-09-22) | `dx.sh deploy` built and staged, sent only the one changed file, kept the device's copy in `.prev-<date-time>` and verified all 13 files; `profile-map.sh` applied `launcher.ini`'s Overclock (four cores, 2.0 GHz) through `port-hooks.sh` and restored power-save after |
 
 Verified with the earlier wizard build, on code paths unchanged since: install
 validation naming each missing file; `Running.ini` created at commit and
@@ -190,7 +197,9 @@ out; `DXL_NO_HOME=1`; the messenger half of the single-instance handoff.
 Measured on the device with the frame-time instrumentation in
 `engine-patches/optional/perf-instrumentation.patch` and
 [`tools/profile-map.sh`](tools/profile-map.sh) (start a map directly with
-`--url=<map>`; the hooks are never committed -- `scripts/engine.sh perf on|off`):
+`--url=<map>`; the hooks are never committed -- `scripts/engine.sh perf on|off`).
+The script applies the CPU mode `launcher.ini` names, through the app's own
+`port-hooks.sh`, so a profile measures what playing gets:
 
 | Scene, CPU mode | FPS | Frame | Game tick | Render CPU | GPU wait |
 | --- | --- | --- | --- | --- | --- |

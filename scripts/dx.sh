@@ -5,7 +5,7 @@
 #   scripts/dx.sh deps    <port>              toolchains and sysroot into deps/
 #   scripts/dx.sh build   <port> [launcher|engine]   default: both, if the port ships the engine
 #   scripts/dx.sh stage   <port>              build/<port>/app: exactly what ships
-#   scripts/dx.sh deploy  <port> [args]       send the app to the device (port-specific)
+#   scripts/dx.sh deploy  <port> [args]       build, stage, send the app to the device (port-specific)
 #   scripts/dx.sh run     <port> [args]       run the staged app here (native ports)
 #   scripts/dx.sh test                        host build + unit tests
 #   scripts/dx.sh check                       docs paths, engine patches, ABI, port files
@@ -150,15 +150,26 @@ cmd_ports() {
     done
 }
 
+# A deploy is always of the current tree: build (incremental) and stage first,
+# then the port's port_deploy. An engine with uncommitted changes -- the
+# profiling hooks, most likely -- ships with a warning, not silently.
+cmd_deploy() {
+    cmd_build
+    cmd_stage
+    local eng="$DX_ROOT/engine/SurrealEngine"
+    if [ "$PORT_ENGINE" = 1 ] && [ -d "$eng/.git" ] && ! git -C "$eng" diff --quiet HEAD; then
+        say "warning: the engine has uncommitted changes (profiling hooks? scripts/engine.sh perf off) -- deploying them"
+    fi
+    port_deploy "$@"
+}
+
 cmd="${1:-}"; [ -n "$cmd" ] || usage; shift
 case "$cmd" in
     ports)  cmd_ports ;;
     deps)   load_port "${1:-}"; shift || true; port_deps "$@" ;;
     build)  load_port "${1:-}"; shift || true; cmd_build "$@" ;;
     stage)  load_port "${1:-}"; cmd_stage ;;
-    deploy) load_port "${1:-}"; shift || true
-            [ -d "$APP" ] || die "nothing staged -- scripts/dx.sh stage $PORT"
-            port_deploy "$@" ;;
+    deploy) load_port "${1:-}"; shift || true; cmd_deploy "$@" ;;
     run)    load_port "${1:-}"; shift || true
             [ -x "$APP/deusex-launcher" ] || die "nothing staged -- scripts/dx.sh stage $PORT"
             port_run "$@" ;;
