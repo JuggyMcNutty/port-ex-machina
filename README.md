@@ -15,13 +15,13 @@ an open-source UE1 re-implementation, with patches we develop targeting differen
 
 ## Ports
 
-| Port | For | Built | Status |
-|---|---|---|---|
+| Port | For | Status |
+|---|---|---|
 | [`linux-x86_64`](ports/linux-x86_64/) | desktop Linux; **the base** | runs the game; where the tests, `dxl-shots` and engine validation run |
 | [`linux-aarch64`](ports/linux-aarch64/) | aarch64 devices with an ordinary distro | Builds not tested |
 | [`trimui-smartpro`](ports/trimui-smartpro/) | TrimUI Smart Pro, spruceOS | builds and runs; performance work in progress |
-| [`android`](ports/android/) | Android | -- | planned |
-| [`xbox360`](ports/x360/) | Xbox 360 | -- | planned |
+| [`android`](ports/android/) | Android | planned |
+| [`xbox360`](ports/x360/) | Xbox 360 | planned |
 
 ## Quick start
 

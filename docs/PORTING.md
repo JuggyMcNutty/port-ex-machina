@@ -122,7 +122,7 @@ renderer list is built from.
 
 ## Other operating systems
 
-Every port so far is POSIX, and so is Android (bionic has everything below).
+Every port built so far is POSIX, and so is Android (bionic has everything below).
 The launcher's OS dependencies are few and named:
 
 | What | Where | POSIX mechanism |
@@ -135,6 +135,8 @@ The launcher's OS dependencies are few and named:
 
 **Android** needs a different hand-over -- the engine has to run inside the
 app's process -- and more besides: [`../ports/android/README.md`](../ports/android/README.md).
+**Xbox 360** (planned) is not POSIX, so it would need its own version of
+each; nothing about it is worked out yet ([`../ports/x360/README.md`](../ports/x360/README.md)).
 **Windows** would need win32 versions of all five; the original binary's own
 answers to the same questions are in [`re/porting-notes.md`](re/porting-notes.md).
 

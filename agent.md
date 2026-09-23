@@ -25,6 +25,7 @@ no facts of its own beyond those; each lives in one doc, and the
   resolution.
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
+- **x360**: planned; nothing about it is worked out yet.
 
 ## Decided
 
