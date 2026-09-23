@@ -31,6 +31,8 @@ per patch file:
   (`868e8d2`).
 - `0003-gamepad-and-deusex-fixes.patch` — controller support and two Deus Ex
   fixes (`e84d3e8`).
+- `0004-vulkan-frame-overlap.patch` — the game tick runs while the GPU draws
+  the previous frame (`0bfde8a`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -250,6 +252,38 @@ engine delivered for that press. Surreal delivers one, so the flag carried into
 the first level and ate the player's first attempt to open the pause menu.
 Nothing else sets it; `LoginPlayer` and `PossessSavedPlayer` clear it once a
 level is running (Deus Ex only).
+
+## Patch 0004 — the CPU and the GPU in parallel
+
+Fork commit `0bfde8a`, measured on the device: the fight on Liberty Island went
+from ~450 to ~400 ms a frame
+([the Smart Pro's Performance](../ports/trimui-smartpro/README.md#performance)).
+
+### 17. The end-of-frame wait moves to the next frame
+
+`Unlock` submitted the frame and waited on its fence straight away, so a frame
+cost CPU time plus GPU time. The end-of-frame submit (`VulkanRenderDevice::Submit`
+with `wait = false`) now leaves the frame in flight: `CommandBufferManager`
+keeps its command buffers and the frame's delete list alive, and
+`WaitForFrame()` collects it before anything could touch what it uses -- at
+`Lock`, when a new draw or transfer command buffer starts, before any write to
+the shared upload buffer, before the texture and descriptor caches are cleared,
+and before a swapchain rebuild. Everything the frame reads is still single:
+the next frame's drawing starts only after the wait, so the gain is the game
+tick (and the rest of the main loop) overlapping the GPU, with no
+double-buffering. Mid-frame flushes wait as before, and so does `Unlock` when a
+hit buffer must be read back.
+
+### 18. Swapchain rebuilds wait for the device
+
+A fence covers a submit, not the present queued after it. Rebuilding the
+swapchain (a resize, a VSync or HDR change) destroyed the old one and its
+semaphores while the presentation engine could still hold them -- the
+validation layer's `VUID-vkDestroySwapchainKHR-swapchain-01282` and
+`VUID-vkDestroySemaphore-semaphore-05149`, present before patch 0004 as well.
+It now calls `vkDeviceWaitIdle` first; the path runs only on a rebuild.
+Synchronization validation is clean on Liberty Island with the patch, on both
+the bindless and the per-batch descriptor set path (`SURREAL_VK_NO_BINDLESS=1`).
 
 ## Running it headlessly
 

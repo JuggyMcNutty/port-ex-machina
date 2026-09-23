@@ -27,7 +27,10 @@
 #            takes --url=<map>; "-u <map>" silently loads the default map.
 #
 # SURREAL_PERF_DETAIL=1 in the environment adds tick by actor class and script
-# functions by self time; those hooks slow what they measure.
+# functions by self time; those hooks slow what they measure. SHOT=<seconds>
+# (a multiple of 5) saves the screen at that point to
+# /tmp/dxl-test/fb-<label>.gz -- the raw framebuffer, gzipped; its first
+# 1280x720 is BGRA (magick -size 1280x720 -depth 8 bgra:fb -alpha off out.png).
 #
 # The spruceOS menu is paused while the engine runs (two programs drawing to
 # one framebuffer fight) and resumed on exit. The engine ignores SIGTERM, so
@@ -60,6 +63,7 @@ i=0
 while [ $i -lt "$SECS" ]; do
     sleep 5; i=$((i + 5))
     echo "t=$i cpu: $(cat $C/cpu0/cpufreq/scaling_cur_freq) load: $(cat /proc/loadavg)" >> $OUT
+    [ "$i" = "${SHOT:-}" ] && cat /dev/fb0 | gzip -1 -f > /tmp/dxl-test/fb-$LABEL.gz
 done
 kill -9 $PID 2>/dev/null
 sleep 1

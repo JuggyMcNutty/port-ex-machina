@@ -181,6 +181,7 @@ The System tab shows the engine and script logs on screen.
 | Pad in game | moving, looking and firing work (owner, first build); START was swallowed after skipping the intro — fixed since, **not yet re-verified** |
 | The ports framework (2026-09-22) | `dx.sh deploy` put exactly the staged files on the device (checksums); `dxl-cli --dry-run --probe` ran there; the shared `run-game.sh` with this port's hooks started the out-of-tree engine build, the intro rendered at 31 FPS, and the CPU mode was applied and restored |
 | Deploy with checksums (2026-09-22) | `dx.sh deploy` built and staged, sent only the one changed file, kept the device's copy in `.prev-<date-time>` and verified all 13 files; `profile-map.sh` applied `launcher.ini`'s Overclock (four cores, 2.0 GHz) through `port-hooks.sh` and restored power-save after |
+| CPU/GPU overlap, engine patch 0004 (2026-09-22) | Liberty Island renders correctly mid-fight (framebuffer capture); GPU wait ~76 → ~0.2 ms. Synchronization validation clean on the desktop build, bindless and per-batch paths |
 
 Verified with the earlier wizard build, on code paths unchanged since: install
 validation naming each missing file; `Running.ini` created at commit and
@@ -211,6 +212,7 @@ The script applies the CPU mode `launcher.ini` names, through the app's own
 | Liberty Island start, performance, facing the fight | ~2 | 485–535 ms | 190–245 | 210–295 | ~75 |
 | Liberty Island start, overclock, turning | 3.7 | ~272 ms | ~142 | ~81 | ~46 |
 | **Liberty Island start, overclock, facing the fight** | **2.2** | **~450 ms** | **165–177** | **~205** | **~76** |
+| The same, CPU and GPU in parallel (engine patch 0004) | 2.5 | ~400 ms | ~192 | ~205 | ~0.2 |
 
 (Times in ms per frame, averaged over 60 frames. The performance-mode fight
 rows had the per-class or per-function hooks on, which add their own cost; the
@@ -236,12 +238,14 @@ On Liberty Island, facing the fight in overclock (the bold row):
   scanline of the viewport, so it scales with the render height); actor meshes
   25 ms for ~30 actors in view; BSP surfaces 14 ms for ~600 nodes; translucent
   5.5; the sky portal 4; `PostRenderFlash` (all script) 3.5; the rest ~8.
-- **GPU ≈ 17%** (~76 ms), and it does not overlap the CPU:
-  `CommandBufferManager::SubmitCommands` waits on the frame's fence right after
-  submitting, so a frame costs CPU + GPU, not the larger of the two.
+- **GPU ≈ 17%** (~76 ms), and it did not overlap the CPU:
+  `CommandBufferManager::SubmitCommands` waited on the frame's fence right
+  after submitting. Engine patch 0004 lets the next game tick run while the GPU
+  draws: the wait is gone (~0.2 ms), but the tick grew ~20 ms -- CPU and GPU now
+  compete for the SoC's shared memory -- so the frame gained ~50 ms, not 76.
 
 The fixes chosen, their order and the target are in
-[`agent.md`](../../agent.md#decided-not-started). The OpenGL ES backend would
+[`agent.md`](../../agent.md#decided). The OpenGL ES backend would
 not help here: the CPU is the bottleneck, and Vulkan is the better API on this
 GPU.
 
@@ -292,7 +296,8 @@ more tools serve this device:
   `pidof`. busybox `killall` rejects `-x`. Always check afterwards:
   SSH-launched engines survive sloppy kills, and two engines fight over the
   display.
-- **The screen can only be seen over SSH by dumping the framebuffer**:
+- **The screen can only be seen over SSH by dumping the framebuffer**
+  (`SHOT=<seconds>` makes `tools/profile-map.sh` do it mid-profile):
   `cat /dev/fb0 > /tmp/fb.raw` (64 MB), gzip it before copying, decode the
   first 1280×720 as BGRA (`magick -size 1280x720 -depth 8 bgra:frame -alpha off`).
 - **busybox has no `timeout` and no `nohup`.** Use `setsid` with all three fds

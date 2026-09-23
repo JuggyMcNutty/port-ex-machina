@@ -1,0 +1,250 @@
+From 0bfde8a2eceac737281e6a7b4a346635adede949 Mon Sep 17 00:00:00 2001
+From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
+Date: Tue, 22 Sep 2026 21:45:40 -0500
+Subject: [PATCH] Vulkan: let the CPU run the next frame while the GPU draws
+ this one
+
+FORK ONLY. This project ships a NO-AI Code Rule asking that LLM-written
+changes stay in a fork and are never PR'd upstream. These were written with
+Claude. Do not submit them.
+
+Unlock submitted the frame and then waited on its fence at once, so every
+frame cost CPU time plus GPU time. On the TrimUI Smart Pro (PowerVR GE8300)
+that wait was ~76 ms of a ~450 ms frame on Liberty Island.
+
+The end-of-frame submit no longer waits. CommandBufferManager keeps the frame
+in flight -- its command buffers and the frame's delete list alive -- and
+WaitForFrame() collects it before anything could touch what it uses: at
+Lock, when a new draw or transfer command buffer starts, before any write to
+the shared upload buffer, before the texture and descriptor caches are
+cleared, and before a swapchain rebuild. Mid-frame flushes still wait as
+before, and so does Unlock when a hit buffer has to be read back. At most
+one frame is in flight, so the game tick overlaps the GPU and nothing is
+double-buffered.
+
+Also: recreating the swapchain now waits for the device to go idle first. A
+fence covers a submit, not the present queued after it, and the validation
+layer reported the old swapchain and its semaphores destroyed while in use
+(VUID-vkDestroySwapchainKHR-swapchain-01282, -vkDestroySemaphore-05149) --
+before this change too. Synchronization validation is clean on both the
+bindless and the per-batch descriptor set paths.
+---
+ .../Vulkan/CommandBufferManager.cpp           | 40 ++++++++++++++++++-
+ .../Vulkan/CommandBufferManager.h             | 12 +++++-
+ .../RenderDevice/Vulkan/UploadManager.cpp     |  5 +++
+ .../Vulkan/VulkanRenderDevice.cpp             | 16 +++++++-
+ .../RenderDevice/Vulkan/VulkanRenderDevice.h  |  1 +
+ 5 files changed, 70 insertions(+), 4 deletions(-)
+
+diff --git a/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp b/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp
+index 118f3de..355b96a 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp
++++ b/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp
+@@ -32,8 +32,27 @@ CommandBufferManager::~CommandBufferManager()
+ 	DeleteFrameObjects();
+ }
+ 
++void CommandBufferManager::WaitForFrame()
++{
++	if (!FramePending)
++		return;
++
++	VkResult result = vkWaitForFences(renderer->Device.get()->device, 1, &RenderFinishedFence->fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
++	if (result != VK_SUCCESS)
++		throw std::runtime_error("vkWaitForFences failed");
++	result = vkResetFences(renderer->Device.get()->device, 1, &RenderFinishedFence->fence);
++	if (result != VK_SUCCESS)
++		throw std::runtime_error("vkResetFences failed");
++
++	FramePending = false;
++	PendingDrawCommands.reset();
++	PendingTransferCommands.reset();
++	DeleteFrameObjects();
++}
++
+ void CommandBufferManager::WaitForTransfer()
+ {
++	WaitForFrame();
+ 	renderer->Uploads->SubmitUploads();
+ 
+ 	if (TransferCommands)
+@@ -55,14 +74,20 @@ void CommandBufferManager::WaitForTransfer()
+ 	}
+ }
+ 
+-void CommandBufferManager::SubmitCommands(bool present, int presentWidth, int presentHeight, bool presentFullscreen)
++void CommandBufferManager::SubmitCommands(bool present, int presentWidth, int presentHeight, bool presentFullscreen, bool wait)
+ {
++	WaitForFrame();
+ 	renderer->Uploads->SubmitUploads();
+ 
+ 	if (present)
+ 	{
+ 		if (SwapChain->Lost() || SwapChain->Width() != presentWidth || SwapChain->Height() != presentHeight || UsingVsync != renderer->UseVSync || UsingHdr != renderer->Hdr)
+ 		{
++			// A fence covers a submit, not the present queued after it: the
++			// old swapchain and its semaphores may still be in use until the
++			// device is idle.
++			vkDeviceWaitIdle(renderer->Device.get()->device);
++
+ 			UsingVsync = renderer->UseVSync;
+ 			UsingHdr = renderer->Hdr;
+ 			renderer->Framebuffers->DestroySwapChainFramebuffers();
+@@ -119,6 +144,17 @@ void CommandBufferManager::SubmitCommands(bool present, int presentWidth, int pr
+ 		SwapChain->QueuePresent(PresentImageIndex, RenderFinishedSemaphores[PresentImageIndex].get());
+ 	}
+ 
++	if (!wait)
++	{
++		// Leave the frame in flight: the CPU goes on to the next game tick
++		// while the GPU draws this one. WaitForFrame collects it before
++		// anything touches its buffers, images or descriptors again.
++		FramePending = true;
++		PendingDrawCommands = std::move(DrawCommands);
++		PendingTransferCommands = std::move(TransferCommands);
++		return;
++	}
++
+ 	VkResult result = vkWaitForFences(renderer->Device.get()->device, 1, &RenderFinishedFence->fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+ 	if (result != VK_SUCCESS)
+ 		throw std::runtime_error("vkWaitForFences failed");
+@@ -135,6 +171,7 @@ VulkanCommandBuffer* CommandBufferManager::GetTransferCommands()
+ {
+ 	if (!TransferCommands)
+ 	{
++		WaitForFrame();
+ 		TransferCommands = CommandPool->createBuffer();
+ 		TransferCommands->begin();
+ 	}
+@@ -145,6 +182,7 @@ VulkanCommandBuffer* CommandBufferManager::GetDrawCommands()
+ {
+ 	if (!DrawCommands)
+ 	{
++		WaitForFrame();
+ 		DrawCommands = CommandPool->createBuffer();
+ 		DrawCommands->begin();
+ 	}
+diff --git a/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.h b/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.h
+index f1c8d83..4238dd8 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.h
++++ b/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.h
+@@ -11,7 +11,12 @@ public:
+ 	~CommandBufferManager();
+ 
+ 	void WaitForTransfer();
+-	void SubmitCommands(bool present, int presentWidth, int presentHeight, bool presentFullscreen);
++	void SubmitCommands(bool present, int presentWidth, int presentHeight, bool presentFullscreen, bool wait = true);
++
++	// Waits for a frame SubmitCommands left in flight (wait = false), if there
++	// is one. Anything that writes a buffer, image or descriptor the GPU may
++	// still be reading calls this first.
++	void WaitForFrame();
+ 	VulkanCommandBuffer* GetTransferCommands();
+ 	VulkanCommandBuffer* GetDrawCommands();
+ 	void DeleteFrameObjects();
+@@ -40,4 +45,9 @@ private:
+ 	std::unique_ptr<VulkanCommandPool> CommandPool;
+ 	std::unique_ptr<VulkanCommandBuffer> DrawCommands;
+ 	std::unique_ptr<VulkanCommandBuffer> TransferCommands;
++
++	// The frame in flight: its command buffers live until its fence signals.
++	bool FramePending = false;
++	std::unique_ptr<VulkanCommandBuffer> PendingDrawCommands;
++	std::unique_ptr<VulkanCommandBuffer> PendingTransferCommands;
+ };
+diff --git a/SurrealEngine/RenderDevice/Vulkan/UploadManager.cpp b/SurrealEngine/RenderDevice/Vulkan/UploadManager.cpp
+index 09fbaae..781248c 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/UploadManager.cpp
++++ b/SurrealEngine/RenderDevice/Vulkan/UploadManager.cpp
+@@ -25,6 +25,9 @@ bool UploadManager::SupportsTextureFormat(TextureFormat Format) const
+ 
+ void UploadManager::UploadTexture(CachedTexture* tex, const TextureInfo& Info, bool masked)
+ {
++	// The upload buffer is reused from offset 0 after every submit
++	renderer->Commands->WaitForFrame();
++
+ 	int width = Info.USize;
+ 	int height = Info.VSize;
+ 	int mipcount = Info.NumMips;
+@@ -69,6 +72,8 @@ void UploadManager::UploadTexture(CachedTexture* tex, const TextureInfo& Info, b
+ 
+ void UploadManager::UploadTextureRect(CachedTexture* tex, const TextureInfo& Info, int x, int y, int w, int h)
+ {
++	renderer->Commands->WaitForFrame();
++
+ 	TextureUploader* uploader = TextureUploader::GetUploader(Info.Format, renderer->Device->PhysicalDevice.Device);
+ 	if (!uploader || Info.NumMips < 1 || x < 0 || y < 0 || w <= 0 || h <= 0 || x + w > Info.Mips[0].Width || y + h > Info.Mips[0].Height || Info.Mips[0].Data.empty())
+ 		return;
+diff --git a/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.cpp b/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.cpp
+index c642bae..dd6e437 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.cpp
++++ b/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.cpp
+@@ -113,11 +113,16 @@ void VulkanError(const char* text)
+ }
+ 
+ void VulkanRenderDevice::SubmitAndWait(bool present, int presentWidth, int presentHeight, bool presentFullscreen)
++{
++	Submit(present, presentWidth, presentHeight, presentFullscreen, true);
++}
++
++void VulkanRenderDevice::Submit(bool present, int presentWidth, int presentHeight, bool presentFullscreen, bool wait)
+ {
+ 	if (SupportsBindless)
+ 		DescriptorSets->UpdateBindlessSet();
+ 
+-	Commands->SubmitCommands(present, presentWidth, presentHeight, presentFullscreen);
++	Commands->SubmitCommands(present, presentWidth, presentHeight, presentFullscreen, wait);
+ 
+ 	Batch.SceneIndexStart = 0;
+ 	SceneVertexPos = 0;
+@@ -174,6 +179,9 @@ void VulkanRenderDevice::Flush(bool AllowPrecache)
+ 
+ void VulkanRenderDevice::Lock(vec4 InFlashScale, vec4 InFlashFog, vec4 ScreenClear, uint8_t* InHitData, int* InHitSize)
+ {
++	// The previous frame may still be drawing (Unlock does not wait for it).
++	Commands->WaitForFrame();
++
+ 	HitData = InHitData;
+ 	HitSize = InHitSize;
+ 
+@@ -276,13 +284,16 @@ void VulkanRenderDevice::Unlock(bool Blit)
+ 	int windowWidth = Viewport->GetNativePixelWidth();
+ 	int windowHeight = Viewport->GetNativePixelHeight();
+ 
+-	SubmitAndWait(Blit ? true : false, windowWidth, windowHeight, Viewport->IsFullscreen());
++	// Leave the frame in flight, so the next game tick runs while the GPU
++	// draws -- unless the hit buffer has to be read back right away.
++	Submit(Blit ? true : false, windowWidth, windowHeight, Viewport->IsFullscreen(), HitData != nullptr);
+ 
+ 	Batch.Pipeline = nullptr;
+ 	Batch.DescriptorSet = nullptr;
+ 
+ 	if (Samplers->LODBias != LODBias)
+ 	{
++		Commands->WaitForFrame();
+ 		DescriptorSets->ClearCache();
+ 		Textures->ClearAllBindlessIndexes();
+ 		Samplers->CreateSceneSamplers();
+@@ -1010,6 +1021,7 @@ void VulkanRenderDevice::PrecacheTexture(TextureInfo& Info, uint32_t PolyFlags)
+ 
+ void VulkanRenderDevice::ClearTextureCache()
+ {
++	Commands->WaitForFrame();
+ 	Batch.DescriptorSet = nullptr;
+ 	DescriptorSets->ClearCache();
+ 	Textures->ClearCache();
+diff --git a/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.h b/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.h
+index a629e9f..17d0a25 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.h
++++ b/SurrealEngine/RenderDevice/Vulkan/VulkanRenderDevice.h
+@@ -148,6 +148,7 @@ private:
+ 	ivec4 GetTextureIndexes(uint32_t PolyFlags, CachedTexture* tex, CachedTexture* lightmap, CachedTexture* macrotex, CachedTexture* detailtex);
+ 	void DrawBatch(VulkanCommandBuffer* cmdbuffer);
+ 	void SubmitAndWait(bool present, int presentWidth, int presentHeight, bool presentFullscreen);
++	void Submit(bool present, int presentWidth, int presentHeight, bool presentFullscreen, bool wait);
+ 
+ 	vec4 ApplyInverseGamma(vec4 color);
+ 
+-- 
+2.55.0
+

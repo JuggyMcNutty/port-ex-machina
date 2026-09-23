@@ -221,7 +221,7 @@ index 818aa65..ce2144c 100644
  	DrawOpaqueNodes();
  	DrawOpaqueActors();
 diff --git a/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp b/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp
-index 118f3de..bf71562 100644
+index 355b96a..5e424ce 100644
 --- a/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp
 +++ b/SurrealEngine/RenderDevice/Vulkan/CommandBufferManager.cpp
 @@ -1,6 +1,7 @@
@@ -232,7 +232,15 @@ index 118f3de..bf71562 100644
  #include "VulkanRenderDevice.h"
  #include <surrealgpu/vulkanswapchain.h>
  
-@@ -44,6 +45,7 @@ void CommandBufferManager::WaitForTransfer()
+@@ -37,6 +38,7 @@ void CommandBufferManager::WaitForFrame()
+ 	if (!FramePending)
+ 		return;
+ 
++	PerfLog::Scope perfWait(PerfLog::GpuWait); // TEMPORARY DEBUG TOOL
+ 	VkResult result = vkWaitForFences(renderer->Device.get()->device, 1, &RenderFinishedFence->fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
+ 	if (result != VK_SUCCESS)
+ 		throw std::runtime_error("vkWaitForFences failed");
+@@ -63,6 +65,7 @@ void CommandBufferManager::WaitForTransfer()
  			.AddCommandBuffer(TransferCommands.get())
  			.Execute(renderer->Device.get(), renderer->Device.get()->GraphicsQueue, RenderFinishedFence.get());
  
@@ -240,7 +248,7 @@ index 118f3de..bf71562 100644
  		VkResult result = vkWaitForFences(renderer->Device.get()->device, 1, &RenderFinishedFence->fence, VK_TRUE, std::numeric_limits<uint64_t>::max());
  		if (result != VK_SUCCESS)
  			throw std::runtime_error("vkWaitForFences failed");
-@@ -78,7 +80,9 @@ void CommandBufferManager::SubmitCommands(bool present, int presentWidth, int pr
+@@ -103,7 +106,9 @@ void CommandBufferManager::SubmitCommands(bool present, int presentWidth, int pr
  			}
  		}
  
@@ -250,8 +258,8 @@ index 118f3de..bf71562 100644
  		if (PresentImageIndex != -1)
  		{
  			renderer->DrawPresentTexture(presentWidth, presentHeight);
-@@ -119,6 +123,7 @@ void CommandBufferManager::SubmitCommands(bool present, int presentWidth, int pr
- 		SwapChain->QueuePresent(PresentImageIndex, RenderFinishedSemaphores[PresentImageIndex].get());
+@@ -155,6 +160,7 @@ void CommandBufferManager::SubmitCommands(bool present, int presentWidth, int pr
+ 		return;
  	}
  
 +	PerfLog::Scope perfWait(PerfLog::GpuWait); // TEMPORARY DEBUG TOOL

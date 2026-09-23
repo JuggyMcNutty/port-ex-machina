@@ -16,8 +16,9 @@ engine, a fork of Surreal Engine.
   Its history was rewritten before publishing (2026-09-22) to drop the game's
   files and a personal email address.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; **Liberty Island 2–3
-  FPS**, CPU-bound on NPC AI and lightmap rebuilds -- measured; the fixes and
-  a ~20 FPS target are decided, none started (Decided, not started). The framework's build was
+  FPS**, CPU-bound on NPC AI and lightmap rebuilds. The fixes and a ~20 FPS
+  target are decided (Decided); the first, CPU/GPU overlap (engine patch
+  0004), took the fight from 2.2 to 2.5 FPS. The framework's build was
   deployed and started the game on the device.
 - **linux-x86_64**: launcher and engine build natively; the staged app's
   `run-game.sh` ran the engine into the intro level on the development PC.
@@ -66,7 +67,7 @@ the other (the old CMake caches, the engine's embedded source paths). The
 container has no `libpipewire`/`libpulse`, so the engine cannot open audio in
 it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/linux-x86_64/README.md#audio)).
 
-## Decided, not started
+## Decided
 
 1. **Smart Pro performance** (owner, 2026-09-22): the target is **~20 FPS on
    Liberty Island**, and every trade-off below is accepted. 20 FPS needs the
@@ -77,8 +78,8 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    on the CPU), other render CPU ~21% (visibility 34 ms, actor meshes 25, BSP
    surfaces 14), GPU ~17% and serialised with the CPU. Order of work, by
    payoff for effort, re-measuring after each:
-   - Let CPU and GPU overlap: `CommandBufferManager::SubmitCommands` waits on
-     the fence right after submit. No visible cost; hides up to ~76 ms.
+   - ~~Let CPU and GPU overlap~~ -- done, engine patch 0004: 2.2 → 2.5 FPS.
+     The GPU wait is gone, but the tick grew ~20 ms (shared memory).
    - Lightmaps: don't re-light for short-lived flashes; spread rebuilds over
      the four cores. Flashes light characters, not walls. ~110 ms in the
      fight, re-uploads included.
