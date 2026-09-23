@@ -50,9 +50,10 @@ drift guards; `scripts/dx.sh test` the unit tests.
 
 **The device.** Address, login and the ways it bites are in
 [`ports/trimui-smartpro/README.md`](ports/trimui-smartpro/README.md). It drops
-off the network when it sleeps: ask the owner to wake it. The previous build's
-files are in `/mnt/SDCARD/App/DeusEx/.prev-20260922/` on the device, should a
-rollback be wanted. `Running.ini` is present in the game's `System/` there
+off the network when it sleeps: ask the owner to wake it. Earlier builds'
+files are in `.prev-<date>` directories of `/mnt/SDCARD/App/DeusEx/` on the
+device (named by the device's clock, newest last), should a rollback be
+wanted. `Running.ini` is present in the game's `System/` there
 (profiling runs killed with SIGKILL), so the launcher shows a crash banner
 until the next clean exit or "Clear crash marker".
 
