@@ -1,0 +1,311 @@
+From 734c6b317f0fb9c5fbb0df892ba3ccc0f6f251e2 Mon Sep 17 00:00:00 2001
+From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
+Date: Wed, 23 Sep 2026 10:28:31 -0500
+Subject: [PATCH] Meshes: each vertex of a draw computed once, not once per
+ face using it
+
+FORK ONLY. This project ships a NO-AI Code Rule asking that LLM-written
+changes stay in a fork and are never PR'd upstream. These were written with
+Claude. Do not submit them.
+
+VisibleMesh::DrawLodMeshFaceDX, the actor meshes' vertex animation on the
+CPU, was the largest render item on the handheld (~20 ms of self time a
+frame on Liberty Island's fight). For every corner of every face it
+interpolated the vertex between animation frames, added the blend
+channels, transformed it and its normal to the world, and lit and fogged
+it -- though faces share their vertices, so each vertex was done several
+times over. It also refreshed the texture's info for every face.
+
+- A vertex's position, normal, light and fog depend only on the vertex
+  within one draw (the light also on the face's unlit and two-sided
+  flags). VisibleMesh keeps them per vertex, valid for one draw
+  (CachedMeshVertex, by generation), and computes each at its first use,
+  with the same arithmetic. A vertex out of the mesh's bounds still ends
+  the draw at the face that first uses it.
+- The texture's info is reused for consecutive faces with the same
+  texture. UpdateTextureInfo hands out a texture's modified flag once and
+  clears it, so the reuse clears it too, as a second call would have.
+
+A temporary check recomputed every face's corners the old way beside the
+new: 83.5 million faces on Liberty Island, identical to the bit (points,
+UVs, light and fog), and the reused texture info identical to a fresh one.
+---
+ SurrealEngine/Render/VisibleMesh.cpp | 198 ++++++++++++++++++---------
+ SurrealEngine/Render/VisibleMesh.h   |  15 ++
+ 2 files changed, 149 insertions(+), 64 deletions(-)
+
+diff --git a/SurrealEngine/Render/VisibleMesh.cpp b/SurrealEngine/Render/VisibleMesh.cpp
+index 7f5e8ef..74788a8 100644
+--- a/SurrealEngine/Render/VisibleMesh.cpp
++++ b/SurrealEngine/Render/VisibleMesh.cpp
+@@ -928,7 +928,93 @@ bool VisibleMesh::DrawLodMeshFaceDX(VisibleFrame* frame, UActor* actor, UActor*
+ 
+ 	bool needTranslucentPass = false;
+ 
++	// Faces share their vertices, and a vertex's animated position, normal,
++	// light and fog depend only on the vertex this draw (the light also on
++	// the face's unlit and two-sided flags). Each was computed again for
++	// every face using it; now once a draw, by the same arithmetic, so the
++	// results are the same to the bit.
++	if (++vertexCacheGeneration == 0)
++	{
++		for (CachedMeshVertex& v : vertexCache)
++			v.Generation = 0;
++		vertexCacheGeneration = 1;
++	}
++	if (vertexCache.size() < (size_t)mesh->FrameVerts)
++		vertexCache.resize(mesh->FrameVerts);
++	const uint32_t generation = vertexCacheGeneration;
++
++	// The vertex's position and normal in the world; false if the mesh's data is out of bounds
++	auto animateVertex = [&](size_t vindex, vec3& point, vec3& worldNormal) -> bool
++	{
++		size_t vindex0 = vindex + vertexOffsets[0];
++		size_t vindex1 = vindex + vertexOffsets[1];
++
++		if (vindex0 >= mesh->Verts.size() || vindex1 >= mesh->Verts.size())
++			return false; // out of bounds
++
++		const vec3& v0 = mesh->Verts[vindex0];
++		const vec3& v1 = mesh->Verts[vindex1];
++		const vec3& n0 = mesh->Normals[vindex0];
++		const vec3& n1 = mesh->Normals[vindex1];
++		vec3 vertex = mix(v0 + n0 * fatness, v1 + n1 * fatness, t0);
++		vec3 normal = mix(n0, n1, t0);
++		if (t1 != 0.0f)
++		{
++			size_t vindex2 = vindex + vertexOffsets[2];
++			if (vindex2 >= mesh->Verts.size())
++				return false; // out of bounds
++
++			const vec3& v2 = mesh->Verts[vindex2];
++			const vec3& n2 = mesh->Normals[vindex2];
++			vertex = mix(vertex, v2 + n2 * fatness, t1);
++			normal = mix(normal, n2, t1);
++		}
++		vec3 restPose = mesh->Verts[vindex];
++		vec3 restNormal = mesh->Normals[vindex];
++		for (int j = 0; j < blendCount; j++)
++		{
++			BlendInfo& b = blends[j];
++			if (b.weight > 0.0f)
++			{
++				size_t blendVindex0 = vindex + b.offsets[0];
++				size_t blendVindex1 = vindex + b.offsets[1];
++
++				if (blendVindex0 >= mesh->Verts.size() || blendVindex1 >= mesh->Verts.size())
++					continue;
++
++				const vec3& bv0 = mesh->Verts[blendVindex0];
++				const vec3& bv1 = mesh->Verts[blendVindex1];
++				const vec3& bn0 = mesh->Normals[blendVindex0];
++				const vec3& bn1 = mesh->Normals[blendVindex1];
++
++				vec3 blendVertex = mix(bv0, bv1, b.t0);
++				vec3 blendNormal = mix(bn0, bn1, b.t0);
++
++				if (b.t1 != 0.0f)
++				{
++					size_t blendVindex2 = vindex + b.offsets[2];
++					if (blendVindex2 >= mesh->Verts.size())
++						continue;
++
++					const vec3& bv2 = mesh->Verts[blendVindex2];
++					const vec3& bn2 = mesh->Normals[blendVindex2];
++					blendVertex = mix(blendVertex, bv2, b.t1);
++					blendNormal = mix(blendNormal, bn2, b.t1);
++				}
++
++				vertex += (blendVertex - restPose) * b.weight;
++				normal += (blendNormal - restNormal) * b.weight;
++			}
++		}
++
++		point = (ObjectToWorld * vec4(vertex, 1.0f)).xyz();
++		worldNormal = normalize(ObjectNormalToWorld * normal);
++		return true;
++	};
++
+ 	GouraudVertex vertices[3];
++	TextureInfo texinfo;
++	UTexture* texinfoTexture = nullptr;
+ 	for (const MeshFace& face : faces)
+ 	{
+ 		if (face.MaterialIndex >= mesh->Materials.size())
+@@ -960,85 +1046,54 @@ bool VisibleMesh::DrawLodMeshFaceDX(VisibleFrame* frame, UActor* actor, UActor*
+ 
+ 		engine->render->UpdateTexture(tex);
+ 
+-		TextureInfo texinfo;
+-		engine->render->UpdateTextureInfo(texinfo, tex);
++		// The texture's info again for the next face with it, as UpdateTextureInfo
++		// would give it: its modified flag is handed out once and cleared.
++		if (tex != texinfoTexture)
++		{
++			texinfo = {};
++			engine->render->UpdateTextureInfo(texinfo, tex);
++			texinfoTexture = tex;
++		}
++		else
++		{
++			texinfo.bRealtimeChanged = false;
++		}
+ 
+ 		float uscale = (texinfo.Texture ? texinfo.Texture->UsedMipmaps.front().Width : 256) * (1.0f / 255.0f);
+ 		float vscale = (texinfo.Texture ? texinfo.Texture->UsedMipmaps.front().Height : 256) * (1.0f / 255.0f);
+ 
++		bool unlit = !!(renderflags & PF_Unlit);
++		bool twosided = !!(renderflags & PF_TwoSided);
++		uint32_t lightKey = 1 | (unlit ? 2 : 0) | (twosided ? 4 : 0);
++
+ 		vec3 normals[3];
++		CachedMeshVertex* cached[3] = {};
+ 		for (int i = 0; i < 3; i++)
+ 		{
+ 			const MeshWedge& wedge = mesh->Wedges[face.Indices[i]];
+ 
+ 			size_t vbase = (size_t)wedge.Vertex + baseVertexOffset;
+ 			size_t vindex = mesh->ReMapAnimVerts.empty() ? vbase : mesh->ReMapAnimVerts[vbase];
+-			size_t vindex0 = vindex + vertexOffsets[0];
+-			size_t vindex1 = vindex + vertexOffsets[1];
+-
+-			if (vindex0 >= mesh->Verts.size() || vindex1 >= mesh->Verts.size())
+-				return false; // out of bounds
+-
+-			const vec3& v0 = mesh->Verts[vindex0];
+-			const vec3& v1 = mesh->Verts[vindex1];
+-			const vec3& n0 = mesh->Normals[vindex0];
+-			const vec3& n1 = mesh->Normals[vindex1];
+-			vec3 vertex = mix(v0 + n0 * fatness, v1 + n1 * fatness, t0);
+-			vec3 normal = mix(n0, n1, t0);
+-			if (t1 != 0.0f)
+-			{
+-				size_t vindex2 = vindex + vertexOffsets[2];
+-				if (vindex2 >= mesh->Verts.size())
+-					return false; // out of bounds
+ 
+-				const vec3& v2 = mesh->Verts[vindex2];
+-				const vec3& n2 = mesh->Normals[vindex2];
+-				vertex = mix(vertex, v2 + n2 * fatness, t1);
+-				normal = mix(normal, n2, t1);
+-			}
+-			vec3 restPose = mesh->Verts[vindex];
+-			vec3 restNormal = mesh->Normals[vindex];
+-			for (int j = 0; j < blendCount; j++)
++			if (vindex < vertexCache.size())
+ 			{
+-				BlendInfo& b = blends[j];
+-				if (b.weight > 0.0f)
++				CachedMeshVertex& c = vertexCache[vindex];
++				if (c.Generation != generation)
+ 				{
+-					size_t blendVindex0 = vindex + b.offsets[0];
+-					size_t blendVindex1 = vindex + b.offsets[1];
+-
+-					if (blendVindex0 >= mesh->Verts.size() || blendVindex1 >= mesh->Verts.size())
+-						continue;
+-
+-					const vec3& bv0 = mesh->Verts[blendVindex0];
+-					const vec3& bv1 = mesh->Verts[blendVindex1];
+-					const vec3& bn0 = mesh->Normals[blendVindex0];
+-					const vec3& bn1 = mesh->Normals[blendVindex1];
+-
+-					vec3 blendVertex = mix(bv0, bv1, b.t0);
+-					vec3 blendNormal = mix(bn0, bn1, b.t0);
+-
+-					if (b.t1 != 0.0f)
+-					{
+-						size_t blendVindex2 = vindex + b.offsets[2];
+-						if (blendVindex2 >= mesh->Verts.size())
+-							continue;
+-
+-						const vec3& bv2 = mesh->Verts[blendVindex2];
+-						const vec3& bn2 = mesh->Normals[blendVindex2];
+-						blendVertex = mix(blendVertex, bv2, b.t1);
+-						blendNormal = mix(blendNormal, bn2, b.t1);
+-					}
+-
+-					vertex += (blendVertex - restPose) * b.weight;
+-					normal += (blendNormal - restNormal) * b.weight;
++					if (!animateVertex(vindex, c.Point, c.Normal))
++						return false;
++					c.Generation = generation;
++					c.LightKey = 0;
+ 				}
++				vertices[i].Point = c.Point;
++				normals[i] = c.Normal;
++				cached[i] = &c;
++			}
++			else if (!animateVertex(vindex, vertices[i].Point, normals[i]))
++			{
++				return false;
+ 			}
+-
+-
+-
+-			vertices[i].Point = (ObjectToWorld * vec4(vertex, 1.0f)).xyz();
+ 			vertices[i].UV = { wedge.U * uscale, wedge.V * vscale };
+-			normals[i] = normalize(ObjectNormalToWorld * normal);
+ 		}
+ 
+ 		if (renderflags & PF_Environment)
+@@ -1054,8 +1109,23 @@ bool VisibleMesh::DrawLodMeshFaceDX(VisibleFrame* frame, UActor* actor, UActor*
+ 
+ 		for (int i = 0; i < 3; i++)
+ 		{
+-			vertices[i].Light = vertexLight.GetVertexLight(vertices[i].Point, normals[i], !!(renderflags & PF_Unlit), !!(renderflags & PF_TwoSided));
+-			vertices[i].Fog = vertexLight.GetVertexFog(vertices[i].Point);
++			CachedMeshVertex* c = cached[i];
++			if (c && c->LightKey == lightKey)
++			{
++				vertices[i].Light = c->Light;
++				vertices[i].Fog = c->Fog;
++			}
++			else
++			{
++				vertices[i].Light = vertexLight.GetVertexLight(vertices[i].Point, normals[i], unlit, twosided);
++				vertices[i].Fog = vertexLight.GetVertexFog(vertices[i].Point);
++				if (c)
++				{
++					c->Light = vertices[i].Light;
++					c->Fog = vertices[i].Fog;
++					c->LightKey = lightKey;
++				}
++			}
+ 		}
+ 
+ 		renderflags |= PF_RenderFog;
+diff --git a/SurrealEngine/Render/VisibleMesh.h b/SurrealEngine/Render/VisibleMesh.h
+index 5c6bbe1..da36f4b 100644
+--- a/SurrealEngine/Render/VisibleMesh.h
++++ b/SurrealEngine/Render/VisibleMesh.h
+@@ -16,6 +16,18 @@ struct BlendInfo
+ 	float weight;
+ };
+ 
++// One vertex of a mesh as DrawLodMeshFaceDX last computed it: valid for the
++// draw whose Generation it holds, its light and fog for the LightKey's flags.
++struct CachedMeshVertex
++{
++	uint32_t Generation = 0;
++	uint32_t LightKey = 0;
++	vec3 Point;
++	vec3 Normal;
++	vec3 Light;
++	vec4 Fog;
++};
++
+ class VisibleMesh
+ {
+ public:
+@@ -36,4 +48,7 @@ private:
+ 	void FindAttachmentPoints(ULodMesh* mesh, const mat4& ObjectToWorld, const int* vertexOffsets, float t0, float t1);
+ 
+ 	Array<vec3> attachmentTris;
++
++	Array<CachedMeshVertex> vertexCache;
++	uint32_t vertexCacheGeneration = 0;
+ };
+-- 
+2.55.0
+

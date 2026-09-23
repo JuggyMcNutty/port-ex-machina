@@ -59,6 +59,10 @@ per patch file:
   cache (`568646c`).
 - `0017-vm-leaf-expressions.patch` — the commonest leaf expressions made
   without the visitor (`8843675`).
+- `0018-mesh-vertices-once.patch` — each vertex of a mesh draw animated, lit
+  and fogged once, not once per face using it (`734c6b3`).
+- `0019-mesh-face-batches.patch` — a run of mesh faces with one texture drawn
+  in one device call (`587ce9c`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -674,6 +678,50 @@ bool constants. Each went through the visitor's two indirect calls, set
 `Expression::Leaf` tags those node types and `ExpressionEvaluator::Value`
 makes their values directly, exactly as their `Expr` functions do; none
 can throw, so none needs to be the debugger's `StepExpression`.
+
+## Patch 0018 — each mesh vertex once a draw
+
+Fork commit `734c6b3`. On the Smart Pro the actor meshes went from ~28 to
+~14 ms a frame, render CPU from ~92 to ~80 ms, and the fight from 6.0 to 6.6
+FPS.
+
+### 36. A vertex cache per draw
+
+`VisibleMesh::DrawLodMeshFaceDX`, the actor meshes' vertex animation on the
+CPU, interpolated, blended, transformed, lit and fogged the vertex of every
+corner of every face, though faces share vertices. Within one draw a
+vertex's position, normal, light and fog depend only on the vertex (the
+light also on the face's unlit and two-sided flags), so `VisibleMesh` keeps
+them per vertex for the draw (`CachedMeshVertex`, by generation) and
+computes each at its first use, with the same arithmetic; a vertex out of
+the mesh's bounds still ends the draw at the face that first uses it. The
+texture's info is reused for consecutive faces with the same texture, its
+modified flag cleared as a second `UpdateTextureInfo` would have. A
+temporary check recomputed every face's corners the old way beside the
+new: 83.5 million faces on Liberty Island, identical to the bit.
+
+## Patch 0019 — mesh faces in runs
+
+Fork commit `587ce9c`. On the Smart Pro the actor meshes went from ~14 to
+~12 ms a frame and the fight to 6.7 FPS.
+
+### 37. One device call per run of faces
+
+Each face then went to the device on its own, which chose a pipeline,
+looked the texture up (a hash map, and a re-upload check), found its
+descriptor set and reserved vertex space -- the same for every face of a
+material. `RenderDevice::DrawGouraudTriangles` draws a run of triangles
+with one texture and one set of flags; its default is one
+`DrawGouraudPolygon` each, so the OpenGL and D3D11 devices are as they were,
+and the Vulkan device sets up once and writes the same vertices and
+indices in the same order (`WriteGouraudVertices` is shared). The texture's
+modified flag goes with the first triangle, as it did. `DrawLodMeshFaceDX`
+draws its run when the texture or flags change, at the end and before its
+out-of-bounds returns, so every face is drawn in the order and at the point
+it was. Vulkan validation, with synchronization validation, is clean on
+Liberty Island on both texture paths, and a capture of the dock matches the
+one from before patch 0012 except where time moves things (the sky, the
+NPCs, the stats): the statue and props are identical to the pixel.
 
 ## Running it headlessly
 

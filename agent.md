@@ -16,10 +16,10 @@ engine, a fork of Surreal Engine.
   Its history was rewritten before publishing (2026-09-22) to drop the game's
   files and a personal email address.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; Liberty Island's opening
-  firefight **6.0 FPS** at native resolution, 7.0 at 853×480 (2.2 before engine
-  patches 0004–0017), still CPU-bound on NPC AI and render CPU; UNATCO HQ
+  firefight **6.7 FPS** at native resolution, 7.9 at 853×480 (2.2 before engine
+  patches 0004–0019), still CPU-bound on NPC AI and render CPU; UNATCO HQ
   indoors ~20. The target is ~20 FPS in the fight (Decided). The device has
-  the current build: patches 0001–0017, Overclock, Distant AI on, native
+  the current build: patches 0001–0019, Overclock, Distant AI on, native
   resolution.
 - **linux-x86_64**: launcher and engine build natively; the staged app's
   `run-game.sh` ran the engine into the intro level on the development PC.
@@ -73,16 +73,16 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
 
 1. **Smart Pro performance** (owner, 2026-09-22): the target is **~20 FPS on
    Liberty Island** (~50 ms a frame), and every trade-off below is accepted.
-   Now 6.0 FPS at native resolution (~166 ms) and 7.0 at 853×480, facing the
+   Now 6.7 FPS at native resolution (~149 ms) and 7.9 at 853×480, facing the
    fight in overclock. Where it goes is in
-   [its README](ports/trimui-smartpro/README.md#performance): game tick ~69 ms
+   [its README](ports/trimui-smartpro/README.md#performance): game tick ~67 ms
    (NPC AI: ~27 ms under script calls, ~21 ms collision traces, ~12 ms
-   per-actor work), render CPU ~83 ms (actor meshes ~26, visibility ~21, BSP
-   surfaces 11), lightmaps and their uploads ~8 ms; the GPU (~76 ms) overlaps
-   the tick, which is now the shorter of the two, so at native resolution
-   the rest of the frame shares memory with a busy GPU and tick savings
-   show less in the frame. 20 FPS needs the script VM several times faster,
-   so the deep VM work is in scope.
+   per-actor work), render CPU ~68 ms (visibility ~21, actor meshes ~12, BSP
+   surfaces 11), lightmaps and their uploads ~8 ms. The GPU (~76 ms)
+   overlaps the tick, which is now the shorter of the two: at native
+   resolution the render waits ~3 ms for the GPU and tick savings show less
+   in the frame; at 853×480 they show in full. 20 FPS needs the script VM
+   several times faster, so the deep VM work is in scope.
 
    Done, one engine patch each, measured: CPU/GPU overlap (0004); lightmaps
    lit only where a light reaches (0005 -- the cost was a burning barrel's
@@ -97,7 +97,9 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    had been ~16 ms of the device's tick); script calls without heap
    allocations or walks over every local (0014); the commonest operators
    evaluated in place (0015); events found through the virtual-call cache
-   (0016); the commonest leaf expressions made without the visitor (0017).
+   (0016); the commonest leaf expressions made without the visitor (0017);
+   each mesh vertex animated and lit once a draw, not once per face (0018);
+   mesh faces handed to the device in runs (0019).
    [engine-patches/README.md](engine-patches/README.md) has what each found.
 
    Next, in order, re-measuring after each:
@@ -118,11 +120,12 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
      animation and event lookups over ~2,500 actors a frame), and the audio
      update's scan of every actor for an ambient sound (~2 ms,
      `USurrealAudioDevice::StartAmbience`).
-   - **Actor meshes** (~27 ms, now the largest render item): vertex
-     animation on the CPU (`VisibleMesh::DrawLodMeshFaceDX`, the desktop
-     profile's top render function).
-   - **Visibility** (~21 ms): ~2,400 surface tests a frame against the
-     occlusion grid are most of it (the profile splits it by part).
+   - **Actor meshes** (done, 0018–0019: ~27 → ~12 ms). What remains is
+     the per-vertex work itself (~8 ms, lighting most of it) and the
+     device's set-up per run of faces.
+   - **Visibility** (~21 ms, now the largest render item): ~2,400 surface
+     tests a frame against the occlusion grid are most of it (the profile
+     splits it by part).
    - A second tier of AI level of detail (every sixth frame beyond, say,
      4000 units).
    - **Lightmap uploads** (~4 ms since patch 0011): a rebuilt lightmap is
