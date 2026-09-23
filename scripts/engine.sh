@@ -29,10 +29,16 @@ cmd_fetch() {
     mkdir -p "$(dirname "$ENGINE_DIR")"
     git clone "$UPSTREAM" "$ENGINE_DIR"
     eng checkout -b "$BRANCH" "$(base)"
-    # Keeping the author date as the committer date keeps the commit ids the
-    # patch files record, when the committer is the same person.
-    eng am --committer-date-is-author-date "$PATCHES"/[0-9][0-9][0-9][0-9]-*.patch
-    say "engine ready: $ENGINE_DIR ($BRANCH)"
+    # Each fork commit was committed by its author at its author date, so
+    # applying a patch with that identity and date reproduces the commit id
+    # the patch records -- on any machine, whatever its git identity.
+    local p from
+    for p in "$PATCHES"/[0-9][0-9][0-9][0-9]-*.patch; do
+        from=$(sed -n 's/^From: //p' "$p" | head -n 1)
+        GIT_COMMITTER_NAME="${from% <*}" GIT_COMMITTER_EMAIL="$(printf '%s' "$from" | sed 's/.*<\(.*\)>.*/\1/')" \
+            eng am --committer-date-is-author-date "$p"
+    done
+    say "engine ready: $ENGINE_DIR ($BRANCH at $(eng rev-parse --short HEAD))"
 }
 
 # Cross builds need a zipdir that runs here: it packs the resource zip at
@@ -71,9 +77,10 @@ cmd_build() {
 }
 
 # A patch file is its commit's format-patch output. Compared without the
-# first line (the commit id, which a re-applied series changes) and the git
-# version signature at the end.
-normalize() { sed -e '1d' -e '/^-- $/,$d'; }
+# first line (the commit id), the "index" lines (git abbreviates blob ids
+# longer as a repository grows, so the same diff prints differently in a
+# fuller clone) and the git version signature at the end.
+normalize() { sed -e '1d' -e '/^index [0-9a-f]*\.\.[0-9a-f]*/d' -e '/^-- $/,$d'; }
 
 cmd_check() {
     [ -d "$ENGINE_DIR/.git" ] || die "no engine clone -- scripts/engine.sh fetch"
