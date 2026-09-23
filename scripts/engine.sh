@@ -9,7 +9,7 @@
 #   scripts/engine.sh perf on|off|save        apply/revert engine-patches/optional/perf-instrumentation.patch;
 #                                             save writes it from the tree (after re-basing the hooks)
 #
-# The fork stays a fork: see engine-patches/README.md before sharing any of it.
+# The fork stays a fork: see docs/ENGINE.md before sharing any of it.
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 

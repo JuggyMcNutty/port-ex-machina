@@ -1,25 +1,27 @@
 # Porting
 
-How a device becomes a port. The launcher and the engine fork are shared; a
-port is the small set of facts and scripts that differ for one device, in
-`ports/<id>/`. The design reasons behind the launcher are in
-[`DESIGN.md`](DESIGN.md); the ports that exist are listed in the
-[root README](../README.md#ports).
+How a device becomes a port. The launcher and the engine fork are shared, and
+**linux-x86_64 is the base**: the project is developed and tested there
+([`DEVELOPMENT.md`](DEVELOPMENT.md)), it is the generic device profile and
+`ports/common/packaging` with nothing laid over them, and every other port
+starts from it. A port is the small set of facts and scripts that differ for
+one device, in `ports/<id>/`. The launcher is [`LAUNCHER.md`](LAUNCHER.md); the
+ports that exist are listed in the [root README](../README.md#ports).
 
 ## The layers
 
 | Layer | Where | Changes per port? |
 |---|---|---|
-| The launcher contract (the original's entry decision, command-line parsing, crash sentinel, config seeding, `Settings.json`, pad layouts) | `src/core/` | No. C11, no SDL, no device facts |
+| The launcher's core (the entry decision, command-line parsing, crash sentinel, config seeding, `Settings.json`, pad layouts) | `src/core/` | No. C11, no SDL, no device facts |
 | The device profile | `src/platform/target.h`; `ports/<id>/target.c` | Data only: a port may supply one |
 | The OS: handing over to the game, the GPU probe | `src/platform/launch.h`, `src/platform/posix/` | Only for a non-POSIX platform (below) |
 | The screens | `src/ui/` (SDL2) | No |
 | The engine | the fork in `engine/SurrealEngine`, patches in `engine-patches/` | Built per port from `ports/<id>/engine.cmake` |
-| The app around the binaries | `ports/common/packaging/` + `ports/<id>/packaging/` | The port's files are laid over the common ones |
+| The app around the binaries | `ports/common/packaging/` (the base app, what linux-x86_64 ships) + `ports/<id>/packaging/` | The port's files are laid over the base |
 
 ## What a port is
 
-A port directory holds **only what differs** from the common ground:
+A port directory holds **only what differs** from linux-x86_64:
 
 | File | Purpose | Required |
 |---|---|---|
@@ -70,9 +72,11 @@ only when missing.
    (`probe-sdl.c --pad`); the screen size; the fonts on the system; what the
    device's own frontend expects an app to look like; how its CPU governor is
    managed.
-2. **Start from the nearest port.** A device running an ordinary distro is
-   `linux-aarch64` or `linux-x86_64` (often nothing more than a new name). A
-   vendor-firmware handheld is `trimui-smartpro`.
+2. **Start from linux-x86_64**, and keep only what differs. A device running
+   an ordinary distro is often nothing more than a new name (`linux-aarch64`
+   is linux-x86_64 built for another architecture). For a vendor-firmware
+   handheld -- cross-built against the device's own libraries, its own frontend
+   and CPU modes -- `trimui-smartpro` shows what the differences look like.
 3. **Pick a toolchain whose glibc is at or below the device's** -- one newer
    symbol and the binary will not load (see the Smart Pro's README for how that
    was found). Bootlin publishes many; `dx_fetch_bootlin <name> <ceiling>` in
@@ -92,9 +96,10 @@ only when missing.
 7. **Write `packaging/`**: what the device's frontend needs to list and start
    the app, `port-hooks.sh` for its library path and CPU modes, a
    `launcher.ini` with the usual `GameDir`.
-8. **Add the preset**, then `scripts/dx.sh build`, `stage`, `deploy`, and record
-   what was verified in the port's `README.md`.
-9. **`scripts/dx.sh check`** and **`scripts/dx.sh test`** must pass.
+8. **Add the preset**, then `scripts/dx.sh build`, `stage`, `deploy`, and write
+   the port's `README.md` (below).
+9. **`scripts/dx.sh check`** and **`scripts/dx.sh test`** must pass
+   ([the drift guards](DEVELOPMENT.md#drift-guards)).
 
 ## Device probes
 
@@ -133,17 +138,17 @@ app's process -- and more besides: [`../ports/android/README.md`](../ports/andro
 **Windows** would need win32 versions of all five; the original binary's own
 answers to the same questions are in [`re/porting-notes.md`](re/porting-notes.md).
 
-## Drift guards
+## A port's README
 
-Docs and scripts that describe the tree are checked against it, so a move or a
-rename fails loudly instead of leaving stale instructions:
+Every port's `README.md` has the same sections, in this order, leaving out any
+that do not apply:
 
-- `scripts/check-docs.sh` (also the `docs_paths` test): every repository path
-  a doc names in backticks or links must exist.
-- `scripts/engine.sh check`: the fork's commits over `UPSTREAM-BASE.txt` are
-  exactly `engine-patches/*.patch`, in order.
-- `test_target_<port>`: each CPU mode a profile offers is handled by its
-  `port-hooks.sh`, the hooks' fallback (`CPU_MODE_DEFAULT`) is the profile's
-  default, and the profile's id is its port's.
-- `scripts/dx.sh check` runs the first two, confirms every port has its
-  required files, and checks the glibc ceiling of whatever is staged.
+| Section | Holds |
+|---|---|
+| **Status** | one paragraph: what runs, what does not yet |
+| **Build and run** | the commands, where things live on the device, how to reach it |
+| **What differs from linux-x86_64** | the port's files, and why each difference was needed |
+| **The device, as measured** | what was probed, not assumed |
+| **Verified** | what was checked on real hardware, dated |
+| **Performance** | where it is measured: the numbers and how to take them |
+| **Gotchas** | what bit on this device |

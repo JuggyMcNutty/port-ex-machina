@@ -6,7 +6,7 @@
  * those formats. This prints optimalTilingFeatures for every format the
  * uploaders can pick, sampled-image and filter-linear bits included.
  *
- * Build and run: see docs/DESIGN.md "Device probes" (same recipe as
+ * Build and run: see docs/PORTING.md "Device probes" (same recipe as
  * probe-vulkan-caps.c).
  */
 #include <vulkan/vulkan.h>

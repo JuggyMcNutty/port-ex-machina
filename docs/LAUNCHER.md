@@ -1,22 +1,22 @@
-# Design notes
+# The launcher
 
-Companion to the reverse-engineering spec in [`re/`](re/). That folder says what
-`DeusEx.exe` *does*; this file records what the launcher does differently, and
-why. It is about the launcher on any device; what one device needed is in its
-port's README (the Smart Pro's: [`../ports/trimui-smartpro/README.md`](../ports/trimui-smartpro/README.md)),
-and how a device becomes a port is [`PORTING.md`](PORTING.md).
+`deusex-launcher` is what a player starts, in place of the game's
+`System/DeusEx.exe`: a tabbed home screen, driven by a pad or the keyboard, that
+writes the configuration the engine actually reads and then hands over to it.
+`dxl-cli` runs the same sequence with no display. It is C11 and SDL2, and the
+same on every port; what differs per device is in [`PORTING.md`](PORTING.md).
 
-The launcher began as a faithful reimplementation of that binary's wizard. On
-the handheld most of the wizard turned out to be decoration -- Surreal Engine
-ignores the keys and flags it set -- so it is now a controller-first launcher
-that keeps the original's *contract* (the `FirstRun` gates, the crash
-sentinel, the command-line parsing, the single-instance handoff) and replaces
-its screens with settings the engine actually reads.
+It started from the original. `DeusEx.exe` was reverse-engineered first
+([`re/`](re/)), to have known behaviour to begin from, and the launcher kept
+what still matters -- the `FirstRun` gates, the crash sentinel, the
+command-line parsing, the single-instance handoff. Its screens are new: most of
+the original's set things Surreal Engine never reads
+([what was kept and dropped](re/README.md#what-the-launcher-kept-and-dropped)).
 
 ## Where the settings actually live
 
-Surreal Engine does not read the keys the original wizard wrote. Finding out
-what it *does* read decided most of this design:
+Surreal Engine does not read the keys the original launcher wrote. Finding out
+what it *does* read decided most of the launcher:
 
 | File | What the engine takes from it | Who writes it |
 | --- | --- | --- |
@@ -52,7 +52,7 @@ So:
   by Surreal Engine's renderer or mixer**, so the original Detail page's four
   choices are gone rather than kept as switches that do nothing.
 
-## The launcher
+## The screens
 
 A home screen with four tabs, switched with L1/R1; START launches from any tab.
 
@@ -72,8 +72,8 @@ whether one can be chosen, and the picker shows both: whether the *engine build*
 has a backend for it (`renderers.ini` `EngineType`, the `Settings.json` value;
 empty means no), and whether the *device* has the API it needs (the GPU probe).
 The probe runs in a forked child with a timeout, before the display comes up,
-so a driver that crashes or hangs costs the child, not the launcher -- the
-original's reason for running `-testrendev` in a child. On the Smart Pro:
+so a driver that crashes or hangs costs the child, not the launcher (the
+original ran `-testrendev` in a child for the same reason). On the Smart Pro:
 Vulkan selectable; OpenGL ES present on the device but not in the engine;
 Software not in the engine. On a desktop with a current GPU: Vulkan and OpenGL
 selectable. The list is each port's `renderers.ini` (the desktop one is
@@ -88,15 +88,21 @@ Overclock: the menu leaves the handheld in power-save, which costs about a
 third of the frame rate ([its README](../ports/trimui-smartpro/README.md#cpu-mode)).
 A desktop offers none: the row is hidden and `CpuMode` is never written.
 
-**Launch flow** (`main.c`). The home screen opens every time; the original's
-entry decision (`core/policy.c`, unchanged) now picks *where* it opens: first
-run and `-changevideo` on Video, `-safe` on System, a surviving crash sentinel
-on Play with the cursor on Troubleshoot. `DXL_NO_HOME=1` restores the old
-"ask nothing, exec straight in" behaviour for unattended runs over SSH (it still
-shows a screen when the decision itself has a question). Leaving with Quit
-saves settings but creates no sentinel. The hand-over itself is
-`platform/launch.h`: on POSIX it execs `launcher.ini` `GameCommand`
-(`run-game.sh`) with the command line as given.
+**Launch flow** (`app.c`, shared by `main.c` and `cli_main.c`). The home screen
+opens every time; the entry decision (`core/policy.c`, the original's
+`FirstRun` gates and flags) picks *where* it opens: first run and
+`-changevideo` on Video, `-safe` on System, a surviving crash sentinel on Play
+with the cursor on Troubleshoot. `DXL_NO_HOME=1` skips the home screen for
+unattended runs over SSH (it still shows a screen when the decision itself has
+a question). Leaving with Quit saves settings but creates no sentinel.
+
+**The hand-over** (`platform/launch.h`). On POSIX the launcher execs
+`launcher.ini` `GameCommand` (default `./run-game.sh`) with the command line as
+given. Because the command is configured, the whole launcher could be verified
+before any engine existed. `run-game.sh` (`ports/common/packaging/run-game.sh`,
+adjusted by a port's `port-hooks.sh`) starts [the engine](ENGINE.md) and keeps
+the sentinel: `Running.ini` is cleared only on a clean exit, so an engine crash
+still produces the crash notice on the next launch.
 
 **The device profile** (`platform/target.h`). What the launcher needs to know
 about the device it runs on is one struct, from the port's `target.c`: the
@@ -110,9 +116,11 @@ PowerVR.
 ## Controller support
 
 **In the launcher**: d-pad/left stick move, A select, B back (on Play: quit),
-X reset the focused setting, L1/R1 tabs, START play, SELECT/MENU quit.
+X reset the focused setting, L1/R1 tabs, START play, SELECT/MENU quit. The
+keyboard does the same: arrows/WASD, Enter/Space/Z, Backspace/X, R,
+PageUp/PageDown (or `,`/`.`/Tab), P/F5, Escape/Q (`ui/ui.c`).
 
-**In the game** (engine fork, patch 0003 — see [`../engine-patches/README.md`](../engine-patches/README.md)): the SDL2
+**In the game** ([engine patch 0003](ENGINE.md#running-on-our-devices)): the SDL2
 backend exposes the pad as polled state; `GamepadInput` turns it into the UE1
 joystick keys and axes, so what each control does is ordinary `User.ini`
 `[Engine.Input]` bindings — the same table as the keyboard, editable in the
@@ -142,32 +150,7 @@ an earlier launcher applied and a later one revised is recognised and upgraded
 in `Settings.json` records the preset last applied, which is what X restores a
 single button to.
 
-## Deliberate divergences from `DeusEx.exe`
-
-| # | Original | Here | Why |
-| --- | --- | --- | --- |
-| 1 | Safe mode: eight checkboxes become flags (`-nosound`, `-nohard`, `-window`, ...) on a re-exec of the launcher; three of the eight were dead in the shipped binary | Dropped. The System tab (engine log, clear crash marker, resets) replaces it | Surreal Engine honours none of those flags. The corrected eight-box wiring existed (commit `93020da`) and was removed with the page |
-| 2 | Missing splash bitmap → assert → process dies before the wizard | No splash | Nothing to be missing (`0x109090A4`, [`re/live-verification.md`](re/live-verification.md)) |
-| 3 | `MPLAYER` / `HEAT` console commands, one `HKLM\software\mpath` read | Dropped | Services dead since ~2001; `GotoHEAT.exe` is not shipped. [`re/porting-notes.md`](re/porting-notes.md) |
-| 4 | `.ICD`→`.EXE` rewrite in `InitPathnames` | Dropped | SafeDisc artifact; the GOG build is not wrapped |
-| 5 | `-make` rejected with a fatal error | Dropped | Points at `ucc`, shipped separately |
-| 6 | Renderer page runs Win32 3D device detection, re-execing itself per candidate, and writes `GameRenderDevice` | Crash-isolated GPU probe (forked child); choice written to `Settings.json` `RenderDevice.Type` | Surreal Engine overrides `GameRenderDevice`. `-testrendev` is still parsed; `dxl-cli --probe` is its replacement |
-| 7 | `CreateMutex` + `FindWindowEx`/`WM_COPYDATA` handoff | `flock` pidfile + abstract unix socket | Same protocol (one string, the command-line tail), different transport. The four `appStrfind` bypass tokens still skip it |
-| 8 | CD check loops on `<CdPath>Textures\Palettes.utx` with a modal box | Install-validation screen | Generalises to "did the user supply the game files?", which is the actual first-run failure here |
-| 9 | Driver page (2022) names the detected Direct3D card | The renderer picker's status line (GPU, API version) | The page existed to name a D3D card and point at a driver download |
-| 10 | FirstTime page (2019) | Dropped; a first run opens on the Video tab with a note on Play | Its whole content was "Deus Ex is starting up for the first time" and a Run button |
-| 11 | Web button `ShellExecute`s a troubleshooting URL | Dropped | No browser to hand off to, and the URL is long dead |
-| 12 | Six-page modal wizard, shown only on first run, `-changevideo`, `-safe` or after a crash | Tabbed home screen on every launch; `DXL_NO_HOME=1` for the old behaviour | Settings must be reachable with a pad; a screen that appears only after a crash or a command-line flag is not |
-| 13 | Detail page (sound quality, skin/world texture detail, 640×480) writes a block of `[WinDrv.WindowsClient]`/`[Galaxy...]` keys | Dropped; the Video tab carries the engine's real options | The engine's renderer and mixer read none of those keys |
-| 14 | RecoveryMode page ("was not shut down properly") | Crash banner on Play quoting the engine's reported error; Troubleshoot opens System | The engine log can say *why* |
-| 15 | `<Game>.ini` missing: UE1's Core creates it from `Default.ini` (before the launcher runs) | The launcher does it, and also rebuilds a stub with no `[Core.System] Paths` | See "Where the settings actually live" |
-
-Reproduced as specified: the `FirstRun` gates (220/400/1100) and the
-up-only clamp, the `Running.ini` sentinel lifecycle and its create-after-UI
-ordering, the three non-equivalent command-line parsers, the single-instance
-handoff.
-
-## What was verified, and how
+## How it is tested
 
 Host (`scripts/dx.sh test`, no display): the byte-identical ini
 round-trip on the shipped files; the three command-line parsers including the
@@ -175,43 +158,14 @@ round-trip on the shipped files; the three command-line parsers including the
 `SE-` file targeting; the JSON model and `Settings.json` rules (corrupt file
 replaced, every member written, choices validated, a member an older file
 lacks taken from the packaged default, the render resolutions offered);
-renderer resolution and
-the PowerVR MSAA rule; layouts, per-button remapping and retired-layout
-detection; argv construction for the exec; the device profiles -- the generic
-one, and each port's checked against its own `port-hooks.sh` (every CPU mode it
-offers is one the hooks handle, and the hooks fall back to its default).
+renderer resolution and the PowerVR MSAA rule; layouts, per-button remapping
+and retired-layout detection; argv construction for the exec; the device
+profiles -- the generic one, and each port's checked against its own
+`port-hooks.sh` (every CPU mode it offers is one the hooks handle, and the
+hooks fall back to its default).
 
 `dxl-shots` renders every tab and overlay headlessly at the profile's panel
 size (`DXL_WINDOW`) for review; configure a host build with
-`-DDXL_PROFILE=<port>` to see another device's screens. When the device facts
-moved into profiles, a host build with the Smart Pro's profile drew the same
-pixels as before the move.
+`-DDXL_PROFILE=<port>` to see another device's screens.
 
 What was checked on real hardware is per port, in each port's README.
-
-## The runtime behind the launcher
-
-The launcher's final step execs a **configured** command (`launcher.ini`
-`GameCommand`, default `./run-game.sh`), which is what let the whole contract be
-verified before any engine existed. `run-game.sh` starts
-[Surreal Engine](https://github.com/dpjudas/SurrealEngine), an open-source UE1
-reimplementation that recognises this build directly: our `DeusEx.exe` SHA1
-`2a933e26aa9cfb33b37f78afe21434caa031f14a` is its `DEUS_EX_1112fm` database
-entry. Fork patches and the reason they stay in a fork are in
-[`../engine-patches/`](../engine-patches/); `scripts/engine.sh` fetches, builds
-and checks the fork for any port.
-
-That script is shared by every port (`ports/common/packaging/run-game.sh`; a
-port adjusts it through its `port-hooks.sh`) and keeps the sentinel contract:
-`Running.ini` is cleared only on a clean exit, so an engine crash still
-produces the crash notice on the next launch.
-That required one fork fix — `GameApp::main` returned 0 even after catching an
-exception, so a failed start looked clean.
-
-Upstream, the engine requires `VK_EXT_descriptor_indexing` and GPU support for
-every texture format it uploads. Embedded GPUs lack both -- the Smart Pro's
-GE8300 supports descriptor indexing by none of the three available routes
-despite advertising API 1.3.225 -- so the fork has a non-bindless texture path
-and CPU decoders for the formats a GPU cannot sample
-(`engine-patches/0002-nonbindless-fallback-and-format-support.patch`). A
-desktop GPU still takes the bindless path.

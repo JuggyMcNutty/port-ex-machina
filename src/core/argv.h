@@ -7,7 +7,7 @@
  *
  * The original also re-executed itself for safe mode with a flag string built
  * from eight checkboxes. Surreal Engine honours none of those flags, so that
- * path is gone; docs/DESIGN.md records why.
+ * path is gone; docs/re/README.md records why.
  */
 #ifndef DXL_ARGV_H
 #define DXL_ARGV_H

@@ -1,18 +1,18 @@
 # Port: Android (planned)
 
+## Status
+
 Not built yet. `port.cmake` stops the configure with a pointer here, and
 `port.sh` refuses to fetch anything. This is what the port needs, in the order
 it would be done.
 
-## What is different about Android
+## What differs from linux-x86_64
 
 On Linux the launcher is a separate program that `exec`s the engine
 (`platform/posix/launch.c`). An Android app is one process around one
 `Activity`: SDL2's Java glue owns the window and calls the app's `SDL_main`.
 There is no second program to start -- the engine has to run inside the same
 process, after the launcher's screens.
-
-## The work
 
 1. **Toolchain.** The NDK (r26 or later) provides clang and a sysroot for
    `arm64-v8a`; its `build/cmake/android.toolchain.cmake` becomes this port's

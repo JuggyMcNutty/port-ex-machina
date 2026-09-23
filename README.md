@@ -1,50 +1,43 @@
 # Port Ex Machina
 
-A native, controller-first launcher for Deus Ex, and the work to run the game
-behind it on devices it was never made for -- structured so that a new device
-is a small port, not a fork of the project.
-
-The name swaps the god in *deus ex machina*, "the god from the machine", for
-ports: the project is written with Claude, an AI coding agent, and each port
-takes the game to another machine.
+A modern, cross-platform launcher for Deus Ex, the Unreal Engine 1 game, and
+the engine and ports that run the game behind it.
 
 You supply your own Deus Ex game files. None are included.
 
-## Two halves
+## What it is
 
-**The launcher** takes the place of `System/DeusEx.exe` -- the Unreal Engine 1
-`Launch` module, the ~250 KB bootstrap shell that decides whether to ask
-anything, writes the config the engine reads, manages the crash-detection
-sentinel and starts the engine. It keeps that binary's contract, documented in
-[`docs/re/`](docs/re/) and reverse-engineered before any of this was written,
-but its screens are a tabbed home screen driven by the pad (Play, Video,
-Controls, System) with settings the engine actually reads.
-[`docs/DESIGN.md`](docs/DESIGN.md) records every divergence and why.
+**The launcher** takes the place of the game's `System/DeusEx.exe`: a tabbed
+home screen, driven by a pad or the keyboard (Play, Video, Controls, System),
+whose settings are the ones the engine actually reads. The original launcher
+was reverse-engineered first ([`docs/re/`](docs/re/)), so the project started
+from known behaviour; the launcher is our own clean code, built from there.
+[`docs/LAUNCHER.md`](docs/LAUNCHER.md)
 
-**The engine** is [Surreal Engine](https://github.com/dpjudas/SurrealEngine), an
-open-source UE1 reimplementation that recognises this exact build. It is not
-vendored here: [`engine-patches/`](engine-patches/) holds the fork's patches and
-the reason they must stay in a fork, and `scripts/engine.sh` clones, checks and
-builds it.
+**The engine** is a fork of [Surreal Engine](https://github.com/dpjudas/SurrealEngine),
+an open-source UE1 reimplementation that recognises this exact build. We use it
+as a vendored dependency: pinned to one upstream commit, plus patches for what
+our ports need. It does not follow upstream; it moves to a newer one only when
+someone chooses to. [`docs/ENGINE.md`](docs/ENGINE.md)
+
+**The ports** take it to other machines. linux-x86_64 is the base: the project
+is developed and tested there, and every other port is linux-x86_64 plus what
+differs for one device -- its toolchain, where SDL2 comes from, a device
+profile, packaging, how to deploy. [`docs/PORTING.md`](docs/PORTING.md)
 
 ## Ports
 
 | Port | For | Built | Status |
 |---|---|---|---|
-| [`linux-x86_64`](ports/linux-x86_64/) | desktop Linux | natively | the engine runs the game on the development PC; also the build for tests and `dxl-shots` |
+| [`linux-x86_64`](ports/linux-x86_64/) | desktop Linux; **the base** | natively | runs the game; where the tests, `dxl-shots` and engine validation run |
 | [`linux-aarch64`](ports/linux-aarch64/) | aarch64 devices with an ordinary distro | cross (launcher) or natively | the launcher cross-builds; not yet run on a device |
-| [`trimui-smartpro`](ports/trimui-smartpro/) | TrimUI Smart Pro, spruceOS | cross | runs: the intro at ~30 FPS, Liberty Island's opening fight at 7.3 FPS (9.3 at 853×480; CPU-bound, the target is ~20) |
+| [`trimui-smartpro`](ports/trimui-smartpro/) | TrimUI Smart Pro, spruceOS | cross | runs the game; performance work in progress |
 | [`android`](ports/android/) | Android | -- | planned: what it needs is in its README |
-
-A port is a directory of the few things that differ for one device -- its
-toolchain, where SDL2 comes from, a device profile, packaging, how to deploy.
-[`docs/PORTING.md`](docs/PORTING.md) is the contract and the checklist for a
-new one.
 
 ## Quick start
 
 ```sh
-scripts/dx.sh test                         # unit tests (host build)
+scripts/dx.sh test                         # unit tests (the base port's build)
 scripts/engine.sh fetch                    # once: the engine fork, into engine/SurrealEngine
 
 scripts/dx.sh deps   <port>                # toolchains and sysroot, if the port needs them
@@ -60,24 +53,36 @@ scripts/dx.sh check                        # drift guards: docs, engine patches,
 Put the game files where the port's `launcher.ini` says (`GameDir`); a
 `linux-x86_64` app staged in this workspace points at `gamefiles/`.
 
+## Documentation
+
+| Doc | Read it for |
+|---|---|
+| [`agent.md`](agent.md) | where things stand: decisions, open items, what is next |
+| [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | how to work here: the base port, cold start, commits, docs rules, gotchas |
+| [`docs/LAUNCHER.md`](docs/LAUNCHER.md) | the launcher: the settings files the engine really reads, the screens, controller support |
+| [`docs/ENGINE.md`](docs/ENGINE.md) | the engine fork: how it is pinned and upgraded, running and profiling it, every patch |
+| [`docs/PORTING.md`](docs/PORTING.md) | how ports work, and how to add one |
+| `ports/<id>/README.md` | one device: status, what differs from linux-x86_64, measurements, what was verified |
+| [`docs/re/`](docs/re/) | the original `DeusEx.exe`, where the launcher began |
+
 ## Layout
 
 ```
-agent.md             session handoff: state, open decisions, gotchas
+agent.md             where things stand (session handoff)
 CMakeLists.txt       the launcher; CMakePresets.json has one preset per port
-src/core/            the launcher contract and settings -- C11, no SDL, no device facts
+src/core/            the launcher's core and settings -- C11, no SDL, no device facts
 src/platform/        the device profile (target.h), the hand-over to the game (launch.h),
                      posix/: exec and the crash-isolated GPU probe
 src/ui/              SDL2 frontend: ui.c widgets, screens.c session + rows, tab_*.c, remap.c
 src/app.c            the launcher's sequence, shared by both front ends
-src/main.c           deusex-launcher;  src/cli_main.c: dxl-cli, the same contract with no display
+src/main.c           deusex-launcher;  src/cli_main.c: dxl-cli, the same sequence with no display
 tests/               host unit tests -- no display needed
 tools/               shots.c (dxl-shots: every screen as .bmp), probes/ (device probes)
-engine-patches/      the Surreal Engine fork's patches, and why they stay in a fork
-docs/                DESIGN.md, PORTING.md, re/ (the reverse-engineering spec)
+engine-patches/      the engine fork as patches over a pinned upstream commit
+docs/                LAUNCHER, ENGINE, PORTING, DEVELOPMENT; re/ (the original DeusEx.exe)
 scripts/             dx.sh, engine.sh, check-abi.sh, check-docs.sh, host-tools.sh, lib/common.sh,
                      sample-report.py (CPU samples from a device without perf)
-ports/common/        what every port ships unless it overrides it: run-game.sh, defaults
+ports/common/        the base app every port ships unless it overrides it: run-game.sh, defaults
 ports/<port>/        one device: see docs/PORTING.md
 
 build/               (ignored) build/<port>/{launcher,engine,app}
@@ -87,15 +92,11 @@ gamefiles/           (ignored) your Deus Ex install, for running on this machine
 reference/           (ignored) the 1112f SDK, the DeusExe launcher source, IDA and ini backups
 ```
 
-## Reading order
+## The name
 
-1. [`agent.md`](agent.md) -- where things stand, what is open, what cost time.
-2. [`docs/DESIGN.md`](docs/DESIGN.md) -- what the launcher does and why:
-   the settings files the engine really reads, the screens, controller support.
-3. [`docs/PORTING.md`](docs/PORTING.md) -- how ports work.
-4. The port you are working on: `ports/<port>/README.md`.
-5. [`engine-patches/README.md`](engine-patches/README.md) -- every engine change.
-6. [`docs/re/`](docs/re/) -- the original binary, when a behaviour's origin matters.
+It swaps the god in *deus ex machina*, "the god from the machine", for ports:
+the project is written with Claude, an AI coding agent, and each port takes the
+game to another machine.
 
 ## License
 

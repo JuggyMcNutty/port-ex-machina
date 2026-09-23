@@ -47,7 +47,7 @@ foreach(src ${DXL_PORT_TARGETS})
     add_test(NAME ${name} COMMAND ${name})
 endforeach()
 
-# Docs drift: every repository path a doc names must exist (docs/PORTING.md).
+# Docs drift: every repository path a doc names must exist (docs/DEVELOPMENT.md).
 find_program(DXL_BASH bash)
 find_program(DXL_GIT git)
 if(DXL_BASH AND DXL_GIT)

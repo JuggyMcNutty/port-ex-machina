@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Tools for engine work on an x86_64 Linux host, unpacked into deps/ -- nothing
 # is installed on the machine. Pinned Arch Linux packages, like the sysroot's
-# headers; engine-patches/README.md says how they are used.
+# headers; docs/ENGINE.md says how they are used.
 #
 #   deps/perf           Linux perf and the four libraries it needs
 #   deps/vulkan-layers  the Khronos validation layer, with a manifest in

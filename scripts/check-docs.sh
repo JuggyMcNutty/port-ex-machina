@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Docs drift guard: every repository path a doc names must exist.
+# Docs drift guard: every repository path a doc names must exist, and every
+# link to a heading must find one.
 #
 #   scripts/check-docs.sh [-v]
 #
@@ -9,11 +10,15 @@
 #
 #   the doc's own directory   links like re/wizard.md
 #   the repository root       src/core/config.c, ports/trimui-smartpro/port.sh
-#   src/                      core/config.c, ui/screens.c (how DESIGN.md names code)
+#   src/                      core/config.c, ui/screens.c (how LAUNCHER.md names code)
 #   engine/SurrealEngine/     SurrealEngine/GameApp.cpp (the fork, a separate clone)
 #   gamefiles/                System/DeusEx.ini (the game install)
 #   ports/*/packaging/        run-game.sh's neighbours: the app directory
 #   ports/*/                  names relative to a port (packaging/, target.c)
+#
+# A link with an #anchor to a markdown file (or to a heading of the doc itself)
+# must name one of that file's headings, as GitHub makes their ids: lower case,
+# punctuation dropped, spaces as "-", a repeated heading numbered -1, -2, ...
 #
 # engine/, gamefiles/ and reference/ are not in the repository. When one is
 # missing (a fresh clone), a path that resolves nowhere is counted as unverifiable
@@ -45,7 +50,8 @@ done
 for r in "$ROOT"/ports/*/packaging; do roots+=("$r"); done
 for r in "$ROOT"/ports/*; do roots+=("$r"); done
 
-# file:line:token for every candidate, skipping fenced code blocks.
+# file:line:kind:token for every candidate, skipping fenced code blocks; kind
+# is C for `code`, L for a link target.
 extract() {
     awk '
         /^[[:space:]]*```/ { fence = !fence; next }
@@ -53,15 +59,49 @@ extract() {
         {
             line = $0
             while (match(line, /`[^`]+`/)) {
-                print FILENAME ":" FNR ":" substr(line, RSTART + 1, RLENGTH - 2)
+                print FILENAME ":" FNR ":C:" substr(line, RSTART + 1, RLENGTH - 2)
                 line = substr(line, RSTART + RLENGTH)
             }
             line = $0
             while (match(line, /\]\([^)]+\)/)) {
-                print FILENAME ":" FNR ":" substr(line, RSTART + 2, RLENGTH - 3)
+                print FILENAME ":" FNR ":L:" substr(line, RSTART + 2, RLENGTH - 3)
                 line = substr(line, RSTART + RLENGTH)
             }
         }' "$@"
+}
+
+# The heading ids GitHub gives one markdown file, one per line.
+anchors_of() {
+    awk '
+        /^[[:space:]]*```/ { fence = !fence; next }
+        fence { next }
+        /^#+[ \t]/ {
+            h = $0
+            sub(/^#+[ \t]+/, "", h); sub(/[ \t]+$/, "", h)
+            h = tolower(h)
+            gsub(/[^a-z0-9 _-]/, "", h)
+            gsub(/ /, "-", h)
+            n = seen[h]++
+            print (n ? h "-" n : h)
+        }' "$1"
+}
+
+# Does <doc>'s link <path#anchor> name a heading? A target that is not a
+# markdown file here has no headings to check (a missing one is the path
+# check's to report).
+declare -A HEADINGS=()
+anchor_found() {
+    local doc="$1" target="$2" path="${2%%#*}" anchor="${2#*#}" file
+    if [ -z "$path" ]; then
+        file="$doc"
+    else
+        file="$(dirname "$doc")/$path"
+        [ -d "$file" ] && file="$file/README.md"
+    fi
+    case "$file" in *.md) ;; *) return 0 ;; esac
+    [ -f "$file" ] || return 0
+    [ -n "${HEADINGS[$file]+x}" ] || HEADINGS[$file]="$(anchors_of "$file")"
+    grep -qxF -- "$anchor" <<<"${HEADINGS[$file]}"
 }
 
 allowed() {
@@ -75,11 +115,21 @@ cd "$ROOT"
 mapfile -t docs < <(git ls-files --cached --others --exclude-standard '*.md')
 [ ${#docs[@]} -gt 0 ] || { echo "no tracked docs?" >&2; exit 1; }
 
-checked=0 failed=0 unverifiable=0
+checked=0 anchors=0 failed=0 unverifiable=0
 while IFS= read -r rec; do
-    doc="${rec%%:*}"; rest="${rec#*:}"; line="${rest%%:*}"; tok="${rest#*:}"
+    doc="${rec%%:*}"; rest="${rec#*:}"; line="${rest%%:*}"; rest="${rest#*:}"
+    kind="${rest%%:*}"; tok="${rest#*:}"
+    tok="${tok%% *}"                       # `path args` -> path; [x](path "title") -> path
+    if [ "$kind" = L ] && [[ "$tok" == *'#'* ]] && ! [[ "$tok" =~ ^[a-z]+: ]]; then
+        anchors=$((anchors + 1))
+        if anchor_found "$doc" "$tok"; then
+            [ "$verbose" = 1 ] && echo "ok   $doc:$line $tok"
+        else
+            echo "NO HEADING $doc:$line: $tok" >&2
+            failed=$((failed + 1))
+        fi
+    fi
     tok="${tok%%#*}"                       # link anchors
-    tok="${tok%% *}"                       # `path args` -> path
     # Relative paths only: must contain "/" and a letter, and nothing that
     # makes it a URL, a command, a placeholder, a glob or an address.
     [[ "$tok" == */* ]] || continue
@@ -105,7 +155,7 @@ while IFS= read -r rec; do
     fi
 done < <(extract "${docs[@]}")
 
-summary="docs: $checked paths checked in ${#docs[@]} files, $failed missing"
+summary="docs: $checked paths and $anchors anchors checked in ${#docs[@]} files, $failed missing"
 [ "$unverifiable" = 0 ] || summary="$summary, $unverifiable unverifiable (engine/, gamefiles/ or reference/ absent)"
 echo "$summary"
 [ "$failed" = 0 ]

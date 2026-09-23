@@ -54,8 +54,8 @@ function(dxl_check_abi target)
 endfunction()
 
 # ---------------------------------------------------------------------------
-# core -- the launcher contract. No SDL, no platform assumptions, no I/O policy.
-# Everything here is specified by docs/re/; see docs/DESIGN.md.
+# core -- the launcher's core. No SDL, no platform assumptions, no I/O policy.
+# docs/LAUNCHER.md; docs/re/ has the original behaviour it began from.
 # ---------------------------------------------------------------------------
 add_library(dxl_core STATIC
     src/core/common.c

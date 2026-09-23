@@ -18,7 +18,7 @@
  * older per-extension struct. The PowerVR Rogue GE8300 reports API 1.3.225 and
  * supports it by none of the three.
  *
- * Build: see docs/DESIGN.md. Needs only the Vulkan loader.
+ * Build: see docs/PORTING.md "Device probes". Needs only the Vulkan loader.
  */
 #include <vulkan/vulkan.h>
 #include <stdio.h>

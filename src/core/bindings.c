@@ -237,7 +237,7 @@ void dxl_bindings_set(dxl_ini *ini, const char *joy_key, const char *command) {
 
 /* ---- remapping --------------------------------------------------------- */
 
-/* This device's buttons (docs/DESIGN.md "Pad controls"): no L3/R3, so Joy9
+/* The Smart Pro's buttons (ports/trimui-smartpro/README.md, "Pad controls"): no L3/R3, so Joy9
  * and Joy10 are never produced and are not offered. */
 static const char *const remappable[] = {
     "Joy1", "Joy2", "Joy3", "Joy4", "Joy5", "Joy6", "Joy11", "Joy12",
