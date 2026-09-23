@@ -312,7 +312,10 @@ script VM several times faster.
     (`Frame::Run` ~2), the expressions the typed and leaf paths do not cover
     (`ExpressionEvaluator::Value`, `Expr`), calls (`ExpressionEvaluator::Call`,
     `Frame::Call`, `CallScript`, `CallFastOperator`), the typed evaluators
-    themselves (~3); ~4 is AI sight traces (`CanSee`, `FastTrace`).
+    themselves (~3). ~8 is the natives the scripts call, ~4 of that AI
+    sight traces (`CanSee`, `FastTrace`), ~2.4 `FindPathToward`, ~1.9
+    `TraceTexture`: a script VM with no cost of its own would take script
+    time down by about half, not more.
     `ScriptedPawn.CheckEnemyPresence` is still the costliest script function.
     Most of the interpreter's time is now the Cortex-A53 waiting on memory
     for each expression node. Next in the structure: calls without an

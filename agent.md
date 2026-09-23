@@ -93,3 +93,13 @@ no facts of its own beyond those; each lives in one doc, and the
 4. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
    engine's libraries, as the Smart Pro has); Android (its README lists the
    work, starting with an in-process hand-over).
+5. **The script interpreter's next step** (found 2026-09-23, after 0029):
+   what is left of its own time (~10 ms of a ~50 ms tick) is mostly the
+   Cortex-A53 waiting on memory for each expression node, which only a
+   denser, compiled form of each function's code would change -- a rewrite
+   of the evaluator's core, not another patch like 0028–0029. The natives
+   the scripts call (~8 ms) and the per-actor work are the rest of the
+   script-side time ([where a frame goes](ports/trimui-smartpro/README.md#where-a-frame-goes)).
+   And at native resolution the tick does not move the frame at all until
+   the GPU's time comes down (decision 3). For the owner: take on that
+   rewrite now, or move to the next item first.
