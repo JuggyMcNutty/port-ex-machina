@@ -44,23 +44,28 @@ no facts of its own beyond those; each lives in one doc, and the
    [the Smart Pro's Performance](ports/trimui-smartpro/README.md#performance);
    what each patch did: [`docs/ENGINE.md`](docs/ENGINE.md#what-the-fork-changes).
 
-   Next, in order, re-measuring after each; what is left in each is in
-   [where a frame goes](ports/trimui-smartpro/README.md#where-a-frame-goes).
-   Profile on the device (`SAMPLE=1`): the desktop's proportions are not the
-   device's.
-   - **The script interpreter** (in progress, patches 0012–0017 and
-     0028–0029). Further gains need its structure changed: 0028–0029 took
-     conditions, operands and the commonest statements off the 88-byte value
-     and the per-statement result; calls are next.
-   - **Collision traces** (owner, 2026-09-23: next after the list above; in
-     progress, patches 0025–0027).
-   - Found 2026-09-23, not yet placed in this order by the owner: the
-     **per-actor work** around the scripts, and the audio update's scan of
-     every actor for an ambient sound.
-   - **Actor meshes** (done so far, 0018–0019): the per-vertex work itself.
-   - **Visibility** (in progress, 0020–0021): still the largest render item.
+   The work, in no order (owner, 2026-09-23): what a profile turns up is added
+   here as potential work, to take up or come back to. What is left in each is
+   in [where a frame goes](ports/trimui-smartpro/README.md#where-a-frame-goes).
+   Re-measure after each change, and profile on the device (`SAMPLE=1`): the
+   desktop's proportions are not the device's.
+   - **Collision traces** (in progress: patches 0025–0027).
+   - **The script interpreter** (patches 0012–0017, 0028–0029). What is left of
+     its own time is mostly the Cortex-A53 waiting on memory for each
+     expression node: only a denser, compiled form of each function's code
+     would change that -- a rewrite of the evaluator's core. Even with no cost
+     of its own, script time would only about halve: the natives the scripts
+     call are the rest. Smaller: calls without an `ExpressionValue` per
+     argument.
+   - **Per-actor work** around the scripts, `IsEventEnabled` among it.
+   - **The audio update's scan** of every actor for an ambient sound.
+   - **Actor meshes** (0018–0019 so far): the per-vertex work itself.
+   - **Visibility** (0020–0021 so far): still the largest render item.
    - **Lightmap uploads**: re-uploading only the rows a light changed, and each
      surface's lightmap lookup.
+
+   At native resolution the game tick does not move the frame until the GPU's
+   time comes down (open decision 3); at 853×480 it does.
 3. **Renderers on aarch64** (owner, 2026-09-22): the goal is Vulkan, OpenGL ES
    and software rendering all selectable. Not now: Vulkan is the only one the
    engine has. GLES means porting Surreal's desktop OpenGL 3.2 renderer (the
@@ -93,13 +98,3 @@ no facts of its own beyond those; each lives in one doc, and the
 4. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
    engine's libraries, as the Smart Pro has); Android (its README lists the
    work, starting with an in-process hand-over).
-5. **The script interpreter's next step** (found 2026-09-23, after 0029):
-   what is left of its own time (~10 ms of a ~50 ms tick) is mostly the
-   Cortex-A53 waiting on memory for each expression node, which only a
-   denser, compiled form of each function's code would change -- a rewrite
-   of the evaluator's core, not another patch like 0028–0029. The natives
-   the scripts call (~8 ms) and the per-actor work are the rest of the
-   script-side time ([where a frame goes](ports/trimui-smartpro/README.md#where-a-frame-goes)).
-   And at native resolution the tick does not move the frame at all until
-   the GPU's time comes down (decision 3). For the owner: take on that
-   rewrite now, or move to the next item first.

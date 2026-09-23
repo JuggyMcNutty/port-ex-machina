@@ -330,7 +330,9 @@ script VM several times faster.
     a move (`TraceMove`/`FinishMove` asking whether the mover is a player or a
     projectile).
   - ~12 ms of per-actor work around the scripts for the level's ~2,500 actors
-    (`ULevel::TickActor`, animation, event lookups).
+    (`ULevel::TickActor`, animation, event lookups). ~1.6 of it is
+    `UObject::IsEventEnabled` asking whether to send each actor `Tick`: little
+    work, but a wait on memory for each actor's state frame, state and class.
   - Pawns out of view think every third frame, every sixth beyond 4000 units
     (Distant AI).
 - **Render CPU ~59 ms** besides waits, lightmaps and uploads:
