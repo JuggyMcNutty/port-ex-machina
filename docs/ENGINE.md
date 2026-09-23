@@ -257,7 +257,8 @@ not already say.
 
 ### Script VM
 
-With 0013, these took the Smart Pro's script time from ~125 to ~30 ms a frame.
+With 0013, these took the Smart Pro's script time from ~125 ms a frame to
+~30 by 0017; with the collision patches (0025–0027) it was ~25 before 0028.
 
 - [**0006**](../engine-patches/0006-vm-call-path-without-casts.patch)
   `vm-call-path-without-casts` -- parameters from `Properties`, and a per-class
@@ -281,6 +282,14 @@ With 0013, these took the Smart Pro's script time from ~125 to ~30 ms a frame.
 - [**0017**](../engine-patches/0017-vm-leaf-expressions.patch)
   `vm-leaf-expressions` -- the commonest leaf expressions made without the
   visitor. **Smart Pro:** tick ~70.7 → ~69.3 ms.
+- [**0028**](../engine-patches/0028-vm-typed-evaluation.patch)
+  `vm-typed-evaluation` -- conditions, `&&` and `||`, the fast operators and
+  assignments to plain variables evaluated as plain values, each node
+  classified once, instead of through an 88-byte `ExpressionValue`; a typed
+  node carries the offset or operands it reads. **Smart Pro:** script ~25.4
+  → ~22.7 ms, tick ~54 → ~51 ms; at 853×480 the frame ~108.5 → ~106 ms.
+  **Checked:** also a hash of every actor's state, frame by frame, with the
+  frame time and random seeds fixed (the message has both checks).
 
 ### Game tick
 

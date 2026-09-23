@@ -48,8 +48,9 @@ no facts of its own beyond those; each lives in one doc, and the
    [where a frame goes](ports/trimui-smartpro/README.md#where-a-frame-goes).
    Profile on the device (`SAMPLE=1`): the desktop's proportions are not the
    device's.
-   - **The script interpreter** (in progress, patches 0012–0017). Further gains
-     need its structure changed.
+   - **The script interpreter** (in progress, patches 0012–0017 and 0028).
+     Further gains need its structure changed: 0028 took conditions and
+     operands off the 88-byte value; statements and calls are next.
    - **Collision traces** (owner, 2026-09-23: next after the list above; in
      progress, patches 0025–0027).
    - Found 2026-09-23, not yet placed in this order by the owner: the
