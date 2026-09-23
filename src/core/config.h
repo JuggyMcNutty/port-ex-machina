@@ -68,15 +68,8 @@ int  dxl_config_first_run(const dxl_config *c);
 void dxl_config_clamp_first_run(dxl_config *c);
 
 const char *dxl_config_render_device(const dxl_config *c);
-void        dxl_config_set_render_device(dxl_config *c, const char *class_name);
 const char *dxl_config_cd_path(const dxl_config *c);
 const char *dxl_config_game_engine(const dxl_config *c);
-
-/* [<render class>] DescFlags -- the output channel from device detection back
- * into the wizard. docs/re/ini-keys.md. */
-int  dxl_config_desc_flags(const dxl_config *c, const char *render_class);
-void dxl_config_set_desc_flags(dxl_config *c, const char *render_class, int flags);
-const char *dxl_config_description(const dxl_config *c, const char *render_class);
 
 /* Client settings the engine honours (USurrealClient). Brightness is 0..1. */
 double dxl_config_brightness(dxl_config *c);

@@ -5,8 +5,7 @@ the game's files are not ours to publish, so none are here. Each has the
 features of the real file that the tests depend on: CRLF throughout, repeated
 keys (`Paths=`, `Suppress=`, `ServerActors=`, `EditPackages=`), `=` inside
 values, empty values, bracketed `Aliases[n]` values with a double space
-(`Axis aBaseY  Speed=`), the shipped joystick lines, and one quoted value in
-`Startup.int`.
+(`Axis aBaseY  Speed=`), and the shipped joystick lines.
 
 `DeusEx.ini` and `Default.ini` are the same file, as they are in a fresh
 install.

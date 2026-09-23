@@ -11,7 +11,6 @@ endfunction()
 
 dxl_test(test_ini)
 dxl_test(test_cmdline)
-dxl_test(test_strings)
 dxl_test(test_policy)
 dxl_test(test_argv)
 dxl_test(test_config)

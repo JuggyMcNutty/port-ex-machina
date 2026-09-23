@@ -60,7 +60,6 @@ endfunction()
 add_library(dxl_core STATIC
     src/core/common.c
     src/core/ini.c
-    src/core/strings.c
     src/core/cmdline.c
     src/core/paths.c
     src/core/config.c

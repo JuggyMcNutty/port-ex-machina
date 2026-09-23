@@ -150,28 +150,12 @@ const char *dxl_config_render_device(const dxl_config *c) {
     return dxl_ini_get(c->base.ini, "Engine.Engine", "GameRenderDevice");
 }
 
-void dxl_config_set_render_device(dxl_config *c, const char *class_name) {
-    dxl_ini_set(c->base.ini, "Engine.Engine", "GameRenderDevice", class_name);
-}
-
 const char *dxl_config_cd_path(const dxl_config *c) {
     return dxl_ini_get(c->base.ini, "Engine.Engine", "CdPath");
 }
 
 const char *dxl_config_game_engine(const dxl_config *c) {
     return dxl_ini_get(c->base.ini, "Engine.Engine", "GameEngine");
-}
-
-int dxl_config_desc_flags(const dxl_config *c, const char *render_class) {
-    return dxl_ini_get_int(c->base.ini, render_class, "DescFlags", 0);
-}
-
-void dxl_config_set_desc_flags(dxl_config *c, const char *render_class, int flags) {
-    dxl_ini_set_int(c->base.ini, render_class, "DescFlags", flags);
-}
-
-const char *dxl_config_description(const dxl_config *c, const char *render_class) {
-    return dxl_ini_get(c->base.ini, render_class, "Description");
 }
 
 double dxl_config_brightness(dxl_config *c) {

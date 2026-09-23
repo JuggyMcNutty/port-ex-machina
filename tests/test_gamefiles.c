@@ -1,7 +1,6 @@
 #include "test.h"
 #include "core/bindings.h"
 #include "core/ini.h"
-#include "core/strings.h"
 
 #include <unistd.h>
 
@@ -84,39 +83,6 @@ static void test_defuser_is_classic(void) {
     dxl_ini_free(ini);
 }
 
-/* Startup.int is the original launcher's string table: the file still says
- * what docs/re/wizard.md says it says. */
-static void test_startup_int_matches_the_spec(void) {
-    dxl_strings *s = dxl_strings_load(DXL_GAMEFILES, "Startup");
-    CHECK_INT(dxl_strings_present(s), 1);
-
-    CHECK_STR(dxl_strings_get(s, "General", "Run", NULL), "Run!");
-    CHECK_STR(dxl_strings_get(s, "General", "SafeMode", NULL), "Deus Ex Safe Mode");
-    CHECK_STR(dxl_strings_get(s, "General", "RecoveryMode", NULL), "Deus Ex Recovery Mode");
-    CHECK_STR(dxl_strings_get(s, "General", "FirstTime", NULL),
-              "Deus Ex First-Time Configuration");
-    /* WorldHigh is the file's only quoted value. */
-    CHECK_STR(dxl_strings_get(s, "General", "WorldHigh", NULL), "High detail textures");
-
-    /* The SafeMode buttons, as docs/re/wizard.md lists them. */
-    CHECK_STR(dxl_strings_get(s, "IDDIALOG_ConfigPageSafeMode", "IDC_Run", NULL),
-              "Run Deus Ex");
-    CHECK_STR(dxl_strings_get(s, "IDDIALOG_ConfigPageSafeMode", "IDC_Video", NULL),
-              "Change your 3D video device");
-
-    /* All the safe-mode checkbox labels exist -- including the three the
-     * original never reads. We wire them; the strings were always there. */
-    const char *boxes[] = { "IDC_NoSound", "IDC_No3DSound", "IDC_No3DVideo",
-                            "IDC_Window", "IDC_Res", "IDC_ResetConfig",
-                            "IDC_NoProcessor" };
-    for (size_t i = 0; i < sizeof boxes / sizeof *boxes; i++)
-        CHECK(dxl_strings_get(s, "IDDIALOG_ConfigPageSafeOptions", boxes[i], NULL) != NULL);
-
-    const char *d = dxl_strings_get(s, "Descriptions", "OpenGLDrv.OpenGLRenderDevice", NULL);
-    CHECK(d && strstr(d, "OpenGL") != NULL);
-    dxl_strings_free(s);
-}
-
 TEST_MAIN_BEGIN
     if (access(DXL_GAMEFILES "/Default.ini", R_OK) != 0) {
         printf("skipped: no Deus Ex install in %s\n", DXL_GAMEFILES);
@@ -125,5 +91,4 @@ TEST_MAIN_BEGIN
     RUN(test_roundtrip);
     RUN(test_default_ini_matches_the_spec);
     RUN(test_defuser_is_classic);
-    RUN(test_startup_int_matches_the_spec);
 TEST_MAIN_END

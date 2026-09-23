@@ -66,13 +66,12 @@ static void test_first_run_clamps_up_only(void) {
     scrub(dir);
 }
 
-/* The renderer choice is the ONLY thing the wizard communicates to the engine
- * about video. docs/re/porting-notes.md lists it as load-bearing. */
-static void test_render_device_write_persists(void) {
-    char *dir = scratch_install("render");
+/* The clamp is a write like any other: it marks the config dirty and reaches
+ * the file on save. */
+static void test_first_run_clamp_persists(void) {
+    char *dir = scratch_install("persist");
 
     dxl_config *c = dxl_config_open(dir, "DeusEx");
-    dxl_config_set_render_device(c, "OpenGLDrv.OpenGLRenderDevice");
     dxl_config_clamp_first_run(c);
     CHECK_INT(dxl_config_dirty(c), 1);
     dxl_err e;
@@ -80,7 +79,6 @@ static void test_render_device_write_persists(void) {
     dxl_config_free(c);
 
     c = dxl_config_open(dir, "DeusEx");
-    CHECK_STR(dxl_config_render_device(c), "OpenGLDrv.OpenGLRenderDevice");
     CHECK_INT(dxl_config_first_run(c), 1100);
     dxl_config_free(c);
 
@@ -111,33 +109,6 @@ static void test_untouched_config_is_byte_identical_after_save(void) {
     scrub(dir);
 }
 
-/* Reproduces what the live Proton run actually wrote into the ini
- * (docs/re/live-verification.md): DescFlags and Description are runtime values
- * that no shipped file carries, written by detection and read back by the
- * wizard. */
-static void test_desc_flags_round_trip(void) {
-    char *dir = scratch_install("desc");
-    dxl_config *c = dxl_config_open(dir, "DeusEx");
-
-    CHECK_INT(dxl_config_desc_flags(c, "D3DDrv.D3DRenderDevice"), 0);
-    CHECK(dxl_config_description(c, "D3DDrv.D3DRenderDevice") == NULL);
-
-    dxl_config_set_desc_flags(c, "D3DDrv.D3DRenderDevice", 1);
-    dxl_ini_set(dxl_config_ini(c), "D3DDrv.D3DRenderDevice", "Description",
-                "ATI Radeon HD 5600 Series");
-    dxl_err e;
-    CHECK_INT(dxl_config_save(c, &e), 0);
-    dxl_config_free(c);
-
-    c = dxl_config_open(dir, "DeusEx");
-    CHECK_INT(dxl_config_desc_flags(c, "D3DDrv.D3DRenderDevice"), 1);
-    CHECK_STR(dxl_config_description(c, "D3DDrv.D3DRenderDevice"),
-              "ATI Radeon HD 5600 Series");
-    dxl_config_free(c);
-
-    scrub(dir);
-}
-
 /* A fresh install with no ini must still be usable: the wizard writes one. */
 static void test_missing_ini_is_not_fatal(void) {
     char dir[512];
@@ -147,13 +118,13 @@ static void test_missing_ini_is_not_fatal(void) {
     dxl_config *c = dxl_config_open(dir, "DeusEx");
     CHECK(c != NULL);
     CHECK_INT(dxl_config_first_run(c), 0);         /* absent reads as 0 */
-    dxl_config_set_render_device(c, "OpenGLDrv.OpenGLRenderDevice");
+    dxl_config_clamp_first_run(c);
     dxl_err e;
     CHECK_INT(dxl_config_save(c, &e), 0);
     dxl_config_free(c);
 
     c = dxl_config_open(dir, "DeusEx");
-    CHECK_STR(dxl_config_render_device(c), "OpenGLDrv.OpenGLRenderDevice");
+    CHECK_INT(dxl_config_first_run(c), DXL_FIRSTRUN_CURRENT);
     dxl_config_free(c);
 
     scrub(dir);
@@ -331,9 +302,8 @@ static void test_reset_refuses_without_default(void) {
 TEST_MAIN_BEGIN
     RUN(test_reads_the_gates);
     RUN(test_first_run_clamps_up_only);
-    RUN(test_render_device_write_persists);
+    RUN(test_first_run_clamp_persists);
     RUN(test_untouched_config_is_byte_identical_after_save);
-    RUN(test_desc_flags_round_trip);
     RUN(test_missing_ini_is_not_fatal);
     RUN(test_missing_ini_is_created_from_default);
     RUN(test_stub_ini_is_rebuilt_keeping_its_values);
