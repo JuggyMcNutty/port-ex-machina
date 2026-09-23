@@ -5,8 +5,9 @@ handheld (4× Cortex-A53, PowerVR GE8300) running spruceOS. Cross-built from a
 PC; the launcher is the app the spruceOS menu starts.
 
 **Status.** The launcher and the engine both run on the device. The intro plays
-at ~30 FPS; Liberty Island runs at 2–3 FPS, CPU-bound on NPC AI and lightmap
-rebuilds -- see [Performance](#performance).
+at ~30 FPS; Liberty Island's opening firefight at 4.5 FPS (2.2 before engine
+patches 0004–0008), CPU-bound on NPC AI script and render CPU -- see
+[Performance](#performance).
 
 | File | What it is |
 |---|---|
@@ -186,6 +187,7 @@ The System tab shows the engine and script logs on screen.
 | Deploy with checksums (2026-09-22) | `dx.sh deploy` built and staged, sent only the one changed file, kept the device's copy in `.prev-<date-time>` and verified all 13 files; `profile-map.sh` applied `launcher.ini`'s Overclock (four cores, 2.0 GHz) through `port-hooks.sh` and restored power-save after |
 | CPU/GPU overlap, engine patch 0004 (2026-09-22) | Liberty Island renders correctly mid-fight (framebuffer capture); GPU wait ~76 → ~0.2 ms. Synchronization validation clean on the desktop build, bindless and per-batch paths |
 | Lit-span lightmaps, engine patch 0005 (2026-09-22) | Liberty Island's dock pixel-identical before and after (framebuffer captures); lightmaps ~98 → ~11 ms. On the desktop, a temporary walk over every texel found none in reach outside a span |
+| Script calls and Distant AI, engine patches 0006–0008 (2026-09-22) | Liberty Island runs, 4.2 → 4.5 FPS with Distant AI; ~38 pawns a frame skip their thinking and the scene renders normally (framebuffer capture). No script errors on the desktop. Whether out-of-sight NPCs still behave is **not yet judged by hand** |
 
 Verified with the earlier wizard build, on code paths unchanged since: install
 validation naming each missing file; `Running.ini` created at commit and
@@ -227,34 +229,29 @@ rows had the per-class or per-function hooks on, which add their own cost; the
 overclock rows (2026-09-22) had them off. Overclock is the owner's mode from
 then on.)
 
-On Liberty Island, facing the fight in overclock (the bold row):
+The bold row is where the performance work started; each row after it is one
+engine patch, and what each found is in
+[`engine-patches/README.md`](../../engine-patches/README.md). Where a frame
+goes now (the last row, ~222 ms, facing the fight in overclock):
 
-- **Game tick ≈ 38%** (~170 ms), almost all NPC AI: 29 Terrorists ~3 ms each,
-  10 UNATCO troops, thugs, bots. ~110 ms of it runs under script calls
-  (outermost `Frame::Call`; state code runs outside that, so script's real
-  share is higher). Surreal's UnrealScript VM costs microseconds per trivial
-  operation on this CPU (14–20k VM calls per frame; every call copies its
-  argument array and re-walks the function's parameters). The single worst
-  native was `CycleActors` (see engine-patches, patch 0003); with it fixed,
-  `ScriptedPawn.CheckEnemyPresence`/`Tick` and general VM overhead dominate.
-- **Lightmaps ≈ 24%**: ~13.5 rebuilt per frame at ~7 ms each (~98 ms), plus
-  ~12 ms re-uploading them (a rebuilt lightmap, like a fog map, is flagged for
-  upload). Not muzzle flashes, as first assumed: 12 of the 13.5 are one
-  `BarrelFire`, a dynamic light with the fire waver effect, which re-lights
-  every surface it touches every frame -- and every light was computed over
-  every texel of a surface, ~300,000 a frame for ~550 in reach. Engine patch
-  0005 lights only the texels in reach: ~11 ms, plus the same ~12 ms of
-  uploads.
-- **Other render CPU ≈ 21%** (~95 ms), by section: visibility 34 ms (the BSP
-  walk, and `BspClipper`'s span buffer, which rasterises occluders on every
-  scanline of the viewport, so it scales with the render height); actor meshes
-  25 ms for ~30 actors in view; BSP surfaces 14 ms for ~600 nodes; translucent
-  5.5; the sky portal 4; `PostRenderFlash` (all script) 3.5; the rest ~8.
-- **GPU ≈ 17%** (~76 ms), and it did not overlap the CPU:
-  `CommandBufferManager::SubmitCommands` waited on the frame's fence right
-  after submitting. Engine patch 0004 lets the next game tick run while the GPU
-  draws: the wait is gone (~0.2 ms), but the tick grew ~20 ms -- CPU and GPU now
-  compete for the SoC's shared memory -- so the frame gained ~50 ms, not 76.
+- **Game tick ~104 ms**, almost all NPC AI -- Deus Ex's `ScriptedPawn` script.
+  ~61 ms runs under script calls (outermost `Frame::Call`; state code runs
+  outside that, so script's real share is higher), about a third of it one
+  function, `ScriptedPawn.CheckEnemyPresence`; ~13,500 VM calls a frame. The
+  fight's 29 Terrorists cost the most. Pawns out of view think every third
+  frame (Distant AI).
+- **Render CPU ~92 ms** besides lightmaps: visibility 34 ms (the BSP walk, and
+  `BspClipper`'s span buffer, which rasterises occluders on every scanline of
+  the viewport, so it scales with the render height); actor meshes ~23 ms for
+  ~30 in view (vertex animation on the CPU); BSP surfaces 14 ms for ~600
+  nodes; translucent 5.5; the sky portal 4; `PostRenderFlash` (script) 2.6;
+  the rest ~8.
+- **Lightmaps ~11 ms, texture uploads ~12 ms.** One `BarrelFire`, a dynamic
+  light with the fire waver effect, has 12 lightmaps rebuilt every frame (~13.5
+  with the rest), and each goes back to the GPU whole, converted from float on the CPU (the GE8300
+  cannot filter RGBA32F; engine patch 0002).
+- **GPU ~76 ms**, hidden behind the next frame's tick since patch 0004, which
+  cost ~20 ms of tick: CPU and GPU now compete for the SoC's shared memory.
 
 The fixes chosen, their order and the target are in
 [`agent.md`](../../agent.md#decided). The OpenGL ES backend would

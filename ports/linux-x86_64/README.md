@@ -9,6 +9,9 @@ desktop fonts. This is also the development build -- the unit tests and
 the staged app's `run-game.sh` started the engine on the workspace's
 `gamefiles/`: Vulkan with bindless textures, the intro level loaded and ran
 until stopped. `dxl-cli --probe` found Vulkan 1.4 and OpenGL, both selectable.
+Started directly on Liberty Island (`--url=01_NYC_UNATCOIsland.dx`), the
+engine is also where it is profiled and its Vulkan use validated for the
+handheld's sake ([`engine-patches/README.md`](../../engine-patches/README.md#profiling-and-validating-on-the-desktop)).
 Not yet exercised: the home screen driven by hand into a game, and a pad in
 game on a desktop.
 

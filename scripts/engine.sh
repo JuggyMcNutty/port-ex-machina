@@ -6,7 +6,8 @@
 #   scripts/engine.sh build <port>            build/<port>/engine from ports/<port>/engine.cmake
 #   scripts/engine.sh check                   the fork's commits are exactly engine-patches/*.patch
 #   scripts/engine.sh export <commit> <NNNN-name>   write a fork commit to engine-patches/
-#   scripts/engine.sh perf on|off             apply/revert engine-patches/optional/perf-instrumentation.patch
+#   scripts/engine.sh perf on|off|save        apply/revert engine-patches/optional/perf-instrumentation.patch;
+#                                             save writes it from the tree (after re-basing the hooks)
 #
 # The fork stays a fork: see engine-patches/README.md before sharing any of it.
 set -euo pipefail
@@ -17,7 +18,7 @@ PATCHES="$DX_ROOT/engine-patches"
 UPSTREAM="https://github.com/dpjudas/SurrealEngine.git"
 BRANCH=deusex-handheld
 
-usage() { sed -n '2,11p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,12p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 base() { awk 'NR == 1 { print $1 }' "$PATCHES/UPSTREAM-BASE.txt"; }
 eng() { git -C "$ENGINE_DIR" "$@"; }
 
@@ -117,12 +118,35 @@ cmd_export() {
     say "wrote engine-patches/${name%.patch}.patch"
 }
 
+# The profiling hooks are a patch against the fork's head, so a fork commit
+# that touches the same lines moves them. "on" falls back to a three-way
+# merge; after one (and after resolving any conflict it leaves), "save"
+# rewrites the patch from the tree so "off" and the next "on" apply cleanly.
 cmd_perf() {
     local p="$PATCHES/optional/perf-instrumentation.patch"
     case "${1:-}" in
-        on)  eng apply "$p" && say "profiling hooks applied -- never commit them (scripts/engine.sh perf off)" ;;
+        on)
+            if eng apply "$p" 2>/dev/null; then
+                say "profiling hooks applied -- never commit them (scripts/engine.sh perf off)"
+                return 0
+            fi
+            eng apply --3way "$p" || true
+            eng reset -q
+            local conflicts; conflicts="$(eng diff --name-only --diff-filter=U; eng grep -l '^<<<<<<< ' -- SurrealEngine 2>/dev/null || true)"
+            [ -z "$conflicts" ] || die "the hooks conflict with the fork in: $(echo $conflicts) -- resolve, then scripts/engine.sh perf save"
+            say "profiling hooks applied by a three-way merge -- scripts/engine.sh perf save to re-base the patch"
+            ;;
         off) eng apply -R "$p" && say "profiling hooks removed" ;;
-        *)   die "perf on|off" ;;
+        save)
+            # New files (PerfLog.h) are untracked: record them for the diff only.
+            local new; mapfile -t new < <(eng ls-files --others --exclude-standard -- SurrealEngine)
+            [ ${#new[@]} -eq 0 ] || eng add -N -- "${new[@]}"
+            eng diff > "$p"
+            [ ${#new[@]} -eq 0 ] || eng reset -q -- "${new[@]}"
+            grep -q '^+.*TEMPORARY DEBUG TOOL' "$p" || die "no TEMPORARY DEBUG TOOL lines in the tree -- are the hooks applied?"
+            say "wrote engine-patches/optional/perf-instrumentation.patch from the engine tree"
+            ;;
+        *)   die "perf on|off|save" ;;
     esac
 }
 

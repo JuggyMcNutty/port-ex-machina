@@ -41,9 +41,13 @@ So:
   `DefUser.ini`.
 - **`Settings.json` is parsed inside a catch-all.** One malformed byte and
   every setting reverts to the engine's defaults — including 4x MSAA, which is
-  speckle on the PowerVR. The launcher always writes the complete
-  `RenderDevice` block and replaces a file it cannot parse. A missing member
-  reads as empty/false/0 (`HdrScale` 0), which is why no member is ever left out.
+  speckle on the PowerVR. The launcher always writes every member of every
+  block it knows (`RenderDevice`, and the fork's `Gamepad` and `Performance`)
+  and replaces a file it cannot parse. A missing member reads as
+  empty/false/0 (`HdrScale` 0), which is why none is ever left out; one the
+  file lacks takes the port's packaged default
+  (`engine-settings.json.default`), so a new setting reaches an existing
+  install with the port's value.
 - **Texture/skin detail, sound quality and `MinDesiredFrameRate` are not read
   by Surreal Engine's renderer or mixer**, so the original Detail page's four
   choices are gone rather than kept as switches that do nothing.
@@ -165,15 +169,16 @@ handoff.
 
 ## What was verified, and how
 
-Host (`scripts/dx.sh test`: 13 suites, no display): the byte-identical ini
+Host (`scripts/dx.sh test`, no display): the byte-identical ini
 round-trip on the shipped files; the three command-line parsers including the
 `appStrfind` surprises; the entry matrix; config seeding, stub repair and the
 `SE-` file targeting; the JSON model and `Settings.json` rules (corrupt file
-replaced, every member written, choices validated); renderer resolution and
+replaced, every member written, choices validated, a member an older file
+lacks taken from the packaged default); renderer resolution and
 the PowerVR MSAA rule; layouts, per-button remapping and retired-layout
 detection; argv construction for the exec; the device profiles -- the generic
 one, and each port's checked against its own `port-hooks.sh` (every CPU mode it
-offers is one the hooks handle).
+offers is one the hooks handle, and the hooks fall back to its default).
 
 `dxl-shots` renders every tab and overlay headlessly at the profile's panel
 size (`DXL_WINDOW`) for review; configure a host build with

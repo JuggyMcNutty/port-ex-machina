@@ -8,19 +8,17 @@ halves: a launcher we write, which replaces `System/DeusEx.exe` (only the Unreal
 Engine 1 bootstrap shell, so a native reimplementation is tractable), and the
 engine, a fork of Surreal Engine.
 
-**State (2026-09-22).**
+**State (2026-09-23).**
 
 - **The repository is the project root** (it used to be the port/ directory,
   briefly ports/aarch64-TSP), laid out as shared launcher + `ports/<id>/`. The
   work is on `main`, public at https://github.com/JuggyMcNutty/port-ex-machina.
   Its history was rewritten before publishing (2026-09-22) to drop the game's
   files and a personal email address.
-- **trimui-smartpro**: the game runs. Intro ~30 FPS; **Liberty Island 2–3
-  FPS**, CPU-bound on NPC AI and lightmap rebuilds. The fixes and a ~20 FPS
-  target are decided (Decided); CPU/GPU overlap, lit-span lightmaps, a
-  cheaper script call path and AI level of detail (engine patches 0004–0008)
-  took the fight from 2.2 to 4.5 FPS. The framework's build was
-  deployed and started the game on the device.
+- **trimui-smartpro**: the game runs. Intro ~30 FPS; Liberty Island's opening
+  firefight **4.5 FPS** (2.2 before engine patches 0004–0008), still CPU-bound
+  on NPC AI script and render CPU; the target is ~20 FPS (Decided). The device
+  has the current build: patches 0001–0008, Overclock, Distant AI on.
 - **linux-x86_64**: launcher and engine build natively; the staged app's
   `run-game.sh` ran the engine into the intro level on the development PC.
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
@@ -55,9 +53,9 @@ drift guards; `scripts/dx.sh test` the unit tests.
 **The device.** Address, login and the ways it bites are in
 [`ports/trimui-smartpro/README.md`](ports/trimui-smartpro/README.md). It drops
 off the network when it sleeps: ask the owner to wake it. Every deploy keeps
-the device's previous copy of each file it replaces in a `.prev-<date>`
-directory of `/mnt/SDCARD/App/DeusEx/` (named by the device's clock, newest
-last): copying one back is a rollback. Profiling runs use the CPU mode
+the device's previous copy of each file it replaces in a `.prev-<date-time>`
+directory of `/mnt/SDCARD/App/DeusEx/` (the device's clock, newest last; older
+hand-made ones are `.prev-<date>`): copying one back is a rollback. Profiling runs use the CPU mode
 `launcher.ini` names -- Overclock, the port's default since 2026-09-22.
 `Running.ini` is present in the game's `System/` there
 (profiling runs killed with SIGKILL), so the launcher shows a crash banner
@@ -72,40 +70,24 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
 ## Decided
 
 1. **Smart Pro performance** (owner, 2026-09-22): the target is **~20 FPS on
-   Liberty Island**, and every trade-off below is accepted. 20 FPS needs the
-   script VM several times faster, so the deep VM work is in scope. Where the
-   time goes is in [its README](ports/trimui-smartpro/README.md#performance)
-   (overclock, facing the fight, now 4.5 FPS, ~222 ms): game tick ~104 ms (NPC
-   AI through a slow script VM, ~61 ms of it under script calls), other
-   render CPU ~92 ms (visibility 34, actor meshes 23, BSP surfaces 14),
-   lightmaps and their uploads ~22 ms; the GPU now overlaps the tick. Order of
-   work, by payoff for effort, re-measuring after each:
-   - ~~Let CPU and GPU overlap~~ -- done, engine patch 0004: 2.2 → 2.5 FPS.
-     The GPU wait is gone, but the tick grew ~20 ms (shared memory).
-   - ~~Lightmaps~~ -- done, engine patch 0005, with no trade-off: the cost was
-     a burning barrel's animated light computed over every texel of twelve
-     large surfaces, not flashes. 2.5 → 3.3 FPS. Left: ~22 ms of whole-surface
-     copying, conversion and upload per frame; a rebuild could upload only its
-     changed rows.
-   - ~~VM call path~~ -- first step done, engine patch 0006: parameters from
-     `Properties` and a per-class virtual function cache removed the
-     `dynamic_cast`s (~15% of desktop samples); script ~125 → ~84 ms, 3.3 →
-     4.0 FPS; patch 0007 took per-call set-up out (native frames without
-     locals, event names looked up once, plain-data locals zero-filled):
-     script ~77 ms, 4.2 FPS. What remains is the interpreter itself
-     (`Frame::Run`, `ExpressionEvaluator::Eval`, `ExpressionValue` copies),
-     the large part; one script function, `ScriptedPawn.CheckEnemyPresence`,
-     is ~a third of all script time. Profile the desktop
-     build with `perf` ([engine-patches/README.md](engine-patches/README.md#profiling-and-validating-on-the-desktop)).
-   - ~~AI level of detail~~ -- done, engine patch 0008, the Video tab's Distant
-     AI (on by default on the Smart Pro): pawns out of view and farther than
-     ~1500 units think every third frame; 4.2 → 4.5 FPS. The fight's costly
-     pawns are the ones in view, so the saving is ~20 ms of tick. A second
-     tier (every sixth frame beyond, say, 4000 units) would take more.
-   - Visibility (34 ms): `BspClipper` rasterises occluders on every scanline
-     of the viewport. The render resolution below shrinks it; the clipper
-     could also run coarser than the image.
-   - Render resolution, **chosen by the user on the launcher's Video tab**
+   Liberty Island** (~50 ms a frame), and every trade-off below is accepted.
+   Now 4.5 FPS, ~222 ms, facing the fight in overclock. Where it goes is in
+   [its README](ports/trimui-smartpro/README.md#performance): game tick ~104 ms
+   (NPC AI, ~61 ms of it script), render CPU ~92 ms (visibility 34, actor
+   meshes 23, BSP surfaces 14), lightmaps and their uploads ~22 ms; the GPU
+   overlaps the tick. 20 FPS needs the script VM several times faster, so the
+   deep VM work is in scope.
+
+   Done, one engine patch each, measured: CPU/GPU overlap (0004); lightmaps
+   lit only where a light reaches (0005 -- the cost was a burning barrel's
+   animated light over whole surfaces, not flashes, so that trade-off was not
+   needed); the script call path without casts (0006) or per-call set-up
+   (0007); AI level of detail (0008, the Video tab's Distant AI, on by default
+   here). [engine-patches/README.md](engine-patches/README.md) has what each
+   found.
+
+   Next, in order, re-measuring after each:
+   - **Render resolution**, chosen by the user on the launcher's Video tab
      (owner, 2026-09-22) and scaled up to the panel; the default stays native.
      The engine already draws each frame into an offscreen image and scales it
      when presenting (`VulkanRenderDevice::DrawPresentTexture`); a fork patch
@@ -115,6 +97,22 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
      the Smart Pro. Still to settle when it is built: a new `Settings.json`
      field, or the engine's own `FullscreenViewportX` and `Y`, which the in-game
      menu writes too. A softer image, HUD included.
+   - **Visibility** (34 ms): `BspClipper` rasterises occluders on every
+     scanline of the viewport, so the render resolution shrinks it; the
+     clipper could also run coarser than the image.
+   - **The script interpreter** (`Frame::Run`, `ExpressionEvaluator::Eval`,
+     `ExpressionValue` copies), the large part of the tick; one function,
+     `ScriptedPawn.CheckEnemyPresence`, is about a third of all script time.
+     Profile the desktop build with `perf`
+     ([engine-patches/README.md](engine-patches/README.md#profiling-and-validating-on-the-desktop)).
+   - **Actor meshes** (~23 ms): vertex animation on the CPU
+     (`VisibleMesh::DrawLodMeshFaceDX`, the desktop profile's top render
+     function).
+   - **Lightmap uploads** (~12 ms, plus copying and converting): a rebuilt
+     lightmap is re-uploaded whole, though only the rows its lights reach
+     changed.
+   - A second tier of AI level of detail (every sixth frame beyond, say,
+     4000 units).
 2. **Renderers on aarch64** (owner, 2026-09-22): the goal is Vulkan, OpenGL ES
    and software rendering all selectable. Not now: Vulkan is the only one the
    engine has. GLES means porting Surreal's desktop OpenGL 3.2 renderer (the
@@ -187,7 +185,9 @@ are in its README. These apply everywhere:
   after moving the tree, delete `build/` and rebuild.
 - **Temporary debug hooks** (screenshots from the renderer, extra logging) carry
   a `TEMPORARY DEBUG TOOL` comment and are reverted before committing; the
-  frame-time profiling hooks are `scripts/engine.sh perf on|off`.
+  frame-time profiling hooks are `scripts/engine.sh perf on|off|save`
+  ([engine-patches/README.md](engine-patches/README.md#base)). Take them off
+  before changing the engine: a commit made with them on carries them.
 - **Editing docs with string replacement fails silently** when the pattern does
   not match. One README edit in this project was reported as done in a commit
   message and had not happened. Prefer full rewrites or scripted replacements

@@ -85,8 +85,9 @@ only when missing.
    device's GPU APIs, and **`engine.cmake`** for the display backends the
    device has.
 6. **Write `target.c`** if the device has anything to say: its fonts, CPU modes
-   its hooks can apply (then `port-hooks.sh` must handle each one --
-   `test_target_<port>` checks), a note about its pad.
+   its hooks can apply (then `port-hooks.sh` must handle each one and fall back
+   to the profile's default, `CPU_MODE_DEFAULT` -- `test_target_<port>`
+   checks), a note about its pad.
 7. **Write `packaging/`**: what the device's frontend needs to list and start
    the app, `port-hooks.sh` for its library path and CPU modes, a
    `launcher.ini` with the usual `GameDir`.
@@ -141,6 +142,7 @@ rename fails loudly instead of leaving stale instructions:
 - `scripts/engine.sh check`: the fork's commits over `UPSTREAM-BASE.txt` are
   exactly `engine-patches/*.patch`, in order.
 - `test_target_<port>`: each CPU mode a profile offers is handled by its
-  `port-hooks.sh`, and the profile's id is its port's.
+  `port-hooks.sh`, the hooks' fallback (`CPU_MODE_DEFAULT`) is the profile's
+  default, and the profile's id is its port's.
 - `scripts/dx.sh check` runs the first two, confirms every port has its
   required files, and checks the glibc ceiling of whatever is staged.

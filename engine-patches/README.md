@@ -64,7 +64,12 @@ Temporary debugging hooks never go into a patch. They carry a
 `TEMPORARY DEBUG TOOL` comment and are reverted before committing; the
 frame-time profiling hooks live in `optional/perf-instrumentation.patch` so
 they can be re-applied: `scripts/engine.sh perf on`, and `perf off`
-afterwards.
+afterwards. The patch is against the fork's head, so a fork commit that
+touches the same lines moves them: `perf on` then falls back to a three-way
+merge (and stops if that leaves conflicts to resolve), and `perf save`
+rewrites the patch from the tree so the next `on` and `off` apply cleanly.
+Take the hooks off before changing the engine itself: a commit made with them
+on carries them.
 
 ## What the patches change
 
