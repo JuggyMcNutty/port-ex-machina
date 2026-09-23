@@ -1,0 +1,219 @@
+From e9a806d56f88f63efded8ec14f8487afbc863b0a Mon Sep 17 00:00:00 2001
+From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
+Date: Wed, 23 Sep 2026 16:55:00 -0500
+Subject: [PATCH] Collision: moves and traces without casts or allocations
+
+FORK ONLY. This project ships a NO-AI Code Rule asking that LLM-written
+changes stay in a fork and are never PR'd upstream. These were written with
+Claude. Do not submit them.
+
+Around the geometry of every move and trace:
+
+- TraceMove and FinishMove asked with two dynamic_casts whether the mover
+  is a UPlayerPawn or a UProjectile (which block and are blocked by
+  bBlockPlayers), and again for every actor the move met. An object's C++
+  class never changes: UActor::IsPlayerOrProjectile makes the casts once
+  and keeps the answer.
+- Every trace sorted its hits with std::stable_sort, which takes a buffer
+  from the heap each time, twice for a trace that reaches the world. A
+  trace's hits are few: CollisionHitList::SortByFraction is an insertion
+  sort, which leaves them in the order std::stable_sort did.
+- TraceTester::Trace kept the first hit for each actor with a std::set,
+  one allocation per actor hit; the hits kept are few, so it scans them.
+
+Checked with the frame time and random seeds temporarily fixed: a hash of
+every actor's location, rotation, velocity, state and class matched the
+build before patch 0028, frame by frame, on Liberty Island and UNATCO HQ.
+---
+ .../Collision/BottomLevel/TraceAABBModel.cpp  |  2 +-
+ .../Collision/BottomLevel/TraceRayModel.cpp   |  2 +-
+ .../Collision/TopLevel/CollisionHit.h         | 18 ++++++++++++++++++
+ .../Collision/TopLevel/TraceTest.cpp          | 18 ++++++++++--------
+ SurrealEngine/Packages/Engine/Actors/UActor.h |  7 +++++++
+ .../Packages/Engine/Actors/UActor_Phys.cpp    | 19 +++++++++++++------
+ 6 files changed, 50 insertions(+), 16 deletions(-)
+
+diff --git a/SurrealEngine/Collision/BottomLevel/TraceAABBModel.cpp b/SurrealEngine/Collision/BottomLevel/TraceAABBModel.cpp
+index e294956..41f8f65 100644
+--- a/SurrealEngine/Collision/BottomLevel/TraceAABBModel.cpp
++++ b/SurrealEngine/Collision/BottomLevel/TraceAABBModel.cpp
+@@ -8,7 +8,7 @@ CollisionHitList TraceAABBModel::Trace(UModel* model, const dvec3& origin, doubl
+ 	Model = model;
+ 	CollisionHitList hits;
+ 	Trace(origin, tmin, dirNormalized, tmax, extents, visibilityOnly, &Model->Nodes.front(), hits);
+-	std::stable_sort(hits.begin(), hits.end(), [](const auto& a, const auto& b) { return a.Fraction < b.Fraction; });
++	hits.SortByFraction();
+ 	return hits;
+ }
+ 
+diff --git a/SurrealEngine/Collision/BottomLevel/TraceRayModel.cpp b/SurrealEngine/Collision/BottomLevel/TraceRayModel.cpp
+index 33a3995..1d29fb6 100644
+--- a/SurrealEngine/Collision/BottomLevel/TraceRayModel.cpp
++++ b/SurrealEngine/Collision/BottomLevel/TraceRayModel.cpp
+@@ -8,7 +8,7 @@ CollisionHitList TraceRayModel::Trace(UModel* model, const dvec3& origin, double
+ 	Model = model;
+ 	CollisionHitList hits;
+ 	Trace(origin, tmin, dirNormalized, tmax, visibilityOnly, &Model->Nodes.front(), hits, 0.0, tmax);
+-	std::stable_sort(hits.begin(), hits.end(), [](const auto& a, const auto& b) { return a.Fraction < b.Fraction; });
++	hits.SortByFraction();
+ 	return hits;
+ }
+ 
+diff --git a/SurrealEngine/Collision/TopLevel/CollisionHit.h b/SurrealEngine/Collision/TopLevel/CollisionHit.h
+index bd791c1..b7f1df0 100644
+--- a/SurrealEngine/Collision/TopLevel/CollisionHit.h
++++ b/SurrealEngine/Collision/TopLevel/CollisionHit.h
+@@ -102,6 +102,24 @@ public:
+ 		}
+ 	}
+ 
++	// Nearest first, equal fractions kept in their order: the order
++	// std::stable_sort gives, without the buffer it took from the heap on
++	// every trace. A trace's hits are few, so an insertion sort.
++	void SortByFraction()
++	{
++		for (size_t i = 1; i < count; i++)
++		{
++			CollisionHit hit = items[i];
++			size_t j = i;
++			while (j > 0 && hit.Fraction < items[j - 1].Fraction)
++			{
++				items[j] = items[j - 1];
++				j--;
++			}
++			items[j] = hit;
++		}
++	}
++
+ private:
+ 	void reserve(size_t newcapacity)
+ 	{
+diff --git a/SurrealEngine/Collision/TopLevel/TraceTest.cpp b/SurrealEngine/Collision/TopLevel/TraceTest.cpp
+index 700892f..ca9620f 100644
+--- a/SurrealEngine/Collision/TopLevel/TraceTest.cpp
++++ b/SurrealEngine/Collision/TopLevel/TraceTest.cpp
+@@ -74,23 +74,25 @@ CollisionHitList TraceTester::Trace(const vec3& from, const vec3& to, float heig
+ 
+ 	// Sort by closest hit and only include the first hit for each actor
+ 
+-	std::stable_sort(hits.begin(), hits.end(), [](const auto& a, const auto& b) { return a.Fraction < b.Fraction; });
+-	std::set<UActor*> seenActors;
++	hits.SortByFraction();
+ 	CollisionHitList uniqueHits;
+ 	for (auto& hit : hits)
+ 	{
++		// The hits kept are few: a scan of them, not a std::set allocated per trace
++		bool seen = false;
+ 		if (hit.Actor)
+ 		{
+-			if (seenActors.find(hit.Actor) == seenActors.end())
++			for (const CollisionHit& kept : uniqueHits)
+ 			{
+-				seenActors.insert(hit.Actor);
+-				uniqueHits.push_back(hit);
++				if (kept.Actor == hit.Actor)
++				{
++					seen = true;
++					break;
++				}
+ 			}
+ 		}
+-		else
+-		{
++		if (!seen)
+ 			uniqueHits.push_back(hit);
+-		}
+ 	}
+ 
+ 	tmax -= margin;
+diff --git a/SurrealEngine/Packages/Engine/Actors/UActor.h b/SurrealEngine/Packages/Engine/Actors/UActor.h
+index 13d47a8..0d703b6 100644
+--- a/SurrealEngine/Packages/Engine/Actors/UActor.h
++++ b/SurrealEngine/Packages/Engine/Actors/UActor.h
+@@ -526,8 +526,15 @@ public:
+ 		vec3 Location = { 0.0f };
+ 		vec3 Extents = { 0.0f };
+ 		int CheckCounter = -1;
++		int8_t PlayerOrProjectile = -1; // IsPlayerOrProjectile, once asked
+ 	} Collision;
+ 
++	// Whether this is a UPlayerPawn or a UProjectile, which block and are
++	// blocked by bBlockPlayers rather than bBlockActors. Asked on every move
++	// and for every actor a move meets; an object's C++ class never changes,
++	// so the two dynamic_casts are made once.
++	bool IsPlayerOrProjectile();
++
+ 	// The status of the actor in the light system
+ 	struct
+ 	{
+diff --git a/SurrealEngine/Packages/Engine/Actors/UActor_Phys.cpp b/SurrealEngine/Packages/Engine/Actors/UActor_Phys.cpp
+index 9b0b0b6..5f203cb 100644
+--- a/SurrealEngine/Packages/Engine/Actors/UActor_Phys.cpp
++++ b/SurrealEngine/Packages/Engine/Actors/UActor_Phys.cpp
+@@ -421,10 +421,17 @@ CollisionHit UActor::TryMove(const vec3& delta, bool dryRun, bool isOwnBaseBlock
+ 	return FinishMove(delta, hits, blockingHit);
+ }
+ 
++bool UActor::IsPlayerOrProjectile()
++{
++	if (Collision.PlayerOrProjectile < 0)
++		Collision.PlayerOrProjectile = (UObject::TryCast<UPlayerPawn>(this) || UObject::TryCast<UProjectile>(this)) ? 1 : 0;
++	return Collision.PlayerOrProjectile != 0;
++}
++
+ CollisionHit UActor::TraceMove(const vec3& delta, bool isOwnBaseBlocking, CollisionHitList& hits)
+ {
+ 	// Analyze what we will hit if we move as requested and stop if it is the level or a blocking actor
+-	bool useBlockPlayers = UObject::TryCast<UPlayerPawn>(this) || UObject::TryCast<UProjectile>(this);
++	bool useBlockPlayers = IsPlayerOrProjectile();
+ 	CollisionHit blockingHit;
+ 	if (!Brush())
+ 	{
+@@ -436,7 +443,7 @@ CollisionHit UActor::TraceMove(const vec3& delta, bool isOwnBaseBlocking, Collis
+ 				if (hit.Actor)
+ 				{
+ 					bool isBlocking;
+-					if (useBlockPlayers || UObject::TryCast<UPlayerPawn>(hit.Actor) || UObject::TryCast<UProjectile>(hit.Actor))
++					if (useBlockPlayers || hit.Actor->IsPlayerOrProjectile())
+ 						isBlocking = hit.Actor->bBlockPlayers() && bBlockPlayers();
+ 					else
+ 						isBlocking = hit.Actor->bBlockActors() && bBlockActors();
+@@ -461,7 +468,7 @@ CollisionHit UActor::TraceMove(const vec3& delta, bool isOwnBaseBlocking, Collis
+ 
+ CollisionHit UActor::FinishMove(const vec3& delta, const CollisionHitList& hits, CollisionHit blockingHit)
+ {
+-	bool useBlockPlayers = UObject::TryCast<UPlayerPawn>(this) || UObject::TryCast<UProjectile>(this);
++	bool useBlockPlayers = IsPlayerOrProjectile();
+ 
+ 	vec3 actuallyMoved = delta * blockingHit.Fraction;
+ 	vec3 OldLocation = Location();
+@@ -489,7 +496,7 @@ CollisionHit UActor::FinishMove(const vec3& delta, const CollisionHitList& hits,
+ 				continue;
+ 
+ 			bool isBlocking;
+-			if (useBlockPlayers || UObject::TryCast<UPlayerPawn>(actor) || UObject::TryCast<UProjectile>(actor))
++			if (useBlockPlayers || actor->IsPlayerOrProjectile())
+ 				isBlocking = actor->bBlockPlayers() && bBlockPlayers();
+ 			else
+ 				isBlocking = actor->bBlockActors() && bBlockActors();
+@@ -516,7 +523,7 @@ CollisionHit UActor::FinishMove(const vec3& delta, const CollisionHitList& hits,
+ 				continue;
+ 
+ 			bool isBlocking;
+-			if (useBlockPlayers || UObject::TryCast<UPlayerPawn>(actor) || UObject::TryCast<UProjectile>(actor))
++			if (useBlockPlayers || actor->IsPlayerOrProjectile())
+ 				isBlocking = actor->bBlockPlayers() && bBlockPlayers();
+ 			else
+ 				isBlocking = actor->bBlockActors() && bBlockActors();
+@@ -546,7 +553,7 @@ CollisionHit UActor::FinishMove(const vec3& delta, const CollisionHitList& hits,
+ 		{
+ 			// We can't touch stuff we are blocked by
+ 			bool isBlocking;
+-			if (useBlockPlayers || UObject::TryCast<UPlayerPawn>(hit.Actor) || UObject::TryCast<UProjectile>(hit.Actor))
++			if (useBlockPlayers || hit.Actor->IsPlayerOrProjectile())
+ 				isBlocking = hit.Actor->bBlockPlayers() && bBlockPlayers();
+ 			else
+ 				isBlocking = hit.Actor->bBlockActors() && bBlockActors();
+-- 
+2.55.0
+

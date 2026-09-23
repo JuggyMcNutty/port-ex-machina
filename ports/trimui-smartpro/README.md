@@ -324,11 +324,15 @@ script VM several times faster.
   - ~6 ms of physics, mostly box sweeps for walking pawns (`TryMove`,
     `TryStepToGround`). With the sight traces, ~13.5 ms of collision traces
     in all, through `TraceAABBModel` and `TraceRayModel` (~21 before patches
-    0025–0027). Left: the sight rays' polygon tests (`NodeRayIntersect` ~3.7),
-    the box sweeps' BSP walk (`TraceAABBModel::Trace` ~3.1, ~380 short sweeps
-    a frame, ~20 nodes each), the actor passes (~2.4), and two `dynamic_cast`s
-    a move (`TraceMove`/`FinishMove` asking whether the mover is a player or a
-    projectile).
+    0025–0027). Left, as measured before patches 0030–0032 (not yet measured
+    after them): the sight rays' polygon tests (`NodeRayIntersect` ~3.7), the
+    box sweeps' BSP walk (`TraceAABBModel::Trace` ~3.1, ~380 short sweeps a
+    frame, ~20 nodes each), the actor passes (~2.4, a third of it looking up
+    grid cells), and two `dynamic_cast`s a move. `TraceTexture` is ~1.9 of
+    it: `LaserEmitter.CalcTrace` traces each laser beam 5,000 units for
+    every one of its reflection points every tick, collecting every hit
+    along the way, and the player's floor and wall materials are two more
+    traces a frame.
   - ~12 ms of per-actor work around the scripts for the level's ~2,500 actors
     (`ULevel::TickActor`, animation, event lookups). ~1.6 of it is
     `UObject::IsEventEnabled` asking whether to send each actor `Tick`: little

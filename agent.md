@@ -21,8 +21,9 @@ no facts of its own beyond those; each lives in one doc, and the
   app ran the engine into the intro level on the development PC.
 - **trimui-smartpro**: the game runs; the performance work is in progress
   ([its Performance](ports/trimui-smartpro/README.md#performance)). The device
-  has the current build: every patch, Overclock, Distant AI on, native
-  resolution.
+  has every patch up to 0029, Overclock, Distant AI on, native resolution.
+  Patches 0030–0032 are not yet measured on it: its battery ran out
+  (2026-09-23, 0% and not charging).
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
@@ -49,7 +50,7 @@ no facts of its own beyond those; each lives in one doc, and the
    in [where a frame goes](ports/trimui-smartpro/README.md#where-a-frame-goes).
    Re-measure after each change, and profile on the device (`SAMPLE=1`): the
    desktop's proportions are not the device's.
-   - **Collision traces** (in progress: patches 0025–0027).
+   - **Collision traces** (in progress: patches 0025–0027, 0030–0032).
    - **The script interpreter** (patches 0012–0017, 0028–0029). What is left of
      its own time is mostly the Cortex-A53 waiting on memory for each
      expression node: only a denser, compiled form of each function's code

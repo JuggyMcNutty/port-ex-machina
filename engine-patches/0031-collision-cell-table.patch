@@ -1,0 +1,197 @@
+From 0098ca8c5f69c1d2c8ff397a75d1915afc20872b Mon Sep 17 00:00:00 2001
+From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
+Date: Wed, 23 Sep 2026 16:49:41 -0500
+Subject: [PATCH] Collision: the actors of each cell in an open-addressed table
+
+FORK ONLY. This project ships a NO-AI Code Rule asking that LLM-written
+changes stay in a fork and are never PR'd upstream. These were written with
+Claude. Do not submit them.
+
+Every trace, sweep and overlap test visits the 256-unit cells its box
+covers and asks the collision system for each one's actors, most often
+finding none. The cells were a std::unordered_map of std::lists: a lookup
+took a 64-bit division for the bucket and a chain of dependent loads, and
+on the handheld a third of TraceTester::Trace's own time was those
+lookups. Every move of every actor also removed it from its cells and
+added it again, a list node allocated and freed for each cell.
+
+The cells are now an open-addressed table keyed by the same bucket id:
+linear probing over a power-of-two array of ids, at most half full, so a
+lookup is a multiply and, for an empty cell, usually one cache line. Each
+cell's actors are an array in the order they were added, and removing an
+actor keeps the others in order, as std::list::remove did, so every test
+meets them in the same order as before. A cell keeps its slot once used;
+an empty one iterates nothing, as an erased one did.
+
+Checked with the frame time and random seeds temporarily fixed: a hash of
+every actor's location, rotation, velocity, state and class matched the
+build before patch 0028, frame by frame, on Liberty Island and UNATCO HQ,
+and so did the logs.
+---
+ .../Collision/TopLevel/CollisionSystem.cpp    | 69 +++++++++++++++++--
+ .../Collision/TopLevel/CollisionSystem.h      | 22 +++++-
+ .../Collision/TopLevel/CollisionTest.h        |  9 +--
+ 3 files changed, 84 insertions(+), 16 deletions(-)
+
+diff --git a/SurrealEngine/Collision/TopLevel/CollisionSystem.cpp b/SurrealEngine/Collision/TopLevel/CollisionSystem.cpp
+index 051ad9f..f643f34 100644
+--- a/SurrealEngine/Collision/TopLevel/CollisionSystem.cpp
++++ b/SurrealEngine/Collision/TopLevel/CollisionSystem.cpp
+@@ -140,7 +140,7 @@ void CollisionSystem::AddToCollision(UActor* actor)
+ 			{
+ 				for (int x = start.x; x < end.x; x++)
+ 				{
+-					CollisionActors[GetBucketId(x, y, z)].push_back(actor);
++					Cell(GetBucketId(x, y, z)).push_back(actor);
+ 				}
+ 			}
+ 		}
+@@ -162,12 +162,12 @@ void CollisionSystem::RemoveFromCollision(UActor* actor)
+ 			{
+ 				for (int x = start.x; x < end.x; x++)
+ 				{
+-					auto it = CollisionActors.find(GetBucketId(x, y, z));
+-					if (it != CollisionActors.end())
++					// Every entry, keeping the others in order, as std::list::remove did
++					size_t slot = FindSlot(GetBucketId(x, y, z));
++					if (slot != NoSlot)
+ 					{
+-						it->second.remove(actor);
+-						if (it->second.empty())
+-							CollisionActors.erase(it);
++						Array<UActor*>& cell = CellActors[slot];
++						cell.erase(std::remove(cell.begin(), cell.end(), actor), cell.end());
+ 					}
+ 				}
+ 			}
+@@ -176,3 +176,60 @@ void CollisionSystem::RemoveFromCollision(UActor* actor)
+ 		actor->Collision.Inserted = false;
+ 	}
+ }
++
++size_t CollisionSystem::FindSlot(uint32_t id) const
++{
++	if (CellIds.empty())
++		return NoSlot;
++	size_t mask = CellIds.size() - 1;
++	for (size_t slot = CellHash(id) & mask; ; slot = (slot + 1) & mask)
++	{
++		uint32_t cellId = CellIds[slot];
++		if (cellId == id)
++			return slot;
++		if (cellId == NoCell)
++			return NoSlot;
++	}
++}
++
++const Array<UActor*>& CollisionSystem::FindCell(uint32_t id) const
++{
++	size_t slot = FindSlot(id);
++	return slot != NoSlot ? CellActors[slot] : NoActors;
++}
++
++Array<UActor*>& CollisionSystem::Cell(uint32_t id)
++{
++	if ((CellCount + 1) * 2 > CellIds.size())
++		GrowCells();
++	size_t mask = CellIds.size() - 1;
++	size_t slot = CellHash(id) & mask;
++	while (CellIds[slot] != id && CellIds[slot] != NoCell)
++		slot = (slot + 1) & mask;
++	if (CellIds[slot] == NoCell)
++	{
++		CellIds[slot] = id;
++		CellCount++;
++	}
++	return CellActors[slot];
++}
++
++void CollisionSystem::GrowCells()
++{
++	size_t capacity = std::max<size_t>(4096, CellIds.size() * 2);
++	Array<uint32_t> ids(capacity, NoCell);
++	Array<Array<UActor*>> actors(capacity);
++	size_t mask = capacity - 1;
++	for (size_t i = 0; i < CellIds.size(); i++)
++	{
++		if (CellIds[i] == NoCell)
++			continue;
++		size_t slot = CellHash(CellIds[i]) & mask;
++		while (ids[slot] != NoCell)
++			slot = (slot + 1) & mask;
++		ids[slot] = CellIds[i];
++		actors[slot] = std::move(CellActors[i]);
++	}
++	CellIds = std::move(ids);
++	CellActors = std::move(actors);
++}
+diff --git a/SurrealEngine/Collision/TopLevel/CollisionSystem.h b/SurrealEngine/Collision/TopLevel/CollisionSystem.h
+index 147ce3d..0de2c0b 100644
+--- a/SurrealEngine/Collision/TopLevel/CollisionSystem.h
++++ b/SurrealEngine/Collision/TopLevel/CollisionSystem.h
+@@ -1,8 +1,6 @@
+ #pragma once
+ 
+ #include "Math/vec.h"
+-#include <unordered_map>
+-#include <list>
+ 
+ class ULevel;
+ class UActor;
+@@ -108,8 +106,26 @@ private:
+ 		return ((x & 0x3ff) << 20) | ((y & 0x3ff) << 10) | (z & 0x3ff);
+ 	}
+ 
++	// The actors whose collision boxes reach each 256-unit cell, in the order
++	// they were added. An open-addressed table keyed by bucket id (linear
++	// probing, a power-of-two size, at most half full): finding a cell is a
++	// multiply and, for an empty one, usually one cache line of ids, where a
++	// std::unordered_map of std::lists took a division and a chain of
++	// pointers, and a list node allocated for every cell of every move. A
++	// cell keeps its slot once used, so the table only ever grows.
++	const Array<UActor*>& FindCell(uint32_t id) const;
++	Array<UActor*>& Cell(uint32_t id); // made if new
++	size_t FindSlot(uint32_t id) const; // NoSlot if the cell was never used
++	void GrowCells();
++	static uint32_t CellHash(uint32_t id) { uint32_t h = id * 0x9E3779B1u; return h ^ (h >> 16); }
++	static const uint32_t NoCell = 0xffffffff; // never a bucket id: those have 30 bits
++	static const size_t NoSlot = ~(size_t)0;
++
+ 	ULevel* Level = nullptr;
+-	std::unordered_map<uint32_t, std::list<UActor*>> CollisionActors;
++	Array<uint32_t> CellIds; // NoCell where a slot is free
++	Array<Array<UActor*>> CellActors;
++	size_t CellCount = 0;
++	inline static const Array<UActor*> NoActors;
+ 
+ 	friend class CollisionTester;
+ };
+diff --git a/SurrealEngine/Collision/TopLevel/CollisionTest.h b/SurrealEngine/Collision/TopLevel/CollisionTest.h
+index cd6a6ba..d3db419 100644
+--- a/SurrealEngine/Collision/TopLevel/CollisionTest.h
++++ b/SurrealEngine/Collision/TopLevel/CollisionTest.h
+@@ -18,19 +18,14 @@ public:
+ 	static ivec3 GetRayEndExtents(const vec3& from, const vec3& to) { return CollisionSystem::GetRayEndExtents(from, to); }
+ 	static ivec3 GetSweepEndExtents(const vec3& from, const vec3& to, const vec3& extents) { return CollisionSystem::GetSweepEndExtents(from, to, extents); }
+ 
+-	const std::list<UActor*>& GetActors(int x, int y, int z) const
++	const Array<UActor*>& GetActors(int x, int y, int z) const
+ 	{
+-		auto it = Collision->CollisionActors.find(CollisionSystem::GetBucketId(x, y, z));
+-		if (it != Collision->CollisionActors.end())
+-			return it->second;
+-		else
+-			return emptyList;
++		return Collision->FindCell(CollisionSystem::GetBucketId(x, y, z));
+ 	}
+ 
+ 	ULevel* GetLevel() const { return Collision->Level; }
+ 
+ private:
+ 	CollisionSystem* Collision = nullptr;
+-	inline static std::list<UActor*> emptyList;
+ 	inline static int CheckCounter = 0;
+ };
+-- 
+2.55.0
+

@@ -313,3 +313,18 @@ With 0013, these took the Smart Pro's script time from ~125 ms a frame to
 - [**0027**](../engine-patches/0027-step-down-one-trace.patch)
   `step-down-one-trace` -- a walking pawn's step to the ground made with the
   trace its dry run made. **Smart Pro:** tick ~56 → ~53 ms.
+- [**0030**](../engine-patches/0030-ray-plane-tests-first.patch)
+  `ray-plane-tests-first` -- a ray tests a polygon's plane before reading its
+  vertex count and surface, which lie on other cache lines. **Smart Pro:** not
+  yet measured.
+- [**0031**](../engine-patches/0031-collision-cell-table.patch)
+  `collision-cell-table` -- each collision cell's actors found in an
+  open-addressed table and kept in an array, not a `std::unordered_map` of
+  `std::list`s. **Smart Pro:** not yet measured.
+- [**0032**](../engine-patches/0032-collision-move-overheads.patch)
+  `collision-move-overheads` -- a move asks once per actor whether it is a
+  player or a projectile, and traces sort and sift their hits without heap
+  allocations. **Smart Pro:** not yet measured.
+
+0030–0032 were each checked with the actor-state hash on Liberty Island and
+UNATCO HQ (their messages say how).
