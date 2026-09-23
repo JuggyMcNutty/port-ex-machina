@@ -10,8 +10,10 @@ the staged app's `run-game.sh` started the engine on the workspace's
 `gamefiles/`: Vulkan with bindless textures, the intro level loaded and ran
 until stopped. `dxl-cli --probe` found Vulkan 1.4 and OpenGL, both selectable.
 Started directly on Liberty Island (`--url=01_NYC_UNATCOIsland.dx`), the
-engine is also where it is profiled and its Vulkan use validated for the
-handheld's sake ([`engine-patches/README.md`](../../engine-patches/README.md#profiling-and-validating-on-the-desktop)).
+engine is also where its Vulkan use is validated for the handheld's sake,
+and where the temporary side-by-side checks of engine changes run
+([`engine-patches/README.md`](../../engine-patches/README.md#profiling-and-validating-on-the-desktop));
+its CPU profile is only a rough guide to the handheld's.
 Not yet exercised: the home screen driven by hand into a game, and a pad in
 game on a desktop.
 

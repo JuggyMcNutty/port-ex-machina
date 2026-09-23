@@ -78,13 +78,13 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    [its README](ports/trimui-smartpro/README.md#performance): game tick ~53 ms
    (NPC AI: ~22 ms under script calls, ~13.5 ms collision traces, ~12 ms
    per-actor work), render CPU ~59 ms (visibility ~16, actor meshes ~12, BSP
-   surfaces ~8), lightmaps and their uploads ~6 ms. The GPU (~76 ms)
-   overlaps the tick, which is now the shorter of the two, so at native
+   surfaces ~8), lightmaps and their uploads ~6 ms. The GPU (~72 ms at
+   native resolution) overlaps the tick, which is now the shorter of the two, so at native
    resolution a frame is about the GPU's time plus the render CPU: render-
    CPU savings count in full there and tick savings hardly at all (0022:
    tick -2.6 ms, frame -0.7). At 853×480 the frame is the CPU's work, and
    both count. At native resolution, 20 FPS also needs the GPU's
-   ~76 ms a frame below ~50 -- something for the owner to weigh against the
+   ~72 ms a frame below ~50 -- something for the owner to weigh against the
    Resolution default. 20 FPS needs the script VM
    several times faster, so the deep VM work is in scope.
 
@@ -117,7 +117,7 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
 
    Next, in order, re-measuring after each:
    - **The script interpreter** (in progress, 0012–0017: script ~60 → ~30
-     ms a frame, the tick ~98 → ~69). Its own work is still ~14 ms of the
+     ms a frame; ~25 now, in a ~53 ms tick). Its own work is still ~11 ms of the
      tick -- statements (`Frame::Run`, `ExpressionEvaluator::Eval`), the
      expressions the leaf and operator fast paths do not cover, calls
      (`ExpressionEvaluator::Call`, `Frame::Call`), `ExpressionValue` moves --

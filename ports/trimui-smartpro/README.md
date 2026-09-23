@@ -294,10 +294,12 @@ and 5.3 with.)
 The first bold row is where the performance work started, the last is the
 best so far; each row between is one engine patch, and what each found is in
 [`engine-patches/README.md`](../../engine-patches/README.md). The rows at
-960×540 and 853×480 are the Video tab's Resolution below native: the GPU's
-time was already hidden, so the gain is the tick's, which shares memory with
-the GPU, and, since patch 0010, the occlusion grid's. Where a frame goes at
-native resolution (~136 ms, facing the fight in overclock):
+960×540 and 853×480 are the Video tab's Resolution below native. When they
+were first measured the GPU's time was hidden at native resolution too, so
+the gain was the tick's, which shares memory with the GPU, and, since patch
+0010, the occlusion grid's; since patch 0018 the GPU is what holds native
+resolution back (below). Where a frame goes at native resolution (~136 ms,
+facing the fight in overclock):
 
 - **Game tick ~53 ms**, almost all NPCs. The device's CPU samples split it:
   ~22 ms under script calls, ~11 ms of which is the interpreter's own work
@@ -310,20 +312,23 @@ native resolution (~136 ms, facing the fight in overclock):
   frame; `ScriptedPawn.CheckEnemyPresence` is still the costliest script
   function. Pawns out of view think every third frame, every sixth beyond
   4000 units (Distant AI).
-- **Render CPU ~62 ms** besides waits, lightmaps and uploads: visibility
+- **Render CPU ~59 ms** besides waits, lightmaps and uploads: visibility
   ~16 ms (the BSP walk, ~3,800 box tests and ~2,400 surface tests a frame
   against `BspClipper`'s occlusion grid, portal tests, actor set-up; ~20
   with the profile's per-part timers); actor meshes ~12 ms for ~40 in view
   (vertex animation on the CPU); BSP surfaces ~8 ms for ~580 nodes, mostly
   each surface's lightmap lookup (`LightSystem::GetLightmap`); translucent
-  5.6; the sky portal 3; `PostRenderFlash` (script) 2.1; the rest ~7.
+  5.3; the sky portal 3; BSP set-up (`bsp-info`) 2.9; the end of the frame
+  (`unlock`) 2.3; `PostRenderFlash` (script) 1.9; the rest ~2.
 - **Lightmaps ~4 ms, texture uploads ~2 ms.** One `BarrelFire`, a dynamic
   light with the fire waver effect, has ~8 lightmaps rebuilt every frame, and
   each goes back to the GPU whole, converted from float on the CPU (the GE8300
   cannot filter RGBA32F; engine patch 0002; in NEON since 0024).
-- **GPU ~76 ms**, drawing the previous frame alongside the tick since patch
-  0004, which cost ~20 ms of tick: CPU and GPU compete for the SoC's shared
-  memory. At native resolution the tick is now the shorter of the two, so
+- **GPU ~72 ms** at native resolution -- ~76 when last measured directly,
+  as a wait, before patch 0004; now the input, tick and view plus the
+  render's wait for it. It draws the previous frame alongside the tick since
+  patch 0004, which cost ~20 ms of tick: CPU and GPU compete for the SoC's
+  shared memory. At native resolution the tick is now the shorter of the two, so
   the render waits ~3–14 ms for the GPU at its start (patch 0018 on), render
   CPU and `view+audio` grew ~1–1.5 ms each from patch 0015 on, and a
   shorter tick gains little: patch 0022 took ~2.6 ms off the tick and ~0.7
@@ -336,9 +341,8 @@ native resolution (~136 ms, facing the fight in overclock):
   `AmbientSound` each frame (~2 ms).
 
 The fixes chosen, their order and the target are in
-[`agent.md`](../../agent.md#decided). The OpenGL ES backend would
-not help here: the CPU is the bottleneck, and Vulkan is the better API on this
-GPU.
+[`agent.md`](../../agent.md#decided). An OpenGL ES backend is not expected to
+help: the CPU is most of the frame.
 
 ## Device probes
 
