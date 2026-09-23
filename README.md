@@ -81,7 +81,7 @@ ports/<port>/        one device: see docs/PORTING.md
 build/               (ignored) build/<port>/{launcher,engine,app}
 deps/                (ignored) fetched toolchains and sysroots
 engine/              (ignored) the engine fork, a separate git clone
-gamefiles/           (ignored) your Deus Ex install, for running on this machine
+gamefiles/           (ignored) your Deus Ex install, for running on this machine and for test_gamefiles
 reference/           (ignored) the 1112f SDK, the DeusExe launcher source, IDA and ini backups
 ```
 
@@ -94,3 +94,11 @@ reference/           (ignored) the 1112f SDK, the DeusExe launcher source, IDA a
 4. The port you are working on: `ports/<port>/README.md`.
 5. [`engine-patches/README.md`](engine-patches/README.md) -- every engine change.
 6. [`docs/re/`](docs/re/) -- the original binary, when a behaviour's origin matters.
+
+## License
+
+[zlib](LICENSE), for everything in this repository, the engine patches
+included. Surreal Engine has its own licences, in its `LICENSE.md`.
+
+Deus Ex belongs to its owners; this project is not affiliated with or endorsed
+by them.

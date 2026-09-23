@@ -1,42 +1,31 @@
 #include "test.h"
 #include "core/strings.h"
 
-/* Startup.int is the launcher's own string table; docs/re/agent.md calls it
- * one of the two cheat codes for this whole effort. These assertions double as
- * a check that the shipped file still says what the spec says it says. */
+/* Startup.int is the original launcher's string table (docs/re/). The real
+ * file's strings are checked against the spec in test_gamefiles; this one is
+ * a stand-in with the same sections and keys. */
 static void test_reads_startup_int(void) {
     dxl_strings *s = dxl_strings_load(DXL_FIXTURES, "Startup");
     CHECK_INT(dxl_strings_present(s), 1);
 
-    CHECK_STR(dxl_strings_get(s, "General", "Run", NULL), "Run!");
-    CHECK_STR(dxl_strings_get(s, "General", "SafeMode", NULL), "Deus Ex Safe Mode");
-    CHECK_STR(dxl_strings_get(s, "General", "RecoveryMode", NULL), "Deus Ex Recovery Mode");
-    CHECK_STR(dxl_strings_get(s, "General", "FirstTime", NULL),
-              "Deus Ex First-Time Configuration");
-    CHECK_STR(dxl_strings_get(s, "General", "WebPage", NULL), "http://www.deusex.com/");
-
-    /* The four SafeMode buttons, in the order docs/re/wizard.md lists them. */
-    CHECK_STR(dxl_strings_get(s, "IDDIALOG_ConfigPageSafeMode", "IDC_Run", NULL),
-              "Run Deus Ex");
+    CHECK_STR(dxl_strings_get(s, "General", "Run", NULL), "Play");
+    CHECK_STR(dxl_strings_get(s, "General", "SafeMode", NULL), "Safe mode");
+    CHECK_STR(dxl_strings_get(s, "General", "WebPage", NULL), "https://example.invalid/");
     CHECK_STR(dxl_strings_get(s, "IDDIALOG_ConfigPageSafeMode", "IDC_Video", NULL),
-              "Change your 3D video device");
-
-    /* All eight safe-mode checkbox labels exist -- including the three the
-     * original never reads. We wire them; the strings were always there. */
-    const char *boxes[] = { "IDC_NoSound", "IDC_No3DSound", "IDC_No3DVideo",
-                            "IDC_Window", "IDC_Res", "IDC_ResetConfig",
-                            "IDC_NoProcessor" };
-    for (size_t i = 0; i < sizeof boxes / sizeof *boxes; i++)
-        CHECK(dxl_strings_get(s, "IDDIALOG_ConfigPageSafeOptions", boxes[i], NULL) != NULL);
-
+              "Choose a 3D device");
+    /* Two spaces inside a value are the value's, not collapsed. */
+    CHECK_STR(dxl_strings_get(s, "Descriptions", "SoftDrv.SoftwareRenderDevice", NULL),
+              "Software rendering.  Slow, but it always works.");
+    /* An empty value is a present, empty string. */
+    CHECK_STR(dxl_strings_get(s, "IDDIALOG_ConfigPageSafeOptions", "IDC_NoJoy", NULL), "");
     dxl_strings_free(s);
 }
 
-/* WorldHigh="High detail textures" -- the only quoted value in the file. */
+/* WorldHigh is quoted, as in the real file (its only quoted value). */
 static void test_strips_quotes(void) {
     dxl_strings *s = dxl_strings_load(DXL_FIXTURES, "Startup");
-    CHECK_STR(dxl_strings_get(s, "General", "WorldHigh", NULL), "High detail textures");
-    CHECK_STR(dxl_strings_get(s, "General", "WorldLow", NULL), "Medium detail world textures");
+    CHECK_STR(dxl_strings_get(s, "General", "WorldHigh", NULL), "High world textures");
+    CHECK_STR(dxl_strings_get(s, "General", "WorldLow", NULL), "Medium world textures");
     dxl_strings_free(s);
 }
 

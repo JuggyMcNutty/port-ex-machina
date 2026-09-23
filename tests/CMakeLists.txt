@@ -21,6 +21,12 @@ dxl_test(test_engine_settings)
 dxl_test(test_renderers)
 dxl_test(test_bindings)
 
+# The same checks against the real game files, which this repository does not
+# carry: skipped unless gamefiles/ holds an install.
+dxl_test(test_gamefiles)
+target_compile_definitions(test_gamefiles PRIVATE DXL_GAMEFILES="${DXL_ROOT}/gamefiles/System")
+set_tests_properties(test_gamefiles PROPERTIES SKIP_RETURN_CODE 77)
+
 # Device profiles: the generic one and the lookup rules, then each port's own
 # target.c checked against its port (its id, and CPU modes its run-game hooks
 # handle).

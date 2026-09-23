@@ -1,11 +1,12 @@
 #include "test.h"
 #include "core/ini.h"
 
-/* The property that matters most: a real shipped file, loaded and saved
- * untouched, must come back byte-identical -- CRLF, comments, blank lines,
+/* The property that matters most: a file in the game's format, loaded and
+ * saved untouched, must come back byte-identical -- CRLF, blank lines,
  * repeated keys and all. Everything else in the config layer is built on the
- * assumption that we never gratuitously rewrite the engine's own file. */
-static void test_roundtrip_shipped(void) {
+ * assumption that we never gratuitously rewrite the engine's own file. The
+ * same round trip against the real files is in test_gamefiles. */
+static void test_roundtrip_fixtures(void) {
     const char *names[] = { "DeusEx.ini", "Default.ini", "DefUser.ini" };
     for (size_t i = 0; i < sizeof names / sizeof *names; i++) {
         char *path = fixture(names[i]);
@@ -30,17 +31,14 @@ static void test_roundtrip_shipped(void) {
     }
 }
 
-static void test_reads_shipped_values(void) {
+static void test_reads_values(void) {
     char *path = fixture("DeusEx.ini");
     dxl_ini *ini = dxl_ini_load(path, NULL);
     free(path);
     CHECK(ini != NULL);
     if (!ini) return;
 
-    /* docs/re/wizard.md: a pristine install ships FirstRun=0, so the
-     * first-time flow always runs. */
     CHECK_INT(dxl_ini_get_int(ini, "FirstRun", "FirstRun", -1), 0);
-    /* docs/re/launch-flow.md section 8: CdPath=..\ makes the CD check pass. */
     CHECK_STR(dxl_ini_get(ini, "Engine.Engine", "CdPath"), "..\\");
     CHECK_STR(dxl_ini_get(ini, "Engine.Engine", "GameEngine"), "DeusEx.DeusExGameEngine");
     CHECK_STR(dxl_ini_get(ini, "Engine.Engine", "GameRenderDevice"),
@@ -50,11 +48,9 @@ static void test_reads_shipped_values(void) {
     CHECK_STR(dxl_ini_get(ini, "engine.engine", "cdpath"), "..\\");
     CHECK_STR(dxl_ini_get(ini, "ENGINE.ENGINE", "CDPATH"), "..\\");
 
-    /* docs/re/ini-keys.md: DescFlags and Description are runtime values that
-     * appear in no shipped ini. If these ever start existing, the detection
-     * story in the docs is wrong. */
-    CHECK(dxl_ini_get(ini, "D3DDrv.D3DRenderDevice", "Description") == NULL);
+    /* A key the section lacks is absent, not empty. */
     CHECK(dxl_ini_get(ini, "D3DDrv.D3DRenderDevice", "DescFlags") == NULL);
+    CHECK_STR(dxl_ini_get(ini, "URL", "Host"), "");
 
     dxl_ini_free(ini);
 }
@@ -230,8 +226,8 @@ static void test_rewrite_normalises_line_ending(void) {
 }
 
 TEST_MAIN_BEGIN
-    RUN(test_roundtrip_shipped);
-    RUN(test_reads_shipped_values);
+    RUN(test_roundtrip_fixtures);
+    RUN(test_reads_values);
     RUN(test_repeated_keys);
     RUN(test_set_preserves_everything_else);
     RUN(test_noop_set_is_not_dirty);

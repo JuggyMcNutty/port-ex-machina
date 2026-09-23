@@ -10,7 +10,8 @@ static dxl_ini *user_ini(void) {
 }
 
 /* An untouched install carries exactly the shipped Joy lines, and must be
- * recognised as such -- that is what triggers the first-contact switch. */
+ * recognised as such -- that is what triggers the first-contact switch. The
+ * fixture carries them too; test_gamefiles checks the real DefUser.ini. */
 static void test_shipped_bindings_are_classic(void) {
     dxl_ini *ini = user_ini();
     CHECK(ini != NULL);

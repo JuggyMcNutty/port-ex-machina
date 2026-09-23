@@ -1,9 +1,15 @@
 # Test fixtures
 
-Copied verbatim from a retail Deus Ex install (`System/`). They are here because
-the byte-identical round-trip test is only meaningful against the real files —
-CRLF terminators, repeated `Paths=` keys, and the exact spacing the engine writes.
+Stand-ins for the game's own `System/` files, written for this repository --
+the game's files are not ours to publish, so none are here. Each has the
+features of the real file that the tests depend on: CRLF throughout, repeated
+keys (`Paths=`, `Suppress=`, `ServerActors=`, `EditPackages=`), `=` inside
+values, empty values, bracketed `Aliases[n]` values with a double space
+(`Axis aBaseY  Speed=`), the shipped joystick lines, and one quoted value in
+`Startup.int`.
 
-These are the game's own configuration and localisation files, not redistributable
-game content. If this repo is ever published, drop them and regenerate from a local
-install instead.
+`DeusEx.ini` and `Default.ini` are the same file, as they are in a fresh
+install.
+
+The same checks against the real files are in `tests/test_gamefiles.c`: it
+runs when `gamefiles/System` holds an install and is skipped otherwise.

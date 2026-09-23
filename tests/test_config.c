@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-/* Copies the shipped DeusEx.ini into a scratch directory so the tests can
+/* Copies the fixture DeusEx.ini into a scratch directory so the tests can
  * write to it. Returns the directory; caller removes it. */
 static char *scratch_install(const char *tag) {
     static char dir[512];

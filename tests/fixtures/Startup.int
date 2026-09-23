@@ -1,0 +1,33 @@
+[General]
+Run=Play
+FirstTime=First-time setup
+SafeMode=Safe mode
+Video=Video setup
+RecoveryMode=Recovery mode
+WebPage=https://example.invalid/
+Detecting=Looking for 3D devices...
+WorldLow=Medium world textures
+WorldHigh="High world textures"
+
+[Descriptions]
+SoftDrv.SoftwareRenderDevice=Software rendering.  Slow, but it always works.
+OpenGLDrv.OpenGLRenderDevice=OpenGL rendering.  Experimental.
+
+[IDDIALOG_ConfigPageSafeMode]
+IDC_Run=Play now
+IDC_Video=Choose a 3D device
+IDC_SafeMode=Choose safe options
+IDC_Web=Visit the web site
+
+[IDDIALOG_ConfigPageSafeOptions]
+IDC_NoSound=No sound
+IDC_No3DSound=No 3D sound
+IDC_No3DVideo=No 3D video
+IDC_Window=Windowed
+IDC_Res=Lowest resolution
+IDC_ResetConfig=Reset the configuration
+IDC_NoProcessor=No processor extensions
+IDC_NoJoy=
+
+[Errors]
+Critical=Critical error
