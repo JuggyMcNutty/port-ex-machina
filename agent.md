@@ -16,11 +16,11 @@ engine, a fork of Surreal Engine.
   Its history was rewritten before publishing (2026-09-22) to drop the game's
   files and a personal email address.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; Liberty Island's opening
-  firefight **7.0 FPS** at native resolution, 8.4 at 853×480 (2.2 before engine
-  patches 0004–0022), still CPU-bound on NPC AI and render CPU, and at native
+  firefight **7.3 FPS** at native resolution, 8.9 at 853×480 (2.2 before engine
+  patches 0004–0024), still CPU-bound on NPC AI and render CPU, and at native
   resolution held by the GPU too; UNATCO HQ indoors ~20. The target is ~20 FPS
   in the fight (Decided). The device has the current build: patches
-  0001–0022, Overclock, Distant AI on, native resolution.
+  0001–0024, Overclock, Distant AI on, native resolution.
 - **linux-x86_64**: launcher and engine build natively; the staged app's
   `run-game.sh` ran the engine into the intro level on the development PC.
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
@@ -73,16 +73,17 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
 
 1. **Smart Pro performance** (owner, 2026-09-22): the target is **~20 FPS on
    Liberty Island** (~50 ms a frame), and every trade-off below is accepted.
-   Now 7.0 FPS at native resolution (~142 ms) and 8.4 at 853×480, facing the
+   Now 7.3 FPS at native resolution (~138 ms) and 8.9 at 853×480, facing the
    fight in overclock. Where it goes is in
-   [its README](ports/trimui-smartpro/README.md#performance): game tick ~63 ms
+   [its README](ports/trimui-smartpro/README.md#performance): game tick ~62 ms
    (NPC AI: ~27 ms under script calls, ~21 ms collision traces, ~12 ms
-   per-actor work), render CPU ~62 ms (visibility ~16, actor meshes ~12, BSP
-   surfaces 11), lightmaps and their uploads ~8 ms. The GPU (~76 ms)
-   overlaps the tick, which is now the shorter of the two: at native
-   resolution the render waits ~5 ms for the GPU and tick savings hardly
-   show in the frame (0022: tick -2.6 ms, frame -0.7), while at 853×480
-   they show in full. At native resolution, 20 FPS also needs the GPU's
+   per-actor work), render CPU ~59 ms (visibility ~16, actor meshes ~12, BSP
+   surfaces ~8), lightmaps and their uploads ~6 ms. The GPU (~76 ms)
+   overlaps the tick, which is now the shorter of the two, so at native
+   resolution a frame is about the GPU's time plus the render CPU: render-
+   CPU savings count in full there and tick savings hardly at all (0022:
+   tick -2.6 ms, frame -0.7). At 853×480 the frame is the CPU's work, and
+   both count. At native resolution, 20 FPS also needs the GPU's
    ~76 ms a frame below ~50 -- something for the owner to weigh against the
    Resolution default. 20 FPS needs the script VM
    several times faster, so the deep VM work is in scope.
@@ -106,7 +107,9 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    test in the visibility clipper fixed -- an upstream bug that clipped
    every triangle on non-x86 builds (0020); surface points gathered only
    for the surfaces tested (0021); AI level of detail's far tier, every
-   sixth frame beyond 4000 units (0022).
+   sixth frame beyond 4000 units (0022); the light tree, and each surface's
+   lights from it, kept while no light changes (0023); the lightmaps'
+   conversion for the GPU in NEON (0024).
    [engine-patches/README.md](engine-patches/README.md) has what each found.
 
    Next, in order, re-measuring after each:
@@ -140,8 +143,12 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
      misses), box tests (~2).
    - A second tier of AI level of detail (done, 0022: every sixth frame
      beyond 4000 units).
-   - **Lightmap uploads** (~4 ms since patch 0011): a rebuilt lightmap is
-     re-uploaded whole, though only the rows its lights reach changed.
+   - **Lightmap uploads** (0024: conversion ~3.9 → ~2.1 ms): a rebuilt
+     lightmap is still converted and re-uploaded whole, though only the rows
+     its lights reach changed. Each visible surface's lightmap lookup
+     (`LightSystem::GetLightmap`, ~3 ms of self time) is the other lightmap
+     cost left (0023 took its light-tree queries away while no light
+     changes).
 2. **Renderers on aarch64** (owner, 2026-09-22): the goal is Vulkan, OpenGL ES
    and software rendering all selectable. Not now: Vulkan is the only one the
    engine has. GLES means porting Surreal's desktop OpenGL 3.2 renderer (the

@@ -1,0 +1,78 @@
+From edb0ecbbd21aadd792ce0322d2517f13d233f33e Mon Sep 17 00:00:00 2001
+From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
+Date: Wed, 23 Sep 2026 11:20:25 -0500
+Subject: [PATCH] Lightmap uploads: the float-to-byte conversion in NEON on ARM
+
+FORK ONLY. This project ships a NO-AI Code Rule asking that LLM-written
+changes stay in a fork and are never PR'd upstream. These were written with
+Claude. Do not submit them.
+
+The GE8300 cannot filter RGBA32F, so patch 0002 converts lightmaps to RGBA8
+on the CPU as they are uploaded, and a rebuilt lightmap goes through
+TextureUploader_RGBA32F_Decode whole: ~3.7 ms a frame in Liberty Island's
+fight on the handheld, where a burning barrel's light rebuilds ~8
+lightmaps a frame.
+
+On ARM (USE_NEON) the same clamp, scale and truncation now run on four
+channels at once. A test on the device, built with the engine's flags,
+compared it with the scalar loop for every float bit pattern from 0 to 1
+(1,073,741,824 values) and for negatives, overflows, infinities and NaNs:
+all the same. A 256x128 lightmap converts in ~0.77 ms instead of ~1.72.
+Other builds keep the scalar loop.
+---
+ .../RenderDevice/Vulkan/TextureUploader.cpp   | 27 +++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/SurrealEngine/RenderDevice/Vulkan/TextureUploader.cpp b/SurrealEngine/RenderDevice/Vulkan/TextureUploader.cpp
+index 5d7cc29..598c55f 100644
+--- a/SurrealEngine/RenderDevice/Vulkan/TextureUploader.cpp
++++ b/SurrealEngine/RenderDevice/Vulkan/TextureUploader.cpp
+@@ -3,6 +3,10 @@
+ #include "TextureUploader.h"
+ #include "RenderDevice/RenderDevice.h"
+ 
++#ifdef USE_NEON
++#include <arm_neon.h>
++#endif
++
+ #ifdef USE_SSE2
+ #include <immintrin.h>
+ #endif
+@@ -751,6 +755,28 @@ void TextureUploader_RGBA32F_Decode::UploadRect(void* d, UnrealMipmap* mip, int
+ 	int pitch = mip->Width * 16;
+ 	float* src = (float*)(mip->Data.data() + (size_t)x * 16 + (size_t)y * pitch);
+ 	uint8_t* dst = (uint8_t*)d;
++#ifdef USE_NEON
++	// Every lightmap rebuilt goes through here, several a frame on the
++	// handheld. The same clamp, scale and truncation, four channels at once:
++	// checked on the device against the loop below for every float from 0 to
++	// 1 and for negatives, overflows, infinities and NaNs -- all the same.
++	const float32x4_t zero = vdupq_n_f32(0.0f), one = vdupq_n_f32(1.0f), scale = vdupq_n_f32(255.0f), half = vdupq_n_f32(0.5f);
++	for (int i = 0; i < h; i++)
++	{
++		for (int j = 0; j < w; j++)
++		{
++			float32x4_t c = vld1q_f32(src + (size_t)j * 4);
++			uint32x4_t lt = vcltq_f32(c, zero), gt = vcgtq_f32(c, one);
++			c = vbslq_f32(lt, zero, vbslq_f32(gt, one, c));
++			uint32x4_t u = vcvtq_u32_f32(vaddq_f32(vmulq_f32(c, scale), half));
++			uint16x4_t u16 = vmovn_u32(u);
++			uint8x8_t u8 = vmovn_u16(vcombine_u16(u16, u16));
++			vst1_lane_u32((uint32_t*)(dst + (size_t)j * 4), vreinterpret_u32_u8(u8), 0);
++		}
++		dst += (size_t)w * 4;
++		src = (float*)((uint8_t*)src + pitch);
++	}
++#else
+ 	for (int i = 0; i < h; i++)
+ 	{
+ 		for (int j = 0; j < w; j++)
+@@ -766,4 +792,5 @@ void TextureUploader_RGBA32F_Decode::UploadRect(void* d, UnrealMipmap* mip, int
+ 		dst += (size_t)w * 4;
+ 		src = (float*)((uint8_t*)src + pitch);
+ 	}
++#endif
+ }
+-- 
+2.55.0
+

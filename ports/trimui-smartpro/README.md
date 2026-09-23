@@ -5,8 +5,8 @@ handheld (4× Cortex-A53, PowerVR GE8300) running spruceOS. Cross-built from a
 PC; the launcher is the app the spruceOS menu starts.
 
 **Status.** The launcher and the engine both run on the device. The intro plays
-at ~30 FPS; Liberty Island's opening firefight at 7.0 FPS, 8.4 at 853×480 (2.2
-before engine patches 0004–0022), CPU-bound on NPC AI and render CPU, and at
+at ~30 FPS; Liberty Island's opening firefight at 7.3 FPS, 8.9 at 853×480 (2.2
+before engine patches 0004–0024), CPU-bound on NPC AI and render CPU, and at
 native resolution now held by the GPU too -- see [Performance](#performance).
 Indoors, UNATCO HQ shows ~20.
 
@@ -192,6 +192,7 @@ The System tab shows the engine and script logs on screen.
 | Deploy with checksums (2026-09-22) | `dx.sh deploy` built and staged, sent only the one changed file, kept the device's copy in `.prev-<date-time>` and verified all 13 files; `profile-map.sh` applied `launcher.ini`'s Overclock (four cores, 2.0 GHz) through `port-hooks.sh` and restored power-save after |
 | CPU/GPU overlap, engine patch 0004 (2026-09-22) | Liberty Island renders correctly mid-fight (framebuffer capture); GPU wait ~76 → ~0.2 ms. Synchronization validation clean on the desktop build, bindless and per-batch paths |
 | Lit-span lightmaps, engine patch 0005 (2026-09-22) | Liberty Island's dock pixel-identical before and after (framebuffer captures); lightmaps ~98 → ~11 ms. On the desktop, a temporary walk over every texel found none in reach outside a span |
+| Light tree kept, lightmap conversion in NEON, engine patches 0023–0024 (2026-09-23) | The fight runs; a capture at 853×480 shows the dock's lightmaps as before. The NEON conversion checked on the device against the scalar loop for every float from 0 to 1 |
 | AI level of detail's far tier, engine patch 0022 (2026-09-23) | The fight runs; ~48 pawns a frame fall in the far tier, ~8 of them thinking. Whether far NPCs still behave is **not yet judged by hand** |
 | Visibility: the ARM clip test, surface points on demand, engine patches 0020–0021 (2026-09-23) | A capture of the dock after 0020 differs from the one before it only in the sky's moving clouds and the NPCs; every level surface identical to the pixel |
 | Mesh vertices once a draw and faces in runs, engine patches 0018–0019 (2026-09-23) | A capture of Liberty Island's dock matches the one from before patch 0012 except where time moves things (the sky, the NPCs, the stats overlay): the statue and props identical to the pixel. On the desktop, Vulkan validation clean on both texture paths |
@@ -272,7 +273,10 @@ The frame times:
 | Native, the ARM clipper's clip test fixed (0020) | 6.9 | ~144 ms | ~66 | ~74 | ~4 |
 | The same, surface points on demand (0021) | 7.0 | ~143 ms | ~65 | ~73 | ~4 |
 | The same, far pawns think every sixth frame (0022) | 7.0 | ~142 ms | ~63 | ~75 | ~5 |
-| **853×480, the same** | **8.4** | **~119 ms** | **~51** | **~65** | **~0.2** |
+| 853×480, the same | 8.4 | ~119 ms | ~51 | ~65 | ~0.2 |
+| Native, the light tree kept while no light changes (0023) | 7.2 | ~139 ms | ~61 | ~73 | ~7 |
+| The same, lightmap conversion in NEON (0024) | 7.3 | ~138 ms | ~62 | ~72 | ~7 |
+| **853×480, the same** | **8.9** | **~112 ms** | **~48** | **~61** | **~0.2** |
 
 (Times in ms per frame, averaged over 60 frames. The performance-mode fight
 rows had the per-class or per-function hooks on, which add their own cost; the
@@ -287,9 +291,9 @@ best so far; each row between is one engine patch, and what each found is in
 960×540 and 853×480 are the Video tab's Resolution below native: the GPU's
 time was already hidden, so the gain is the tick's, which shares memory with
 the GPU, and, since patch 0010, the occlusion grid's. Where a frame goes at
-native resolution (~142 ms, facing the fight in overclock):
+native resolution (~138 ms, facing the fight in overclock):
 
-- **Game tick ~63 ms**, almost all NPCs. The device's CPU samples split it:
+- **Game tick ~62 ms**, almost all NPCs. The device's CPU samples split it:
   ~27 ms under script calls, ~14 ms of which is the interpreter's own work
   (evaluating expressions, making calls, moving values) and ~9 ms AI sight
   traces (`CanSee`, `FastTrace`); ~17 ms physics, mostly collision traces for
@@ -304,21 +308,24 @@ native resolution (~142 ms, facing the fight in overclock):
   ~16 ms (the BSP walk, ~3,800 box tests and ~2,400 surface tests a frame
   against `BspClipper`'s occlusion grid, portal tests, actor set-up; ~20
   with the profile's per-part timers); actor meshes ~12 ms for ~40 in view
-  (vertex animation on the CPU); BSP surfaces 11 ms for ~580 nodes;
-  translucent 5.6; the sky portal 3; `PostRenderFlash` (script) 2.1; the
-  rest ~7.
-- **Lightmaps ~4 ms, texture uploads ~4 ms.** One `BarrelFire`, a dynamic
+  (vertex animation on the CPU); BSP surfaces ~8 ms for ~580 nodes, mostly
+  each surface's lightmap lookup (`LightSystem::GetLightmap`); translucent
+  5.6; the sky portal 3; `PostRenderFlash` (script) 2.1; the rest ~7.
+- **Lightmaps ~4 ms, texture uploads ~2 ms.** One `BarrelFire`, a dynamic
   light with the fire waver effect, has ~8 lightmaps rebuilt every frame, and
   each goes back to the GPU whole, converted from float on the CPU (the GE8300
-  cannot filter RGBA32F; engine patch 0002).
+  cannot filter RGBA32F; engine patch 0002; in NEON since 0024).
 - **GPU ~76 ms**, drawing the previous frame alongside the tick since patch
   0004, which cost ~20 ms of tick: CPU and GPU compete for the SoC's shared
   memory. At native resolution the tick is now the shorter of the two, so
   the render waits ~3–5 ms for the GPU at its start (patch 0018 on), render
   CPU and `view+audio` grew ~1–1.5 ms each from patch 0015 on, and a
   shorter tick gains little: patch 0022 took ~2.6 ms off the tick and ~0.7
-  off the frame. At 853×480 none of that happens, and the tick itself is
-  ~11 ms shorter there, from the GPU's lighter memory traffic. `view+audio` is
+  off the frame. At native resolution a frame now comes to about the GPU's
+  time plus the render CPU, so render-CPU savings count in full and tick
+  savings hardly at all. At 853×480 none of that happens -- the frame is the
+  CPU's work -- and the tick itself is ~11 ms shorter there, from the GPU's
+  lighter memory traffic. `view+audio` is
   mostly `USurrealAudioDevice::StartAmbience`, which reads every actor's
   `AmbientSound` each frame (~2 ms).
 

@@ -70,6 +70,10 @@ per patch file:
   when a visibility test needs them (`2d08d1d`).
 - `0022-ai-lod-far-tier.patch` — with AI level of detail, pawns out of sight
   beyond 4000 units think every sixth frame (`da0fa3f`).
+- `0023-light-tree-kept.patch` — the light tree, and each surface's lights
+  from it, kept while no light changes (`f3ee690`).
+- `0024-lightmap-neon-conversion.patch` — the lightmaps' float-to-byte
+  conversion for the GPU in NEON on ARM (`edb0ecb`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -781,6 +785,44 @@ the second tier the owner chose for the handheld, at the cost of such a
 pawn noticing things up to five frames late. On Liberty Island ~48 pawns a
 frame fall in that tier, ~8 of them thinking; ~9 fewer pawns think each
 frame than before. The launcher's Distant AI row says so.
+
+## Patch 0023 — the light tree kept while no light changes
+
+Fork commit `f3ee690`. On the Smart Pro the BSP surfaces' section went from
+~11 to ~8 ms a frame and the frame from ~142 to ~139 ms (7.2 FPS).
+
+### 41. Surface lights from a kept answer
+
+Every frame `LightSystem::BeginFrame` rebuilt the light tree, and every
+visible surface's lightmap asked it again for the lights touching the
+surface (~6 ms a frame of `LightActorTree::CollectLights` and
+`TestSphereAABB` on the handheld), though the answers change only when a
+light does. The tree is built from the lights, their order, locations and
+radii alone: `BeginFrame` keeps what it last built it from (`TreeLights`)
+and rebuilds it, bumping `LightTreeVersion`, only when any of that differs.
+`GetLightmap` takes a surface's lights from `CollectSurfaceLights`, which
+keeps each lightmap's answer until the version moves or the surface's
+sphere differs; from the same tree the answer is the same, in the same
+order. A temporary check built a fresh tree whenever the rebuild was
+skipped and asked the tree afresh for every kept answer: 4,500 skipped
+builds identical node for node, 4.8 million answers identical. In the
+fight the light set changes in ~30% of frames (lights switching on and
+off), and each change drops every kept answer.
+
+## Patch 0024 — lightmap conversion in NEON
+
+Fork commit `edb0ecb`. On the Smart Pro the texture uploads went from ~3.9
+to ~2.1 ms a frame (7.3 FPS).
+
+### 42. Four channels at once
+
+The GE8300 cannot filter RGBA32F, so lightmaps are converted to RGBA8 on
+the CPU as they are uploaded (patch 0002), whole, several a frame while the
+burning barrel's light animates. On ARM the same clamp, scale and
+truncation now run on four channels at once. A test on the device, built
+with the engine's flags, compared it with the scalar loop for every float
+from 0 to 1 (1,073,741,824 values) and for negatives, overflows, infinities
+and NaNs: all the same; a 256×128 lightmap takes ~0.77 ms instead of ~1.72.
 
 ## Running it headlessly
 
