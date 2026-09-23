@@ -35,6 +35,8 @@ per patch file:
   the previous frame (`0bfde8a`).
 - `0005-lightmap-lit-spans.patch` — lightmaps are lit only where a light
   reaches (`c42fae4`).
+- `0006-vm-call-path-without-casts.patch` — script calls find parameters and
+  virtual functions without `dynamic_cast` (`1fb6deb`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -320,6 +322,34 @@ the same, save that a texel can now land in a vector loop's scalar tail or
 the other way round (rounding at 1e-7); screenshots of the dock before and
 after match pixel for pixel.
 
+## Patch 0006 — script calls without casting
+
+Fork commit `1fb6deb`. Profiling the desktop build on Liberty Island (Linux
+`perf`) put `dynamic_cast` at ~15% of all samples, nearly all on the script
+call path. On the Smart Pro, script time went from ~125 to ~84 ms a frame and
+the fight from 3.3 to 4.0 FPS
+([Performance](../ports/trimui-smartpro/README.md#performance)).
+
+### 20. Parameters from `Properties`
+
+`Frame::Call`, `CallScript` and `CallNative` found a function's parameters by
+walking its `Children` and casting each one to `UProperty` -- three or four
+walks per call. A function's `Properties` array is exactly those children in
+order (`UStruct::Load` collects them, and functions inherit none), so the walks
+use it. `CallScript` also stopped building a variable reference for every
+local, only for the parameters it copies. A temporary check compared the two
+for every function called on Liberty Island: all matched.
+
+### 21. A virtual function cache per class
+
+`ExpressionEvaluator::Expr(VirtualFunctionExpression*)` searched on every
+virtual call: the class hierarchy's state maps, then every field of every
+class, cast to `UFunction`, until the name matched. The answer depends only on
+the class, the state name and the function name, none of which change once
+loaded, so `UClass::VirtualFunctionCache` keeps it, keyed by the two names'
+compare indexes. A search that finds nothing is not cached (it throws, as
+before).
+
 ## Running it headlessly
 
 ```sh
@@ -336,3 +366,29 @@ Start a map directly with `--url=<map>`, e.g. `--url=01_NYC_UNATCOIsland.dx`.
 The parser only takes the `=` form: `-u <map>` sets an empty `-u` and the map
 name becomes a stray argument, so the default (intro) map loads with no
 warning.
+
+## Profiling and validating on the desktop
+
+The handheld has no profiler and no Vulkan validation layer, so both run
+against the desktop build (`scripts/dx.sh build linux-x86_64 engine`), whose
+CPU hot spots on the script and render paths are the handheld's too; timing
+on the device is `optional/perf-instrumentation.patch`'s job.
+`scripts/host-tools.sh` unpacks pinned copies of Linux `perf` and the Khronos
+validation layer into `deps/` without installing anything:
+
+```sh
+scripts/host-tools.sh
+cd gamefiles    # the engine is started from the game's directory
+# CPU profile of Liberty Island, recording from 25 s in (after the load):
+LD_LIBRARY_PATH=../deps/perf/usr/lib ../deps/perf/usr/bin/perf record -F 2000 --delay=25000 -o /tmp/se.data -- \
+    timeout -s KILL 55 ../build/linux-x86_64/engine/SurrealEngine --no-launcher "$PWD" --url=01_NYC_UNATCOIsland.dx
+LD_LIBRARY_PATH=../deps/perf/usr/lib ../deps/perf/usr/bin/perf report -i /tmp/se.data --no-children --sort symbol
+# Synchronization validation (add SURREAL_VK_NO_BINDLESS=1 for the handheld's texture path):
+VK_LAYER_PATH=$PWD/../deps/vulkan-layers/layers VK_INSTANCE_LAYERS=VK_LAYER_KHRONOS_validation \
+VK_KHRONOS_VALIDATION_VALIDATE_SYNC=true \
+    timeout -s KILL 60 ../build/linux-x86_64/engine/SurrealEngine --no-launcher "$PWD" --url=01_NYC_UNATCOIsland.dx
+```
+
+`--call-graph dwarf` on `perf record` gives callers (the build has no frame
+pointers). The engine ignores SIGTERM, hence `timeout -s KILL`; in a container
+without a sound server, add the null OpenAL driver from above.
