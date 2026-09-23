@@ -54,7 +54,12 @@ dx_ssh_sync() {
         mkdir -p "$p/$(dirname "$f")" && cp -p "$f" "$p/$f" && n=$((n + 1))
     done; if [ $n -gt 0 ]; then echo "$p"; fi'
 
-    mapfile -t changed < <(printf '%s\n' "$manifest" | dx_ssh "mkdir -p '$dst' && sh -c '$differs' sh '$dst'")
+    # Not mapfile < <(...): that hides ssh's exit status, and an unreachable
+    # device would read as one that already has everything.
+    local out
+    out="$(printf '%s\n' "$manifest" | dx_ssh "mkdir -p '$dst' && sh -c '$differs' sh '$dst'")" ||
+        die "cannot reach $DEVICE_USER@$DEVICE (asleep?) -- nothing was sent"
+    [ -z "$out" ] || mapfile -t changed <<< "$out"
     if [ ${#changed[@]} -eq 0 ]; then
         say "the device already has this build (${#files[@]} files)"
     else
