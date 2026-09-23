@@ -16,10 +16,10 @@ engine, a fork of Surreal Engine.
   Its history was rewritten before publishing (2026-09-22) to drop the game's
   files and a personal email address.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; Liberty Island's opening
-  firefight **5.9 FPS** at native resolution, 6.8 at 853×480 (2.2 before engine
-  patches 0004–0014), still CPU-bound on NPC AI and render CPU; UNATCO HQ
+  firefight **6.0 FPS** at native resolution, 7.0 at 853×480 (2.2 before engine
+  patches 0004–0017), still CPU-bound on NPC AI and render CPU; UNATCO HQ
   indoors ~20. The target is ~20 FPS in the fight (Decided). The device has
-  the current build: patches 0001–0014, Overclock, Distant AI on, native
+  the current build: patches 0001–0017, Overclock, Distant AI on, native
   resolution.
 - **linux-x86_64**: launcher and engine build natively; the staged app's
   `run-game.sh` ran the engine into the intro level on the development PC.
@@ -73,14 +73,16 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
 
 1. **Smart Pro performance** (owner, 2026-09-22): the target is **~20 FPS on
    Liberty Island** (~50 ms a frame), and every trade-off below is accepted.
-   Now 5.9 FPS at native resolution (~169 ms) and 6.8 at 853×480, facing the
+   Now 6.0 FPS at native resolution (~166 ms) and 7.0 at 853×480, facing the
    fight in overclock. Where it goes is in
-   [its README](ports/trimui-smartpro/README.md#performance): game tick ~75 ms
-   (NPC AI: ~32 ms under script calls, ~21 ms collision traces, ~12 ms
+   [its README](ports/trimui-smartpro/README.md#performance): game tick ~69 ms
+   (NPC AI: ~27 ms under script calls, ~21 ms collision traces, ~12 ms
    per-actor work), render CPU ~83 ms (actor meshes ~26, visibility ~21, BSP
-   surfaces 11), lightmaps and their uploads ~8 ms; the GPU overlaps the
-   tick. 20 FPS needs the script VM several times faster, so the deep VM work
-   is in scope.
+   surfaces 11), lightmaps and their uploads ~8 ms; the GPU (~76 ms) overlaps
+   the tick, which is now the shorter of the two, so at native resolution
+   the rest of the frame shares memory with a busy GPU and tick savings
+   show less in the frame. 20 FPS needs the script VM several times faster,
+   so the deep VM work is in scope.
 
    Done, one engine patch each, measured: CPU/GPU overlap (0004); lightmaps
    lit only where a light reaches (0005 -- the cost was a burning barrel's
@@ -93,25 +95,29 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    expression evaluator per script statement (0012); the actors of a class
    found from an index, not a scan of the level (0013 -- `CycleActors` alone
    had been ~16 ms of the device's tick); script calls without heap
-   allocations or walks over every local (0014).
+   allocations or walks over every local (0014); the commonest operators
+   evaluated in place (0015); events found through the virtual-call cache
+   (0016); the commonest leaf expressions made without the visitor (0017).
    [engine-patches/README.md](engine-patches/README.md) has what each found.
 
    Next, in order, re-measuring after each:
-   - **The script interpreter** (in progress, 0012–0014: script ~60 → ~35
-     ms a frame). Its own work is still ~20 ms of the tick -- expression
-     evaluation, calls, value moves (`ExpressionEvaluator::Expr`/`Value`/`Call`,
-     `Frame::Call`/`CallNative`/`Run`, `ExpressionValue`) -- over ~10,000 VM
-     calls a frame; the next steps are structural (operators and other small
-     natives without the general call path; values without the 88-byte
-     variant). `FindEventFunction` could share the virtual-call cache (~1 ms).
-     Profile on the device (`SAMPLE=1`, [its README](ports/trimui-smartpro/README.md#performance)):
+   - **The script interpreter** (in progress, 0012–0017: script ~60 → ~30
+     ms a frame, the tick ~98 → ~69). Its own work is still ~14 ms of the
+     tick -- statements (`Frame::Run`, `ExpressionEvaluator::Eval`), the
+     expressions the leaf and operator fast paths do not cover, calls
+     (`ExpressionEvaluator::Call`, `Frame::Call`), `ExpressionValue` moves --
+     over ~10,000 VM calls a frame. Further gains need the structure changed
+     (values without the 88-byte variant; statements without a full result
+     each). Profile on the device (`SAMPLE=1`, [its README](ports/trimui-smartpro/README.md#performance)):
      the desktop's proportions are not the device's.
    - Found 2026-09-23, not yet placed in this order by the owner: **collision
      traces** (~21 ms of the tick: walking pawns' physics, `TryMove` /
      `TryStepToGround` / `ShouldAbortJumping`, and AI sight, `CanSee` /
-     `FastTrace`, through `TraceAABBModel` and `TraceRayModel`), and the
+     `FastTrace`, through `TraceAABBModel` and `TraceRayModel`), the
      **per-actor work** around the scripts (~12 ms: `ULevel::TickActor`,
-     animation and event lookups over ~2,500 actors a frame).
+     animation and event lookups over ~2,500 actors a frame), and the audio
+     update's scan of every actor for an ambient sound (~2 ms,
+     `USurrealAudioDevice::StartAmbience`).
    - **Actor meshes** (~27 ms, now the largest render item): vertex
      animation on the CPU (`VisibleMesh::DrawLodMeshFaceDX`, the desktop
      profile's top render function).

@@ -59,7 +59,8 @@ port_deploy() {
 # SAMPLE and SURREAL_PERF_DETAIL pass through; with SHOT the screen comes back
 # as fb-<label>.png beside it (needs ImageMagick), with SAMPLE=1 the CPU
 # samples as samples-<label> and samples-<label>.maps, for
-# scripts/sample-report.py.
+# scripts/sample-report.py, with the engine that made them as
+# samples-<label>.engine: a sample is an address in one particular build.
 port_profile() {
     local label="${2:-run}" out="$BUILD/profile"
     mkdir -p "$out"
@@ -71,6 +72,14 @@ port_profile() {
         dx_ssh "cat /tmp/dxl-test/samples-$label" > "$out/samples-$label" &&
             dx_ssh "cat /tmp/dxl-test/samples-$label.maps" > "$out/samples-$label.maps" &&
             say "samples: $out/samples-$label (scripts/sample-report.py)"
+        local ran staged
+        ran=$(dx_ssh "md5sum '$DEVICE_APPDIR/SurrealEngine'" | awk '{ print $1 }')
+        staged=$(md5sum "$APP/SurrealEngine" | awk '{ print $1 }')
+        if [ -n "$ran" ] && [ "$ran" = "$staged" ]; then
+            cp "$APP/SurrealEngine" "$out/samples-$label.engine" && say "engine that ran: $out/samples-$label.engine"
+        else
+            say "warning: the device's engine is not the staged build -- symbolise with the build that ran"
+        fi
     fi
     if [ -n "${SHOT:-}" ]; then
         dx_ssh "cat /tmp/dxl-test/fb-$label.gz" | gunzip -c 2>/dev/null | head -c $((1280 * 720 * 4)) > "$out/fb-$label.bgra" || true

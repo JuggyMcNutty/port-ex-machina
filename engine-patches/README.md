@@ -53,6 +53,12 @@ per patch file:
   actors from an index instead of a scan of the level (`e5ae2ca`).
 - `0014-vm-calls-without-allocation.patch` — script calls without heap
   allocations or walks over every local (`4d5b8e7`).
+- `0015-vm-fast-operators.patch` — the commonest operators evaluated in place
+  (`1950f5e`).
+- `0016-vm-event-lookup-cache.patch` — events found through the virtual-call
+  cache (`568646c`).
+- `0017-vm-leaf-expressions.patch` — the commonest leaf expressions made
+  without the visitor (`8843675`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -608,6 +614,66 @@ Fork commit `4d5b8e7`. On the Smart Pro, script time went from ~39 to
   though almost no object disables anything; the lookups are skipped when
   `DisabledEvents` is empty, and `EnableEvent` removes a state's entry when
   its set empties so that it stays so.
+
+## Patch 0015 — the commonest operators in place
+
+Fork commit `1950f5e`. On the Smart Pro, script time went from ~35 to
+~31 ms a frame and the game tick from ~75 to ~71 ms (5.9 to 6.0 FPS).
+
+### 33. Operators without the call path
+
+Natives are 84% of the VM calls on Liberty Island (45 million against 8.3
+million script calls in a desktop run), and 25 operators -- object and name
+(in)equality, int and float comparisons, `!`, float arithmetic, int
+subtraction, `++`, `+=` and `-=` -- are 83% of those. Each went through the
+argument list, `Frame::Call`'s checks, `CallNative`'s frame, a
+`std::function` and a return slot to compute one comparison.
+
+`ExpressionEvaluator::CallFastOperator` computes them in place, each as its
+native in `NObject.cpp` does, with the same conversions, read only after
+every argument has been evaluated (in the caller's context), as the general
+path reads them. A function is recognised once, by its native index and
+its name (`UFunction::FastOperator`), so a game whose indexes differ keeps
+the general path. If a conversion throws, nothing has been changed yet: the
+same argument values go through the general path, which makes the same
+conversions in the native's own frame and reports and recovers as before.
+What these calls skip is `Frame::Call`'s event-enabled check on the
+operator's name, which a script would have to `Disable` to matter. A
+temporary check had the registered native compute every fifth call from
+the same values (out parameters restored after): 8.8 million calls across
+all 25 operators, results and out parameters identical to the bit.
+
+## Patch 0016 — events through the virtual-call cache
+
+Fork commit `568646c`. Within the device's noise on its own (the tick
+~71.2 → ~70.7 ms).
+
+### 34. One cached lookup for virtual calls and events
+
+`CallEvent` looked up its function with `FindEventFunction` on every call:
+`std::map` lookups of the state and the function name in every class up
+the hierarchy. That is the search a virtual call makes, whose answers
+patch 0006 already kept per class. `FindScriptFunction` is that search with
+the cache, serving both; misses are kept too, since an event a class does
+not have is asked for often (a virtual call that finds nothing still throws
+each time). A temporary check compared 3 million event lookups with the old
+`FindEventFunction` and 3,379 uncached searches with the old virtual-call
+search: all the same.
+
+## Patch 0017 — leaf expressions without the visitor
+
+Fork commit `8843675`. On the Smart Pro the game tick went from ~70.7 to
+~69.3 ms.
+
+### 35. Leaves made directly
+
+About half the expressions the evaluator meets are leaves: local, instance
+and bool variables, `Self`, `None`, and object, name, int, byte, float and
+bool constants. Each went through the visitor's two indirect calls, set
+`Frame::StepExpression` and handed its value up by assignment.
+`Expression::Leaf` tags those node types and `ExpressionEvaluator::Value`
+makes their values directly, exactly as their `Expr` functions do; none
+can throw, so none needs to be the debugger's `StepExpression`.
 
 ## Running it headlessly
 

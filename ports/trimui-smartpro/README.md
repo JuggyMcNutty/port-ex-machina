@@ -5,8 +5,8 @@ handheld (4× Cortex-A53, PowerVR GE8300) running spruceOS. Cross-built from a
 PC; the launcher is the app the spruceOS menu starts.
 
 **Status.** The launcher and the engine both run on the device. The intro plays
-at ~30 FPS; Liberty Island's opening firefight at 5.9 FPS, 6.8 at 853×480 (2.2
-before engine patches 0004–0014), CPU-bound on NPC AI and render CPU -- see
+at ~30 FPS; Liberty Island's opening firefight at 6.0 FPS, 7.0 at 853×480 (2.2
+before engine patches 0004–0017), CPU-bound on NPC AI and render CPU -- see
 [Performance](#performance). Indoors, UNATCO HQ shows ~20.
 
 | File | What it is |
@@ -190,7 +190,7 @@ The System tab shows the engine and script logs on screen.
 | Deploy with checksums (2026-09-22) | `dx.sh deploy` built and staged, sent only the one changed file, kept the device's copy in `.prev-<date-time>` and verified all 13 files; `profile-map.sh` applied `launcher.ini`'s Overclock (four cores, 2.0 GHz) through `port-hooks.sh` and restored power-save after |
 | CPU/GPU overlap, engine patch 0004 (2026-09-22) | Liberty Island renders correctly mid-fight (framebuffer capture); GPU wait ~76 → ~0.2 ms. Synchronization validation clean on the desktop build, bindless and per-batch paths |
 | Lit-span lightmaps, engine patch 0005 (2026-09-22) | Liberty Island's dock pixel-identical before and after (framebuffer captures); lightmaps ~98 → ~11 ms. On the desktop, a temporary walk over every texel found none in reach outside a span |
-| Script evaluator, actor iterators and calls, engine patches 0012–0014 (2026-09-23) | Liberty Island's fight runs; the engine's log is the same as before them, bar a window address. On the desktop, temporary checks ran the old code beside the new ([engine-patches/README.md](../../engine-patches/README.md)) |
+| Script VM and actor iterators, engine patches 0012–0017 (2026-09-23) | Liberty Island's fight runs; the engine's log is the same as before them, bar a window address. On the desktop, temporary checks ran the old code beside the new ([engine-patches/README.md](../../engine-patches/README.md)) |
 | One-sided back faces skipped, engine patch 0011 (2026-09-23) | Captures of Liberty Island and of UNATCO HQ's interior (`01_NYC_UNATCOHQ.dx`) before and after differ only in the stats overlay's surface count |
 | Occlusion grid sized to the image, engine patch 0010 (2026-09-23) | The dock pixel-identical to the captures before it, at 1280×720 and at 853×480; ~830 surfaces pass visibility where ~740 did, all hidden by the depth test |
 | Render scale, engine patch 0009 (2026-09-23) | Liberty Island at 960×540 and 853×480 fills the panel, scaled up; the HUD draws larger (framebuffer captures). Synchronization validation clean on the desktop at scale 0.667 |
@@ -227,7 +227,7 @@ the samples back beside the log, for the report:
 SAMPLE=1 scripts/dx.sh profile trimui-smartpro 90 mylabel
 NM=deps/toolchains/aarch64--glibc--bleeding-edge-2021.05-1/bin/aarch64-linux-nm \
     scripts/sample-report.py build/trimui-smartpro/profile/samples-mylabel \
-    build/trimui-smartpro/engine/SurrealEngine --sysroot deps/sysroots/trimui-smartpro \
+    build/trimui-smartpro/profile/samples-mylabel.engine --sysroot deps/sysroots/trimui-smartpro \
     --root ULevel::Tick
 ```
 
@@ -256,7 +256,11 @@ The frame times:
 | Native, one evaluator per script statement (0012) | 5.4 | ~187 ms | ~94 | ~90 | ~0.2 |
 | The same, actors of a class from an index (0013) | 5.8 | ~172 ms | ~78 | ~91 | ~0.2 |
 | The same, script calls without allocations (0014) | 5.9 | ~169 ms | ~75 | ~91 | ~0.2 |
-| **853×480, the same** | **6.8** | **~147 ms** | **~59** | **~85** | **~0.2** |
+| 853×480, the same | 6.8 | ~147 ms | ~59 | ~85 | ~0.2 |
+| Native, the commonest operators in place (0015) | 6.0 | ~166 ms | ~71 | ~91 | ~0.2 |
+| The same, events through the virtual-call cache (0016) | 6.0 | ~166 ms | ~71 | ~92 | ~0.2 |
+| The same, leaf expressions without the visitor (0017) | 6.0 | ~166 ms | ~69 | ~92 | ~0.2 |
+| **853×480, the same** | **7.0** | **~143 ms** | **~54** | **~85** | **~0.2** |
 
 (Times in ms per frame, averaged over 60 frames. The performance-mode fight
 rows had the per-class or per-function hooks on, which add their own cost; the
@@ -271,10 +275,10 @@ best so far; each row between is one engine patch, and what each found is in
 960×540 and 853×480 are the Video tab's Resolution below native: the GPU's
 time was already hidden, so the gain is the tick's, which shares memory with
 the GPU, and, since patch 0010, the occlusion grid's. Where a frame goes at
-native resolution (~169 ms, facing the fight in overclock):
+native resolution (~166 ms, facing the fight in overclock):
 
-- **Game tick ~75 ms**, almost all NPCs. The device's CPU samples split it:
-  ~32 ms under script calls, ~20 ms of which is the interpreter's own work
+- **Game tick ~69 ms**, almost all NPCs. The device's CPU samples split it:
+  ~27 ms under script calls, ~14 ms of which is the interpreter's own work
   (evaluating expressions, making calls, moving values) and ~9 ms AI sight
   traces (`CanSee`, `FastTrace`); ~17 ms physics, mostly collision traces for
   walking pawns (`TryMove`, `TryStepToGround`, `ShouldAbortJumping`) -- ~21 ms
@@ -283,6 +287,12 @@ native resolution (~169 ms, facing the fight in overclock):
   actors (`ULevel::TickActor`, animation, event lookups). ~10,000 VM calls a
   frame; `ScriptedPawn.CheckEnemyPresence` is still the costliest script
   function. Pawns out of view think every third frame (Distant AI).
+- **The tick is now shorter than the GPU's work** (~76 ms, drawing the
+  previous frame alongside it), so the rest of the frame shares memory with
+  a GPU still busy: from patch 0015 on, render CPU and `view+audio` grew by
+  ~1–1.5 ms each at native resolution, not at 853×480, and a shorter tick
+  gained less. `view+audio` is mostly `USurrealAudioDevice::StartAmbience`,
+  which reads every actor's `AmbientSound` each frame (~2 ms).
 - **Render CPU ~83 ms** besides lightmaps: actor meshes ~27 ms for ~30 in view
   (vertex animation on the CPU); visibility ~21 ms (the BSP walk, ~3,800 box
   tests and ~2,400 surface tests a frame against `BspClipper`'s occlusion

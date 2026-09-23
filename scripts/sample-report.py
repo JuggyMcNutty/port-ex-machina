@@ -6,7 +6,8 @@ engine-patches/optional/perf-instrumentation.patch), for devices without perf.
                            [--skip N] [--top N] [--sysroot DIR]
 
 <samples> is the file the engine wrote, with <samples>.maps beside it; the
-engine binary is the unstripped build that ran (build/<port>/engine/SurrealEngine).
+engine binary is the unstripped build that ran -- that exact build: every
+rebuild moves the addresses (dx.sh profile keeps it as <samples>.engine).
 Each block records the main thread's CPU time over it, so shares come out
 as ms per frame too (a sample is 1 ms, or a scheduler tick where the kernel
 checks CPU timers only that often: 4 ms on the Smart Pro). --root keeps only
@@ -52,6 +53,7 @@ def read_blocks(path):
 
 
 def read_maps(path):
+    # The executable is the first file mapped: the lowest address.
     maps = []   # (start, end, path)
     bases = {}  # path -> load address (its mapping at file offset 0)
     with open(path) as f:
@@ -66,7 +68,8 @@ def read_maps(path):
             if offset == 0 and name not in bases:
                 bases[name] = start
     maps.sort()
-    return maps, bases
+    exe = next((m[2] for m in maps if m[2].startswith("/")), "")
+    return maps, bases, exe
 
 
 class Symbols:
@@ -108,7 +111,7 @@ def main():
 
     nm = os.environ.get("NM", "nm")
     blocks = read_blocks(args.samples)
-    maps, bases = read_maps(args.samples + ".maps")
+    maps, bases, exe = read_maps(args.samples + ".maps")
     starts = [m[0] for m in maps]
     engine = Symbols(args.binary, nm)
     libs = {}
@@ -122,7 +125,7 @@ def main():
         path = maps[i][2]
         rel = addr - bases.get(path, maps[i][0])
         base = os.path.basename(path)
-        if base == os.path.basename(args.binary):
+        if path == exe:
             return short(engine.lookup(rel) or "[" + base + "]")
         if args.sysroot:
             if base not in libs:
