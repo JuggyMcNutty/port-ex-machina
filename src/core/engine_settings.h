@@ -13,8 +13,10 @@
  *
  * The engine parses the file inside a catch-all, so a file it cannot read
  * costs every setting at once, and a member it cannot find reads as empty,
- * false or 0. That is why a save always writes the complete RenderDevice
- * block, and why an unreadable file is replaced rather than left alone.
+ * false or 0. That is why a save always writes every member of every section
+ * here, and why an unreadable file is replaced rather than left alone. A
+ * member the file lacks takes the packaged default, so a field added later
+ * reaches an existing install with the port's value.
  */
 #ifndef DXL_ENGINE_SETTINGS_H
 #define DXL_ENGINE_SETTINGS_H
@@ -94,8 +96,8 @@ int  dxl_es_set_choice(dxl_engine_settings *s, dxl_es_field f, const char *v);
 void dxl_es_set_bool  (dxl_engine_settings *s, dxl_es_field f, int v);
 void dxl_es_set_number(dxl_engine_settings *s, dxl_es_field f, double v);
 
-/* One field, or every field in a section ("RenderDevice", "Gamepad"), back
- * to its default. */
+/* One field, or every field in a section ("RenderDevice", "Gamepad",
+ * "Performance"), back to its default. */
 void dxl_es_reset(dxl_engine_settings *s, dxl_es_field f);
 void dxl_es_reset_section(dxl_engine_settings *s, const char *section);
 
