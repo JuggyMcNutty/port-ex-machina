@@ -150,6 +150,27 @@ index 12619e4..3c36bfa 100644
  	Shadow.Clear(model, lightMap);
  	for (UActor* light : lights)
  	{
+diff --git a/SurrealEngine/Packages/Engine/Actors/UActor.cpp b/SurrealEngine/Packages/Engine/Actors/UActor.cpp
+index 462099b..d1fd689 100644
+--- a/SurrealEngine/Packages/Engine/Actors/UActor.cpp
++++ b/SurrealEngine/Packages/Engine/Actors/UActor.cpp
+@@ -16,6 +16,7 @@
+ #include "VM/Frame.h"
+ #include "Render/RenderSubsystem.h"
+ #include "LauncherSettings.h"
++#include "Utils/PerfLog.h" // TEMPORARY DEBUG TOOL
+ 
+ UActor* UActor::Spawn(UClass* SpawnClass, std::optional<UActor*> SpawnOwner, std::optional<NameString> SpawnTag, std::optional<vec3> SpawnLocation, std::optional<Rotator> SpawnRotation)
+ {
+@@ -243,6 +244,8 @@ bool UActor::ThinkThisFrame(float elapsed, float& thinkElapsed)
+ 	UActor* player = engine->viewport->Actor();
+ 	bool seen = LastVisibleFrame >= engine->render->SceneFrameStart;
+ 	bool near = player && length(player->Location() - Location()) < nearDistance;
++	if (PerfLog::Enabled()) // TEMPORARY DEBUG TOOL: why pawns think
++		PerfLog::Tally()[seen ? (near ? "ai-seen+near" : "ai-seen") : near ? "ai-near" : AiFramesSinceThought >= 3 ? "ai-turn" : "ai-skip"]++;
+ 	if (seen || near || AiFramesSinceThought >= 3)
+ 	{
+ 		thinkElapsed = AiTimeSinceThought;
 diff --git a/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp b/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp
 index 28e61f2..820cc16 100644
 --- a/SurrealEngine/Packages/Engine/Resources/Level/ULevel.cpp
@@ -174,7 +195,7 @@ index 28e61f2..820cc16 100644
  	// Destroy the actor if its time
  	if (actor->Role() >= ROLE_SimulatedProxy && actor->LifeSpan() != 0.0f)
 diff --git a/SurrealEngine/Render/RenderScene.cpp b/SurrealEngine/Render/RenderScene.cpp
-index 0d0b3ba..437d19f 100644
+index d349a77..fe59078 100644
 --- a/SurrealEngine/Render/RenderScene.cpp
 +++ b/SurrealEngine/Render/RenderScene.cpp
 @@ -1,5 +1,6 @@
@@ -184,7 +205,7 @@ index 0d0b3ba..437d19f 100644
  #include "RenderSubsystem.h"
  #include "RenderDevice/RenderDevice.h"
  #include "GameWindow.h"
-@@ -19,16 +20,22 @@ void RenderSubsystem::DrawScene()
+@@ -19,17 +20,23 @@ void RenderSubsystem::DrawScene()
  	TextureFrameCounter++;
  
  	// Make sure all actors are at the right location in the BSP
@@ -197,6 +218,7 @@ index 0d0b3ba..437d19f 100644
 +	}
  
  	mat4 worldToView = Coords::ViewToRenderDev().ToMatrix() * Coords::Rotation(engine->CameraRotation).Inverse().ToMatrix() * Coords::Location(engine->CameraLocation).ToMatrix();
+ 	SceneFrameStart = FrameCounter;
 +	{ PerfLog::Section perf(PerfLog::Visibility); // TEMPORARY DEBUG TOOL
  	MainFrame.Process(engine->CameraLocation, worldToView, Coords::Rotation(engine->CameraRotation));
 +	}
@@ -365,10 +387,10 @@ index b869842..513994e 100644
  	}
 diff --git a/SurrealEngine/Utils/PerfLog.h b/SurrealEngine/Utils/PerfLog.h
 new file mode 100644
-index 0000000..63ec138
+index 0000000..7645f9d
 --- /dev/null
 +++ b/SurrealEngine/Utils/PerfLog.h
-@@ -0,0 +1,296 @@
+@@ -0,0 +1,314 @@
 +// TEMPORARY DEBUG TOOL -- revert before commit.
 +//
 +// Frame-time breakdown for profiling on the handheld. With SURREAL_PERF_LOG=1
@@ -503,6 +525,13 @@ index 0000000..63ec138
 +		return c;
 +	}
 +
++	// Anything else worth counting per frame (AI level of detail decisions).
++	inline std::unordered_map<std::string, int>& Tally()
++	{
++		static std::unordered_map<std::string, int> t;
++		return t;
++	}
++
 +	// Events per interval: lightmaps rebuilt, textures uploaded.
 +	inline int& Counter(int slot) { static int c[Count]; return c[slot]; }
 +
@@ -632,6 +661,17 @@ index 0000000..63ec138
 +			std::fprintf(stderr, " %s %.1f", causes[i].first.c_str(), causes[i].second / n);
 +		std::fprintf(stderr, "\n");
 +		LmCauses().clear();
++
++		if (!Tally().empty())
++		{
++			std::vector<std::pair<std::string, int>> tally(Tally().begin(), Tally().end());
++			std::sort(tally.begin(), tally.end());
++			std::fprintf(stderr, "perf: tally (per frame):");
++			for (auto& t : tally)
++				std::fprintf(stderr, " %s %.1f", t.first.c_str(), t.second / n);
++			std::fprintf(stderr, "\n");
++			Tally().clear();
++		}
 +
 +		if (!Detail())
 +		{

@@ -169,6 +169,12 @@ static const dxl_row rows[] = {
       .activate = renderer_activate, .reset = renderer_reset, .describe = renderer_describe },
     { .label = "CPU mode", .visible = cpu_visible, .value = cpu_value, .step = cpu_step,
       .reset = cpu_reset, .describe = cpu_describe },
+    { .label = "Distant AI",
+      .help = "On lets characters you cannot see, and who are not close, think every third "
+              "frame instead of every frame; they still move and animate every frame. Saves "
+              "much of the CPU the game's AI takes, at the cost of them reacting a little "
+              "later. Off thinks for everyone every frame.",
+      .value = es_value, .step = es_step, .reset = es_reset, .arg = DXL_ES_AI_LOD },
     { .label = "Vertical sync",
       .help = "Waits for the display's refresh before showing a frame. Removes tearing, "
               "but when the game runs below the refresh rate it then holds frames to a "

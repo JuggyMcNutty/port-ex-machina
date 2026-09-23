@@ -39,6 +39,8 @@ per patch file:
   virtual functions without `dynamic_cast` (`1fb6deb`).
 - `0007-vm-call-overheads.patch` — native frames without locals, event names
   looked up once, plain-data locals zero-filled (`c4b46f1`).
+- `0008-ai-level-of-detail.patch` — pawns out of sight think every third frame,
+  when `Settings.json` asks for it (`4222051`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -381,6 +383,33 @@ names, object references, and structs of those, all of which construct to
 zero bytes and have nothing to destruct -- the locals are zero-filled at once
 and not destructed. `UStruct::PlainDataLocals` remembers which functions
 qualify; strings, dynamic arrays and maps keep the old path.
+
+## Patch 0008 — AI level of detail
+
+Fork commit `4222051`. A speed-for-fidelity choice, off unless
+`Settings.json` `Performance.AiLevelOfDetail` is true -- the launcher's Video
+tab row Distant AI, on by default on the Smart Pro. There the fight went from
+~124 to ~104 ms of game tick, 4.2 to 4.5 FPS.
+
+### 25. Thinking every third frame
+
+`UActor::ThinkThisFrame` decides, for a pawn the player does not control,
+whether its script `Tick` event and state code run this frame. A pawn that
+was not in view last frame and is not within ~1500 units thinks every third
+frame, and its `Tick` then gets all the time that passed; pawns are spread
+over the three frames. Movement and latent moves, physics, animation,
+timers and the engine's sight checks still run every frame, so nothing
+jumps. The cost is reaction time: such a pawn notices things up to two
+frames late.
+
+"In view" is the renderer's own per-actor test: `VisibleActor::Process` sets
+`UActor::LastVisibleFrame` when an actor's box passes the clipper, and
+`RenderSubsystem::SceneFrameStart` says where the last scene's frame numbers
+began. The BSP node test behind `LastDrawFrame` was tried first; outdoors on
+Liberty Island it called ~50 of 73 pawns visible.
+
+`LauncherSettings` reads and writes the `Performance` block like `Gamepad`:
+absent members keep their defaults.
 
 ## Running it headlessly
 

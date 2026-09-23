@@ -152,7 +152,10 @@ non-negotiable entry is `Antialias: Off`: the engine defaults to 4x MSAA, and
 the GE8300's resolve turns partially covered pixels into speckle. The launcher
 locks it off on any PowerVR, and this port's `engine-settings.json.default`
 says `Off` too (VSync is off as well: the game runs below the panel's 60 Hz,
-and vsync would hold it to 30 or 20).
+and vsync would hold it to 30 or 20). It also turns on
+`Performance.AiLevelOfDetail` (the Video tab's Distant AI, engine patch 0008):
+characters out of sight and not close think every third frame. An install
+whose `Settings.json` predates the field gets it from this default.
 
 ## Diagnosing
 
@@ -217,6 +220,7 @@ The script applies the CPU mode `launcher.ini` names, through the app's own
 | The same, lightmaps lit only where lights reach (0005) | 3.3 | ~299 ms | ~180 | ~117 | ~0.2 |
 | The same, script calls without casting (0006) | 4.0 | ~252 ms | ~135 | ~115 | ~0.2 |
 | The same, less work per script call (0007) | 4.2 | ~240 ms | ~124 | ~113 | ~0.2 |
+| The same, AI level of detail on (0008) | 4.5 | ~222 ms | ~104 | ~115 | ~0.2 |
 
 (Times in ms per frame, averaged over 60 frames. The performance-mode fight
 rows had the per-class or per-function hooks on, which add their own cost; the

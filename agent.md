@@ -17,9 +17,9 @@ engine, a fork of Surreal Engine.
   files and a personal email address.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; **Liberty Island 2–3
   FPS**, CPU-bound on NPC AI and lightmap rebuilds. The fixes and a ~20 FPS
-  target are decided (Decided); CPU/GPU overlap, lit-span lightmaps and a
-  cheaper script call path (engine patches 0004–0007) took the fight from
-  2.2 to 4.2 FPS. The framework's build was
+  target are decided (Decided); CPU/GPU overlap, lit-span lightmaps, a
+  cheaper script call path and AI level of detail (engine patches 0004–0008)
+  took the fight from 2.2 to 4.5 FPS. The framework's build was
   deployed and started the game on the device.
 - **linux-x86_64**: launcher and engine build natively; the staged app's
   `run-game.sh` ran the engine into the intro level on the development PC.
@@ -75,9 +75,9 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    Liberty Island**, and every trade-off below is accepted. 20 FPS needs the
    script VM several times faster, so the deep VM work is in scope. Where the
    time goes is in [its README](ports/trimui-smartpro/README.md#performance)
-   (overclock, facing the fight, now 4.2 FPS, ~240 ms): game tick ~124 ms (NPC
-   AI through a slow script VM, ~77 ms of it under script calls), other
-   render CPU ~90 ms (visibility 34, actor meshes 23, BSP surfaces 14),
+   (overclock, facing the fight, now 4.5 FPS, ~222 ms): game tick ~104 ms (NPC
+   AI through a slow script VM, ~61 ms of it under script calls), other
+   render CPU ~92 ms (visibility 34, actor meshes 23, BSP surfaces 14),
    lightmaps and their uploads ~22 ms; the GPU now overlaps the tick. Order of
    work, by payoff for effort, re-measuring after each:
    - ~~Let CPU and GPU overlap~~ -- done, engine patch 0004: 2.2 → 2.5 FPS.
@@ -97,8 +97,11 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
      the large part; one script function, `ScriptedPawn.CheckEnemyPresence`,
      is ~a third of all script time. Profile the desktop
      build with `perf` ([engine-patches/README.md](engine-patches/README.md#profiling-and-validating-on-the-desktop)).
-   - AI level of detail: tick far/unseen pawns every 2–4 frames. Distant AI
-     reacts slightly later.
+   - ~~AI level of detail~~ -- done, engine patch 0008, the Video tab's Distant
+     AI (on by default on the Smart Pro): pawns out of view and farther than
+     ~1500 units think every third frame; 4.2 → 4.5 FPS. The fight's costly
+     pawns are the ones in view, so the saving is ~20 ms of tick. A second
+     tier (every sixth frame beyond, say, 4000 units) would take more.
    - Visibility (34 ms): `BspClipper` rasterises occluders on every scanline
      of the viewport. The render resolution below shrinks it; the clipper
      could also run coarser than the image.
@@ -121,8 +124,9 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
 ## Open decisions
 
 1. **Verify by hand** (owner):
-   - On the Smart Pro: START opens the pause menu on the first press after
-     skipping the intro; SELECT opens it too; B/Y/SELECT/START close menus; the
+   - On the Smart Pro: that NPCs out of sight still behave (Distant AI on:
+     they think every third frame); START opens the pause menu on the first
+     press after skipping the intro; SELECT opens it too; B/Y/SELECT/START close menus; the
      Customize buttons screen; the retired-layout upgrade being written on
      Play/Quit; CPU mode chosen from the Video tab; stick speeds -- look
      (`Speed=3.75`/`2.25`) and pointer speed are calibrated by reasoning, not by

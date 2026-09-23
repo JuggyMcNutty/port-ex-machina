@@ -18,6 +18,7 @@ static const char *const pad_layouts[]  = { "modern", "southpaw", "classic", "cu
 
 #define RD "RenderDevice"
 #define GP "Gamepad"
+#define PF "Performance"
 
 /* Defaults are the port's, not the engine's: Antialias is Off because the
  * PowerVR GE8300 resolves MSAA to speckle, and VSync is off because the game
@@ -42,6 +43,9 @@ static const dxl_es_info fields[DXL_ES_FIELD_COUNT] = {
     [DXL_ES_PAD_INVERT_Y]      = { GP, "InvertY",           DXL_ES_BOOL,   NULL, NULL, 0,    0, 1, 1 },
     [DXL_ES_PAD_CURSOR_SPEED]  = { GP, "CursorSpeed",       DXL_ES_NUMBER, NULL, NULL, 1.00, 0.25, 3.00, 0.25 },
     [DXL_ES_PAD_LAYOUT]        = { GP, "Layout",            DXL_ES_CHOICE, pad_layouts, "modern", 0, 0, 0, 0 },
+
+    /* Off unless the port's packaged default turns it on: a desktop has the CPU. */
+    [DXL_ES_AI_LOD]            = { PF, "AiLevelOfDetail",   DXL_ES_BOOL,   NULL, NULL, 0,    0, 1, 1 },
 };
 
 const dxl_es_info *dxl_es_describe(dxl_es_field f) {

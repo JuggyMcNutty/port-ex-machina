@@ -21,6 +21,9 @@
     "CursorSpeed": 1,
     "Layout": "modern"
   },
+  "Performance": {
+    "AiLevelOfDetail": true
+  },
   "Games": {
     "SearchList": [],
     "LastSelected": 0

@@ -42,13 +42,15 @@ typedef enum {
     DXL_ES_PAD_INVERT_Y,
     DXL_ES_PAD_CURSOR_SPEED,
     DXL_ES_PAD_LAYOUT,          /* which preset the launcher last applied */
+    /* Performance -- the fork's speed-for-fidelity choices */
+    DXL_ES_AI_LOD,              /* pawns out of sight think every third frame */
     DXL_ES_FIELD_COUNT
 } dxl_es_field;
 
 typedef enum { DXL_ES_CHOICE, DXL_ES_BOOL, DXL_ES_NUMBER } dxl_es_kind;
 
 typedef struct {
-    const char  *section;           /* "RenderDevice" or "Gamepad" */
+    const char  *section;           /* "RenderDevice", "Gamepad" or "Performance" */
     const char  *key;               /* member name inside it */
     dxl_es_kind  kind;
     const char  *const *choices;    /* DXL_ES_CHOICE: NULL-terminated */

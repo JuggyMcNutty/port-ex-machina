@@ -141,6 +141,32 @@ static void test_reset_uses_packaged_default(void) {
     teardown();
 }
 
+/* A Settings.json written before a field existed takes the port's packaged
+ * default for it -- an install upgraded on the handheld gets AI level of
+ * detail on -- and a save writes the new section. */
+static void test_new_field_takes_the_packaged_default(void) {
+    setup("newfield");
+    put("default.json", "{\"Performance\": {\"AiLevelOfDetail\": true}}");
+    put("Settings.json", device_default);
+    dxl_engine_settings *s = dxl_es_open(in_dir("Settings.json"), in_dir("default.json"));
+    CHECK_INT(dxl_es_was_present(s, DXL_ES_AI_LOD), 0);
+    CHECK_INT(dxl_es_bool(s, DXL_ES_AI_LOD), 1);
+    dxl_err e;
+    CHECK_INT(dxl_es_save(s, &e), 0);
+    dxl_es_free(s);
+
+    s = dxl_es_open(in_dir("Settings.json"), NULL);
+    CHECK_INT(dxl_es_was_present(s, DXL_ES_AI_LOD), 1);
+    CHECK_INT(dxl_es_bool(s, DXL_ES_AI_LOD), 1);
+    dxl_es_free(s);
+
+    /* Without a packaged default it is off: the table's built-in value. */
+    s = dxl_es_open(in_dir("missing.json"), NULL);
+    CHECK_INT(dxl_es_bool(s, DXL_ES_AI_LOD), 0);
+    dxl_es_free(s);
+    teardown();
+}
+
 static void test_save_creates_the_directory(void) {
     setup("mkdir");
     dxl_engine_settings *s = dxl_es_open(in_dir("sub/deeper/Settings.json"), NULL);
@@ -174,6 +200,7 @@ TEST_MAIN_BEGIN
     RUN(test_save_writes_every_field_and_keeps_games);
     RUN(test_setters_validate);
     RUN(test_reset_uses_packaged_default);
+    RUN(test_new_field_takes_the_packaged_default);
     RUN(test_save_creates_the_directory);
     RUN(test_clean_file_is_not_dirty);
 TEST_MAIN_END
