@@ -666,7 +666,7 @@ index 0000000..63ec138
 +	}
 +}
 diff --git a/SurrealEngine/VM/Frame.cpp b/SurrealEngine/VM/Frame.cpp
-index ec7826c..a3f78d7 100644
+index be0df56..a709de5 100644
 --- a/SurrealEngine/VM/Frame.cpp
 +++ b/SurrealEngine/VM/Frame.cpp
 @@ -1,6 +1,7 @@
@@ -677,7 +677,7 @@ index ec7826c..a3f78d7 100644
  #include "Bytecode.h"
  #include "ExpressionEvaluator.h"
  #include "NativeFunc.h"
-@@ -227,14 +228,17 @@ ExpressionValue Frame::Call(UFunction* func, UObject* instance, Array<Expression
+@@ -243,14 +244,17 @@ ExpressionValue Frame::Call(UFunction* func, UObject* instance, Array<Expression
  			argindex++;
  	}
  

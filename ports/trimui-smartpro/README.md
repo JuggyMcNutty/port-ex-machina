@@ -216,6 +216,7 @@ The script applies the CPU mode `launcher.ini` names, through the app's own
 | The same, CPU and GPU in parallel (engine patch 0004) | 2.5 | ~400 ms | ~192 | ~205 | ~0.2 |
 | The same, lightmaps lit only where lights reach (0005) | 3.3 | ~299 ms | ~180 | ~117 | ~0.2 |
 | The same, script calls without casting (0006) | 4.0 | ~252 ms | ~135 | ~115 | ~0.2 |
+| The same, less work per script call (0007) | 4.2 | ~240 ms | ~124 | ~113 | ~0.2 |
 
 (Times in ms per frame, averaged over 60 frames. The performance-mode fight
 rows had the per-class or per-function hooks on, which add their own cost; the

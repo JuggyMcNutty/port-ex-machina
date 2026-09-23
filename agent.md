@@ -18,8 +18,8 @@ engine, a fork of Surreal Engine.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; **Liberty Island 2–3
   FPS**, CPU-bound on NPC AI and lightmap rebuilds. The fixes and a ~20 FPS
   target are decided (Decided); CPU/GPU overlap, lit-span lightmaps and a
-  cast-free script call path (engine patches 0004–0006) took the fight from
-  2.2 to 4.0 FPS. The framework's build was
+  cheaper script call path (engine patches 0004–0007) took the fight from
+  2.2 to 4.2 FPS. The framework's build was
   deployed and started the game on the device.
 - **linux-x86_64**: launcher and engine build natively; the staged app's
   `run-game.sh` ran the engine into the intro level on the development PC.
@@ -75,9 +75,9 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    Liberty Island**, and every trade-off below is accepted. 20 FPS needs the
    script VM several times faster, so the deep VM work is in scope. Where the
    time goes is in [its README](ports/trimui-smartpro/README.md#performance)
-   (overclock, facing the fight, now 4.0 FPS, ~252 ms): game tick ~135 ms (NPC
-   AI through a slow script VM, ~84 ms of it under script calls), other
-   render CPU ~92 ms (visibility 34, actor meshes 25, BSP surfaces 14),
+   (overclock, facing the fight, now 4.2 FPS, ~240 ms): game tick ~124 ms (NPC
+   AI through a slow script VM, ~77 ms of it under script calls), other
+   render CPU ~90 ms (visibility 34, actor meshes 23, BSP surfaces 14),
    lightmaps and their uploads ~22 ms; the GPU now overlaps the tick. Order of
    work, by payoff for effort, re-measuring after each:
    - ~~Let CPU and GPU overlap~~ -- done, engine patch 0004: 2.2 → 2.5 FPS.
@@ -90,9 +90,12 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
    - ~~VM call path~~ -- first step done, engine patch 0006: parameters from
      `Properties` and a per-class virtual function cache removed the
      `dynamic_cast`s (~15% of desktop samples); script ~125 → ~84 ms, 3.3 →
-     4.0 FPS. Next on the call path, per the desktop profile: the argument
-     array and locals allocated per call (`malloc`, `ConstructArray`), then
-     the interpreter itself, which is the large part. Profile the desktop
+     4.0 FPS; patch 0007 took per-call set-up out (native frames without
+     locals, event names looked up once, plain-data locals zero-filled):
+     script ~77 ms, 4.2 FPS. What remains is the interpreter itself
+     (`Frame::Run`, `ExpressionEvaluator::Eval`, `ExpressionValue` copies),
+     the large part; one script function, `ScriptedPawn.CheckEnemyPresence`,
+     is ~a third of all script time. Profile the desktop
      build with `perf` ([engine-patches/README.md](engine-patches/README.md#profiling-and-validating-on-the-desktop)).
    - AI level of detail: tick far/unseen pawns every 2–4 frames. Distant AI
      reacts slightly later.

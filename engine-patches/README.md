@@ -37,6 +37,8 @@ per patch file:
   reaches (`c42fae4`).
 - `0006-vm-call-path-without-casts.patch` — script calls find parameters and
   virtual functions without `dynamic_cast` (`1fb6deb`).
+- `0007-vm-call-overheads.patch` — native frames without locals, event names
+  looked up once, plain-data locals zero-filled (`c4b46f1`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -349,6 +351,36 @@ the class, the state name and the function name, none of which change once
 loaded, so `UClass::VirtualFunctionCache` keeps it, keyed by the two names'
 compare indexes. A search that finds nothing is not cached (it throws, as
 before).
+
+## Patch 0007 — less work per script call
+
+Fork commit `c4b46f1`, from a profile of the game tick alone (`perf` with
+DWARF call graphs, samples under `ULevel::Tick`): allocation and set-up were
+about a quarter of it. On the Smart Pro, script time went from ~84 to ~77 ms
+and the fight from 4.0 to 4.2 FPS.
+
+### 22. Native frames without locals
+
+`CallNative` put a full `Frame` on the call stack, which allocated and
+constructed the native function's locals. Natives get their arguments
+directly and never `Run`; only `Frame::Run` reads a frame's `Variables`. The
+frame is now built with `Frame::NoLocals` -- for operators alone that is
+thousands of allocations a frame.
+
+### 23. Event names looked up once
+
+`Frame::Call` mapped the function's name to an `EventName` on every call.
+`UFunction::EventIndex` keeps the answer, and `UObject::IsNonEventEnabled` is
+the rest of `IsEventEnabled(name)` for names that are not events.
+
+### 24. Plain-data locals
+
+`LocalVariables` constructed and destructed each local through a virtual
+call. When every property of a function is plain data -- numbers, bools,
+names, object references, and structs of those, all of which construct to
+zero bytes and have nothing to destruct -- the locals are zero-filled at once
+and not destructed. `UStruct::PlainDataLocals` remembers which functions
+qualify; strings, dynamic arrays and maps keep the old path.
 
 ## Running it headlessly
 
