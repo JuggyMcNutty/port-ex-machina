@@ -63,6 +63,11 @@ per patch file:
   and fogged once, not once per face using it (`734c6b3`).
 - `0019-mesh-face-batches.patch` — a run of mesh faces with one texture drawn
   in one device call (`587ce9c`).
+- `0020-clipper-arm-clip-test.patch` — the visibility clipper's non-SSE
+  (ARM) build skips clipping for triangles inside the view, as the SSE build
+  did (`f7188e7`).
+- `0021-surface-points-on-demand.patch` — a surface's points gathered only
+  when a visibility test needs them (`2d08d1d`).
 
 Each file is its commit's `git format-patch` output (`0001` was regenerated
 with its header on 2026-09-22; it had been a bare diff), so `git am` applies
@@ -722,6 +727,42 @@ it was. Vulkan validation, with synchronization validation, is clean on
 Liberty Island on both texture paths, and a capture of the dock matches the
 one from before patch 0012 except where time moves things (the sky, the
 NPCs, the stats): the statue and props are identical to the pixel.
+
+## Patch 0020 — the ARM build's clip test
+
+Fork commit `f7188e7`. On the Smart Pro the visibility pass went from ~25
+to ~20 ms a frame (with the profile's per-part timers), its surface tests
+from ~11.8 to ~7.4 ms, and the fight from 6.7 to 6.9 FPS.
+
+### 38. Only triangles that need clipping are clipped
+
+`BspClipper::ClipEdge` returns a triangle as it is when none of its clip
+distances is negative. The SSE path tests that; the plain C++ path, which
+every non-x86 build takes (`Precomp.h` defines `NOSSE` there), tested
+`clipd[i]` -- a vertex index, and the value's truth rather than its sign --
+so on the handheld every visibility test went through the full six-plane
+clipping loop, and `ClipEdge` was the visibility pass's largest function
+(~5 ms a frame). The test is now the SSE path's, with a NaN distance
+counted as needing clipping. Whenever it lets a triangle skip, the loop
+would have returned the triangle's own three vertices with weights of
+exactly 1 and 0: a standalone test ran both through it on a million random
+triangles (inside, crossing the planes, degenerate, some with NaNs), 48%
+skipped and none different. The bug is upstream's; captures of the dock
+before and after differ only in the sky's moving clouds and the NPCs.
+
+## Patch 0021 — surface points on demand
+
+Fork commit `2d08d1d`. On the Smart Pro the visibility pass went from ~20.5
+to ~19.6 ms a frame and render CPU from ~74 to ~73 ms (7.0 FPS).
+
+### 39. Points only for the surfaces tested
+
+`VisibleFrame::ProcessNodeSurface` copied each surface's points out of the
+model -- two dependent lookups a vertex -- before deciding anything, and
+since patch 0011 over half the surfaces in view, one-sided back faces, are
+then skipped untested. The points are now gathered before a sky, warp zone
+or mirror's portal check and before the surface test, the only places that
+read them.
 
 ## Running it headlessly
 

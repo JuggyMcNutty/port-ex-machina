@@ -303,7 +303,7 @@ index f3fcef6..43b5045 100644
  
  void RenderSubsystem::DrawEditorViewport()
 diff --git a/SurrealEngine/Render/VisibleFrame.cpp b/SurrealEngine/Render/VisibleFrame.cpp
-index 7568df4..b378505 100644
+index d0b49d9..e135ffa 100644
 --- a/SurrealEngine/Render/VisibleFrame.cpp
 +++ b/SurrealEngine/Render/VisibleFrame.cpp
 @@ -1,6 +1,7 @@
@@ -335,42 +335,40 @@ index 7568df4..b378505 100644
  			visactor.Process(this, actor);
  		}
  	}
-@@ -206,7 +212,9 @@ void VisibleFrame::ProcessNodeSurface(BspNode* node, bool front)
- 			UZoneInfo* zoneInfo = engine->GetZoneActor(zone);
+@@ -213,7 +219,9 @@ void VisibleFrame::ProcessNodeSurface(BspNode* node, bool front)
  			if (zoneInfo->SkyZone())
  			{
+ 				gatherPoints();
 +				uint64_t perfPortal = PerfLog::Enabled() ? PerfLog::NowNs() : 0; // TEMPORARY DEBUG TOOL
  				Array<PortalSpan> spans = Clipper.CheckPortal(points, numverts);
 +				if (perfPortal) PerfLog::Add(PerfLog::VisPortal, (PerfLog::NowNs() - perfPortal) / 1e6); // TEMPORARY DEBUG TOOL
  				if (!spans.empty())
  				{
  					USkyZoneInfo* skyZone = zoneInfo->SkyZone();
-@@ -236,7 +244,9 @@ void VisibleFrame::ProcessNodeSurface(BspNode* node, bool front)
- 				UWarpZoneInfo* warpZone = UObject::TryCast<UWarpZoneInfo>(engine->GetZoneActor(portalZone));
+@@ -244,7 +252,9 @@ void VisibleFrame::ProcessNodeSurface(BspNode* node, bool front)
  				if (warpZone)
  				{
--					Array<PortalSpan> spans = Clipper.CheckPortal(points, numverts);
+ 					gatherPoints();
 +					uint64_t perfPortal = PerfLog::Enabled() ? PerfLog::NowNs() : 0; // TEMPORARY DEBUG TOOL
-+				Array<PortalSpan> spans = Clipper.CheckPortal(points, numverts);
-+				if (perfPortal) PerfLog::Add(PerfLog::VisPortal, (PerfLog::NowNs() - perfPortal) / 1e6); // TEMPORARY DEBUG TOOL
+ 					Array<PortalSpan> spans = Clipper.CheckPortal(points, numverts);
++					if (perfPortal) PerfLog::Add(PerfLog::VisPortal, (PerfLog::NowNs() - perfPortal) / 1e6); // TEMPORARY DEBUG TOOL
  					if (!spans.empty())
  					{
  						for (auto& p : Portals)
-@@ -263,7 +273,9 @@ void VisibleFrame::ProcessNodeSurface(BspNode* node, bool front)
- 			if (PortalDepth > 0) // To do: cull backfacing surfaces so we don't need this hack
+@@ -272,7 +282,9 @@ void VisibleFrame::ProcessNodeSurface(BspNode* node, bool front)
  				return;
  
--			Array<PortalSpan> spans = Clipper.CheckPortal(points, numverts);
+ 			gatherPoints();
 +			uint64_t perfPortal = PerfLog::Enabled() ? PerfLog::NowNs() : 0; // TEMPORARY DEBUG TOOL
-+				Array<PortalSpan> spans = Clipper.CheckPortal(points, numverts);
-+				if (perfPortal) PerfLog::Add(PerfLog::VisPortal, (PerfLog::NowNs() - perfPortal) / 1e6); // TEMPORARY DEBUG TOOL
+ 			Array<PortalSpan> spans = Clipper.CheckPortal(points, numverts);
++			if (perfPortal) PerfLog::Add(PerfLog::VisPortal, (PerfLog::NowNs() - perfPortal) / 1e6); // TEMPORARY DEBUG TOOL
  			if (!spans.empty())
  			{
  				for (auto& p : Portals)
-@@ -297,7 +309,11 @@ void VisibleFrame::ProcessNodeSurface(BspNode* node, bool front)
- 			return;
+@@ -307,7 +319,11 @@ void VisibleFrame::ProcessNodeSurface(BspNode* node, bool front)
  	}
  
+ 	gatherPoints();
 -	if (!Clipper.CheckSurface(points, numverts, (PolyFlags & PF_NoOcclude) == 0))
 +	bool perfSurfaceVisible; // TEMPORARY DEBUG TOOL: time the surface test
 +	{ PerfLog::Scope perf(PerfLog::VisSurface); PerfLog::Counter(PerfLog::VisSurface)++;
@@ -380,7 +378,7 @@ index 7568df4..b378505 100644
  		return;
  
  	/*if (PolyFlags & PF_Portal)
-@@ -356,6 +372,14 @@ int VisibleFrame::FindZoneAt(const vec4& location, BspNode* node, BspNode* nodes
+@@ -366,6 +382,14 @@ int VisibleFrame::FindZoneAt(const vec4& location, BspNode* node, BspNode* nodes
  
  void VisibleFrame::Draw()
  {

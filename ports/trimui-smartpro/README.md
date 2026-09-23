@@ -5,8 +5,8 @@ handheld (4× Cortex-A53, PowerVR GE8300) running spruceOS. Cross-built from a
 PC; the launcher is the app the spruceOS menu starts.
 
 **Status.** The launcher and the engine both run on the device. The intro plays
-at ~30 FPS; Liberty Island's opening firefight at 6.7 FPS, 7.9 at 853×480 (2.2
-before engine patches 0004–0019), CPU-bound on NPC AI and render CPU -- see
+at ~30 FPS; Liberty Island's opening firefight at 7.0 FPS, 7.9 at 853×480 (2.2
+before engine patches 0004–0021), CPU-bound on NPC AI and render CPU -- see
 [Performance](#performance). Indoors, UNATCO HQ shows ~20.
 
 | File | What it is |
@@ -190,6 +190,7 @@ The System tab shows the engine and script logs on screen.
 | Deploy with checksums (2026-09-22) | `dx.sh deploy` built and staged, sent only the one changed file, kept the device's copy in `.prev-<date-time>` and verified all 13 files; `profile-map.sh` applied `launcher.ini`'s Overclock (four cores, 2.0 GHz) through `port-hooks.sh` and restored power-save after |
 | CPU/GPU overlap, engine patch 0004 (2026-09-22) | Liberty Island renders correctly mid-fight (framebuffer capture); GPU wait ~76 → ~0.2 ms. Synchronization validation clean on the desktop build, bindless and per-batch paths |
 | Lit-span lightmaps, engine patch 0005 (2026-09-22) | Liberty Island's dock pixel-identical before and after (framebuffer captures); lightmaps ~98 → ~11 ms. On the desktop, a temporary walk over every texel found none in reach outside a span |
+| Visibility: the ARM clip test, surface points on demand, engine patches 0020–0021 (2026-09-23) | A capture of the dock after 0020 differs from the one before it only in the sky's moving clouds and the NPCs; every level surface identical to the pixel |
 | Mesh vertices once a draw and faces in runs, engine patches 0018–0019 (2026-09-23) | A capture of Liberty Island's dock matches the one from before patch 0012 except where time moves things (the sky, the NPCs, the stats overlay): the statue and props identical to the pixel. On the desktop, Vulkan validation clean on both texture paths |
 | Script VM and actor iterators, engine patches 0012–0017 (2026-09-23) | Liberty Island's fight runs; the engine's log is the same as before them, bar a window address. On the desktop, temporary checks ran the old code beside the new ([engine-patches/README.md](../../engine-patches/README.md)) |
 | One-sided back faces skipped, engine patch 0011 (2026-09-23) | Captures of Liberty Island and of UNATCO HQ's interior (`01_NYC_UNATCOHQ.dx`) before and after differ only in the stats overlay's surface count |
@@ -265,6 +266,8 @@ The frame times:
 | Native, each mesh vertex once a draw (0018) | 6.6 | ~150 ms | ~66 | ~80 | ~3 |
 | The same, mesh faces in runs (0019) | 6.7 | ~149 ms | ~67 | ~78 | ~3 |
 | **853×480, the same** | **7.9** | **~126 ms** | **~52** | **~71** | **~0.2** |
+| Native, the ARM clipper's clip test fixed (0020) | 6.9 | ~144 ms | ~66 | ~74 | ~4 |
+| The same, surface points on demand (0021) | 7.0 | ~143 ms | ~65 | ~73 | ~4 |
 
 (Times in ms per frame, averaged over 60 frames. The performance-mode fight
 rows had the per-class or per-function hooks on, which add their own cost; the
@@ -279,9 +282,9 @@ best so far; each row between is one engine patch, and what each found is in
 960×540 and 853×480 are the Video tab's Resolution below native: the GPU's
 time was already hidden, so the gain is the tick's, which shares memory with
 the GPU, and, since patch 0010, the occlusion grid's. Where a frame goes at
-native resolution (~149 ms, facing the fight in overclock):
+native resolution (~143 ms, facing the fight in overclock):
 
-- **Game tick ~67 ms**, almost all NPCs. The device's CPU samples split it:
+- **Game tick ~65 ms**, almost all NPCs. The device's CPU samples split it:
   ~27 ms under script calls, ~14 ms of which is the interpreter's own work
   (evaluating expressions, making calls, moving values) and ~9 ms AI sight
   traces (`CanSee`, `FastTrace`); ~17 ms physics, mostly collision traces for
@@ -291,12 +294,13 @@ native resolution (~149 ms, facing the fight in overclock):
   actors (`ULevel::TickActor`, animation, event lookups). ~10,000 VM calls a
   frame; `ScriptedPawn.CheckEnemyPresence` is still the costliest script
   function. Pawns out of view think every third frame (Distant AI).
-- **Render CPU ~68 ms** besides lightmaps and uploads: visibility ~21 ms (the
-  BSP walk, ~3,800 box tests and ~2,400 surface tests a frame against
-  `BspClipper`'s occlusion grid, portal tests, actor set-up; ~25 with the
-  profile's per-part timers); actor meshes ~12 ms for ~40 in view (vertex
-  animation on the CPU); BSP surfaces 11 ms for ~580 nodes; translucent 5.6;
-  the sky portal 3; `PostRenderFlash` (script) 2.1; the rest ~7.
+- **Render CPU ~62 ms** besides waits, lightmaps and uploads: visibility
+  ~16 ms (the BSP walk, ~3,800 box tests and ~2,400 surface tests a frame
+  against `BspClipper`'s occlusion grid, portal tests, actor set-up; ~20
+  with the profile's per-part timers); actor meshes ~12 ms for ~40 in view
+  (vertex animation on the CPU); BSP surfaces 11 ms for ~580 nodes;
+  translucent 5.6; the sky portal 3; `PostRenderFlash` (script) 2.1; the
+  rest ~7.
 - **Lightmaps ~4 ms, texture uploads ~4 ms.** One `BarrelFire`, a dynamic
   light with the fire waver effect, has ~8 lightmaps rebuilt every frame, and
   each goes back to the GPU whole, converted from float on the CPU (the GE8300
@@ -304,7 +308,7 @@ native resolution (~149 ms, facing the fight in overclock):
 - **GPU ~76 ms**, drawing the previous frame alongside the tick since patch
   0004, which cost ~20 ms of tick: CPU and GPU compete for the SoC's shared
   memory. At native resolution the tick is now the shorter of the two, so
-  the render waits ~3 ms for the GPU at its start (patch 0018 on), render
+  the render waits ~3–4 ms for the GPU at its start (patch 0018 on), render
   CPU and `view+audio` grew ~1–1.5 ms each from patch 0015 on, and a
   shorter tick gains less; at 853×480 none of that happens. `view+audio` is
   mostly `USurrealAudioDevice::StartAmbience`, which reads every actor's
