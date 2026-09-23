@@ -220,11 +220,10 @@ On Liberty Island:
   waits on the frame's fence right after submitting, so a frame costs CPU + GPU,
   not the larger of the two.
 
-Candidate work, none started: AI level of detail (tick far/unseen pawns every
-2–4 frames), skipping lightmap re-lighting for short flashes and spreading
-rebuilds over the four cores, a lower internal resolution with CPU/GPU overlap,
-and speeding up the VM's call path. The OpenGL ES backend would not help: the
-CPU is the bottleneck, and Vulkan is the better API on this GPU.
+The fixes chosen, their order and the target are in
+[`agent.md`](../../agent.md#decided-not-started). The OpenGL ES backend would
+not help here: the CPU is the bottleneck, and Vulkan is the better API on this
+GPU.
 
 ## Device probes
 

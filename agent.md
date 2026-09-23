@@ -16,8 +16,8 @@ engine, a fork of Surreal Engine.
   Its history was rewritten before publishing (2026-09-22) to drop the game's
   files and a personal email address.
 - **trimui-smartpro**: the game runs. Intro ~30 FPS; **Liberty Island 2–3
-  FPS**, CPU-bound on NPC AI and lightmap rebuilds -- measured, candidate fixes
-  waiting on the owner's choice (Open decisions). The framework's build was
+  FPS**, CPU-bound on NPC AI and lightmap rebuilds -- measured; the fixes and
+  a ~20 FPS target are decided, none started (Decided, not started). The framework's build was
   deployed and started the game on the device.
 - **linux-x86_64**: launcher and engine build natively; the staged app's
   `run-game.sh` ran the engine into the intro level on the development PC.
@@ -63,29 +63,48 @@ the other (the old CMake caches, the engine's embedded source paths). The
 container has no `libpipewire`/`libpulse`, so the engine cannot open audio in
 it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/linux-x86_64/README.md#audio)).
 
-## Open decisions
+## Decided, not started
 
-1. **Performance** on the Smart Pro (owner to choose; nothing started).
-   Liberty Island, from [its README](ports/trimui-smartpro/README.md#performance):
+1. **Smart Pro performance** (owner, 2026-09-22): the target is **~20 FPS on
+   Liberty Island**, and every trade-off below is accepted. 20 FPS needs the
+   script VM several times faster, so the deep VM work is in scope. Where the
+   time goes is in [its README](ports/trimui-smartpro/README.md#performance):
    game tick ~40% (NPC AI through a slow script VM), lightmap rebuilds ~20%
    (muzzle flashes re-light surfaces on the CPU), other render CPU ~20% (not yet
-   broken down), GPU ~15% and serialised with the CPU. Candidates, in order of
-   payoff per effort:
-   - AI level of detail: tick far/unseen pawns every 2–4 frames. Trade-off:
-     distant AI reacts slightly later.
+   broken down), GPU ~15% and serialised with the CPU. Order of work,
+   re-measuring after each:
+   - Break down the ~100 ms of "other render CPU" (a measurement; the device
+     must be awake).
+   - Let CPU and GPU overlap: `CommandBufferManager::SubmitCommands` waits on
+     the fence right after submit. No visible cost.
+   - VM call path: `Frame::Call`, `CallScript` and `CallNative` (the
+     engine's `Frame.cpp`) walk the function's parameter list two or three times
+     per call, casting every field, and take the arguments in a freshly built
+     array. Cache the parameter layout per function first; then the
+     interpreter itself, which is the large part.
+   - AI level of detail: tick far/unseen pawns every 2–4 frames. Distant AI
+     reacts slightly later.
    - Lightmaps: don't re-light for short-lived flashes; spread rebuilds over
-     the four cores. Trade-off: flashes light characters, not walls.
-   - Lower internal resolution + let CPU and GPU overlap
-     (`CommandBufferManager::SubmitCommands` waits on the fence right after
-     submit). Trade-off: a softer image.
-   - Speed up the VM call path (`Frame::Call` copies its argument array and
-     re-walks the parameter list per call). No trade-off; largest effort.
-   Next measurement: break down the ~100 ms of "other render CPU".
-2. **OpenGL ES backend** (was "Phase 4"): recommended to drop or park -- the
-   CPU is the bottleneck and Vulkan is the better API on the GE8300. The Smart
-   Pro's `renderers.ini` already lists GLES as "not in this engine build";
-   setting `EngineType=GLES` there is all it would need later.
-3. **Verify by hand** (owner):
+     the four cores. Flashes light characters, not walls.
+   - Render resolution, **chosen by the user on the launcher's Video tab**
+     (owner, 2026-09-22) and scaled up to the panel; the default stays native.
+     The engine already draws each frame into an offscreen image and scales it
+     when presenting (`VulkanRenderDevice::DrawPresentTexture`); a fork patch
+     lets that image be smaller than the window. The game's own resolution menu
+     refuses anything under 640×480 (`MenuChoice_Resolution` in `DeusEx.u`),
+     so 480 lines is the floor on a 16:9 panel: 1280×720, 960×540, 854×480 on
+     the Smart Pro. Still to settle when it is built: a new `Settings.json`
+     field, or the engine's own `FullscreenViewportX` and `Y`, which the in-game
+     menu writes too. A softer image, HUD included.
+2. **Renderers on aarch64** (owner, 2026-09-22): the goal is Vulkan, OpenGL ES
+   and software rendering all selectable. Not now: Vulkan is the only one the
+   engine has. GLES means porting Surreal's desktop OpenGL 3.2 renderer (the
+   Smart Pro's `renderers.ini` then needs only `EngineType=GLES`); Surreal has
+   no software renderer at all.
+
+## Open decisions
+
+1. **Verify by hand** (owner):
    - On the Smart Pro: START opens the pause menu on the first press after
      skipping the intro; SELECT opens it too; B/Y/SELECT/START close menus; the
      Customize buttons screen; the retired-layout upgrade being written on
@@ -96,16 +115,13 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
      into a game, a pad in game. The desktop defaults (4x MSAA, VSync on) are
      chosen by reasoning.
    - linux-aarch64 on any real device.
-4. **Release polish** (owner's request, deferred): the home screen is
+2. **Release polish** (owner's request, deferred): the home screen is
    deliberately verbose for development; a final build needs a declutter pass,
    and Surreal Engine's always-on Deus Ex stats overlay (FPS/actors/surfaces,
    `RenderCanvas.cpp` `DrawTimedemoStats`) hidden behind an option.
-5. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
+3. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
    engine's libraries, as the Smart Pro has); Android (its README lists the
    work, starting with an in-process hand-over).
-6. **Cleanups**: `core/strings.{c,h}` (Startup.int reading) is no longer used
-   by the app, only by `test_strings`; `dxl_config_set_render_device` and the
-   `DescFlags` accessors are only used by tests. Remove or keep deliberately.
 
 ## Gotchas that cost time
 
