@@ -1,4 +1,4 @@
-From e9559491115d16f6224d7f6608885d8b6a7d62a4 Mon Sep 17 00:00:00 2001
+From d635be4bda5c027b5e0b34ee3c13aa64ebc28217 Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Wed, 23 Sep 2026 07:03:29 -0500
 Subject: [PATCH] BspClipper: one occlusion row per row of the image

@@ -1,4 +1,4 @@
-From 1fb6deb94e36fae7302fbaf9342137896722ce11 Mon Sep 17 00:00:00 2001
+From af2ed868bfe107485ad905a2c183405f01139391 Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Tue, 22 Sep 2026 22:23:10 -0500
 Subject: [PATCH] VM: no casting on the call path

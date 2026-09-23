@@ -1,4 +1,4 @@
-From f7188e7415b1cb2e3c6e1af20a393411f6572a61 Mon Sep 17 00:00:00 2001
+From 96f1b6b4b1d7b59cdfca4c878a93a243116cf98c Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Wed, 23 Sep 2026 10:46:21 -0500
 Subject: [PATCH] BspClipper: the non-SSE build skips clipping for triangles

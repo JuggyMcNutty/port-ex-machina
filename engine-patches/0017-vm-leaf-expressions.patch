@@ -1,4 +1,4 @@
-From 88436759321fb3c538ce1d679c82bd04266466b4 Mon Sep 17 00:00:00 2001
+From 51d45aa37c96a9bc5656d4ce5d89992e94fa8d13 Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Wed, 23 Sep 2026 10:12:46 -0500
 Subject: [PATCH] VM: the commonest leaf expressions made without the visitor

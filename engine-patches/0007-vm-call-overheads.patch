@@ -1,4 +1,4 @@
-From c4b46f11a49c12a299e55066acd7347502c4f53f Mon Sep 17 00:00:00 2001
+From 9cc49e284b2e5f3d9f9a12fbd0449117afbc9d79 Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Tue, 22 Sep 2026 22:37:22 -0500
 Subject: [PATCH] VM: less work per call -- native frames, events, plain-data

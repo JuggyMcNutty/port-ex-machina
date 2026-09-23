@@ -1,4 +1,4 @@
-From e84d3e8fc4b12b7409bc0e6d9580c68f89470f0b Mon Sep 17 00:00:00 2001
+From af99616f537480cc63f9f781865e2e76634abe44 Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Tue, 22 Sep 2026 17:03:55 -0500
 Subject: [PATCH] Gamepad support, and two Deus Ex script-interop fixes

@@ -1,4 +1,4 @@
-From 868e8d28d437a2c8b5b99fc494b50a446c7927ba Mon Sep 17 00:00:00 2001
+From a40bec64d33574529da21d63c1b57b3b3ebfe85e Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Tue, 22 Sep 2026 06:53:59 -0500
 Subject: [PATCH] Non-bindless fallback path and texture format support checks

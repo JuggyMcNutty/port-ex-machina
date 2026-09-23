@@ -1,4 +1,4 @@
-From da0fa3fcd011378bcee887e72b866298d097f01a Mon Sep 17 00:00:00 2001
+From a41d14b1180e2e04957d1b19d7a5406b88800b6c Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Wed, 23 Sep 2026 10:57:25 -0500
 Subject: [PATCH] AI level of detail: a second tier, every sixth frame when far

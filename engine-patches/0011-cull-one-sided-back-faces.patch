@@ -1,4 +1,4 @@
-From a8b5a2fdb3b52dd3dc06ccf18638e07b9aec5092 Mon Sep 17 00:00:00 2001
+From 7599d2b600015df7f2eec1e683cd94b6f55c2e5b Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Wed, 23 Sep 2026 07:26:25 -0500
 Subject: [PATCH] Visibility: skip one-sided surfaces seen from behind

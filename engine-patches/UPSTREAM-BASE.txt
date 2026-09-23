@@ -1,1 +1,1 @@
-42b0d64 Simplify the the NO-AI Code Rule.md file in hope it is easier to understand (who am I kidding, these people don't read before telling the clanker to submit their work)
+af860b366e6c24370dd4e4e7865902a3b550df02 Fix bool properties in structs not getting serialized

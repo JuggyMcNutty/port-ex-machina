@@ -1,4 +1,4 @@
-From c42fae458ade829ebc04dd58d6a4d3d3c97f49a6 Mon Sep 17 00:00:00 2001
+From 03afa604679b0e8e89ea5100bb58c1484d677f41 Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Tue, 22 Sep 2026 22:09:50 -0500
 Subject: [PATCH] Lightmaps: light only the texels a light can reach

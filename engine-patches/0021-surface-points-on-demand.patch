@@ -1,4 +1,4 @@
-From 2d08d1d2e9eaf0b4998b55e51c9f0d2d1b5e0841 Mon Sep 17 00:00:00 2001
+From 377cf462b1452f880723cce4305087172bfe7463 Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Wed, 23 Sep 2026 10:51:12 -0500
 Subject: [PATCH] Visibility: a surface's points gathered only when a test

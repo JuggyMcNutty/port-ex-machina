@@ -1,4 +1,4 @@
-From 2f0143bd9cb123666d038a8bc19297c7a66ff2fc Mon Sep 17 00:00:00 2001
+From a1a2926f93fbd6be6288f4dd87191ca36ae9f0f9 Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Wed, 23 Sep 2026 06:53:16 -0500
 Subject: [PATCH] Render scale: draw the scene smaller than the window, present

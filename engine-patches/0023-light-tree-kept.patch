@@ -1,4 +1,4 @@
-From f3ee69043f8b33111671cb5823095265fd2666b7 Mon Sep 17 00:00:00 2001
+From 56e86e57548c00aa5ccb597a52aed093ceaa9172 Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Wed, 23 Sep 2026 11:10:17 -0500
 Subject: [PATCH] Lights: the light tree and each surface's lights kept while

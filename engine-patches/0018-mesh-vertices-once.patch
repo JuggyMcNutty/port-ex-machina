@@ -1,4 +1,4 @@
-From 734c6b317f0fb9c5fbb0df892ba3ccc0f6f251e2 Mon Sep 17 00:00:00 2001
+From efc2a80026cbc0768503c0c365e15db0d9df2c4b Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Wed, 23 Sep 2026 10:28:31 -0500
 Subject: [PATCH] Meshes: each vertex of a draw computed once, not once per

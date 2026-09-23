@@ -1,4 +1,4 @@
-From 1950f5e002461e401d45e256434c1c583ba6de86 Mon Sep 17 00:00:00 2001
+From 6ba1983af99b9fd70a1e6133a70332578a13431c Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Wed, 23 Sep 2026 10:03:41 -0500
 Subject: [PATCH] VM: the commonest operators evaluated in place

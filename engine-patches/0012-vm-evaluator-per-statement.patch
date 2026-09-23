@@ -1,4 +1,4 @@
-From fdf89cec2edf83c22d5be4a1263cfbaad9ab496f Mon Sep 17 00:00:00 2001
+From f4ea318b0b71718e83c19b0e0efd208379bfc91c Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Wed, 23 Sep 2026 08:57:55 -0500
 Subject: [PATCH] VM: one evaluator per statement, nested values returned

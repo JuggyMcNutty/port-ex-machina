@@ -1,4 +1,4 @@
-From 8937b8ab3cbe31e126847fae9770d2bb7a6667d2 Mon Sep 17 00:00:00 2001
+From f984a7800675f85cc5e7eb134de36b03ffa8aef8 Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Wed, 23 Sep 2026 11:42:19 -0500
 Subject: [PATCH] Ray traces: each BSP child gets its own part of the segment

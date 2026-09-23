@@ -1,4 +1,4 @@
-From e5ae2cadf36c9ae5cac1cfeafcf8d5ed613817a8 Mon Sep 17 00:00:00 2001
+From 9720823c814691ca1455cbef65d13c629fac2a60 Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Wed, 23 Sep 2026 09:19:46 -0500
 Subject: [PATCH] Actor iterators: the slots of a class from an index, not a

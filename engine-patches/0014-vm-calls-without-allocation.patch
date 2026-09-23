@@ -1,4 +1,4 @@
-From 4d5b8e793bca31830f8be2d164e90fc06b3a1956 Mon Sep 17 00:00:00 2001
+From 829adcbd7e1d6e109ae2cd81f67f4e46a84f5c95 Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Wed, 23 Sep 2026 09:40:14 -0500
 Subject: [PATCH] VM: calls without heap allocations or walks over every local

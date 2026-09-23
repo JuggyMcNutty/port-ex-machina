@@ -1,4 +1,4 @@
-From 4222051b42e73799e1d34379f7a927f3ce28ec63 Mon Sep 17 00:00:00 2001
+From ce78355fb3cc47b2ac27dd18b3751c2c564dd5ce Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Tue, 22 Sep 2026 22:44:33 -0500
 Subject: [PATCH] AI level of detail: pawns out of sight think every third

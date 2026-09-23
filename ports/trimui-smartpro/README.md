@@ -227,6 +227,7 @@ a PC.
 | Pad in game | moving, looking and firing work (owner, first build); START was swallowed after skipping the intro — fixed since, **not yet re-verified** |
 | The ports framework (2026-09-22) | `dx.sh deploy` put exactly the staged files on the device (checksums); `dxl-cli --dry-run --probe` ran there; the shared `run-game.sh` with this port's hooks started the out-of-tree engine build, the intro rendered at 31 FPS, and the CPU mode was applied and restored |
 | Deploy with checksums (2026-09-22) | `dx.sh deploy` built and staged, sent only the one changed file, kept the device's copy in `.prev-<date-time>` and verified all 13 files; `profile-map.sh` applied `launcher.ini`'s Overclock (four cores, 2.0 GHz) through `port-hooks.sh` and restored power-save after |
+| Engine upgraded to upstream `af860b3` (2026-09-23) | The fight runs and renders as before (framebuffer captures, with and without the profiling hooks); its log is the same as before apart from timings, and Distant AI's tallies match. On the desktop, Liberty Island's log was the same as the build before the upgrade, and synchronization validation was clean on both texture paths |
 | Engine patches 0004–0027 (2026-09-22/23) | Each one's check on this device -- the fight runs, framebuffer captures against the ones before it -- is with the patch in [`docs/ENGINE.md`](../../docs/ENGINE.md#what-the-fork-changes) |
 
 Verified with the earlier wizard build, on code paths unchanged since: install
@@ -248,7 +249,8 @@ unless a row says otherwise, in milliseconds a frame averaged over 60 frames.
 ### The fight, patch by patch
 
 The overclock fight, facing it, from the start of the engine work and then after
-each patch in turn; the last row is where it stands (what each changed is
+each patch in turn, and after each upgrade to a newer upstream; the last row is
+where it stands (what each changed is
 in [`docs/ENGINE.md`](../../docs/ENGINE.md#what-the-fork-changes)). The 853×480
 columns were measured at some steps only; its GPU wait stayed ~0.2 ms throughout.
 
@@ -278,9 +280,11 @@ columns were measured at some steps only; its GPU wait stayed ~0.2 ms throughout
 | 0024 | 7.3 | ~138 | ~62 | ~72 | ~7 | 8.9 | ~112 | ~48 | ~61 |
 | 0025 | 7.3 | ~138 | ~58 | ~75 | ~10 | | | | |
 | 0026 | 7.4 | ~136 | ~56 | ~75 | ~11 | 9.2 | ~109 | ~46 | ~61 |
-| **0027** | **7.3** | **~136** | **~53** | **~78** | **~14** | **9.3** | **~108** | **~44** | **~61** |
+| 0027 | 7.3 | ~136 | ~53 | ~78 | ~14 | 9.3 | ~108 | ~44 | ~61 |
+| **upstream `af860b3`** | **7.3** | **~137** | **~55** | **~78** | **~13** | **9.2** | **~108** | **~45** | **~61** |
 
-After 0009, 960×540 (render scale 0.75) measured 4.7 FPS, ~214 ms, tick ~94,
+The upgrade to upstream `af860b3` (2026-09-23) measured the same as 0027 within
+the noise. After 0009, 960×540 (render scale 0.75) measured 4.7 FPS, ~214 ms, tick ~94,
 render CPU ~118. From patch 0013 on, the hooks build with frame pointers for
 the sampling profiler, which costs ~1%: patch 0012 measured 5.4 FPS without
 them and 5.3 with. From patch 0018 on, native resolution is held back by the

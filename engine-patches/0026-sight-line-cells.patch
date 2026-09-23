@@ -1,4 +1,4 @@
-From 85642be980bdae2a1bfb973f2d6ddff97aa750d7 Mon Sep 17 00:00:00 2001
+From 0f9ce6cccd7dbc52bf0c71a57ae9490573e08d18 Mon Sep 17 00:00:00 2001
 From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
 Date: Wed, 23 Sep 2026 11:49:38 -0500
 Subject: [PATCH] Collision: sight lines test only the cells they cross; hull
