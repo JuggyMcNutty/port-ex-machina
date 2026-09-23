@@ -75,6 +75,8 @@ static void clear_marker(dxl_session *s, const dxl_row *r) {
 
 static void do_reset_video(dxl_session *s) {
     dxl_es_reset_section(s->app->es, "RenderDevice");
+    const dxl_cpu_mode_info *cpu = dxl_target_cpu_mode(dxl_target_get(), NULL);
+    if (cpu) dxl_app_set_cpu_mode(s->app, cpu->name);
     dxl_config_set_brightness(s->app->cfg, 0.5);
     dxl_config_set_decals(s->app->cfg, 1);
     dxl_log("video settings reset");
@@ -82,9 +84,9 @@ static void do_reset_video(dxl_session *s) {
 }
 static void reset_video(dxl_session *s, const dxl_row *r) {
     open_confirm(s, "Reset video settings?",
-                 "Every Video tab setting goes back to this device's defaults: Vulkan, "
-                 "no vertical sync, normal lighting, D3D9 gamma, brightness 50%, no bloom, "
-                 "anti-aliasing off, decals on.", "Reset video", do_reset_video);
+                 "Every Video tab setting goes back to the defaults the launcher ships "
+                 "with for this device; brightness goes to 50% and decals on.",
+                 "Reset video", do_reset_video);
 }
 
 static void do_reset_controls(dxl_session *s) {
@@ -141,6 +143,10 @@ static void version_value(dxl_session *s, const dxl_row *r, char *out, size_t n)
     snprintf(out, n, "%s", DXL_VERSION);
 }
 
+static void version_describe(dxl_session *s, const dxl_row *r, char *out, size_t n) {
+    snprintf(out, n, "%s", dxl_target_get()->about);
+}
+
 static const dxl_row rows[] = {
     { .label = "Last run", .value = last_run_value, .describe = last_run_describe },
     { .label = "Engine log",
@@ -162,8 +168,7 @@ static const dxl_row rows[] = {
               "will not start or an in-game option has broken it.",
       .enabled = have_default_ini, .activate = reset_game },
     { .label = "Game files", .value = files_value, .describe = files_describe },
-    { .label = "Launcher version", .value = version_value,
-      .help = "Deus Ex launcher for spruceOS, running Surreal Engine." },
+    { .label = "Launcher version", .value = version_value, .describe = version_describe },
 };
 
 dxl_rows tab_system_rows(void) {

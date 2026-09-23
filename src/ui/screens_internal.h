@@ -10,6 +10,7 @@
 #define DXL_SCREENS_INTERNAL_H
 
 #include "screens.h"
+#include "platform/target.h"
 
 typedef struct dxl_row dxl_row;
 struct dxl_row {

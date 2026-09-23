@@ -1,12 +1,8 @@
-#define _GNU_SOURCE
-#include "core/relaunch.h"
+#include "core/argv.h"
 
 #include <ctype.h>
-#include <errno.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
 char **dxl_argv_build(const char *exe, const char *flags) {
     size_t cap = 8, n = 0;
@@ -54,19 +50,4 @@ void dxl_argv_free(char **argv) {
     if (!argv) return;
     for (char **p = argv; *p; p++) free(*p);
     free(argv);
-}
-
-int dxl_relaunch(const char *exe, const char *flags, const char *workdir,
-                 dxl_err *err) {
-    if (workdir && *workdir && chdir(workdir) != 0) {
-        dxl_err_set(err, "cannot enter %s: %s", workdir, strerror(errno));
-        return -1;
-    }
-    char **argv = dxl_argv_build(exe, flags);
-    execv(exe, argv);
-
-    /* Only reached on failure -- exec does not return on success. */
-    dxl_err_set(err, "cannot exec %s: %s", exe, strerror(errno));
-    dxl_argv_free(argv);
-    return -1;
 }

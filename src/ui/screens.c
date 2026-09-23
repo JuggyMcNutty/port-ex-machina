@@ -276,6 +276,14 @@ static int visible_rows(dxl_session *s, dxl_rows rs, const dxl_row **out) {
     return n;
 }
 
+int dxl_session_row_index(dxl_session *s, dxl_tab tab, const char *label) {
+    const dxl_row *vis[MAX_ROWS];
+    int n = visible_rows(s, rows_for(tab), vis);
+    for (int i = 0; i < n; i++)
+        if (strcmp(vis[i]->label, label) == 0) return i;
+    return -1;
+}
+
 static int row_enabled(dxl_session *s, const dxl_row *r, char *why, size_t n) {
     if (why && n) why[0] = '\0';
     return !r->enabled || r->enabled(s, r, why, n);

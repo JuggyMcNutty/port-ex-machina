@@ -6,6 +6,8 @@
 #include "core/log.h"
 #include "core/paths.h"
 #include "platform/gpu_probe.h"
+#include "platform/launch.h"
+#include "platform/target.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -259,16 +261,14 @@ void dxl_app_bind(dxl_app *app, const char *joy_key, const char *command) {
     dxl_log("pad: %s -> %s", joy_key, command && *command ? command : "(nothing)");
 }
 
-const char *const dxl_cpu_modes[] = { "Smart", "Performance", "Overclock", NULL };
-
 const char *dxl_app_cpu_mode(const dxl_app *app) {
     const char *v = app->launcher_ini ? dxl_ini_get(app->launcher_ini, "Launcher", "CpuMode") : NULL;
-    for (int i = 0; v && dxl_cpu_modes[i]; i++)
-        if (dxl_stricmp(v, dxl_cpu_modes[i]) == 0) return dxl_cpu_modes[i];
-    return "Performance";
+    const dxl_cpu_mode_info *m = dxl_target_cpu_mode(dxl_target_get(), v);
+    return m ? m->name : NULL;
 }
 
 void dxl_app_set_cpu_mode(dxl_app *app, const char *mode) {
+    if (!dxl_app_cpu_mode(app)) return;   /* the device offers none */
     if (!app->launcher_ini) app->launcher_ini = dxl_ini_new();
     if (strcmp(dxl_app_cpu_mode(app), mode) == 0 &&
         dxl_ini_get(app->launcher_ini, "Launcher", "CpuMode")) return;
@@ -308,11 +308,11 @@ static void settle_renderer(dxl_app *app) {
     dxl_app_choose_renderer(app, alt);
 }
 
-/* The PowerVR GE8300's multisample resolve turns partially covered pixels to
- * speckle; the Video tab locks the row, and this catches a file edited by
- * hand or carried over from another device. */
+/* A GPU whose multisample resolve is broken (dxl_gpu_msaa_broken): the Video
+ * tab locks the row, and this catches a file edited by hand or carried over
+ * from another device. */
 static void settle_device_limits(dxl_app *app) {
-    if (!app->gpu.probed || !strstr(app->gpu.vulkan_device, "PowerVR")) return;
+    if (!dxl_gpu_msaa_broken(&app->gpu)) return;
     if (strcmp(dxl_es_choice(app->es, DXL_ES_ANTIALIAS), "Off") == 0) return;
     dxl_log("anti-aliasing %s turned off: not usable on %s",
             dxl_es_choice(app->es, DXL_ES_ANTIALIAS), app->gpu.vulkan_device);
@@ -376,7 +376,7 @@ int dxl_app_launch(dxl_app *app, dxl_err *err) {
     if (app->instance) { dxl_instance_release(app->instance); app->instance = NULL; }
     dxl_log_close();
 
-    int rc = dxl_relaunch(cmd, app->cmdline, app->game_dir, err);
+    int rc = dxl_platform_launch(cmd, app->cmdline, app->game_dir, err);
     free(cmd);
     return rc;   /* only here on failure */
 }
@@ -425,7 +425,7 @@ void dxl_app_dry_run(dxl_app *app) {
     const dxl_pad_preset *pp = dxl_app_current_layout(app);
     printf("  %-18s %s%s\n", "pad layout", pp ? pp->label : "custom",
            app->pad_layout_applied ? " (applied now; shipped bindings were in place)" : "");
-    printf("  %-18s %s\n", "CPU mode", dxl_app_cpu_mode(app));
+    if (dxl_app_cpu_mode(app)) printf("  %-18s %s\n", "CPU mode", dxl_app_cpu_mode(app));
     printf("  %-18s %s\n", "Running.ini",
            dxl_sentinel_exists(&app->sentinel) ? "present (crash pending)" : "absent");
 

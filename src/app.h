@@ -20,7 +20,7 @@
 #include "core/install.h"
 #include "core/instance.h"
 #include "core/policy.h"
-#include "core/relaunch.h"
+#include "core/argv.h"
 #include "core/renderers.h"
 #include "core/sentinel.h"
 
@@ -89,10 +89,10 @@ const dxl_pad_preset *dxl_app_base_layout(dxl_app *app);
 /* Binds one pad button (a Joy key) to a command. */
 void dxl_app_bind(dxl_app *app, const char *joy_key, const char *command);
 
-/* CPU mode for the game, as spruceOS names them for its Ports: "Smart",
- * "Performance" (the default) or "Overclock". Kept in launcher.ini as
- * CpuMode and applied by run-game.sh just before the engine starts. */
-extern const char *const dxl_cpu_modes[];   /* NULL-terminated */
+/* CPU mode for the game: one of the device profile's modes
+ * (platform/target.h), kept in launcher.ini as CpuMode and applied by the
+ * port's run-game hooks just before the engine starts. NULL when the device
+ * offers none. */
 const char *dxl_app_cpu_mode(const dxl_app *app);
 void        dxl_app_set_cpu_mode(dxl_app *app, const char *mode);
 

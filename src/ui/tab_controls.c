@@ -16,9 +16,9 @@ static void pad_value(dxl_session *s, const dxl_row *r, char *out, size_t n) {
 }
 
 static void pad_describe(dxl_session *s, const dxl_row *r, char *out, size_t n) {
+    const char *note = dxl_target_get()->pad_note;
     if (dxl_ui_pad_name(s->ui))
-        snprintf(out, n, "The controller SDL sees. The Smart Pro's built-in controls "
-                 "report themselves as an Xbox 360 controller.");
+        snprintf(out, n, "The controller SDL sees.%s%s", note ? " " : "", note ? note : "");
     else
         snprintf(out, n, "No controller is connected. The launcher also works from a "
                  "keyboard: arrows, Enter, Backspace, R to reset, P to play.");

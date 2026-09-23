@@ -1,5 +1,5 @@
 #include "test.h"
-#include "core/relaunch.h"
+#include "core/argv.h"
 
 /* argv construction for the exec into the game. The launcher's command line
  * is kept as one string (docs/re/cli-flags.md: appStrfind matches anywhere),

@@ -1,5 +1,7 @@
 #include "ui.h"
 
+#include "platform/target.h"
+
 #include <SDL_ttf.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -63,7 +65,8 @@ dxl_ui *dxl_ui_init(dxl_err *err) {
      * change modes gains nothing on a fixed screen. DXL_WINDOW=WxH asks for
      * a plain window instead -- for working on the UI at the panel's size
      * on a desktop, and for the screenshot tool. */
-    int ww = 1280, wh = 720;
+    const dxl_target *t = dxl_target_get();
+    int ww = t->panel_w, wh = t->panel_h;
     Uint32 wflags = SDL_WINDOW_FULLSCREEN_DESKTOP;
     const char *wenv = SDL_getenv("DXL_WINDOW");
     if (wenv && sscanf(wenv, "%dx%d", &ww, &wh) == 2 && ww > 0 && wh > 0)
@@ -88,7 +91,7 @@ dxl_ui *dxl_ui_init(dxl_err *err) {
     }
     SDL_SetRenderDrawBlendMode(ui->ren, SDL_BLENDMODE_BLEND);
     SDL_GetRendererOutputSize(ui->ren, &ui->w, &ui->h);
-    if (ui->w <= 0 || ui->h <= 0) { ui->w = 1280; ui->h = 720; }
+    if (ui->w <= 0 || ui->h <= 0) { ui->w = t->panel_w; ui->h = t->panel_h; }
     dxl_metrics_for(&ui->m, ui->h);
     SDL_ShowCursor(SDL_DISABLE);
 

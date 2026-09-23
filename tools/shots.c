@@ -1,6 +1,9 @@
 /* Renders every screen to a .bmp, so layout can be reviewed without a
  * handheld in reach. Uses SDL's offscreen/dummy driver, so it runs headless.
  *
+ * It draws the device profile compiled in (platform/target.h): configure a
+ * host build with -DDXL_PROFILE=<port> to see that device's screens.
+ *
  * This is a development tool, not part of the launcher: it fabricates the
  * session state each screen needs and drives the same draw code the real
  * frontend does, which is the point -- a screenshot of different code would
@@ -10,6 +13,7 @@
 #include "ui/screens.h"
 #include "ui/ui.h"
 #include "core/log.h"
+#include "platform/target.h"
 
 #include <SDL.h>
 #include <stdio.h>
@@ -52,16 +56,10 @@ static void save(SDL_Renderer *r, const char *dir, const char *name) {
     SDL_FreeSurface(s);
 }
 
-/* The Smart Pro as measured (docs/DESIGN.md), so the shots show the
- * device's renderer list and the PowerVR-specific rows. */
-static void fake_smart_pro(dxl_app *app) {
-    memset(&app->gpu, 0, sizeof app->gpu);
-    app->gpu.probed = 1;
-    app->gpu.vulkan = 1;
-    snprintf(app->gpu.vulkan_device, sizeof app->gpu.vulkan_device, "PowerVR Rogue GE8300");
-    snprintf(app->gpu.vulkan_version, sizeof app->gpu.vulkan_version, "1.3.225");
-    app->gpu.gles = 1;
-    snprintf(app->gpu.gles_version, sizeof app->gpu.gles_version, "OpenGL ES 3.2");
+/* The device's GPU as its profile records it, so the shots show its
+ * renderer list and any GPU-specific rows. */
+static void fake_gpu(dxl_app *app) {
+    app->gpu = dxl_target_get()->preview_gpu;
     dxl_renderers_resolve(&app->renderers, &app->gpu);
 }
 
@@ -79,8 +77,14 @@ int main(int argc, char **argv) {
     /* Offscreen first; dummy cannot read pixels back but is a useful
      * smoke test if offscreen is missing. */
     if (!SDL_getenv("SDL_VIDEODRIVER")) SDL_setenv("SDL_VIDEODRIVER", "offscreen", 1);
-    /* The Smart Pro panel, not whatever the offscreen driver calls a desktop. */
-    if (!SDL_getenv("DXL_WINDOW")) SDL_setenv("DXL_WINDOW", "1280x720", 1);
+    /* The device's panel, not whatever the offscreen driver calls a desktop. */
+    const dxl_target *t = dxl_target_get();
+    if (!SDL_getenv("DXL_WINDOW")) {
+        char size[32];
+        snprintf(size, sizeof size, "%dx%d", t->panel_w, t->panel_h);
+        SDL_setenv("DXL_WINDOW", size, 1);
+    }
+
 
     dxl_log_set_echo(0);
     dxl_log_set_to_file(0);
@@ -91,7 +95,7 @@ int main(int argc, char **argv) {
         fprintf(stderr, "app init: %s\n", dxl_err_msg(&err));
         return 1;
     }
-    fake_smart_pro(&app);
+    fake_gpu(&app);
     dxl_ui *ui = dxl_ui_init(&err);
     if (!ui) { fprintf(stderr, "ui init: %s\n", dxl_err_msg(&err)); return 1; }
     if (dxl_ui_headless(ui)) fprintf(stderr, "warning: no font; shots will be blank\n");
@@ -123,22 +127,23 @@ int main(int argc, char **argv) {
     s.tab = DXL_TAB_VIDEO;
     s.cursor[DXL_TAB_VIDEO] = 0;
     shoot(&s, r, outdir, "04-video");
-    s.cursor[DXL_TAB_VIDEO] = 7;      /* anti-aliasing: locked on the PowerVR */
-    shoot(&s, r, outdir, "05-video-aa");
-    s.cursor[DXL_TAB_VIDEO] = 2;      /* brightness slider */
+    /* Rows by name: which rows show depends on the device profile. */
+    s.cursor[DXL_TAB_VIDEO] = dxl_session_row_index(&s, DXL_TAB_VIDEO, "Anti-aliasing");
+    shoot(&s, r, outdir, "05-video-aa");          /* locked on a PowerVR */
+    s.cursor[DXL_TAB_VIDEO] = dxl_session_row_index(&s, DXL_TAB_VIDEO, "Brightness");
     shoot(&s, r, outdir, "06-video-brightness");
 
     s.cursor[DXL_TAB_VIDEO] = 0;
     dxl_session_act(&s, DXL_ACT_CONFIRM);   /* opens the picker */
-    s.ovl_cursor = 1;                        /* on OpenGL ES */
+    s.ovl_cursor = 1;                        /* on the second renderer */
     shoot(&s, r, outdir, "07-renderers");
     dxl_session_act(&s, DXL_ACT_BACK);
 
     s.tab = DXL_TAB_CONTROLS;
-    s.cursor[DXL_TAB_CONTROLS] = 2;
+    s.cursor[DXL_TAB_CONTROLS] = dxl_session_row_index(&s, DXL_TAB_CONTROLS, "Layout");
     shoot(&s, r, outdir, "08-controls");
-    s.cursor[DXL_TAB_CONTROLS] = 3;
-    dxl_session_act(&s, DXL_ACT_CONFIRM);   /* Customize buttons */
+    s.cursor[DXL_TAB_CONTROLS] = dxl_session_row_index(&s, DXL_TAB_CONTROLS, "Customize buttons");
+    dxl_session_act(&s, DXL_ACT_CONFIRM);
     s.ovl_cursor = 8;                        /* SELECT */
     shoot(&s, r, outdir, "09-customize");
     dxl_session_act(&s, DXL_ACT_CONFIRM);   /* its action picker */
@@ -149,12 +154,12 @@ int main(int argc, char **argv) {
     s.tab = DXL_TAB_SYSTEM;
     s.cursor[DXL_TAB_SYSTEM] = 0;
     shoot(&s, r, outdir, "10-system");
-    s.cursor[DXL_TAB_SYSTEM] = 1;
-    dxl_session_act(&s, DXL_ACT_CONFIRM);   /* the engine log, scrolled to the end */
+    s.cursor[DXL_TAB_SYSTEM] = dxl_session_row_index(&s, DXL_TAB_SYSTEM, "Engine log");
+    dxl_session_act(&s, DXL_ACT_CONFIRM);   /* scrolled to the end */
     shoot(&s, r, outdir, "11-log");
     dxl_session_act(&s, DXL_ACT_BACK);
-    s.cursor[DXL_TAB_SYSTEM] = 5;
-    dxl_session_act(&s, DXL_ACT_CONFIRM);   /* reset game configuration: confirm */
+    s.cursor[DXL_TAB_SYSTEM] = dxl_session_row_index(&s, DXL_TAB_SYSTEM, "Reset game configuration");
+    dxl_session_act(&s, DXL_ACT_CONFIRM);   /* its confirmation */
     shoot(&s, r, outdir, "12-confirm");
     dxl_session_act(&s, DXL_ACT_BACK);      /* cancel: nothing deleted */
 

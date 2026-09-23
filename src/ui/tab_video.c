@@ -58,32 +58,32 @@ static void renderer_reset(dxl_session *s, const dxl_row *r) {
 
 /* ---- CPU mode ------------------------------------------------------------ */
 
+/* The modes, their order and their help come from the device profile
+ * (platform/target.h); a device that offers none has no row. */
+
+static int cpu_visible(dxl_session *s, const dxl_row *r) {
+    return dxl_target_cpu_mode_count(dxl_target_get()) > 0;
+}
+
 static void cpu_value(dxl_session *s, const dxl_row *r, char *out, size_t n) {
     snprintf(out, n, "%s", dxl_app_cpu_mode(s->app));
 }
 
 static void cpu_step(dxl_session *s, const dxl_row *r, int dir) {
-    int count = 0, at = 0;
-    for (; dxl_cpu_modes[count]; count++)
-        if (strcmp(dxl_cpu_modes[count], dxl_app_cpu_mode(s->app)) == 0) at = count;
-    dxl_app_set_cpu_mode(s->app, dxl_cpu_modes[(at + dir + count) % count]);
+    const dxl_target *t = dxl_target_get();
+    int count = dxl_target_cpu_mode_count(t), at = 0;
+    for (int i = 0; i < count; i++)
+        if (strcmp(t->cpu_modes[i].name, dxl_app_cpu_mode(s->app)) == 0) at = i;
+    dxl_app_set_cpu_mode(s->app, t->cpu_modes[(at + dir + count) % count].name);
 }
 
 static void cpu_reset(dxl_session *s, const dxl_row *r) {
-    dxl_app_set_cpu_mode(s->app, "Performance");
+    dxl_app_set_cpu_mode(s->app, dxl_target_cpu_mode(dxl_target_get(), NULL)->name);
 }
 
 static void cpu_describe(dxl_session *s, const dxl_row *r, char *out, size_t n) {
-    const char *m = dxl_app_cpu_mode(s->app);
-    if (!strcmp(m, "Smart"))
-        snprintf(out, n, "Smart: the CPU speeds up and down with load, as in the spruceOS menu. "
-                 "Saves battery; Deus Ex runs noticeably slower.");
-    else if (!strcmp(m, "Overclock"))
-        snprintf(out, n, "Overclock: all four cores at 2.0 GHz. The fastest, but the handheld "
-                 "runs warmer and the battery drains sooner.");
-    else
-        snprintf(out, n, "Performance: all four cores held at 1.8 GHz while the game runs, "
-                 "as spruceOS does for its Ports. Put back as it was when you quit.");
+    const dxl_cpu_mode_info *m = dxl_target_cpu_mode(dxl_target_get(), dxl_app_cpu_mode(s->app));
+    snprintf(out, n, "%s", m->help);
 }
 
 /* ---- ini-backed rows --------------------------------------------------- */
@@ -148,14 +148,9 @@ static void gamma_describe(dxl_session *s, const dxl_row *r, char *out, size_t n
 
 /* ---- anti-aliasing: a device limit, not a preference -------------------- */
 
-/* The PowerVR GE8300's multisample resolve turns partially covered pixels to
- * speckle (found on the device, see engine-patches/README.md). */
-static int is_powervr(const dxl_session *s) {
-    return s->app->gpu.probed && strstr(s->app->gpu.vulkan_device, "PowerVR") != NULL;
-}
-
+/* A GPU whose multisample resolve is broken (core/renderers.h). */
 static int aa_enabled(dxl_session *s, const dxl_row *r, char *why, size_t n) {
-    if (!is_powervr(s)) return 1;
+    if (!dxl_gpu_msaa_broken(&s->app->gpu)) return 1;
     snprintf(why, n, "Kept off on the %s: its multisample resolve turns the edges "
              "of polygons into speckle.", s->app->gpu.vulkan_device);
     return 0;
@@ -172,12 +167,12 @@ static int bloom_on(dxl_session *s, const dxl_row *r, char *why, size_t n) {
 static const dxl_row rows[] = {
     { .label = "Renderer", .value = renderer_value, .step = renderer_step,
       .activate = renderer_activate, .reset = renderer_reset, .describe = renderer_describe },
-    { .label = "CPU mode", .value = cpu_value, .step = cpu_step, .reset = cpu_reset,
-      .describe = cpu_describe },
+    { .label = "CPU mode", .visible = cpu_visible, .value = cpu_value, .step = cpu_step,
+      .reset = cpu_reset, .describe = cpu_describe },
     { .label = "Vertical sync",
-      .help = "Waits for the panel's refresh before showing a frame. Removes tearing, "
-              "but the game runs below 60 fps here, so it then holds frames to 30 or 20 "
-              "per second. Off shows each frame as soon as it is drawn.",
+      .help = "Waits for the display's refresh before showing a frame. Removes tearing, "
+              "but when the game runs below the refresh rate it then holds frames to a "
+              "half or a third of it. Off shows each frame as soon as it is drawn.",
       .value = es_value, .step = es_step, .reset = es_reset, .arg = DXL_ES_VSYNC },
     { .label = "Brightness", .value = brightness_value, .slider = brightness_slider,
       .step = brightness_step, .reset = brightness_reset, .describe = brightness_describe },
@@ -186,8 +181,8 @@ static const dxl_row rows[] = {
     { .label = "Gamma curve", .value = es_value, .step = es_step, .reset = es_reset,
       .describe = gamma_describe, .arg = DXL_ES_GAMMA, .choice_labels = gamma_labels },
     { .label = "Bloom",
-      .help = "A soft glow around bright lights, added by Surreal Engine. Costs GPU time "
-              "on a device that already runs below 30 fps.",
+      .help = "A soft glow around bright lights, added by Surreal Engine. Costs GPU time, "
+              "which a handheld rarely has to spare.",
       .value = es_value, .step = es_step, .reset = es_reset, .arg = DXL_ES_BLOOM },
     { .label = "Bloom strength",
       .help = "How far the glow spreads and how bright it is.",

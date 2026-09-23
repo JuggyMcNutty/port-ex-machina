@@ -149,7 +149,7 @@ void tab_play_act(dxl_session *s, dxl_act a) {
         }
         break;
     case DXL_ACT_BACK:
-        /* Home is the root: back leaves, the way every spruceOS app does. */
+        /* Home is the root: back leaves, the way handheld frontends' apps do. */
         s->end = DXL_END_QUIT;
         break;
     default:

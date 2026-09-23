@@ -1,5 +1,7 @@
 #include "theme.h"
 
+#include "platform/target.h"
+
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -18,7 +20,7 @@ const dxl_palette DXL_PAL = {
 };
 
 void dxl_metrics_for(dxl_metrics *m, int height) {
-    /* Reference is the Smart Pro's 720p panel. Rounding to whole pixels keeps
+    /* Reference is a 720p panel. Rounding to whole pixels keeps
      * text crisp on a small screen, where half-pixel baselines are visible. */
     double s = (double)height / 720.0;
     if (s < 0.5) s = 0.5;
@@ -32,13 +34,14 @@ void dxl_metrics_for(dxl_metrics *m, int height) {
     m->line_gap    = (int)(28 * s + 0.5);
 }
 
+static int is_font(const char *path) {
+    struct stat st;
+    return stat(path, &st) == 0 && S_ISREG(st.st_mode);
+}
+
 const char *dxl_theme_find_font(void) {
-    static const char *candidates[] = {
-        /* device */
-        "/usr/trimui/res/regular.ttf",
-        "/usr/trimui/res/full.ttf",
-        "/mnt/SDCARD/spruce/Font Files/Noto.ttf",
-        /* host, for iteration */
+    /* What desktop distros put where; the device profile's own come first. */
+    static const char *generic[] = {
         "/usr/share/fonts/TTF/DejaVuSans.ttf",
         "/usr/share/fonts/dejavu/DejaVuSans.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
@@ -50,9 +53,10 @@ const char *dxl_theme_find_font(void) {
         struct stat st;
         if (stat(env, &st) == 0) return env;
     }
-    for (int i = 0; candidates[i]; i++) {
-        struct stat st;
-        if (stat(candidates[i], &st) == 0 && S_ISREG(st.st_mode)) return candidates[i];
-    }
+    const char *const *own = dxl_target_get()->fonts;
+    for (int i = 0; own && own[i]; i++)
+        if (is_font(own[i])) return own[i];
+    for (int i = 0; generic[i]; i++)
+        if (is_font(generic[i])) return generic[i];
     return NULL;
 }
