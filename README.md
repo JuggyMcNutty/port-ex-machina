@@ -1,38 +1,27 @@
 # Port Ex Machina
 
-A modern, cross-platform launcher for Deus Ex, the Unreal Engine 1 game, and
-the engine and ports that run the game behind it.
+## A modern, cross-platform launcher for Deus Ex with efforts to port to other platforms.
 
-You supply your own Deus Ex game files. None are included.
+# You supply your own game assets. None are included.
 
 ## What it is
 
-**The launcher** takes the place of the game's `System/DeusEx.exe`: a tabbed
-home screen, driven by a pad or the keyboard (Play, Video, Controls, System),
-whose settings are the ones the engine actually reads. The original launcher
-was reverse-engineered first ([`docs/re/`](docs/re/)), so the project started
-from known behaviour; the launcher is our own clean code, built from there.
-[`docs/LAUNCHER.md`](docs/LAUNCHER.md)
+**The launcher** A reverse engineered modern launcher for the deus ex engine.
 
 **The engine** is a fork of [Surreal Engine](https://github.com/dpjudas/SurrealEngine),
-an open-source UE1 reimplementation that recognises this exact build. We use it
-as a vendored dependency: pinned to one upstream commit, plus patches for what
-our ports need. It does not follow upstream; it moves to a newer one only when
-someone chooses to. [`docs/ENGINE.md`](docs/ENGINE.md)
+an open-source UE1 re-implementation, with patches we develop targeting different platforms.
 
-**The ports** take it to other machines. linux-x86_64 is the base: the project
-is developed and tested there, and every other port is linux-x86_64 plus what
-differs for one device -- its toolchain, where SDL2 comes from, a device
-profile, packaging, how to deploy. [`docs/PORTING.md`](docs/PORTING.md)
+**The ports** linux-x86_64 is the base target with linux-aarch64, android, and platform specific builds.
 
 ## Ports
 
 | Port | For | Built | Status |
 |---|---|---|---|
-| [`linux-x86_64`](ports/linux-x86_64/) | desktop Linux; **the base** | natively | runs the game; where the tests, `dxl-shots` and engine validation run |
-| [`linux-aarch64`](ports/linux-aarch64/) | aarch64 devices with an ordinary distro | cross (launcher) or natively | the launcher cross-builds; not yet run on a device |
-| [`trimui-smartpro`](ports/trimui-smartpro/) | TrimUI Smart Pro, spruceOS | cross | runs the game; performance work in progress |
-| [`android`](ports/android/) | Android | -- | planned: what it needs is in its README |
+| [`linux-x86_64`](ports/linux-x86_64/) | desktop Linux; **the base** | runs the game; where the tests, `dxl-shots` and engine validation run |
+| [`linux-aarch64`](ports/linux-aarch64/) | aarch64 devices with an ordinary distro | Builds not tested |
+| [`trimui-smartpro`](ports/trimui-smartpro/) | TrimUI Smart Pro, spruceOS | builds and runs; performance work in progress |
+| [`android`](ports/android/) | Android | -- | planned |
+| [`xbox360`](ports/x360/) | Xbox 360 | -- | planned |
 
 ## Quick start
 
@@ -92,12 +81,6 @@ engine/              (ignored) the engine fork, a separate git clone
 gamefiles/           (ignored) your Deus Ex install, for running on this machine and for test_gamefiles
 reference/           (ignored) the 1112f SDK, the DeusExe launcher source, IDA and ini backups
 ```
-
-## The name
-
-It swaps the god in *deus ex machina*, "the god from the machine", for ports:
-the project is written with Claude, an AI coding agent, and each port takes the
-game to another machine.
 
 ## License
 
