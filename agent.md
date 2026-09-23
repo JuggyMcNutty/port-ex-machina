@@ -1,4 +1,4 @@
-# Deus Ex on any device — working log and session handoff
+# Port Ex Machina — working log and session handoff
 
 **Goal.** Run Deus Ex natively, driven by a pad, on devices it was never made
 for. It began as one handheld (TrimUI Smart Pro, aarch64, spruceOS); it is now
@@ -93,8 +93,13 @@ it: run it with the null OpenAL driver ([`ports/linux-x86_64/README.md`](ports/l
      into a game, a pad in game. The desktop defaults (4x MSAA, VSync on) are
      chosen by reasoning.
    - linux-aarch64 on any real device.
-4. **Merge `ports-framework`** into `aarch64`/`main` -- the owner's call. The
-   branch name `aarch64` no longer describes the repository.
+4. **Publishing on GitHub** as `port-ex-machina` (the name is explained in the
+   README). Before it goes public: a `LICENSE` (none yet -- the owner's choice;
+   Surreal Engine is zlib-licensed, with LGPL parts), and merging `ports-framework` into
+   `aarch64`/`main` -- the owner's call; the branch name `aarch64` no longer
+   describes the repository. The checkout directory is still named
+   `deusex-launcher`; renaming it means deleting `build/` (see the CMake
+   gotcha below).
 5. **Release polish** (owner's request, deferred): the home screen is
    deliberately verbose for development; a final build needs a declutter pass,
    and Surreal Engine's always-on Deus Ex stats overlay (FPS/actors/surfaces,

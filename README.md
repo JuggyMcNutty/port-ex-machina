@@ -1,8 +1,12 @@
-# deusex-launcher
+# Port Ex Machina
 
 A native, controller-first launcher for Deus Ex, and the work to run the game
 behind it on devices it was never made for -- structured so that a new device
 is a small port, not a fork of the project.
+
+The name swaps the god in *deus ex machina*, "the god from the machine", for
+ports: the project is written with Claude, an AI coding agent, and each port
+takes the game to another machine.
 
 You supply your own Deus Ex game files. None are included.
 
