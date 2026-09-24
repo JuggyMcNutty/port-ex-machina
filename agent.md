@@ -29,13 +29,14 @@ no facts of its own beyond those; each lives in one doc, and the
   often) on and 853×480 (2026-09-23), which the fight's native rows switch to
   native for the run. It has no battery (its battery
   warnings are off: [its Gotchas](ports/trimui-smartpro/README.md#gotchas)).
-- **The game's DLLs**: a first pass is read (2026-09-24); the second is
-  [decided 4](#decided)'s list. [`docs/re/`](docs/re/README.md) covers each
-  binary read, and an IDA database gets three scripts from `tools/ida/`
+- **The game's DLLs**: both passes are read but for `Galaxy.dll`
+  (2026-09-24; [decided 4](#decided)). [`docs/re/`](docs/re/README.md) covers
+  each binary read, and an IDA database gets three scripts from `tools/ida/`
   (types, strings, names).
-  - **`DeusEx.dll`**, **`Engine.dll`**, **`Core.dll`**, **`Extension.dll`**,
-    **`ConSys.dll`**, **`DeusExText.dll`**, **`Render.dll`** -- where a
-    feature's drawing lives there, and its mesh detail and lighting -- and
+  - **`DeusEx.dll`**, **`Engine.dll`** (its network code in
+    [`network.md`](docs/re/network.md)), **`Core.dll`**, **`Extension.dll`**,
+    **`ConSys.dll`**, **`DeusExText.dll`**, **`Render.dll`** (where a
+    feature's drawing lives there, its mesh detail and lighting) and
     **`IpDrv.dll`**
     ([`deusex-dll.md`](docs/re/deusex-dll.md),
     [`engine-dll.md`](docs/re/engine-dll.md),
@@ -121,19 +122,20 @@ no facts of its own beyond those; each lives in one doc, and the
    IDA serves one database at a time, which the owner opens.
    - **The first pass** (done): DeusEx, Engine, Core, Extension, ConSys,
      DeusExText, and Render.dll where a feature's drawing lives there.
-   - **The second**, in no order:
-     - **`Render.dll`'s mesh detail and lighting** (read:
-       [mesh detail](docs/re/render-dll.md#mesh-detail),
-       [lighting](docs/re/render-dll.md#lighting)).
-     - **`Galaxy.dll`**, the audio (no database yet): sounds muffled behind
-       level geometry, which the fork plays at full volume; the per-frame
-       update's search for ambient sounds (the audio scan, decided 2); which
-       sounds win when the channels run out.
-     - **`Engine.dll`'s unread natives** (read: [traces](docs/re/engine-dll.md#traces),
-       [moving](docs/re/engine-dll.md#moving), [small](docs/re/engine-dll.md#small)).
-     - **`Engine.dll`'s network code and `IpDrv.dll`**, for multiplayer
-       (decided 5; read: [the network](docs/re/network.md),
-       [`IpDrv.dll`](docs/re/ipdrv-dll.md)).
+   - **The second** (done but for `Galaxy.dll`): Render.dll's
+     [mesh detail](docs/re/render-dll.md#mesh-detail) and
+     [lighting](docs/re/render-dll.md#lighting); Engine.dll's last natives
+     ([traces](docs/re/engine-dll.md#traces), [moving](docs/re/engine-dll.md#moving),
+     [small](docs/re/engine-dll.md#small)) and its
+     [network code](docs/re/network.md); [`IpDrv.dll`](docs/re/ipdrv-dll.md).
+   - **Next: `Galaxy.dll`**, the audio (no database yet): sounds muffled
+     behind level geometry, which the fork plays at full volume; the
+     per-frame update's search for ambient sounds (the audio scan, decided
+     2); which sounds win when the channels run out. It is the one to read
+     for what the game should sound like -- recommended over the two the
+     owner copied beside it, `ALAudio.dll` and `RGalaxy.dll`
+     ([what they are](docs/re/README.md#the-binaries)): ALAudio only for what
+     the original lacks, if wanted (reverb, HRTF).
    - **Only if a need comes up**: `D3DDrv.dll` (how the original looks:
      gamma, lightmap brightness, fog, detail textures), `SoftDrv.dll` (a
      software renderer, decided 3), `Fire.dll` (fire, water and ice

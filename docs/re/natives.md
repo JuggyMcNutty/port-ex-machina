@@ -34,8 +34,8 @@ Which item is taken up, and when, is the owner's call.
   native does what it does. Found so far: `IsValidEnemy` (fixed by patch
   0034), and the ones under [not as the original](#implemented-not-as-the-original).
 - **The data.** Where a difference depends on content, the game's
-  conversation and text packages and its maps were read for what it reaches
-  (a throwaway reader of the package format).
+  conversation, text and mesh packages, its classes' defaults and its maps
+  were read for what it reaches (a throwaway reader of the package format).
   Code compiled out with `#if 0` also leaves no stub; the audit reports it as
   partial.
 
