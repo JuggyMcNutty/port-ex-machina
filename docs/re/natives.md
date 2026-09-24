@@ -26,7 +26,10 @@ Which item is taken up, and when, is the owner's call.
   renderer does with an actor -- leaves no stub behind: only reading the
   original shows it is missing.
 - **Reading both.** Only reading the original shows whether an implemented
-  native does what it does. Found so far: `IsValidEnemy`, fixed by patch 0034.
+  native does what it does. Found so far: `IsValidEnemy` (fixed by patch
+  0034), and the ones under [not as the original](#implemented-not-as-the-original).
+  Code compiled out with `#if 0` also leaves no stub; the audit reports it as
+  partial.
 
 ## Stops the game
 
@@ -48,6 +51,16 @@ ends the game.
 - **The least that stops the crash:** an empty iterator.
 - **The fix:** the original's, in `Engine.dll`. Not yet read.
 
+### Saving: any save (seen)
+
+The fork saves a Deus Ex game's `DeusExSaveInfo` into package `DeusEx`, but it
+made that object in the transient package, and the save refuses it: "Object
+does not belong to this package", exit 1. A run with a temporary hook typed
+`QuickSave` into the console in UNATCO HQ. The fork wrote the level, as
+`01_NYC_UNATCOHQ.dxs` in a directory `Save00-1`, and stopped the game before
+writing the save's info. A save from the Save Game screen takes the same path, when that
+screen gets that far ([saving, loading and travel](#saving-loading-and-travel)).
+
 ### The Save Game screen: `GetConfig` (read from the code, not yet seen)
 
 `Object.GetConfig(section, key)` is a Deus Ex native with no number, called by
@@ -60,34 +73,61 @@ by hand: open Save Game.
 
 - **The fix:** read one key from the ini, a few lines.
 
-## Every level: maps that remember
+## Saving, loading and travel
 
-Deus Ex keeps a mission's maps as the player left them. `DDeusExGameEngine`,
-its C++ game engine (the ini's `GameEngine`), does this in `Browse`
-(`0x10010b90`, [read in part](deusex-dll.md#classes)):
+Deus Ex keeps a mission's maps as the player left them, and a save is those
+maps plus the one being played. `DDeusExGameEngine`, its C++ game engine,
+does both ([travel and saving](deusex-dll.md#the-game-engine-travel-and-saving)).
+The fork's `Engine` has a save of its own for Deus Ex and none of the rest,
+and the game's own screens and keys cannot save or load with it. Two runs
+with a temporary hook (2026-09-24, UNATCO HQ) typed the game's console
+commands and showed three of these. The rest is read from the code:
 
-- **Leaving a map for another of the same mission** saves the map left to
-  `Save\Current\<map>` (`SaveCurrentLevel`, after `PruneTravelActors`).
-- **Arriving** loads the destination from there when it has been visited.
-- **A new mission** empties `Save\Current`, as `DeleteSaveGameFiles` 3012
-  does with no argument. `StartNewGame` and `StartTrainingMission` call that
-  too.
-- **A save** copies `Save\Current` into its slot along with the current
-  level and a picture, and loading one copies the slot back. This is read
-  from what `SaveGame` and `Browse` call: `CopySaveGameFiles`,
-  `SaveCurrentLevel`, `XRootWindow::GenerateSnapshot`.
+- **Saving.**
+  - Any save stops the game ([above](#saving-any-save-seen)), after writing
+    the level. Seen with `QuickSave`.
+  - A new save always writes `Save0000`: the Save Game screen passes slot 0,
+    and the original takes the next free slot. The quick save writes
+    `Save00-1`, where the original writes `QuickSave` (seen).
+  - Either holds only the level being played. There is no `Current`, so none
+    of the mission's other maps.
+  - The `SaveInfo` has no picture, play time, save count or cheats flag.
+  - Its date is wrong. `UpdateTimeStamp` counts the year from 1900 and the
+    month from 0, so the load list shows year 126, and sorts the fork's saves
+    before the original's.
+- **The Save Game screen** stops the game ([`GetConfig`](#stops-the-game)).
+- **The Load Game screen** lists no save.
+  - `GetSaveInfoFromDirectoryIndex` searches a list the fork never fills (the
+    code that fills it is `#if 0`).
+  - `GetSaveInfo(-1)` does not know the quick save.
+- **Loading does nothing** (seen: `LoadGame -1` and `LoadGame 3` ran, and
+  nothing happened). The game asks for `?loadgame=N`, and the fork looks only
+  for an option named `load`. It also looks for a file
+  `Save<N>.<ext>`, not the directory it saved to.
+- **Deleting** a save from either screen leaves it on disk. The screens send
+  the console command `DeleteGame N`, which the fork lacks (seen: "Unknown
+  command: DeleteGame 1").
+- **Maps forget.** `LoadMap` loads every map fresh from `Maps/` ("To do:
+  handle level hubs"), and `DeleteSaveGameFiles` 3012 is a stub. A map
+  revisited within a mission is back as it started: its enemies alive, its
+  items back, its doors locked. New York's and Hong Kong's hub maps are
+  revisited throughout.
+- **The player's history, log and notes** are made transient
+  (`CreateHistoryObject` and its kin). The original makes them in the level,
+  which a save keeps.
 
-The fork has none of it. Its `LoadMap` loads every map fresh from `Maps/`
-("To do: handle level hubs"), `DeleteSaveGameFiles` is a stub, and a save
-holds only the current map. So a map revisited within a mission is back as it
-started, with its enemies alive, items back and doors locked. A loaded save
-forgets every map but the one it was made in. New York's and Hong Kong's hub
-maps are revisited throughout.
+**The fix:** the original's travel and save logic in the fork's `Engine` and
+its `GameDirectory` natives, all of it now read:
 
-- **The fix:** the original's travel and save logic, in the fork's `Engine`:
-  `Browse`, `SaveCurrentLevel`, `SaveGame`, `CopySaveGameFiles`,
-  `PruneTravelActors`, and the mission numbers they compare. It needs reading
-  in full first.
+- the engine's `Browse`, `SaveGame`, `SaveCurrentLevel`,
+  `PruneTravelActors`, `CopySaveGameFiles`, `DeleteSaveGameFiles` and
+  `DeleteGame`, with the mission numbers;
+- `GameDirectory`'s listing, save info and new-slot numbering;
+- `UpdateTimeStamp` and `CreateHistoryObject` and its kin;
+- the `DeleteGame` console command.
+
+Done the original's way, the fork might also read the original game's saves;
+to be checked.
 
 ## Every NPC
 
@@ -188,13 +228,32 @@ In `Extension.dll`, all stubs or partial in the fork:
 - **`GC.DrawBorders`** (partial, 13 call sites): the HUD's and inventory's
   window borders.
 - **`GC.DrawActor`** (partial): the vision augmentation's view of actors.
-- **Save-game pictures.** `RootWindow.GenerateSnapshot` and `SetSnapshotSize`
-  (no picture, even once `GetConfig` exists).
+- **Save-game pictures.** `RootWindow.GenerateSnapshot` and `SetSnapshotSize`,
+  which the original's `SaveGame` also uses
+  ([saving](#saving-loading-and-travel)).
 - **The HUD.** `Window.SetChildVisibility`: how the HUD shows and hides its
   parts.
 - **Keyboard navigation.** `MoveTabGroupNext`/`Prev` (tab between controls),
   `EditWindow.Undo`/`Redo`, `RootWindow.LockMouse` (while a key is being
   bound).
+
+## Implemented, not as the original
+
+- **`ScriptedPawn.GetPawnAllianceType(None)`.** The fork reads through the
+  null pawn and crashes; the original answers Neutral. A distress call's
+  sender or `GetPlayerPawn()` during a level change could be `None`.
+- **`ConBindEvents`.** The fork binds conversations from `DeusExConText`'s
+  mission list, found by mission number. The original loads the list the
+  level's `ConversationPackage` names, so a mod's own conversations bind only
+  in the original. What ConSys's `BindConversations` adds is not yet read.
+- **`GameDirectory.GetNewSaveFileIndex`.** The fork takes the first free
+  number; the original takes the highest plus one and never refills a gap.
+- **`DeusExPlayer.CreateGameDirectoryObject`.** The fork keeps one object;
+  the original makes a new one each call. The scripts `CriticalDelete` it
+  after use: harmless while that is a stub, but once it deletes, the fork's
+  kept object would go with it.
+- **`DeusExPlayer.GetDeusExVersion`.** The fork's own string, by choice; the
+  original's is "Mon Mar 19 12:06:14 2001 v1.112fm".
 
 ## Housekeeping, not seen directly
 

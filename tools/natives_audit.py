@@ -11,8 +11,8 @@ the conditions are evaluated as Deus Ex 1112fm.
     python3 tools/natives_audit.py [--game DIR] [--engine DIR] [--tsv FILE]
                                    [--runs LOG...]
 
-It prints the natives that are not simply implemented: stubs, partial ones,
-empty bodies, iterators that make no iterator (a foreach over one stops the
+It prints the natives that are not simply implemented: stubs, partial ones
+(some code, or code compiled out with `#if 0`), empty bodies, iterators that make no iterator (a foreach over one stops the
 game), and the declared ones nothing registers (a call to one stops it too). --runs takes engine
 logs and adds which stubs fired, and where from. The judgement the listing
 cannot make -- whether an implemented native does what the original does --
@@ -267,6 +267,37 @@ def definitions(engine_src):
     return defs
 
 
+def handed_over_texts(reg, defs):
+    """A registered function's body and the bodies it hands over to: what it
+    calls through -> or ::, and in those, their own class's methods called
+    by name."""
+    owner, func = reg[0], reg[1]
+    bodies = defs.get("%s::%s" % (owner, func), [])
+    if not bodies:
+        return []
+    texts = [bodies[0]]
+    seen = {"%s::%s" % (owner, func)}
+    for m in re.finditer(r"(?:->|::)\s*(\w+)\s*\(", bodies[0]):
+        name = m.group(1)
+        if name in ("Cast", "TryCast", "Value", "RegisterVMNativeFunc"):
+            continue
+        for key, bs in defs.items():
+            if key.endswith("::" + name) and not key.startswith(owner + "::") and key not in seen:
+                seen.add(key)
+                texts.append(bs[0])
+                cls = key.split("::")[0]
+                for m2 in re.finditer(r"(?<![\w>:.])(\w+)\s*\(", bs[0]):
+                    k2 = "%s::%s" % (cls, m2.group(1))
+                    if k2 in defs and k2 not in seen:
+                        seen.add(k2)
+                        texts.append(defs[k2][0])
+    return texts
+
+
+def handed_over(reg, defs):
+    return "\n".join(handed_over_texts(reg, defs))
+
+
 TRIVIAL = [
     re.compile(r"^\s*LogUnimplemented\s*\(.*\)\s*$", re.S),
     re.compile(r"^\s*return\s*(?:\w+|\{\s*\}|nullptr|false|true|0|0\.0f?|std::string\(\)|\"\")?\s*$"),
@@ -283,40 +314,29 @@ def substantive(body):
     return [s.strip() for s in stmts if not any(t.match(s) for t in TRIVIAL)]
 
 
-def handed_over(reg, defs):
-    """A registered function's body and the bodies it hands over to."""
-    owner, func = reg[0], reg[1]
-    bodies = defs.get("%s::%s" % (owner, func), [])
-    if not bodies:
-        return ""
-    texts = [bodies[0]]
-    for m in re.finditer(r"(?:->|::)\s*(\w+)\s*\(", bodies[0]):
-        for key, bs in defs.items():
-            if key.endswith("::" + m.group(1)) and not key.startswith(owner + "::"):
-                texts.extend(bs[:1])
-    return "\n".join(texts)
+def compiled_out(text):
+    """An `#if 0` block whose `#else`, if any, does nothing: code compiled
+    out with nothing real in its place."""
+    for m in re.finditer(r"^\s*#\s*if\s+0\b(.*?)^\s*#\s*endif", text, re.M | re.S):
+        parts = re.split(r"^\s*#\s*(?:else|elif)\b[^\n]*", m.group(1), maxsplit=1, flags=re.M)
+        if len(parts) == 1 or not substantive(parts[1]):
+            return True
+    return False
 
 
 def classify(reg, defs):
-    owner, func = reg[0], reg[1]
-    bodies = defs.get("%s::%s" % (owner, func), [])
-    if not bodies:
+    texts = handed_over_texts(reg, defs)
+    if not texts:
         return "no-body", ""
-    body = bodies[0]
-    texts = [body]
-    # One level into what it hands over to: ->Method( or Class::Method(
-    for m in re.finditer(r"(?:->|::)\s*(\w+)\s*\(", body):
-        name = m.group(1)
-        if name in ("Cast", "TryCast", "Value", "RegisterVMNativeFunc"):
-            continue
-        for key, bs in defs.items():
-            if key.endswith("::" + name) and not key.startswith(owner + "::"):
-                texts.extend(bs[:1])
+    body = texts[0]
     texts = [re.sub(r"/\*.*?\*/", "", re.sub(r"//[^\n]*", "", t), flags=re.S) for t in texts]
     unimpl = any("LogUnimplemented" in t for t in texts)
+    disabled = any(compiled_out(t) for t in texts)
     subst = [s for t in texts for s in substantive(t)]
     if unimpl:
         return ("stub" if len(subst) <= 1 else "partial"), body
+    if disabled:
+        return "partial", body
     if not subst:
         return "empty", body
     return "implemented", body

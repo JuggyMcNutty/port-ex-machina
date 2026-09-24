@@ -94,8 +94,9 @@ no facts of its own beyond those; each lives in one doc, and the
      (`Speed=3.75`/`2.25`) and pointer speed are calibrated by reasoning, not by
      feel.
    - On a desktop: `scripts/dx.sh run linux-x86_64`, the home screen driven
-     into a game, a pad in game; opening Save Game (`GetConfig`,
-     [natives.md](docs/re/natives.md#stops-the-game)). The desktop defaults (4x MSAA, VSync on) are
+     into a game, a pad in game; opening Save Game (`GetConfig`) and Load
+     Game (no save listed), by
+     [natives.md](docs/re/natives.md#saving-loading-and-travel). The desktop defaults (4x MSAA, VSync on) are
      chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is
@@ -110,10 +111,12 @@ no facts of its own beyond those; each lives in one doc, and the
    engine's libraries, as the Smart Pro has); Android (its README lists the
    work, starting with an in-process hand-over).
 5. **What Surreal lacks of the original**: potential work, in no order, for
-   the owner to take up: [`docs/re/natives.md`](docs/re/natives.md). Two
-   items stop the game. Since patch 0034's fights, an NPC searching in Battery
-   Park reaches `ReachablePathnodes`, an iterator the fork lacks: seen in a
-   run. The Save Game screen calls the unregistered `GetConfig`: read from the
-   code, not yet seen. Next on it: `DeusEx.dll` in full, then `Engine.dll`
-   (AI events, movement, render iterators) and the rest
-   ([the binaries](docs/re/README.md#the-binaries)).
+   the owner to take up: [`docs/re/natives.md`](docs/re/natives.md).
+   - **Stops the game:** an NPC searching in Battery Park (the fork lacks the
+     `ReachablePathnodes` iterator; since patch 0034's fights) and any save
+     (seen with `QuickSave`). The Save Game screen does too, by the code (the
+     unregistered `GetConfig`).
+   - **Loading** a game does nothing (seen).
+   - **Next on it:** the rest of `DeusEx.dll`, then `Engine.dll` (AI events,
+     movement, render iterators) and the rest
+     ([the binaries](docs/re/README.md#the-binaries)).
