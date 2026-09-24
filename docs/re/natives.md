@@ -138,6 +138,32 @@ its `GameDirectory` natives, all of it now read:
 Done the original's way, the fork might also read the original game's saves;
 to be checked.
 
+## Flags
+
+The flag base holds what missions and conversations set and test: every
+conversation played sets `<name>_Played` (the game has 1,955 conversations),
+and the mission scripts set their events' flags
+([the original](extension-dll.md#flags)).
+
+- **At most 64.** The fork keeps one flag in each of the script's 64 slots,
+  where the original chains any number from each. Past 64, a new flag is not
+  made ("Could not create flag ...: no room in FlagBase.HashTable") and
+  `SetBool` returns false: a conversation not marked played plays again, and
+  a mission event not marked is not remembered. Read from the code; a 70 s
+  unattended run of Liberty Island set too few to see it.
+- **None expire.** `DeleteExpiredFlags` is a stub. In the original a flag set
+  with no expiration of its own, as the conversations' are, is deleted when
+  the next mission's first level is reached by travel. In the fork every flag
+  stays, so a later mission can read an earlier mission's flags, and the 64
+  fill sooner.
+- **Smaller.** A new flag gets its expiration only when set again.
+  `GetExpiration` looks a flag up as a bool whatever its type, and gives 0 for
+  a flag that is not there, where the original gives -1. The fork's flags are
+  transient objects in the transient package; the original's are inside the
+  flag base, which a save keeps.
+
+**The fix:** the original's chains and expiry, read in full.
+
 ## Every NPC
 
 ### The native tick: `AScriptedPawn::Tick`
@@ -263,29 +289,78 @@ tick and the blending of the mesh's vertices. Its tick moves the slots only
 while the main animation plays, and up to three times their rate: what the
 game's head turns and lip sync were made with.
 
+### Lists
+
+The list window is behind the load and save screens, emails, the logs,
+images, the conversation history, the key bindings, the colour themes and a
+new game's skills ([the original](extension-dll.md#lists)). The fork's own
+list differs in more than its stubs:
+
+- **Every field reads as empty.** The fork's `GetField` tests the column the
+  wrong way round: a field that is there comes back empty, and one past the
+  row's last is read out of bounds. `GetFieldValue` reads through it and is
+  always 0. The game's screens keep what a row stands for in a hidden column
+  and read it back, so:
+  - on a computer, every email the player picks shows the first one
+    (`ComputerScreenEmail.ListSelectionChanged` reads the email's number from
+    column 2);
+  - loading a colour theme does nothing, and the colour editor cannot tell
+    which colour it is editing;
+  - the images screen never marks an image viewed or unloads its textures;
+  - the load and save screens take every save for slot 0, once they list any.
+- **No row is activated.** The fork counts every click as one and never sends
+  `ListRowActivated`, for a double click or for Enter. The game's Customize
+  Keys screen starts rebinding a key only that way, so no key can be rebound
+  there (read from the code, to check by hand). The load, save and new game
+  screens and a hacked computer's accounts have buttons for what a double
+  click does.
+- **No key moves in a list.** `MoveRow` is a stub, and the list's script sends
+  it the arrow keys, Page Up and Down, Home and End. A pad whose d-pad is
+  mapped to the arrows cannot move through a list either.
+- **Nothing is sorted.** `Sort`, `SetSortColumn`, `AddSortColumn` and
+  `ResetSortColumns` are stubs, and `EnableAutoSort` sets its flag. The load
+  game list, emails, the conversation history, images and logs stay in the
+  order they were filled: once the load list lists saves, by directory, not
+  by date.
+- **Columns.** `EnableAutoExpandColumns` sets its flag and widens nothing;
+  the original widens a column to each field put in it, and does so by
+  default. The fork's new columns are 0 wide, the original's 26. The fork
+  draws hidden columns too, after the others.
+- **Small.** A float column keeps its text as given, where the original shows
+  the number through the column's format. A click below the last row selects
+  nothing, where the original selects the last row.
+
 ### The UI
 
-In `Extension.dll`, all stubs or partial in the fork:
-
-- **List sorting.** `Sort` 1784, `SetSortColumn` 1780, `AddSortColumn`,
-  `ResetSortColumns`, `MoveRow`, and `EnableAutoSort`, which sets its flag and
-  never sorts: the load game list, emails, the conversation history, images
-  and logs stay in the order they were filled.
-- **Column sizes.** `EnableAutoExpandColumns` (partial, 16 call sites).
-- **`GC.DrawBorders`** (partial, 13 call sites): the HUD's and inventory's
-  window borders.
-- **`GC.DrawActor`** (partial): the vision augmentation's view of actors.
-- **Save-game pictures.** `RootWindow.GenerateSnapshot` and `SetSnapshotSize`,
-  which the original's `SaveGame` also uses
+- **Keys held under a menu.** The original releases every key held when a
+  menu takes the input ([the input](extension-dll.md#the-engine-and-the-input)).
+  The fork gives an open menu every key, releases included, and releases
+  nothing, so a movement key held as a menu opens and let go inside it is
+  still held when the menu closes (read from the code, to check by hand).
+- **Showing and hiding.** The fork's `Show` and `Hide` set the window's flag
+  themselves. They do not ask the parent (`ChildRequestedVisibilityChange` is
+  never sent; `SetChildVisibility` is a stub), and do not move focus from a
+  window being hidden or tell its children. So the HUD does not lay itself
+  out again as the InfoLink and the log come and go
+  ([showing and hiding](extension-dll.md#showing-and-hiding)).
+- **The vision augmentation** (`GC.DrawActor`, a stub): no heat source is
+  drawn, only the tint ([actors in a window](extension-dll.md#actors-in-a-window)).
+- **Borders** (`GC.DrawBorders`, partial): the fork stretches each edge and
+  the centre over its length, where the original tiles them at one texel a
+  pixel ([borders](extension-dll.md#borders)). The game passes no margins,
+  which is all the fork handles.
+- **Save pictures** (`RootWindow.GenerateSnapshot` and `SetSnapshotSize`,
+  stubs): none, where the original's are grey 160 × 120 images
+  ([save pictures](extension-dll.md#save-pictures)). `SaveGame` takes them too
   ([saving](#saving-loading-and-travel)).
-- **The HUD.** `Window.SetChildVisibility`: how the HUD shows and hides its
-  parts.
-- **Keyboard navigation.** `MoveTabGroupNext`/`Prev` (tab between controls),
-  `EditWindow.Undo`/`Redo`, `RootWindow.LockMouse` (while a key is being
-  bound).
+- **Keys.** `MoveTabGroupNext` and `Prev` (Tab and Shift+Tab between
+  controls), `EditWindow.Undo` and `Redo` (Ctrl+Z and Ctrl+Y in an edit
+  field), and `RootWindow.LockMouse` (the pointer held while a key is being
+  bound) are stubs.
 
 ## Implemented, not as the original
 
+- **The list window and the flag base:** [lists](#lists) and [flags](#flags).
 - **`ScriptedPawn.GetPawnAllianceType(None)`.** The fork reads through the
   null pawn and crashes; the original answers Neutral. A distress call's
   sender or `GetPlayerPawn()` during a level change could be `None`.
@@ -343,10 +418,6 @@ In `Extension.dll`, all stubs or partial in the fork:
 
 ## Housekeeping, not seen directly
 
-- **`FlagBase.DeleteExpiredFlags` 1124.** Each mission script calls it at
-  start (`MissionScript.InitStateMachine`) to drop flags set to expire. Flags
-  never expire, so a later mission can read an earlier mission's flags. What
-  that changes in play is not known yet.
 - **`Object.CriticalDelete` 751** (20 call sites): the original frees the
   object at once, whatever still refers to it
   ([`CriticalDelete`](core-dll.md#criticaldelete)), and the game's callers
@@ -370,8 +441,13 @@ In `Extension.dll`, all stubs or partial in the fork:
   bindings. No difference in play.
 - **`Actor.AIGetLightLevel` 700:** returns 1. The original is the light
   patch 0034 computes for `AIVisibility` (`AILightAt`); no script calls it.
-- **`InputExt`:** `Extension.dll`'s input class. The multiplayer key
-  bindings' `SET InputExt ...` commands fail on every map.
+- **`InputExt`:** the fork has no class of that name
+  ([the original](extension-dll.md#the-engine-and-the-input)), so the
+  multiplayer key bindings' `SET InputExt ...` commands fail on every map.
+- **Window sounds:** the fork plays a UI sound at the player, and takes a
+  position given as world X and Y. The original plays it a unit away, turned
+  by the window's place on screen when positional sound is on
+  ([window sounds](extension-dll.md#window-sounds)).
 - **`Object.>` for strings (native 116):** unregistered. The fork registers it
   as 1186, a typo: the original has 116. No script is known to use it; a use
   would stop the game.
@@ -386,5 +462,6 @@ addresses, `SaveTimeDemo`, `Commandlet.Main`, and `Object`'s `clock`,
 `unclock` and `CyclesToSeconds`
 ([timing by hand](core-dll.md#clock-unclock-and-cyclestoseconds)).
 `ComputerWindow` has 22 stubs, but no script calls them; the InfoLink's text
-window, its only user, calls only implemented ones. `ClipWindow`'s unit sizes
-are stubs with no callers.
+window, its only user, calls only implemented ones. No script calls
+`ClipWindow`'s unit sizes, `GC`'s `PushGC`, `PopGC`, `CopyGC` and
+`Intersect`, or 16 more of the windows' stubs.

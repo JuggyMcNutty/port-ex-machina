@@ -32,12 +32,13 @@ no facts of its own beyond those; each lives in one doc, and the
 - **The game's DLLs** are being reverse-engineered (from 2026-09-24):
   [`docs/re/`](docs/re/README.md) covers every binary, and an IDA database gets
   three scripts from `tools/ida/` (types, strings, names).
-  - **`DeusEx.dll`**, **`Engine.dll`** and **`Core.dll`** are read
-    ([`deusex-dll.md`](docs/re/deusex-dll.md),
+  - **`DeusEx.dll`**, **`Engine.dll`**, **`Core.dll`** and **`Extension.dll`**
+    are read ([`deusex-dll.md`](docs/re/deusex-dll.md),
     [`engine-dll.md`](docs/re/engine-dll.md),
-    [`core-dll.md`](docs/re/core-dll.md)); their databases are typed, named
-    and backed up.
-  - **Extension, ConSys and DeusExText** are not read yet.
+    [`core-dll.md`](docs/re/core-dll.md),
+    [`extension-dll.md`](docs/re/extension-dll.md)); their databases are
+    typed, named and backed up.
+  - **ConSys and DeusExText** are not read yet.
   - **What Surreal lacks** of them is [`docs/re/natives.md`](docs/re/natives.md),
     from [`tools/natives_audit.py`](tools/natives_audit.py), five map runs and
     two runs with a temporary hook (removed).
@@ -120,8 +121,10 @@ no facts of its own beyond those; each lives in one doc, and the
    - On a desktop: `scripts/dx.sh run linux-x86_64`, the home screen driven
      into a game, a pad in game; opening Save Game (`GetConfig`) and Load
      Game (no save listed), by
-     [natives.md](docs/re/natives.md#saving-loading-and-travel). The desktop
-     defaults (4x MSAA, VSync on) are chosen by reasoning.
+     [natives.md](docs/re/natives.md#saving-loading-and-travel); rebinding a
+     key in the game's Customize Keys screen, and a movement key held into a
+     menu and let go there, by [natives.md](docs/re/natives.md#lists). The
+     desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is
    deliberately verbose for development; a final build needs a declutter pass,
@@ -141,10 +144,13 @@ no facts of its own beyond those; each lives in one doc, and the
      (seen with `QuickSave`). The Save Game screen does too, by the code (the
      unregistered `GetConfig`).
    - **Loading** a game does nothing (seen).
-   - **Next on it:** `Extension.dll`, the UI's classes, where most of the
-     fork's stubs are ([the UI](docs/re/natives.md#the-ui)). The owner opens
-     `gamefiles/System/Extension.dll` in IDA (a new database beside it, in
-     the window the bridge serves); it gets the three scripts. After it,
-     ConSys and DeusExText ([the binaries](docs/re/README.md#the-binaries)).
-     `Render.dll` has what `Engine.dll` leaves to it: the render iterators'
-     loop, and likely what keeps `LastRenderTime`.
+   - **Flags and lists** (read from the code): at most 64 flags, and none
+     expire; every list field reads as empty, so a computer shows only its
+     first email; no list row activates, so the Customize Keys screen cannot
+     rebind ([flags](docs/re/natives.md#flags), [lists](docs/re/natives.md#lists)).
+   - **Next on it:** ConSys, conversations, and DeusExText, the books and
+     datacubes ([the binaries](docs/re/README.md#the-binaries)). The owner
+     opens each DLL in IDA (a new database beside it, in the window the
+     bridge serves); it gets the three scripts. `Render.dll` has what
+     `Engine.dll` leaves to it: the render iterators' loop, and likely what
+     keeps `LastRenderTime`.
