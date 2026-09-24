@@ -21,10 +21,10 @@ no facts of its own beyond those; each lives in one doc, and the
   app ran the engine into the intro level on the development PC.
 - **trimui-smartpro**: the game runs; the performance work is in progress
   ([its Performance](ports/trimui-smartpro/README.md#performance)). The device
-  has every patch up to 0032 in a build with the profiling hooks, Overclock,
-  native resolution; Distant AI (characters out of sight think less often)
-  was off in its settings on 2026-09-23 (the fight's profiles turn it on for
-  the run). It has no battery (its battery
+  has every patch up to 0034 in a build with the profiling hooks, Overclock;
+  its owner's settings are Distant AI (characters out of sight think less
+  often) on and 853×480 (2026-09-23), which the fight's native rows switch to
+  native for the run. It has no battery (its battery
   warnings are off: [its Gotchas](ports/trimui-smartpro/README.md#gotchas)).
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
@@ -57,7 +57,7 @@ no facts of its own beyond those; each lives in one doc, and the
      its own time is mostly the Cortex-A53 waiting on memory for each
      expression node: only a denser, compiled form of each function's code
      would change that -- a rewrite of the evaluator's core. Even with no cost
-     of its own, script time would only fall by about three fifths: the
+     of its own, script time would only fall by a little over half: the
      natives the scripts call are the rest. Smaller: calls without an
      `ExpressionValue` per argument.
    - **Per-actor work** around the scripts, `IsEventEnabled` among it.
@@ -78,7 +78,8 @@ no facts of its own beyond those; each lives in one doc, and the
 ## Open decisions
 
 1. **Verify by hand** (owner):
-   - On the Smart Pro: that NPCs out of sight still behave (Distant AI); the
+   - On the Smart Pro: that enemies notice the player and fight (patch
+     0034); that NPCs out of sight still behave (Distant AI); the
      Video tab's Resolution at 960×540 and 853×480 -- the look, and the menu
      pointer's speed; START opens the pause menu on the first press after
      skipping the intro; SELECT opens it too; B/Y/SELECT/START close menus; the
@@ -101,3 +102,9 @@ no facts of its own beyond those; each lives in one doc, and the
 4. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
    engine's libraries, as the Smart Pro has); Android (its README lists the
    work, starting with an in-process hand-over).
+5. **The rest of Deus Ex's AI**: NPCs see since patch 0034. Still stubs, as
+   upstream never had them: the AI event system that carries gunfire, noises,
+   alarms and bodies to NPCs (`AISetEventCallback`, `AISendEvent` and their
+   kin) and `AICanHear`, so NPCs hear nothing; `AIDirectionReachable` (moving
+   in a fight) and `AIPickRandomDestination_Deus` (wandering). Potential work,
+   for the owner to take up.

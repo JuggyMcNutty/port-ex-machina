@@ -1,0 +1,674 @@
+From b5d08853dbf4e24894d56942c07a5a743438e824 Mon Sep 17 00:00:00 2001
+From: JuggyMcNutty <11588877+JuggyMcNutty@users.noreply.github.com>
+Date: Wed, 23 Sep 2026 23:01:42 -0500
+Subject: [PATCH] Deus Ex AI: NPCs see -- IsValidEnemy, AICanSee and
+ AIVisibility
+
+FORK ONLY. This project ships a NO-AI Code Rule asking that LLM-written
+changes stay in a fork and are never PR'd upstream. These were written with
+Claude. Do not submit them.
+
+A Deus Ex NPC finds its enemies in ScriptedPawn.CheckEnemyPresence: it cycles
+through the pawns, keeps those IsValidEnemy accepts and asks AICanSee how
+well it sees each; what it sees enough of, it attacks. None of it worked, so
+no NPC ever noticed the player, or anyone:
+
+- IsValidEnemy (native 2105) took only ScriptedPawns, never the player; it
+  tested this pawn's bBlockSight and bDeleteMe where the original tests the
+  other's bDetectable and bDeleteMe, and KillCount where it tests Health;
+  and an omitted bCheckAlliance read as false, which returned false, where
+  the original's exec function defaults it to true.
+- AICanSee (native 705) and AIVisibility (701) were stubs returning 0.
+
+Each is now the original's logic, read from DeusEx.dll and Engine.dll and
+checked field by field against the Actor and Pawn layouts in the game's own
+script source. AICanSee: from the eyes, the other's apparent size (nothing
+under MinAngularSize), how much of it is inside a view AIHorizontalFov wide
+and AspectRatio times narrower up and down (turned by AIAddViewRotation; at
+least 0.75 up and down within 150 units), how lit it is (AIVisibility), less
+VisibilityThreshold; then a line past the world and past any actor that
+blocks sight and is not hidden: to its middle, or with bCheckCylinder to a
+player's eyes, top and bottom, and another pawn's top, bottom and sides.
+The defaults are the exec function's (1.0, true, true, false, true).
+AIVisibility: the light on the actor, found again after a quarter second
+and eased between findings -- half of each light reaching it by brightness,
+whiteness and distance inside its radius, a static light only with no wall
+or mover between, and twice the zone's ambient light -- and up to half as
+much again at 30 to 200 units a second.
+
+Supporting it:
+- CollisionSystem::SightBlocked, the original's MultiLineCheck with
+  NF_NotVisBlocking as a yes or no: the cells along the ray, as patch 0026
+  walks them for TraceAnyHit (now through TraceTester::VisitActorsOnRay),
+  every actor there asked, then the world's visibility-blocking surfaces,
+  with no margin past the end. TraceActor traced no actor cylinders with
+  visibilityOnly; no caller asked for both before this.
+- AIVisibility takes the lights from the light system's tree, built each
+  frame from the same test the original's scan of every actor makes: the
+  few whose reach may take in the location, not a cache miss per actor
+  (0.55 ms of the Smart Pro's tick as a walk of the whole light list). On
+  Liberty Island it gave the whole list's answer over 2,000 calls.
+- Actor.bDetectable, a Deus Ex property.
+
+Checked on Liberty Island on the desktop: NPCs of hostile alliances now
+check each other with AICanSee; with the player moved in front of an NSF
+terrorist, it saw the player (visibility ~0.05 at night, rising as it
+closed in), made the player its enemy ~3.5 s later -- the build-up
+CheckCycle gives a faint sighting -- and two more joined in shooting.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ .../Collision/TopLevel/CollisionSystem.cpp    |   6 +
+ .../Collision/TopLevel/CollisionSystem.h      |   6 +
+ .../Collision/TopLevel/TraceTest.cpp          | 159 +++++++++++-------
+ SurrealEngine/Collision/TopLevel/TraceTest.h  |   2 +
+ SurrealEngine/Light/LightSystem.h             |   5 +
+ SurrealEngine/Native/NPawn.cpp                |   4 +-
+ .../Packages/DeusEx/UScriptedPawn.cpp         |  19 +--
+ .../Packages/Engine/Actors/Pawn/UPawn_AI.cpp  | 133 ++++++++++++++-
+ .../Packages/Engine/Actors/UActor.cpp         |  94 ++++++++++-
+ SurrealEngine/Packages/Engine/Actors/UActor.h |   1 +
+ SurrealEngine/PropertyOffsets.cpp             |   1 +
+ SurrealEngine/PropertyOffsets.h               |   1 +
+ 12 files changed, 355 insertions(+), 76 deletions(-)
+
+diff --git a/SurrealEngine/Collision/TopLevel/CollisionSystem.cpp b/SurrealEngine/Collision/TopLevel/CollisionSystem.cpp
+index f643f34..897c069 100644
+--- a/SurrealEngine/Collision/TopLevel/CollisionSystem.cpp
++++ b/SurrealEngine/Collision/TopLevel/CollisionSystem.cpp
+@@ -46,6 +46,12 @@ CollisionHitList CollisionSystem::TraceDecal(const dvec3& origin, double tmin, c
+ 	return trace.Trace(Level->Model, origin, tmin, dirNormalized, tmax, visibilityOnly);
+ }
+ 
++bool CollisionSystem::SightBlocked(const vec3& from, const vec3& to, const std::function<bool(UActor* actor)>& blocksSight)
++{
++	TraceTester trace(this);
++	return trace.SightBlocked(from, to, blocksSight);
++}
++
+ CollisionHit CollisionSystem::TraceFirstHit(const vec3& from, const vec3& to, UActor* tracingActor, const vec3& extents, const TraceFlags& flags)
+ {
+ 	for (const CollisionHit& hit : Trace(from, to, extents.z, extents.x, flags.traceActors(), flags.traceWorld(), false))
+diff --git a/SurrealEngine/Collision/TopLevel/CollisionSystem.h b/SurrealEngine/Collision/TopLevel/CollisionSystem.h
+index 0de2c0b..d816aba 100644
+--- a/SurrealEngine/Collision/TopLevel/CollisionSystem.h
++++ b/SurrealEngine/Collision/TopLevel/CollisionSystem.h
+@@ -1,6 +1,7 @@
+ #pragma once
+ 
+ #include "Math/vec.h"
++#include <functional>
+ 
+ class ULevel;
+ class UActor;
+@@ -32,6 +33,11 @@ public:
+ 	CollisionHitList TraceDecal(const dvec3& origin, double tmin, const dvec3& dirNormalized, double tmax, bool visibilityOnly);
+ 	CollisionHit TraceFirstHit(const vec3& from, const vec3& to, UActor* tracingActor, const vec3& extents, const TraceFlags& flags);
+ 
++	// Whether sight along a segment is blocked: by world and mover surfaces
++	// that block visibility, or by an actor on it that blocksSight says blocks
++	// (Deus Ex's AI line of sight).
++	bool SightBlocked(const vec3& from, const vec3& to, const std::function<bool(UActor* actor)>& blocksSight);
++
+ 	Array<UActor*> CollidingActors(const vec3& origin, float radius);
+ 	Array<UActor*> CollidingActors(const vec3& origin, float height, float radius);
+ 	Array<UActor*> EncroachingActors(UActor* actor);
+diff --git a/SurrealEngine/Collision/TopLevel/TraceTest.cpp b/SurrealEngine/Collision/TopLevel/TraceTest.cpp
+index ca9620f..77704c3 100644
+--- a/SurrealEngine/Collision/TopLevel/TraceTest.cpp
++++ b/SurrealEngine/Collision/TopLevel/TraceTest.cpp
+@@ -104,6 +104,67 @@ CollisionHitList TraceTester::Trace(const vec3& from, const vec3& to, float heig
+ 	return uniqueHits;
+ }
+ 
++// Calls visit once for each actor in the collision cells the segment passes
++// through, until it returns true; then so does this.
++template<typename Visit>
++bool TraceTester::VisitActorsOnRay(const vec3& from, const vec3& to, Visit&& visit)
++{
++	int checkCounter = NextCheckCounter();
++	ivec3 start = GetRayStartExtents(from, to);
++	ivec3 end = GetRayEndExtents(from, to);
++	if (end.x - start.x >= 100 || end.y - start.y >= 100 || end.z - start.z >= 100)
++		return false;
++
++	// Only the cells the segment passes through, not every cell of its
++	// box: a long sight line's box is mostly cells it never enters, and an
++	// actor is in every cell its collision box touches, so these are all
++	// the actors it can hit. Slab by slab along the segment's longest
++	// axis, each slab's cells on the other two axes found from where the
++	// segment enters and leaves it, a unit wider each way.
++	vec3 delta = to - from;
++	vec3 absDelta = { std::abs(delta.x), std::abs(delta.y), std::abs(delta.z) };
++	int axis = absDelta.x >= absDelta.y ? (absDelta.x >= absDelta.z ? 0 : 2) : (absDelta.y >= absDelta.z ? 1 : 2);
++	for (int slab = start[axis]; slab < end[axis]; slab++)
++	{
++		float tA = (slab * 256.0f - from[axis]) / delta[axis];
++		float tB = ((slab + 1) * 256.0f - from[axis]) / delta[axis];
++		float t0 = std::clamp(std::min(tA, tB), 0.0f, 1.0f);
++		float t1 = std::clamp(std::max(tA, tB), 0.0f, 1.0f);
++		ivec3 cellStart = start, cellEnd = end;
++		cellStart[axis] = slab;
++		cellEnd[axis] = slab + 1;
++		for (int a = 0; a < 3; a++)
++		{
++			if (a == axis)
++				continue;
++			float c0 = from[a] + delta[a] * t0;
++			float c1 = from[a] + delta[a] * t1;
++			cellStart[a] = std::max((int)std::floor((std::min(c0, c1) - 1.0f) * (1.0f / 256.0f)), start[a]);
++			cellEnd[a] = std::min((int)std::floor((std::max(c0, c1) + 1.0f) * (1.0f / 256.0f)) + 1, end[a]);
++		}
++
++		for (int z = cellStart.z; z < cellEnd.z; z++)
++		{
++			for (int y = cellStart.y; y < cellEnd.y; y++)
++			{
++				for (int x = cellStart.x; x < cellEnd.x; x++)
++				{
++					for (UActor* actor : GetActors(x, y, z))
++					{
++						if (actor->Collision.CheckCounter != checkCounter)
++						{
++							actor->Collision.CheckCounter = checkCounter;
++							if (visit(actor))
++								return true;
++						}
++					}
++				}
++			}
++		}
++	}
++	return false;
++}
++
+ bool TraceTester::TraceAnyHit(vec3 from, vec3 to, UActor* tracingActor, bool traceActors, bool traceWorld, bool visibilityOnly)
+ {
+ 	if (from == to || (!traceActors && !traceWorld))
+@@ -121,64 +182,17 @@ bool TraceTester::TraceAnyHit(vec3 from, vec3 to, UActor* tracingActor, bool tra
+ 	tmax += margin;
+ 
+ 	CollisionHitList hits;
+-
+-	int checkCounter = NextCheckCounter();
+-	ivec3 start = GetRayStartExtents(from, to);
+-	ivec3 end = GetRayEndExtents(from, to);
+-	if (end.x - start.x < 100 && end.y - start.y < 100 && end.z - start.z < 100)
+-	{
+-		// Only the cells the segment passes through, not every cell of its
+-		// box: a long sight line's box is mostly cells it never enters, and an
+-		// actor is in every cell its collision box touches, so these are all
+-		// the actors it can hit. Slab by slab along the segment's longest
+-		// axis, each slab's cells on the other two axes found from where the
+-		// segment enters and leaves it, a unit wider each way.
+-		vec3 delta = to - from;
+-		vec3 absDelta = { std::abs(delta.x), std::abs(delta.y), std::abs(delta.z) };
+-		int axis = absDelta.x >= absDelta.y ? (absDelta.x >= absDelta.z ? 0 : 2) : (absDelta.y >= absDelta.z ? 1 : 2);
+-		for (int slab = start[axis]; slab < end[axis]; slab++)
++	bool actorHit = VisitActorsOnRay(from, to, [&](UActor* actor) {
++		if (actor != tracingActor && actor->bBlockActors())
+ 		{
+-			float tA = (slab * 256.0f - from[axis]) / delta[axis];
+-			float tB = ((slab + 1) * 256.0f - from[axis]) / delta[axis];
+-			float t0 = std::clamp(std::min(tA, tB), 0.0f, 1.0f);
+-			float t1 = std::clamp(std::max(tA, tB), 0.0f, 1.0f);
+-			ivec3 cellStart = start, cellEnd = end;
+-			cellStart[axis] = slab;
+-			cellEnd[axis] = slab + 1;
+-			for (int a = 0; a < 3; a++)
+-			{
+-				if (a == axis)
+-					continue;
+-				float c0 = from[a] + delta[a] * t0;
+-				float c1 = from[a] + delta[a] * t1;
+-				cellStart[a] = std::max((int)std::floor((std::min(c0, c1) - 1.0f) * (1.0f / 256.0f)), start[a]);
+-				cellEnd[a] = std::min((int)std::floor((std::max(c0, c1) + 1.0f) * (1.0f / 256.0f)) + 1, end[a]);
+-			}
+-
+-			for (int z = cellStart.z; z < cellEnd.z; z++)
+-			{
+-				for (int y = cellStart.y; y < cellEnd.y; y++)
+-				{
+-					for (int x = cellStart.x; x < cellEnd.x; x++)
+-					{
+-						for (UActor* actor : GetActors(x, y, z))
+-						{
+-							if (actor->Collision.CheckCounter != checkCounter)
+-							{
+-								actor->Collision.CheckCounter = checkCounter;
+-								if (actor != tracingActor && actor->bBlockActors())
+-								{
+-									TraceActor(actor, origin, tmin, direction, tmax, 0.0, 0.0, traceActors, traceWorld, visibilityOnly, hits);
+-									if (!hits.empty())
+-										return true;
+-								}
+-							}
+-						}
+-					}
+-				}
+-			}
++			TraceActor(actor, origin, tmin, direction, tmax, 0.0, 0.0, traceActors, traceWorld, visibilityOnly, hits);
++			if (!hits.empty())
++				return true;
+ 		}
+-	}
++		return false;
++	});
++	if (actorHit)
++		return true;
+ 
+ 	if (traceWorld)
+ 	{
+@@ -189,6 +203,37 @@ bool TraceTester::TraceAnyHit(vec3 from, vec3 to, UActor* tracingActor, bool tra
+ 	return false;
+ }
+ 
++// As UE1's MultiLineCheck with the NF_NotVisBlocking node flags, as far as a
++// yes or no: world and mover surfaces that block visibility, and each actor
++// crossed that blocksSight says blocks, whatever it collides with. The end is
++// often a point on a surface (the foot of a pawn standing on it), which a
++// segment ending there does not cross: no margin past it.
++bool TraceTester::SightBlocked(const vec3& from, const vec3& to, const std::function<bool(UActor* actor)>& blocksSight)
++{
++	if (from == to)
++		return false;
++
++	dvec3 origin = to_dvec3(from);
++	dvec3 direction = to_dvec3(to) - origin;
++	double tmin = 0.01;
++	double tmax = length(direction);
++	if (tmax < tmin)
++		return false;
++	direction *= 1.0 / tmax;
++
++	CollisionHitList hits;
++	bool actorBlocks = VisitActorsOnRay(from, to, [&](UActor* actor) {
++		hits.clear();
++		TraceActor(actor, origin, tmin, direction, tmax, 0.0, 0.0, true, true, true, hits);
++		return !hits.empty() && blocksSight(actor);
++	});
++	if (actorBlocks)
++		return true;
++
++	TraceRayModel tracemodel;
++	return tracemodel.TraceAnyHit(GetLevel()->Model, origin, tmin, direction, tmax, true);
++}
++
+ // The hit lies on the cylinder the trace actually swept against: the actor's cylinder grown by the
+ // moving box's own extents. Center-to-hitpoint is the true surface normal only on the curved side - on
+ // the flat end caps it tilts outwards by however far the contact sits from the axis. That is how the
+@@ -277,7 +322,7 @@ void TraceTester::TraceActor(UActor* actor, const dvec3& origin, double tmin, co
+ 	}
+ 	else
+ 	{
+-		if (!traceActors || visibilityOnly)
++		if (!traceActors)
+ 			return;
+ 
+ 		double t = CylinderActorTrace(origin, tmin, dirNormalized, tmax, height, radius, actor);
+diff --git a/SurrealEngine/Collision/TopLevel/TraceTest.h b/SurrealEngine/Collision/TopLevel/TraceTest.h
+index 13e15a3..c6958b2 100644
+--- a/SurrealEngine/Collision/TopLevel/TraceTest.h
++++ b/SurrealEngine/Collision/TopLevel/TraceTest.h
+@@ -9,8 +9,10 @@ public:
+ 
+ 	CollisionHitList Trace(const vec3& from, const vec3& to, float height, float radius, bool traceActors, bool traceWorld, bool visibilityOnly);
+ 	bool TraceAnyHit(vec3 from, vec3 to, UActor* tracingActor, bool traceActors, bool traceWorld, bool visibilityOnly);
++	bool SightBlocked(const vec3& from, const vec3& to, const std::function<bool(UActor* actor)>& blocksSight);
+ 
+ private:
++	template<typename Visit> bool VisitActorsOnRay(const vec3& from, const vec3& to, Visit&& visit);
+ 	void TraceActor(UActor* actor, const dvec3& origin, double tmin, const dvec3& dirNormalized, double tmax, double height, double radius, bool traceActors, bool traceWorld, bool visibilityOnly, CollisionHitList& hits);
+ 
+ 	// Ray/actor hit trace
+diff --git a/SurrealEngine/Light/LightSystem.h b/SurrealEngine/Light/LightSystem.h
+index 9aa66c9..aa3e0a3 100644
+--- a/SurrealEngine/Light/LightSystem.h
++++ b/SurrealEngine/Light/LightSystem.h
+@@ -199,6 +199,11 @@ public:
+ 
+ 	void InitVertexLight(VertexLight& vertexlight, UActor* actor, UZoneInfo* zoneActor);
+ 
++	// The level's lights whose reach may take in a location, as of the last
++	// frame drawn: BeginFrame builds their tree from each actor with a light
++	// type and a brightness. The list lasts until the next call.
++	const Array<UActor*>& LightsNear(const vec3& location) { LightTree.CollectLights(location, 0.0f); return LightTree.CollectedLights; }
++
+ private:
+ 	TextureInfo GetLightmap(UModel* model, int lightmapIndex, const Coords& coords, UZoneInfo* zoneActor, const vec3& worldLocation, float radius, UMover* mover, bool specialLit);
+ 	TextureInfo GetFogmap(UModel* model, int lightmapIndex, const Coords& coords, UZoneInfo* zoneActor);
+diff --git a/SurrealEngine/Native/NPawn.cpp b/SurrealEngine/Native/NPawn.cpp
+index 62f26ed..6670fff 100644
+--- a/SurrealEngine/Native/NPawn.cpp
++++ b/SurrealEngine/Native/NPawn.cpp
+@@ -295,8 +295,8 @@ void NPawn::AICanHear(UObject* Self, UObject* Other, std::optional<float> Volume
+ 
+ void NPawn::AICanSee(UObject* Self, UObject* Other, std::optional<float> Visibility, std::optional<bool> bCheckVisibility, std::optional<bool> bCheckDir, std::optional<bool> bCheckCylinder, std::optional<bool> bCheckLOS, float& ReturnValue)
+ {
+-	LogUnimplemented("Pawn.AICanSee");
+-	ReturnValue = 0.0f;
++	UPawn* selfPawn = UObject::Cast<UPawn>(Self);
++	ReturnValue = selfPawn->AICanSee(UObject::Cast<UActor>(Other), Visibility, bCheckVisibility, bCheckDir, bCheckCylinder, bCheckLOS);
+ }
+ 
+ void NPawn::AICanSmell(UObject* Self, UObject* Other, std::optional<float> Smell, float& ReturnValue)
+diff --git a/SurrealEngine/Packages/DeusEx/UScriptedPawn.cpp b/SurrealEngine/Packages/DeusEx/UScriptedPawn.cpp
+index 8b9809b..accafb9 100644
+--- a/SurrealEngine/Packages/DeusEx/UScriptedPawn.cpp
++++ b/SurrealEngine/Packages/DeusEx/UScriptedPawn.cpp
+@@ -83,18 +83,15 @@ bool UScriptedPawn::HaveSeenCarcass(const NameString& CarcassName)
+ 	return false;
+ }
+ 
++// A pawn this one could take on (DeusEx.dll AScriptedPawn::IsValidEnemy): any
++// pawn, the player too, but itself, one being destroyed, one AI cannot
++// detect or a dead one; and one of an alliance this pawn is hostile to, which
++// the original's exec function checks unless told not to.
+ bool UScriptedPawn::IsValidEnemy(UPawn* TestEnemy, std::optional<bool> bCheckAlliance)
+ {
+-	if (!UObject::TryCast<UScriptedPawn>(TestEnemy) || TestEnemy == this || !bBlockSight() || bDeleteMe() || UObject::TryCast<UScriptedPawn>(TestEnemy)->KillCount() < 1)
++	if (!TestEnemy || TestEnemy == this || TestEnemy->bDeleteMe() || !TestEnemy->bDetectable() || TestEnemy->Health() <= 0)
+ 		return false;
+-	if (bCheckAlliance)
+-	{
+-		uint8_t retval = GetPawnAllianceType(TestEnemy);
+-		if (retval != (uint8_t)EAllianceType::ALLIANCE_Hostile)
+-		{
+-			return false;
+-		}
+-		return true;
+-	}
+-	return false;
++	if (bCheckAlliance.value_or(true) && GetPawnAllianceType(TestEnemy) != (uint8_t)EAllianceType::ALLIANCE_Hostile)
++		return false;
++	return true;
+ }
+diff --git a/SurrealEngine/Packages/Engine/Actors/Pawn/UPawn_AI.cpp b/SurrealEngine/Packages/Engine/Actors/Pawn/UPawn_AI.cpp
+index bcae88e..3972ca2 100644
+--- a/SurrealEngine/Packages/Engine/Actors/Pawn/UPawn_AI.cpp
++++ b/SurrealEngine/Packages/Engine/Actors/Pawn/UPawn_AI.cpp
+@@ -181,10 +181,137 @@ float UPawn::AICanHear(UActor* other, std::optional<float> volume, std::optional
+ 	return 0.0f;
+ }
+ 
+-float UPawn::AICanSee(UActor* other, std::optional<float> visibility, std::optional<bool> bCheckVisibility, std::optional<bool> bCheckDir, std::optional<bool> bCheckCylinder, std::optional<bool> bCheckLOS)
++// How much of something size degrees across, angle degrees off the middle of
++// a field of view fov degrees wide, is inside it: 1 all of it, 0 none, falling
++// off linearly across the edge. From Engine.dll, where it serves
++// APawn::AICanSee.
++static float AIFieldOfViewShare(float angle, float fov, float size)
+ {
+-	LogUnimplemented("Pawn.AICanSee() [Deus Ex]");
+-	return 0.0f;
++	while (angle <= -180.0f)
++		angle += 360.0f;
++	while (angle > 180.0f)
++		angle -= 360.0f;
++	if (angle < 0.0f)
++		angle = -angle;
++
++	float inner = (float)((fov - size) * 0.5);
++	float outer = inner + size;
++	if (angle > outer)
++		return 0.0f;
++	if (angle <= inner)
++		return 1.0f;
++	return 1.0f - (angle - inner) / size;
++}
++
++// How well this pawn sees another actor, 0 to 1, as Deus Ex's AI judges it
++// (Engine.dll APawn::AICanSee; the defaults are its exec function's). From
++// the eyes: how large the other looks -- nothing under MinAngularSize -- and,
++// with bCheckDir, how much of it is inside the view (AIHorizontalFov wide,
++// AspectRatio times narrower up and down, turned by AIAddViewRotation); with
++// bCheckVisibility, how lit it is (AIVisibility); less VisibilityThreshold.
++// With bCheckLOS, zero unless a line reaches it past the world and anything
++// that blocks sight: its middle, or with bCheckCylinder a player's eyes, its
++// top and its bottom, and anything else's sides.
++float UPawn::AICanSee(UActor* other, std::optional<float> visibilityArg, std::optional<bool> bCheckVisibilityArg, std::optional<bool> bCheckDirArg, std::optional<bool> bCheckCylinderArg, std::optional<bool> bCheckLOSArg)
++{
++	float visibility = visibilityArg.value_or(1.0f);
++	bool bCheckVisibility = bCheckVisibilityArg.value_or(true);
++	bool bCheckDir = bCheckDirArg.value_or(true);
++	bool bCheckCylinder = bCheckCylinderArg.value_or(false);
++	bool bCheckLOS = bCheckLOSArg.value_or(true);
++
++	if (!other || visibility <= 0.0f || !other->bDetectable())
++		return 0.0f;
++
++	vec3 eye = Location();
++	eye.z += BaseEyeHeight();
++	vec3 delta = other->Location() - eye;
++	double distSq = (double)delta.x * delta.x + (double)delta.y * delta.y + (double)delta.z * delta.z;
++	if (distSq < 1.0)
++		distSq = 1.0;
++
++	// Its apparent size squared, as the tangent of the angle it spans
++	double radiusSq = (double)other->CollisionRadius() * other->CollisionRadius();
++	double heightSq = (double)other->CollisionHeight() * other->CollisionHeight();
++	double sizeSq = (radiusSq + heightSq) / distSq;
++	if (sizeSq <= MinAngularSize())
++		return 0.0f;
++	if (sizeSq < 0.0003046792916483) // under a degree: its middle stands for it
++		bCheckCylinder = false;
++	visibility = (float)(visibility * sizeSq * 64.0);
++
++	if (bCheckDir && visibility > 0.0f)
++	{
++		float verticalFov = AspectRatio() > 0.0f ? AIHorizontalFov() / AspectRatio() : 0.0f;
++		float width = (float)(std::atan(std::sqrt(radiusSq / distSq)) * 114.59155902616465); // degrees across
++		float height = (float)(std::atan(std::sqrt(heightSq / distSq)) * 114.59155902616465);
++
++		Rotator view = (UObject::TryCast<UPlayerPawn>(this) ? ViewRotation() : Rotation()) + AIAddViewRotation();
++		Coords axes = Coords::Rotation(view);
++		vec3 local = { dot(delta, axes.XAxis), dot(delta, axes.YAxis), dot(delta, axes.ZAxis) };
++
++		// FVector::Rotation's yaw and pitch, in its whole units
++		const float unitsPerRadian = 65535.0f / (2.0f * 3.14159265358979f);
++		int yaw = (int)(std::atan2(local.y, local.x) * unitsPerRadian);
++		int pitch = (int)(std::atan2(local.z, std::sqrt(local.x * local.x + local.y * local.y)) * unitsPerRadian);
++		visibility *= AIFieldOfViewShare((float)(yaw * 360.0 / 65536.0), AIHorizontalFov(), width);
++		float vertical = AIFieldOfViewShare((float)(pitch * 360.0 / 65536.0), verticalFov, height);
++		if (distSq < 22500.0 && vertical < 0.75f) // within 150 units, above or below still shows
++			vertical = 0.75f;
++		visibility *= vertical;
++	}
++
++	if (bCheckVisibility && visibility > 0.0f)
++		visibility *= other->AIVisibility(true);
++
++	visibility -= VisibilityThreshold();
++	if (visibility < 0.0f)
++		visibility = 0.0f;
++	else if (visibility >= 1.0f)
++		visibility = 1.0f;
++
++	if (bCheckLOS && visibility > 0.0f)
++	{
++		// What blocks: any actor but this pawn, what owns it and the other,
++		// if it blocks sight and is not hidden
++		CollisionSystem& collision = XLevel()->Collision;
++		auto blocksSight = [&](UActor* actor) {
++			for (UActor* viewer = this; viewer; viewer = viewer->Owner())
++			{
++				if (actor == viewer)
++					return false;
++			}
++			return actor != other && actor->bBlockSight() && !actor->bHidden();
++		};
++		auto reaches = [&](const vec3& point) { return !collision.SightBlocked(eye, point, blocksSight); };
++
++		const vec3& center = other->Location();
++		bool seen;
++		if (!bCheckCylinder)
++		{
++			seen = reaches(center);
++		}
++		else
++		{
++			UPlayerPawn* player = UObject::TryCast<UPlayerPawn>(other);
++			seen = (player && reaches(center + vec3(0.0f, 0.0f, player->BaseEyeHeight()))) ||
++				reaches(center + vec3(0.0f, 0.0f, other->CollisionHeight())) ||
++				reaches(center - vec3(0.0f, 0.0f, other->CollisionHeight()));
++			if (!player && !seen)
++			{
++				// Its sides, square to the line to it
++				vec3 across = { delta.x, delta.y, 0.0f };
++				float lengthSq = dot(across, across);
++				across = lengthSq < 1e-8f ? vec3(0.0f) : across * (1.0f / std::sqrt(lengthSq));
++				float radius = other->CollisionRadius();
++				seen = reaches(center + vec3(across.y * radius, -across.x * radius, 0.0f)) ||
++					reaches(center + vec3(-across.y * radius, across.x * radius, 0.0f));
++			}
++		}
++		if (!seen)
++			visibility = 0.0f;
++	}
++	return visibility;
+ }
+ 
+ float UPawn::AICanSmell(UActor* other, std::optional<float> smell)
+diff --git a/SurrealEngine/Packages/Engine/Actors/UActor.cpp b/SurrealEngine/Packages/Engine/Actors/UActor.cpp
+index 2226b8c..894dfd5 100644
+--- a/SurrealEngine/Packages/Engine/Actors/UActor.cpp
++++ b/SurrealEngine/Packages/Engine/Actors/UActor.cpp
+@@ -431,9 +431,97 @@ void UActor::AIStartEvent(const NameString& eventName, uint8_t eventType, std::o
+ 	//LogUnimplemented(Name.ToString() + ": AIStartEvent('" + eventName.ToString() + "')");
+ }
+ 
++// A light's share of what the AI sees by, 0 to 1: its brightness, a third of
++// it for a fully saturated colour and all of it for white.
++static float AILuminance(uint8_t brightness, uint8_t saturation)
++{
++	return (float)((saturation + 127.5) * (1.0 / 382.5) * (brightness * (1.0 / 255.0)));
++}
++
++// The light on an actor at a location, 0 to 1, as Deus Ex's AI sees it: half
++// of each light reaching it -- a static one only with no wall or mover
++// between -- the nearer its middle the more, and twice the zone's ambient
++// light. An unlit actor is always lit. From Engine.dll, where it serves
++// AActor::AIVisibility.
++static float AILightAt(UActor* actor, const vec3& location)
++{
++	float lights = 0.0f;
++	if (actor->bUnlit())
++	{
++		lights = 1.0f;
++	}
++	else
++	{
++		// The original tests every actor for a light reaching the location.
++		// The light system's tree holds the same lights, as of the last frame
++		// drawn, and gives the few whose reach may take it in; one destroyed
++		// since is skipped.
++		ULevel* level = actor->XLevel();
++		for (UActor* light : level->Light.LightsNear(location))
++		{
++			if (light == actor || light->bDeleteMe() || light->LightType() == LT_None || light->LightBrightness() == 0)
++				continue;
++
++			float radius = light->WorldLightRadius();
++			float radiusSq = radius * radius;
++			vec3 d = location - light->Location();
++			float distSq = dot(d, d);
++			if (radiusSq <= distSq)
++				continue;
++
++			if (light->bStatic())
++			{
++				const TraceFlags flags = { .movers = true, .world = true };
++				CollisionHit hit = level->Collision.TraceFirstHit(light->Location(), location, actor, vec3(0.0f), flags);
++				if (hit.Actor || hit.Node)
++					continue;
++			}
++
++			lights += AILuminance(light->LightBrightness(), light->LightSaturation()) * (1.0f - (float)std::sqrt(distSq / radiusSq));
++		}
++		lights *= 0.5f;
++	}
++
++	UZoneInfo* zone = actor->Region().Zone;
++	float ambient = zone ? AILuminance(zone->AmbientBrightness(), zone->AmbientSaturation()) : 0.0f;
++	return std::clamp(ambient * 2.0f + lights, 0.0f, 1.0f);
++}
++
++// How visible this actor is to Deus Ex's AI, 0 to 1 (Engine.dll
++// AActor::AIVisibility): the light on it, found again a quarter second after
++// the last finding and eased from one finding to the next, and with
++// bIncludeVelocity (the default) up to half again as much when it moves at
++// 30 to 200 units a second.
+ float UActor::AIVisibility(std::optional<bool> bIncludeVelocity)
+ {
+-	LogUnimplemented("Actor.AIVisibility");
+-	//LogMessage(Name.ToString() + ": AIVisibility");
+-	return 0.0f;
++	const float period = 0.25f;
++	float now = Level()->TimeSeconds();
++	float elapsed = now - VisUpdateTime();
++	float visibility;
++	if (elapsed > period * 2.0f)
++	{
++		VisUpdateTime() = now;
++		visibility = AILightAt(this, Location());
++		CurrentVisibility() = visibility;
++		LastVisibility() = visibility;
++	}
++	else if (elapsed > period)
++	{
++		LastVisibility() = CurrentVisibility();
++		VisUpdateTime() = now;
++		CurrentVisibility() = AILightAt(this, Location());
++		visibility = LastVisibility();
++	}
++	else
++	{
++		visibility = (CurrentVisibility() - LastVisibility()) * (elapsed / period) + LastVisibility();
++	}
++
++	if (bIncludeVelocity.value_or(true))
++	{
++		float speed = length(Velocity());
++		float factor = std::clamp((speed - 30.0f) / (200.0f - 30.0f), 0.0f, 1.0f);
++		visibility += factor * visibility * 0.5f;
++	}
++	return std::clamp(visibility, 0.0f, 1.0f);
+ }
+diff --git a/SurrealEngine/Packages/Engine/Actors/UActor.h b/SurrealEngine/Packages/Engine/Actors/UActor.h
+index 0d703b6..928cbfb 100644
+--- a/SurrealEngine/Packages/Engine/Actors/UActor.h
++++ b/SurrealEngine/Packages/Engine/Actors/UActor.h
+@@ -841,6 +841,7 @@ public:
+ 	float& LastConEndTime() { return Value<float>(PropOffsets_Actor.LastConEndTime); }
+ 	float& ConStartInterval() { return Value<float>(PropOffsets_Actor.ConStartInterval); }
+ 
++	BitfieldBool bDetectable() { return BoolValue(PropOffsets_Actor.bDetectable); }
+ 	float& VisUpdateTime() { return Value<float>(PropOffsets_Actor.VisUpdateTime); }
+ 	float& CurrentVisibility() { return Value<float>(PropOffsets_Actor.CurrentVisibility); }
+ 	float& LastVisibility() { return Value<float>(PropOffsets_Actor.LastVisibility); }
+diff --git a/SurrealEngine/PropertyOffsets.cpp b/SurrealEngine/PropertyOffsets.cpp
+index 5308fe1..caa67ba 100644
+--- a/SurrealEngine/PropertyOffsets.cpp
++++ b/SurrealEngine/PropertyOffsets.cpp
+@@ -506,6 +506,7 @@ static void InitPropertyOffsets_Actor(PackageManager* packages)
+ 		PropOffsets_Actor.LastConEndTime = cls->GetPropertyDataOffset("LastConEndTime");
+ 		PropOffsets_Actor.ConStartInterval = cls->GetPropertyDataOffset("ConStartInterval");
+ 		PropOffsets_Actor.VisUpdateTime = cls->GetPropertyDataOffset("VisUpdateTime");
++		PropOffsets_Actor.bDetectable = cls->GetPropertyDataOffset("bDetectable");
+ 		PropOffsets_Actor.CurrentVisibility = cls->GetPropertyDataOffset("CurrentVisibility");
+ 		PropOffsets_Actor.LastVisibility = cls->GetPropertyDataOffset("LastVisibility");
+ 		PropOffsets_Actor.SmellClass = cls->GetPropertyDataOffset("SmellClass");
+diff --git a/SurrealEngine/PropertyOffsets.h b/SurrealEngine/PropertyOffsets.h
+index 6ebea74..18d5f62 100644
+--- a/SurrealEngine/PropertyOffsets.h
++++ b/SurrealEngine/PropertyOffsets.h
+@@ -458,6 +458,7 @@ struct PropertyOffsets_Actor
+ 	PropertyDataOffset LastConEndTime;
+ 	PropertyDataOffset ConStartInterval;
+ 	PropertyDataOffset VisUpdateTime;
++	PropertyDataOffset bDetectable;
+ 	PropertyDataOffset CurrentVisibility;
+ 	PropertyDataOffset LastVisibility;
+ 	PropertyDataOffset SmellClass;
+-- 
+2.55.0
+

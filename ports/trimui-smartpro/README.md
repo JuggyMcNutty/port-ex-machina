@@ -284,13 +284,17 @@ columns were measured at some steps only; its GPU wait stayed ~0.2 ms throughout
 | upstream `af860b3` | 7.3 | ~137 | ~55 | ~78 | ~13 | 9.2 | ~108 | ~45 | ~61 |
 | 0028 | 7.3 | ~137 | ~51 | ~81 | ~16 | 9.4 | ~106 | ~43 | ~60 |
 | 0029 | 7.3 | ~136 | ~50 | ~82 | ~17 | 9.5 | ~105 | ~42 | ~61 |
-| **0030–0032** | **7.6** | **~131** | **~39** | **~88** | **~26** | **10.3** | **~97** | **~37** | **~58** |
+| 0030–0032 | 7.6 | ~131 | ~39 | ~88 | ~26 | 10.3 | ~97 | ~37 | ~58 |
+| **0033–0034** | **7.7** | **~129** | **~39** | **~85** | **~24** | **10.4** | **~96** | **~36** | **~57** |
 
 The upgrade to upstream `af860b3` (2026-09-23) measured the same as 0027 within
 the noise. Patches 0030–0032 were measured together. Besides the collision
 traces' own time (~12 → ~8 ms a frame, about half the tick's drop), the rest of
 the tick and the render CPU besides its waits (~64.5 → ~62 ms at native, ~61 →
-~58 at 853×480) got faster with them. After 0009, 960×540 (render scale 0.75) measured 4.7 FPS, ~214 ms, tick ~94,
+~58 at 853×480) got faster with them. From 0034 the NPCs see -- in Surreal
+Engine they never had -- and those of hostile alliances check each other;
+their sight checks take ~0.3 ms of the tick, and the frame moved within the
+noise. After 0009, 960×540 (render scale 0.75) measured 4.7 FPS, ~214 ms, tick ~94,
 render CPU ~118. From patch 0013 on, the hooks build with frame pointers for
 the sampling profiler, which costs ~1%: patch 0012 measured 5.4 FPS without
 them and 5.3 with. From patch 0018 on, native resolution is held back by the
@@ -300,7 +304,7 @@ Indoors, UNATCO HQ runs at ~20 FPS.
 
 ### Where a frame goes
 
-At native resolution, facing the fight in overclock (~131 ms). The GPU draws
+At native resolution, facing the fight in overclock (~129 ms). The GPU draws
 the previous frame while the game tick runs (engine patch 0004), and the tick
 is now the shorter of the two, so **a frame is about the GPU's time plus the
 render CPU**: render-CPU savings count in full, and tick savings hardly at all
@@ -310,23 +314,23 @@ resolution therefore also needs the GPU's ~68 ms under ~50, and it needs the
 script VM several times faster.
 
 - **Game tick ~39 ms**, almost all NPCs. The device's CPU samples split it:
-  - ~15 ms under script calls, ~9 of which is the interpreter's own work
+  - ~16 ms under script calls, ~9 of which is the interpreter's own work
     (the self time of `ExpressionEvaluator`, `Frame` and `ExpressionValue`;
     ~14 before patches 0028–0029) over ~10,000 VM calls a frame: statements
     (`Frame::Run` ~2), the expressions the typed and leaf paths do not cover
     (`ExpressionEvaluator::Value`, `Expr`), calls (`ExpressionEvaluator::Call`,
     `Frame::Call`, `CallScript`, `CallFastOperator`), the typed evaluators
-    themselves (~2.6). The other ~5 is the natives the scripts call,
-    `FindPathToward` ~1.9 and `TraceTexture` ~0.8 the largest: a script VM
-    with no cost of its own would take script time down by about three
-    fifths, not more.
+    themselves (~2.4). The other ~7 is the natives the scripts call,
+    `FindPathToward` ~2.3 and `TraceTexture` ~1 the largest, the NPCs' sight
+    checks (`AICanSee`) ~0.3: a script VM with no cost of its own would take
+    script time down by a little over half, not more.
     `ScriptedPawn.CheckEnemyPresence` is still the costliest script function.
     Most of the interpreter's time is now the Cortex-A53 waiting on memory
     for each expression node. Next in the structure: calls without an
     `ExpressionValue` per argument; beyond that, a denser form of the code
     itself.
   - ~8 ms of physics (`TickPhysics`), mostly walking pawns: the step to the
-    ground (`TryStepToGround` ~4.4) and the move (`TryMove` ~2.1).
+    ground (`TryStepToGround` ~4.2) and the move (`TryMove` ~2.6).
   - ~3 ms of the AI's sight checks, from the pawns' own tick, not from
     script (`UPawn::Tick` → `CanSee` → `FastTrace`).
   - Across those three, ~7 ms of collision traces, ~8 a frame in all (~12
@@ -335,12 +339,12 @@ script VM several times faster.
     ~2.8, ~380 short sweeps a frame, ~20 nodes each), the sight rays' polygon
     tests (`NodeRayIntersect` ~1.9), and the actor passes (~1.4, over a third
     of it the `dynamic_cast` asking whether each actor is a mover).
-    `TraceTexture` is ~0.8 of it:
+    `TraceTexture` is ~1 of it:
     `LaserEmitter.CalcTrace` traces each laser beam 5,000 units for every one
     of its reflection points every tick, collecting every hit along the way,
     and the player's floor and wall materials are two more traces a frame.
   - ~12 ms of per-actor work around the scripts for the level's ~2,500 actors
-    (`ULevel::TickActor`, animation, event lookups). ~1.5 of it is
+    (`ULevel::TickActor`, animation, event lookups). ~1.4 of it is
     `UObject::IsEventEnabled` asking whether to send each actor `Tick`: little
     work, but a wait on memory for each actor's state frame, state and class.
   - Pawns out of view think every third frame, every sixth beyond 4000 units

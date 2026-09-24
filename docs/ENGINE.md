@@ -157,8 +157,8 @@ By area; the number is the patch's place in the series. How each works is in
 its patch file's message. **Smart Pro** is what it did there, measured with the
 hooks in Liberty Island's opening fight (the whole frame's numbers after each
 patch are in [the Smart Pro's Performance](../ports/trimui-smartpro/README.md#performance));
-**checked** is how it was shown not to change the game, where the message does
-not already say.
+**checked** is how it was shown not to change the game, or for a gameplay fix
+to work, where the message does not already say.
 
 ### Running on our devices
 
@@ -333,3 +333,20 @@ With 0013, these took the Smart Pro's script time from ~125 ms a frame to
 collision traces ~12 → ~8 ms a frame, and the render CPU ~2.5 ms less. Each
 was checked with the actor-state hash on Liberty Island and UNATCO HQ (their
 messages say how).
+
+### Gameplay
+
+What Surreal Engine lacked for Deus Ex to play as it should.
+
+- [**0033**](../engine-patches/0033-vm-omitted-optional-arguments.patch)
+  `vm-omitted-optional-arguments` -- a script call that leaves out an optional
+  struct or array argument no longer crashes copying it (upstream's bug): the
+  first NPC to attack hit it, in `ScriptedPawn.ComputeBestFiringPosition`.
+- [**0034**](../engine-patches/0034-deusex-ai-sight.patch) `deusex-ai-sight`
+  -- NPCs see: `IsValidEnemy`, `AICanSee` and `AIVisibility` as the original
+  DLLs have them; upstream had the first wrong and the others as stubs, so no
+  NPC ever noticed the player, or anyone. **Smart Pro:** the sight checks take
+  ~0.3 ms of the tick. **Checked:** on Liberty Island an NSF terrorist, with
+  the player moved in front of it, made the player its enemy ~3.5 s later
+  (the build-up the script gives a faint sighting at night), and it and two
+  more shot at the player; NPCs of hostile alliances check each other.
