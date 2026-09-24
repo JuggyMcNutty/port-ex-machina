@@ -381,7 +381,8 @@ script VM several times faster.
   ~3 now -- 0030–0032's collision work was the part that waited on memory. `view+audio` is mostly `USurrealAudioDevice::StartAmbience`, which
   reads every actor's `AmbientSound` each frame (~2 ms).
 
-An OpenGL ES backend is not expected to help: the CPU is most of the frame.
+A GLES renderer is planned ([renderers](../../agent.md#decided)); what it does
+to the GPU's time and the render CPU here is for it to measure.
 
 ### Other scenes and CPU modes, before the engine work
 

@@ -95,9 +95,10 @@ no facts of its own beyond those; each lives in one doc, and the
    At native resolution the game tick does not move the frame until the GPU's
    time comes down (open decision 3); at 853×480 it does.
 3. **Renderers on aarch64** (owner, 2026-09-22): the goal is Vulkan, OpenGL ES
-   and software rendering all selectable. Not now: Vulkan is the only one the
-   engine has. GLES means porting Surreal's desktop OpenGL 3.2 renderer (the
-   Smart Pro's `renderers.ini` then needs only `EngineType=GLES`); Surreal has
+   and software rendering all selectable; Vulkan is the only one the engine
+   has. A GLES renderer is to be made at some point (owner, 2026-09-24), not
+   yet scheduled: it means porting Surreal's desktop OpenGL 3.2 renderer (the
+   Smart Pro's `renderers.ini` then needs only `EngineType=GLES`). Surreal has
    no software renderer at all.
 4. **Reverse-engineering the game's DLLs** (owner, 2026-09-24): all of
    Deus Ex's -- DeusEx, Engine, Core, Extension, ConSys, DeusExText, and
