@@ -418,6 +418,14 @@ tick, so samples are 4 ms apart.
 
 ## Gotchas
 
+- **The development unit has no battery**: it runs on USB power, and spruceOS
+  reads it as 0% and discharging. Its battery warnings are off: the low power
+  warning is `Off` in `/mnt/SDCARD/Saves/spruce/spruce-config.json`
+  (`Battery Settings` › `lowPowerWarningPercent`; the file as it was is beside
+  it as `.bak-lowpower-20260923`), and `spruce/scripts/low_power_warning.sh`
+  has its forced shutdown at 1% disabled by hand (the original is
+  `low_power_warning.sh.bak-lowbat`). With the warning on, its popup held the
+  screen and a profiling run's engine stalled after setting up Vulkan.
 - **Pause the spruceOS menu while running anything that draws over SSH**:
   `kill -STOP $(pidof MainUI)` and `kill -CONT` afterwards (use a `trap`). Two
   programs on one framebuffer fight, and pad presses would also drive the menu.

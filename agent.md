@@ -22,8 +22,8 @@ no facts of its own beyond those; each lives in one doc, and the
 - **trimui-smartpro**: the game runs; the performance work is in progress
   ([its Performance](ports/trimui-smartpro/README.md#performance)). The device
   has every patch up to 0029, Overclock, Distant AI on, native resolution.
-  Patches 0030–0032 are not yet measured on it: its battery ran out
-  (2026-09-23, 0% and not charging).
+  Patches 0030–0032 are not yet measured on it. It has no battery (its
+  battery warnings are off: [its Gotchas](ports/trimui-smartpro/README.md#gotchas)).
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
