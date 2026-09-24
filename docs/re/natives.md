@@ -159,7 +159,8 @@ it: no field it updates is written anywhere in the fork. Without it:
 - **An NPC's pivot never eases** to `DesiredPrePivot` (sitting, standing).
 
 The fix is the original, read in full. The fork needs a place for a class's
-own C++ tick, where Surreal's actor tick would call it.
+own C++ tick, where Surreal's actor tick would call it; its disappearing also
+needs [render time and stasis](#out-of-sight).
 
 ### Hearing: the AI event system
 
@@ -197,9 +198,13 @@ All are stubs; the originals are read: [moving](engine-dll.md#moving).
 
 ## Out of sight
 
-The original knows when each actor was last drawn and skips work for what the
-player cannot see; the fork does neither
-([stasis and render time](engine-dll.md#stasis-and-render-time)).
+The original records when each actor was last drawn (`LastRenderTime`), and
+the engine and the scripts skip work for what the player has not seen lately
+([stasis and render time](engine-dll.md#stasis-and-render-time)). The fork's
+renderer marks only whether an actor was drawn in the last frame
+(`LastVisibleFrame`), for Distant AI, which has pawns neither seen nor near
+think every third or sixth frame
+([its patches](../ENGINE.md#settings-the-launcher-exposes)); the rest it runs.
 
 - **Render time.** The fork never sets `LastRenderTime`, and its
   `LastRendered()` returns 0 for every actor but a decal: everything counts as
@@ -225,10 +230,9 @@ player cannot see; the fork does neither
 ### Particles and lasers: render iterators
 
 An actor with a `RenderIteratorClass` is drawn as the many things its
-iterator lists. The renderer makes the iterator (`Actor.RenderInterface`) and
-draws each item it lists: in Deus Ex, `Render.dll`, not yet read
-([render iterators](engine-dll.md#render-iterators)). Deus Ex uses this for
-two classes:
+iterator lists: the renderer makes the iterator (`Actor.RenderInterface`) and
+draws each item it lists ([render iterators](engine-dll.md#render-iterators)).
+Deus Ex uses this for two classes:
 
 - **`ParticleGenerator`**: smoke, steam, water, sparks. It is in 32 maps, and
   fires, rockets, faucets, damaged robots and fragments spawn one.
@@ -240,7 +244,7 @@ The fork never makes a `RenderInterface` (its accessor is commented out), and
 `ParticleIterator(RenderInterface)` is always `None`: no particle is made, and
 no beam is drawn. The originals, `UParticleIterator` and `ULaserIterator`, are
 in `DeusEx.dll`, and `URenderIterator` in `Engine.dll`; the loop that makes and
-draws them is in `Render.dll`.
+draws them is in `Render.dll`, not yet read.
 
 ### Head turns and lip sync: blend animations
 
