@@ -52,7 +52,8 @@ no NPC saw anyone, so likely none searched. Now Battery Park's opening fight
 ends the game.
 
 - **The least that stops the crash:** an empty iterator.
-- **The fix:** the original's, in `Engine.dll`. Not yet read.
+- **The fix:** the original's, read:
+  [`ReachablePathnodes`](engine-dll.md#moving).
 
 ### Saving: any save (seen)
 
@@ -163,19 +164,22 @@ own C++ tick, where Surreal's actor tick would call it.
 ### Hearing: the AI event system
 
 NPCs learn of gunfire, footsteps, noises, alarms, bodies and distress through
-events that actors raise and NPCs subscribe to, all in `Engine.dll`:
+events that actors raise and NPCs listen for
+([the original](engine-dll.md#the-ai-event-system)):
 
 - `AISetEventCallback` 710, `AIClearEventCallback` 711, `AISendEvent` 713,
   `AIStartEvent` 714, `AIEndEvent` 715 and `AIClearEvent` 716, with about 100
   script call sites between them;
-- `LevelInfo.InitEventManager` 650;
-- the checks the manager makes before it calls an NPC back: `AICanHear` 706,
-  `AICanSmell` 707, `AIGetLightLevel` 700 (partial).
+- `LevelInfo.InitEventManager` 650.
 
 The fork has them all as stubs, and every map run reached some of them. So no NPC
-hears anything: a shot, a thrown object or a body found raises nothing. The
-manager itself is a C++ class, `UEventManager`
-(`Engine/Inc/UnEventManager.h` in the SDK).
+hears anything: a shot, a thrown object or a body found raises nothing.
+
+- **The fix:** the original's manager, a C++ class (`UEventManager`) that the
+  level ticks and saves, and what it calls: `AICanHear` 706, a stub in the
+  fork, and `AICanSee`, ported. `AICanSmell` 707 returns 0 in the original
+  too. The manager also reads [render time](#out-of-sight), which the fork
+  does not keep.
 
 ### Moving: wandering and tactical movement
 
@@ -189,16 +193,42 @@ manager itself is a C++ class, `UEventManager`
 - **`ReachablePathnodes`**, above, and `ComputePathnodeDistances` 1020 serve
   the same code.
 
-All are stubs.
+All are stubs; the originals are read: [moving](engine-dll.md#moving).
+
+## Out of sight
+
+The original knows when each actor was last drawn and skips work for what the
+player cannot see; the fork does neither
+([stasis and render time](engine-dll.md#stasis-and-render-time)).
+
+- **Render time.** The fork never sets `LastRenderTime`, and its
+  `LastRendered()` returns 0 for every actor but a decal: everything counts as
+  just drawn. So what the script spares actors out of sight, it never does: a
+  `ParticleGenerator` unseen for 2 s goes on; an NPC with `bTickVisibleOnly`
+  more than 600 units away and unseen for 5 s still looks for enemies other
+  than the player, and beyond 1,200 still looks for bodies; any NPC out of
+  sight still checks for light beams. On the handheld all of that runs.
+- **Stasis.** The original skips the whole tick of an actor in stasis --
+  `bStasis`, not drawn for 5 s, not moving, and far from the player or in a
+  zone not drawn -- and destroys a `bTransient` one. The fork ticks every
+  actor, and its `InStasis()` returns `bStasis || bForceStasis`: whether stasis
+  is allowed, not whether the actor is in it. Its script users are `Shadow`,
+  which leaves the shadow of an owner in stasis where it is -- in the fork, of
+  any owner with `bStasis`, moving or not -- and a debug window. Which actors
+  the game's maps set `bStasis` on is to be checked.
+- **The event manager**, once there, reads both: a listener drawn in the last
+  5 s weighs senders at any distance, one unseen and more than 1,200 units
+  from the player only those within 400.
 
 ## On screen
 
 ### Particles and lasers: render iterators
 
 An actor with a `RenderIteratorClass` is drawn as the many things its
-iterator lists. In UE1 the engine makes the iterator (`Actor.RenderInterface`)
-and draws each item it lists; where the original does this is still to be
-read. Deus Ex uses this for two classes:
+iterator lists. The renderer makes the iterator (`Actor.RenderInterface`) and
+draws each item it lists: in Deus Ex, `Render.dll`, not yet read
+([render iterators](engine-dll.md#render-iterators)). Deus Ex uses this for
+two classes:
 
 - **`ParticleGenerator`**: smoke, steam, water, sparks. It is in 32 maps, and
   fires, rockets, faucets, damaged robots and fragments spawn one.
@@ -209,8 +239,8 @@ The fork never makes a `RenderInterface` (its accessor is commented out), and
 `ParticleIterator.UpdateParticles` 3017 is a stub. So the script's
 `ParticleIterator(RenderInterface)` is always `None`: no particle is made, and
 no beam is drawn. The originals, `UParticleIterator` and `ULaserIterator`, are
-in `DeusEx.dll`; `URenderIterator` is in `Engine.dll`; the drawing loop is
-likely in `Render.dll`.
+in `DeusEx.dll`, and `URenderIterator` in `Engine.dll`; the loop that makes and
+draws them is in `Render.dll`.
 
 ### Head turns and lip sync: blend animations
 
@@ -220,8 +250,11 @@ player's `ViewModelBlendPlay` call it; every map run did. Upstream's blend
 code is partly written and logs every call (`TweenBlendAnim: seq=...`,
 `DrawLodMeshDX blend[...]`): a line per mouth shape in a conversation, which a
 handheld pays for. How far the blending gets on screen is to be checked. The
-original is in `Engine.dll`, and the drawing of blended meshes in
-`Render.dll`.
+original is all in `Engine.dll`, and read
+([blend animations](engine-dll.md#blend-animations)): the natives, the slots'
+tick and the blending of the mesh's vertices. Its tick moves the slots only
+while the main animation plays, and up to three times their rate: what the
+game's head turns and lip sync were made with.
 
 ### The UI
 
@@ -264,6 +297,14 @@ In `Extension.dll`, all stubs or partial in the fork:
 - **`LevelInfo`'s clock.** The fork's main loop fills `Year` counted from 1900
   and `Month` from 0, as in its save dates; the original's are the full year
   and 1 to 12. In Deus Ex only `StatLog` reads them.
+- **`Actor.RandomBiasedRotation` 717.** The fork never scales its random
+  offsets to rotator units, so it returns the central yaw and pitch give or
+  take one unit; the original spreads them over up to half a turn of yaw and a
+  quarter of pitch ([moving](engine-dll.md#moving)). An NPC sprinting aside in
+  a fight always goes square to its enemy, and a `PawnGenerator`'s pawns all
+  face its way.
+- **`Actor.LastRendered` 723 and `Actor.InStasis` 721:**
+  [out of sight](#out-of-sight).
 
 ## Housekeeping, not seen directly
 
@@ -278,11 +319,16 @@ In `Extension.dll`, all stubs or partial in the fork:
 ## Small
 
 - **`Actor.SetInstantSpeechVolume` 269:** the speech volume slider's change
-  is not applied as it moves.
+  is not applied as it moves. The original hands it to the audio subsystem at
+  once, as the fork does for sound and music.
 - **`Pawn.FindStairRotation` 524:** with Look Up Stairs on, the player's view
-  does not tilt on stairs.
-- **`PlayerPawn.ResetKeyboard` 544** (every level change): the fork keeps its
-  own bindings.
+  does not tilt on stairs. The original is UE1's
+  ([`Engine.dll`](engine-dll.md#small)).
+- **`PlayerPawn.ResetKeyboard` 544** (every level change): the original
+  resets the config of the input's class (`Core.dll`'s `ResetConfig`); the
+  fork keeps its own bindings.
+- **`Actor.AIGetLightLevel` 700:** returns 1. The original is the light
+  patch 0034 computes for `AIVisibility` (`AILightAt`); no script calls it.
 - **`InputExt`:** `Extension.dll`'s input class. The multiplayer key
   bindings' `SET InputExt ...` commands fail on every map.
 - **`Object.>` for strings (native 116):** unregistered. The fork registers it

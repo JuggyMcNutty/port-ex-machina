@@ -32,9 +32,11 @@ no facts of its own beyond those; each lives in one doc, and the
 - **The game's DLLs** are being reverse-engineered (from 2026-09-24):
   [`docs/re/`](docs/re/README.md) covers every binary, and an IDA database gets
   three scripts from `tools/ida/` (types, strings, names).
-  - **`DeusEx.dll`** is read ([`deusex-dll.md`](docs/re/deusex-dll.md)); its
-    database is typed, named and backed up.
-  - **Engine, Core, Extension, ConSys and DeusExText** are not read yet.
+  - **`DeusEx.dll`** and **`Engine.dll`** are read
+    ([`deusex-dll.md`](docs/re/deusex-dll.md),
+    [`engine-dll.md`](docs/re/engine-dll.md)); their databases are typed,
+    named and backed up.
+  - **Core, Extension, ConSys and DeusExText** are not read yet.
   - **What Surreal lacks** of them is [`docs/re/natives.md`](docs/re/natives.md),
     from [`tools/natives_audit.py`](tools/natives_audit.py), five map runs and
     two runs with a temporary hook (removed).
@@ -78,6 +80,10 @@ no facts of its own beyond those; each lives in one doc, and the
    - **Visibility** (0020–0021 so far): still the largest render item.
    - **Lightmap uploads**: re-uploading only the rows a light changed, and each
      surface's lightmap lookup.
+   - **What is out of sight** (from reading `Engine.dll`): the original skips
+     it -- actors in stasis do not tick, and the scripts spare what was not
+     drawn lately -- and the fork runs all of it
+     ([out of sight](docs/re/natives.md#out-of-sight)).
 
    At native resolution the game tick does not move the frame until the GPU's
    time comes down (open decision 3); at 853×480 it does.
@@ -129,10 +135,10 @@ no facts of its own beyond those; each lives in one doc, and the
      (seen with `QuickSave`). The Save Game screen does too, by the code (the
      unregistered `GetConfig`).
    - **Loading** a game does nothing (seen).
-   - **Next on it:** `Engine.dll`. The owner opens
-     `gamefiles/System/Engine.dll` in IDA (a new database beside it); it gets
-     the three scripts; then its Deus Ex additions: the AI event manager and
-     the `AI*Event*` natives, `AICanHear`, `AIPickRandomDestination`,
-     `AIDirectionReachable`, `ReachablePathnodes`, render iterators, blend
-     animations. After it, Core, Extension, ConSys and DeusExText
-     ([the binaries](docs/re/README.md#the-binaries)).
+   - **Next on it:** `Core.dll`, which has `GetConfig` (the Save Game screen)
+     and `CriticalDelete`. The owner opens `gamefiles/System/Core.dll` in IDA
+     (a new database beside it); it gets the three scripts. After it,
+     Extension, ConSys and DeusExText
+     ([the binaries](docs/re/README.md#the-binaries)). `Render.dll` has what
+     `Engine.dll` leaves to it: the render iterators' loop, and likely what
+     keeps `LastRenderTime`.
