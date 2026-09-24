@@ -611,16 +611,31 @@ list differs in more than its stubs:
   as 1186, a typo: the original has 116. No script is known to use it; a use
   would stop the game.
 
+## Multiplayer
+
+The fork has none of it (read from the code). Every level runs standalone
+(`LevelInfo.NetMode` 0): there is no net driver -- `IpDrv.dll`'s
+`TcpNetDriver` -- and none of `Engine.dll`'s connections, channels or
+replication. The scripts' sockets, which the multiplayer menus use, are
+partial: a `TcpLink` never opens, a `UdpLink` sends but never receives, and
+`InternetLink`'s `ParseURL` and `Validate` are stubs. So neither Join screen
+finds a server: Join Internet's `DeusExGSpyLink` asks the master server over
+TCP, Join LAN's `DeusExLocalLink` listens over UDP, and `DeusExServerPing`
+queries each server over UDP. The master server is `MasterServerAddress`
+under `[DeusEx.MenuScreenJoinGame]` in `DeusEx.ini`; the GOG build's names
+GameSpy's, which closed in 2014. The original's side is not read yet
+([the reading](../../agent.md#decided)).
+
 ## Not needed for single player
 
 `DumpLocation` (21 stubs: Ion Storm's bug-location tool, though
 `DeusExGameInfo.Login` calls `HasLocationBeenSaved` on every map),
-`StatLog`/`StatLogFile`, `InternetLink`, `DebugInfo` (compiled out in the
-original too: [`DebugInfo`](core-dll.md#debuginfo)), network numbers and
-addresses, `SaveTimeDemo`, `Commandlet.Main`, and `Object`'s `clock`,
-`unclock` and `CyclesToSeconds`
-([timing by hand](core-dll.md#clock-unclock-and-cyclestoseconds)).
-`ComputerWindow` has 22 stubs, but no script calls them; the InfoLink's text
+`StatLog`/`StatLogFile`, `DebugInfo` (compiled out in the
+original too: [`DebugInfo`](core-dll.md#debuginfo)), `SaveTimeDemo`,
+`Commandlet.Main`, and `Object`'s `clock`, `unclock` and `CyclesToSeconds`
+([timing by hand](core-dll.md#clock-unclock-and-cyclestoseconds)). The
+network's -- `InternetLink`, network numbers and addresses -- are
+[multiplayer](#multiplayer)'s. `ComputerWindow` has 22 stubs, but no script calls them; the InfoLink's text
 window, its only user, calls only implemented ones. No script calls
 `ClipWindow`'s unit sizes, `GC`'s `PushGC`, `PopGC`, `CopyGC` and
 `Intersect`, or 16 more of the windows' stubs.

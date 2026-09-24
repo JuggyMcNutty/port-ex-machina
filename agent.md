@@ -29,9 +29,10 @@ no facts of its own beyond those; each lives in one doc, and the
   often) on and 853×480 (2026-09-23), which the fight's native rows switch to
   native for the run. It has no battery (its battery
   warnings are off: [its Gotchas](ports/trimui-smartpro/README.md#gotchas)).
-- **The game's DLLs** are read (2026-09-24): [`docs/re/`](docs/re/README.md)
-  covers every binary, and an IDA database gets three scripts from
-  `tools/ida/` (types, strings, names).
+- **The game's DLLs**: a first pass is read (2026-09-24); the second is
+  [decided 4](#decided)'s list. [`docs/re/`](docs/re/README.md) covers each
+  binary read, and an IDA database gets three scripts from `tools/ida/`
+  (types, strings, names).
   - **`DeusEx.dll`**, **`Engine.dll`**, **`Core.dll`**, **`Extension.dll`**,
     **`ConSys.dll`**, **`DeusExText.dll`** and **`Render.dll`**, the last
     where a feature's drawing lives there
@@ -105,12 +106,38 @@ no facts of its own beyond those; each lives in one doc, and the
    yet scheduled: it means porting Surreal's desktop OpenGL 3.2 renderer (the
    Smart Pro's `renderers.ini` then needs only `EngineType=GLES`). Surreal has
    no software renderer at all.
-4. **Reverse-engineering the game's DLLs** (owner, 2026-09-24): all of
-   Deus Ex's -- DeusEx, Engine, Core, Extension, ConSys, DeusExText, and
-   Render.dll where a feature's drawing lives there -- documented in
-   [`docs/re/`](docs/re/README.md) as behaviour in our own words, never
+4. **Reverse-engineering the game's DLLs** (owner, 2026-09-24), documented
+   in [`docs/re/`](docs/re/README.md) as behaviour in our own words, never
    decompiled code. Desktop engine runs as needed to see what fires in play.
    IDA serves one database at a time, which the owner opens.
+   - **The first pass** (done): DeusEx, Engine, Core, Extension, ConSys,
+     DeusExText, and Render.dll where a feature's drawing lives there.
+   - **The second**, in no order:
+     - **`Render.dll`'s mesh detail and lighting.** The meshes carry tables
+       for dropping detail with distance, which the fork loads and never uses
+       (actor meshes, decided 2); the lighting cache bears on lightmap
+       uploads.
+     - **`Galaxy.dll`**, the audio (no database yet): sounds muffled behind
+       level geometry, which the fork plays at full volume; the per-frame
+       update's search for ambient sounds (the audio scan, decided 2); which
+       sounds win when the channels run out.
+     - **`Engine.dll`'s unread natives**, to check the fork's; no known bug
+       points at them: `ParabolicTrace`, `GetBoundingBox`, `TraceTexture`,
+       `TraceVisibleActors`, the sound IDs, and the three Deus Ex changed
+       (`SetPhysics` taking a floor, `StrafeTo` and `StrafeFacing` a speed).
+     - **`IpDrv.dll`** (no database yet) **and `Engine.dll`'s network code**,
+       for multiplayer (decided 5): the net driver and the scripts' sockets,
+       and the connections, channels and replication over them.
+   - **Only if a need comes up**: `D3DDrv.dll` (how the original looks:
+     gamma, lightmap brightness, fog, detail textures), `SoftDrv.dll` (a
+     software renderer, decided 3), `Fire.dll` (fire, water and ice
+     textures), `WinDrv.dll` (mouse and keyboard). **Not at all**:
+     `Editor.dll`, `Window.dll`, the Glide, Metal and SGL drivers,
+     `Setup.exe` and the GOG DLL.
+5. **Multiplayer** (owner, 2026-09-24): Deus Ex's PvP servers are still up on
+   a master server, and co-op is to be added one day; neither is scheduled.
+   The fork has none of it ([multiplayer](docs/re/natives.md#multiplayer));
+   the original's is to be read (decided 4).
 
 ## Open decisions
 
@@ -175,5 +202,3 @@ no facts of its own beyond those; each lives in one doc, and the
    - **On screen** ([its section](docs/re/natives.md#on-screen); read from
      the code): no particle or beam is drawn (render iterators); coronas are
      chosen, hidden and faded differently.
-   - **Reading is done** for every DLL in scope; a fix that needs more opens
-     its DLL again (its database is backed up in `reference/idb-backup/`).
