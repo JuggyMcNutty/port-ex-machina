@@ -127,10 +127,8 @@ no facts of its own beyond those; each lives in one doc, and the
        level geometry, which the fork plays at full volume; the per-frame
        update's search for ambient sounds (the audio scan, decided 2); which
        sounds win when the channels run out.
-     - **`Engine.dll`'s unread natives**, to check the fork's; no known bug
-       points at them: `ParabolicTrace`, `GetBoundingBox`, `TraceTexture`,
-       `TraceVisibleActors`, the sound IDs, and the three Deus Ex changed
-       (`SetPhysics` taking a floor, `StrafeTo` and `StrafeFacing` a speed).
+     - **`Engine.dll`'s unread natives** (read: [traces](docs/re/engine-dll.md#traces),
+       [moving](docs/re/engine-dll.md#moving), [small](docs/re/engine-dll.md#small)).
      - **`IpDrv.dll`** (no database yet) **and `Engine.dll`'s network code**,
        for multiplayer (decided 5): the net driver and the scripts' sockets,
        and the connections, channels and replication over them.
@@ -168,7 +166,9 @@ no facts of its own beyond those; each lives in one doc, and the
      logging in to a computer, a public computer's bulletins and reading a
      datacube, by [natives.md](docs/re/natives.md#what-the-player-reads);
      coronas near and far and behind an NPC, by
-     [natives.md](docs/re/natives.md#coronas).
+     [natives.md](docs/re/natives.md#coronas); walking through a laser
+     tripwire on Liberty Island, and a door's highlight, by
+     [natives.md](docs/re/natives.md#implemented-not-as-the-original).
      The desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is
@@ -210,3 +210,9 @@ no facts of its own beyond those; each lives in one doc, and the
      chosen, hidden and faded differently; every mesh is drawn whole at any
      distance; lights are sorted, picked and shadowed differently, and
      `NoDynamicLights` does nothing.
+   - **Traces and moves** ([not as the original](docs/re/natives.md#implemented-not-as-the-original);
+     read from the code): laser tripwires pass through the player and NPCs;
+     a seeking NPC sees through walls; NPCs misjudge grenades
+     (`ParabolicTrace`'s gravity points up) and strafe at a different speed;
+     a door's highlight and a mover's area are off; things coming to rest
+     take no base; a sound with no radius carries 1,500 units, not 800.

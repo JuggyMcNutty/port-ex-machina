@@ -619,6 +619,47 @@ list differs in more than its stubs:
   diagonals; the original keeps those inside, which lean nowhere.
 - **`Actor.LastRendered` 723 and `Actor.InStasis` 721:**
   [out of sight](#out-of-sight).
+- **The trace iterators, `TraceTexture` 1000 and `TraceVisibleActors`
+  1003** (read from both codes; [the originals](engine-dll.md#traces)). The
+  fork's line goes on past walls, and its hit on the level has no actor, where
+  the original's is the `LevelInfo`. Its `TraceTexture` gives an actor's
+  `Skin` as its texture and passes over an actor without one, and gives the
+  texture's flags, not the surface's; its `TraceVisibleActors` lists only
+  actors of the class that are not hidden, so never the level. In play, by the
+  code:
+  - **Laser tripwires.** A `LaserTrigger`'s beam stops at the first actor
+    `TraceTexture` gives. The player and the NPCs wear `MultiSkins` and have no
+    `Skin`, so the beam passes through them and trips nothing, while an actor
+    with a `Skin` beyond a wall trips it. A beam reflects only off a texture
+    flagged as a mirror, where the original's reflects off a mirrored surface.
+    Liberty Island has laser tripwires.
+  - **An NPC seeking a spot** within its seek distance takes it as seen
+    through a wall, and goes no closer.
+- **`Actor.ParabolicTrace` 722** (read from both codes;
+  [the original](engine-dll.md#traces)). The fork has no default for an
+  argument the script leaves out and reads an empty value -- the NPCs' check
+  of a falling grenade gives no step --; adds the zone's gravity with the wrong
+  sign, so a thrown thing falls upward; leaves out the zone's velocity, its
+  terminal velocity and water; traces each step from the start; and never
+  fails. NPCs misjudge where a grenade will land, and whether their own throw
+  is safe.
+- **`Actor.GetBoundingBox` 724** with a test place or rotation, as every script
+  call gives: the fork moves the actor's box, already in the world, by them,
+  so it is off by the actor's own place ([the original](engine-dll.md#traces)).
+  By the code, the HUD's highlight on a door is drawn in the wrong place, and
+  a `DeusExMover`'s area is wrong: which NPCs step out of its way, and which
+  pawns it tells when it stops.
+- **`Actor.PlaySound` 264** with no radius, from an actor with no
+  `TransientSoundRadius`: 800 units in the original, 1,500 in the fork.
+- **`Actor.SetPhysics` 3970** ignores the floor it is given
+  ([the original](engine-dll.md#moving)): a grenade, pool ball, basketball or
+  fragment coming to rest does not take what it landed on as its base, and
+  stays put when that moves.
+- **`Pawn.StrafeTo` 504 and `StrafeFacing` 506** ignore the speed
+  ([the originals](engine-dll.md#moving)). The fork's `StrafeTo` gives an NPC
+  0.8 of its `MaxDesiredSpeed`, where the original gives all of it (the scripts
+  give no speed), and its `StrafeFacing` keeps the speed the NPC had and its
+  `bReducedSpeed`. NPCs strafe as they run and fire in a fight.
 
 ## Housekeeping, not seen directly
 
