@@ -129,9 +129,9 @@ no facts of its own beyond those; each lives in one doc, and the
        sounds win when the channels run out.
      - **`Engine.dll`'s unread natives** (read: [traces](docs/re/engine-dll.md#traces),
        [moving](docs/re/engine-dll.md#moving), [small](docs/re/engine-dll.md#small)).
-     - **`IpDrv.dll`** (no database yet) **and `Engine.dll`'s network code**,
-       for multiplayer (decided 5): the net driver and the scripts' sockets,
-       and the connections, channels and replication over them.
+     - **`Engine.dll`'s network code** (read: [the network](docs/re/network.md))
+       **and `IpDrv.dll`** (no database yet), for multiplayer (decided 5): the
+       net driver's UDP, the scripts' sockets and the master server.
    - **Only if a need comes up**: `D3DDrv.dll` (how the original looks:
      gamma, lightmap brightness, fog, detail textures), `SoftDrv.dll` (a
      software renderer, decided 3), `Fire.dll` (fire, water and ice
@@ -141,7 +141,9 @@ no facts of its own beyond those; each lives in one doc, and the
 5. **Multiplayer** (owner, 2026-09-24): Deus Ex's PvP servers are still up on
    a master server, and co-op is to be added one day; neither is scheduled.
    The fork has none of it ([multiplayer](docs/re/natives.md#multiplayer));
-   the original's is to be read (decided 4).
+   the original's protocol is Unreal Tournament's
+   ([the network](docs/re/network.md)), and `IpDrv.dll` is still to be read
+   (decided 4).
 
 ## Open decisions
 

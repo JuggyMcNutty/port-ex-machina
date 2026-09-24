@@ -709,7 +709,8 @@ finds a server: Join Internet's `DeusExGSpyLink` asks the master server over
 TCP, Join LAN's `DeusExLocalLink` listens over UDP, and `DeusExServerPing`
 queries each server over UDP. The master server is `MasterServerAddress`
 under `[DeusEx.MenuScreenJoinGame]` in `DeusEx.ini`; the GOG build's names
-GameSpy's, which closed in 2014. The original's side is not read yet
+GameSpy's, which closed in 2014. The original's protocol is
+[the network](network.md); `IpDrv.dll`'s sockets are not read yet
 ([the reading](../../agent.md#decided)).
 
 ## Not needed for single player
