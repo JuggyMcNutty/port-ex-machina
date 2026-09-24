@@ -22,8 +22,9 @@ no facts of its own beyond those; each lives in one doc, and the
 - **trimui-smartpro**: the game runs; the performance work is in progress
   ([its Performance](ports/trimui-smartpro/README.md#performance)). The device
   has every patch up to 0032 in a build with the profiling hooks, Overclock,
-  native resolution; Distant AI was off in its settings on 2026-09-23 (the
-  fight's profiles turn it on for the run). It has no battery (its battery
+  native resolution; Distant AI (characters out of sight think less often)
+  was off in its settings on 2026-09-23 (the fight's profiles turn it on for
+  the run). It has no battery (its battery
   warnings are off: [its Gotchas](ports/trimui-smartpro/README.md#gotchas)).
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
