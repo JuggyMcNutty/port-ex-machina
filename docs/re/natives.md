@@ -436,6 +436,51 @@ A light with `bCorona` and a `Skin` texture shows a glow over it on screen
 - **Brightness:** the fork's are 2.5 times the light's colour; the
   original's, the colour times the fade. The size is the same.
 
+### Mesh detail
+
+The fork draws every LOD mesh whole, at any distance: it loads the tables for
+dropping detail and never uses them (read from the code). The original works
+out a vertex budget from the depth and the view each draw
+([mesh detail](render-dll.md#mesh-detail)): a trooper keeps its 370 vertices to
+about 2,700 units deep at 853 pixels wide, and has about 200 at 5,000 and 100
+at 10,000. Porting it is a filter on the faces (`FaceLevel`) and a walk down
+each corner's collapse list; the fork already works out each vertex once, the
+first time a face uses it, so its per-vertex work would fall with the faces.
+Morphing, for the look, is apart. On the Smart Pro the per-vertex work of
+~40 meshes is ~8 ms of the render
+([where a frame goes](../../ports/trimui-smartpro/README.md#where-a-frame-goes)).
+
+### Lighting
+
+Read from both codes ([the original's](render-dll.md#lighting)):
+
+- **Light maps.** The fork sorts a surface's lights in two: the level's list
+  for the surface, and the lights near it that are neither `bStatic` nor
+  `bNoDelete`. It keeps the first group's light and adds the second's again
+  when one of them changes, as the original does with its static and moving
+  lights. But when a light of the surface's list pulses, flickers or has an
+  animated effect, the fork builds the whole list again every frame, ambient,
+  shadows and all; the original keeps the steady ones in its static map and
+  adds only the animated one, from its light on the surface kept in the cache
+  when its shape holds still. The fork's maps are floats, converted for the
+  Smart Pro's GPU on the CPU (engine patches 0002 and 0024); the original's
+  are bytes. Both send a changed map to the GPU whole. The fork looks each
+  surface's map up in a `std::map`; the original's cache hashes, and first
+  checks the item it found last.
+- **`NoDynamicLights`**: the fork reads and saves the setting, and nothing
+  uses it. In the original it stills animated lights and leaves moving ones
+  out.
+- **`LE_CloudCast`**: the fork builds it once; in the original its shape
+  changes over time, and it is run every frame.
+- **Meshes.** The fork lights a mesh with the first 8 lights in reach that
+  its light tree lists, not the strongest, and keeps the weak ones the
+  original drops. It traces from each light in reach to the actor whenever
+  the actor has moved -- every frame for one walking -- where the original
+  checks each of its lights every 16 frames. It has no fading, and leaves out
+  lights with `bCorona`, which light meshes in the original. Its formula per
+  vertex is its own: a smooth falloff and plain diffuse, two square roots a
+  light, no highlight, and ambient and light scaled otherwise.
+
 ### Head turns and lip sync: blend animations
 
 `Actor.PlayBlendAnim` 1010 is partial in the fork. `Pawn.PlayTurnHead`

@@ -35,7 +35,7 @@ no facts of its own beyond those; each lives in one doc, and the
   (types, strings, names).
   - **`DeusEx.dll`**, **`Engine.dll`**, **`Core.dll`**, **`Extension.dll`**,
     **`ConSys.dll`**, **`DeusExText.dll`** and **`Render.dll`**, the last
-    where a feature's drawing lives there
+    where a feature's drawing lives there, and its mesh detail and lighting
     ([`deusex-dll.md`](docs/re/deusex-dll.md),
     [`engine-dll.md`](docs/re/engine-dll.md),
     [`core-dll.md`](docs/re/core-dll.md),
@@ -87,10 +87,17 @@ no facts of its own beyond those; each lives in one doc, and the
      original answers it from one mask on the state frame, and checks no call
      to any other function ([events and probes](docs/re/core-dll.md#events-and-probes)).
    - **The audio update's scan** of every actor for an ambient sound.
-   - **Actor meshes** (0018–0019 so far): the per-vertex work itself.
+   - **Actor meshes** (0018–0019 so far): the per-vertex work itself. The
+     original draws a distant mesh with fewer vertices, and lights a vertex
+     with the strongest lights only, checking their shadows every 16 frames
+     ([mesh detail](docs/re/natives.md#mesh-detail),
+     [lighting](docs/re/natives.md#lighting)).
    - **Visibility** (0020–0021 so far): still the largest render item.
    - **Lightmap uploads**: re-uploading only the rows a light changed, and each
-     surface's lightmap lookup.
+     surface's lightmap lookup. The original rebuilds a map only for its
+     animated and moving lights, over its kept static part, and its
+     `NoDynamicLights` stops that altogether
+     ([lighting](docs/re/natives.md#lighting)).
    - **What is out of sight** (from reading `Engine.dll` and `Render.dll`):
      the original spares more of it than Distant AI does -- actors in stasis
      do not tick, and the scripts skip work for what was not drawn lately, an
@@ -113,10 +120,9 @@ no facts of its own beyond those; each lives in one doc, and the
    - **The first pass** (done): DeusEx, Engine, Core, Extension, ConSys,
      DeusExText, and Render.dll where a feature's drawing lives there.
    - **The second**, in no order:
-     - **`Render.dll`'s mesh detail and lighting.** The meshes carry tables
-       for dropping detail with distance, which the fork loads and never uses
-       (actor meshes, decided 2); the lighting cache bears on lightmap
-       uploads.
+     - **`Render.dll`'s mesh detail and lighting** (read:
+       [mesh detail](docs/re/render-dll.md#mesh-detail),
+       [lighting](docs/re/render-dll.md#lighting)).
      - **`Galaxy.dll`**, the audio (no database yet): sounds muffled behind
        level geometry, which the fork plays at full volume; the per-frame
        update's search for ambient sounds (the audio scan, decided 2); which
@@ -201,4 +207,6 @@ no facts of its own beyond those; each lives in one doc, and the
      (seen on Liberty Island).
    - **On screen** ([its section](docs/re/natives.md#on-screen); read from
      the code): no particle or beam is drawn (render iterators); coronas are
-     chosen, hidden and faded differently.
+     chosen, hidden and faded differently; every mesh is drawn whole at any
+     distance; lights are sorted, picked and shadowed differently, and
+     `NoDynamicLights` does nothing.
