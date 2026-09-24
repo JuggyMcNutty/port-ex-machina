@@ -32,16 +32,17 @@ no facts of its own beyond those; each lives in one doc, and the
 - **The game's DLLs** are being reverse-engineered (from 2026-09-24):
   [`docs/re/`](docs/re/README.md) covers every binary, and an IDA database gets
   three scripts from `tools/ida/` (types, strings, names).
-  - **`DeusEx.dll`**, **`Engine.dll`**, **`Core.dll`** and **`Extension.dll`**
-    are read ([`deusex-dll.md`](docs/re/deusex-dll.md),
+  - **`DeusEx.dll`**, **`Engine.dll`**, **`Core.dll`**, **`Extension.dll`**
+    and **`ConSys.dll`** are read ([`deusex-dll.md`](docs/re/deusex-dll.md),
     [`engine-dll.md`](docs/re/engine-dll.md),
     [`core-dll.md`](docs/re/core-dll.md),
-    [`extension-dll.md`](docs/re/extension-dll.md)); their databases are
-    typed, named and backed up.
-  - **ConSys and DeusExText** are not read yet.
+    [`extension-dll.md`](docs/re/extension-dll.md),
+    [`consys-dll.md`](docs/re/consys-dll.md)); their databases are typed,
+    named and backed up.
+  - **DeusExText** is not read yet.
   - **What Surreal lacks** of them is [`docs/re/natives.md`](docs/re/natives.md),
     from [`tools/natives_audit.py`](tools/natives_audit.py), five map runs and
-    two runs with a temporary hook (removed).
+    three runs with a temporary hook (removed).
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
@@ -124,8 +125,10 @@ no facts of its own beyond those; each lives in one doc, and the
      Game (no save listed), by
      [natives.md](docs/re/natives.md#saving-loading-and-travel); rebinding a
      key in the game's Customize Keys screen, and a movement key held into a
-     menu and let go there, by [natives.md](docs/re/natives.md#lists). The
-     desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
+     menu and let go there, by [natives.md](docs/re/natives.md#lists);
+     walking up to Tech Sergeant Kaplan on Liberty Island, by
+     [natives.md](docs/re/natives.md#named-troopers-get-the-generic-troopers-conversations-seen).
+     The desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is
    deliberately verbose for development; a final build needs a declutter pass,
@@ -149,9 +152,15 @@ no facts of its own beyond those; each lives in one doc, and the
      expire; every list field reads as empty, so a computer shows only its
      first email; no list row activates, so the Customize Keys screen cannot
      rebind ([flags](docs/re/natives.md#flags), [lists](docs/re/natives.md#lists)).
-   - **Next on it:** ConSys, conversations, and DeusExText, the books and
-     datacubes ([the binaries](docs/re/README.md#the-binaries)). The owner
-     opens each DLL in IDA (a new database beside it, in the window the
-     bridge serves); it gets the three scripts. `Render.dll` has what
-     `Engine.dll` leaves to it: the render iterators' loop, and likely what
-     keeps `LastRenderTime`.
+   - **Conversations** ([conversations](docs/re/natives.md#conversations)):
+     the fork deletes comment events, and 11 jumps go to a comment's label,
+     so their conversations end early (read from the code and the data).
+     Maggie Chow's and Max Chen's meetings in Hong Kong are among them, and
+     can leave Max Chen unconvinced and the raid on the Lucky Money unstarted.
+     Named troopers get the generic trooper's conversations before their own
+     (seen on Liberty Island).
+   - **Next on it:** DeusExText, the books and datacubes
+     ([the binaries](docs/re/README.md#the-binaries)). The owner opens each
+     DLL in IDA (a new database beside it, in the window the bridge serves);
+     it gets the three scripts. `Render.dll` has what `Engine.dll` leaves to
+     it: the render iterators' loop, and likely what keeps `LastRenderTime`.

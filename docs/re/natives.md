@@ -23,13 +23,17 @@ Which item is taken up, and when, is the owner's call.
   once per session, with the script function that called it, so a run shows
   which stubs a map reaches, not how often. Two more runs, with a temporary
   hook that typed console commands, tried saving and loading
-  ([below](#saving-loading-and-travel)).
+  ([below](#saving-loading-and-travel)). One more, of Liberty Island, logged
+  the conversations the fork gives each NPC ([conversations](#conversations)).
 - **The DLLs.** C++ that is not a native -- a class's own `Tick`, what the
   renderer does with an actor -- leaves no stub behind: only reading the
   original shows it is missing.
 - **Reading both.** Only reading the original shows whether an implemented
   native does what it does. Found so far: `IsValidEnemy` (fixed by patch
   0034), and the ones under [not as the original](#implemented-not-as-the-original).
+- **The data.** Where a difference depends on content, the game's
+  conversation package and maps were read for what it reaches (a throwaway
+  reader of the package format).
   Code compiled out with `#if 0` also leaves no stub; the audit reports it as
   partial.
 
@@ -163,6 +167,89 @@ and the mission scripts set their events' flags
   flag base, which a save keeps.
 
 **The fix:** the original's chains and expiry, read in full.
+
+## Conversations
+
+What the original binds and plays is ConSys's ([`ConSys.dll`](consys-dll.md));
+the game's script does the rest.
+
+### Jumps to a comment's label end the conversation
+
+When a level loads, the fork deletes the comment events from its mission's
+conversations. The original keeps them, and the script passes over one: its
+event switch has no case for it. But a comment can carry a label, and 11 jumps
+in 10 conversations go to a label only a comment has. In the fork that label
+is gone, so the conversation logs "Label ... NOT FOUND" and ends there, marked
+played. Read from the code and the data; to check by hand.
+
+- **Maggie Chow's meeting** (`MeetMaggie`, Hong Kong), for a player who has
+  not heard of the Dragon's Tooth, ends after "A nanotech blade.". Lost: the
+  goal to search the Wan Chai police station, the notes of its vault code, the
+  Luminous Path and Max Chen, the `KnowsAboutNanoSword` flag and the
+  `MaggieWanders` trigger. It plays once.
+- **Max Chen's meeting** (`MeetMaxChen`), for a player who brings the evidence
+  without having heard of the sword, ends before its two goals and before
+  `MaxChenConvinced`, the flag that starts the MJ12 raid on the Lucky Money
+  (`Mission06`) and that only this conversation sets. It plays once. The
+  player hears of the sword from Gordon Quick, the market's waiter or
+  newswoman, or Maggie past her break.
+- Smaller: Jughead's deal at the Brooklyn Bridge station (`M03MeetJugHead`),
+  and lines of Harley Filben, a sick bum, three goths, Carmela and the
+  mission 4 troopers.
+
+**The fix:** keep the comment events.
+
+### Named troopers get the generic trooper's conversations (seen)
+
+The fork gives an actor every conversation its `BarkBindName` owns, not only
+the barks, and puts them first in its list; the original gives it only barks
+by that name ([an actor's conversations](consys-dll.md#an-actors-conversations)).
+490 of the maps' actors have a bark name other than their own name, and two
+of those names own other conversations:
+
+- `UNATCOTroop`: the named troopers of missions 1 to 4 -- Corporal Collins,
+  Tech Sergeant Kaplan, Private Lloyd, the HQ's guards, the Battery Park,
+  clinic and hotel guards and more.
+- `MetroCop`: two Paris policemen.
+
+The script starts the first conversation in the list that qualifies. So
+walking up to one of these, or frobbing them, starts the generic trooper's
+instead of their own, such as Kaplan's `MeetKaplan`: on Liberty Island
+`UNATCOTroopInitialBarks`, then `UNATCOTroopSecondBarks` once the statue
+mission is complete. Its lines are bound by name to an actor called
+`UNATCOTroop`: on Liberty Island the one generic trooper, wherever it stands.
+A Liberty Island run with a temporary hook showed the lists: Collins, Kaplan,
+Lloyd, the custody trooper and the five post-mission troopers each start with
+the generic two. What then plays is read from the script; to check by hand.
+
+**The fix:** the original's binding. The fork also finds the list by the
+mission's number in `DeusExConText`; the original loads the one the level's
+`ConversationPackage` names, so a mod's own conversations bind only in the
+original.
+
+### Smaller
+
+- **Lines that cycle once loop.** 169 of the game's random-label events give
+  their lines in turn and then keep the last, 164 of them in the chatter of
+  NPCs. The fork's `GetRandomLabel` starts them over
+  ([random labels](consys-dll.md#random-labels)).
+- **An actor destroyed mid-conversation** does not end it. The fork's
+  `BindEvents` never fills the script's list of the conversation's actors,
+  which is how `ActorDestroyed` knows them. A pawn killed is destroyed.
+- **Speech loads a whole package.** The fork finds a line through the audio
+  package's list, and loading the list loads every sound in the package the
+  first time any line from it plays: 12.4 MB for mission 1, 14.8 MB for the
+  NPCs' barks, 31.7 MB for Hong Kong's. The original loads the one sound by
+  name, the same sound ([speech audio](consys-dll.md#speech-audio)). The fork
+  also names the package `DeusExConAudio<name>`, where the original takes it
+  from the conversation's own package, as a mod's would need.
+- **Bindings are cleared.** The fork's `ClearBindEvents` empties every
+  event's actors, and its `BindEvents` empties a name no actor has; the
+  original never empties one. No difference in play is known.
+- **`ownerRefCount`** is never counted, so the script never calls
+  `BindActorEvents`, and the fork never binds the invoker by its bark name as
+  the original does. No conversation's lines name its owner's bark name, so
+  the game shows no difference.
 
 ## Every NPC
 
@@ -360,14 +447,11 @@ list differs in more than its stubs:
 
 ## Implemented, not as the original
 
-- **The list window and the flag base:** [lists](#lists) and [flags](#flags).
+- **The list window, the flag base and conversations:** [lists](#lists),
+  [flags](#flags) and [conversations](#conversations).
 - **`ScriptedPawn.GetPawnAllianceType(None)`.** The fork reads through the
   null pawn and crashes; the original answers Neutral. A distress call's
   sender or `GetPlayerPawn()` during a level change could be `None`.
-- **`ConBindEvents`.** The fork binds conversations from `DeusExConText`'s
-  mission list, found by mission number. The original loads the list the
-  level's `ConversationPackage` names, so a mod's own conversations bind only
-  in the original. What ConSys's `BindConversations` adds is not yet read.
 - **`GameDirectory.GetNewSaveFileIndex`.** The fork takes the first free
   number; the original takes the highest plus one and never refills a gap.
 - **`DeusExPlayer.CreateGameDirectoryObject`.** The fork keeps one object;
