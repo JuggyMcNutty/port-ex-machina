@@ -287,14 +287,10 @@ columns were measured at some steps only; its GPU wait stayed ~0.2 ms throughout
 | **0030–0032** | **7.6** | **~131** | **~39** | **~88** | **~26** | **10.3** | **~97** | **~37** | **~58** |
 
 The upgrade to upstream `af860b3` (2026-09-23) measured the same as 0027 within
-the noise. Patches 0030–0032 were measured together, on a device booted an
-hour and a half earlier. Their own functions account for about half of the
-tick's drop (the collision traces ~12 → ~8 ms a frame), and the render CPU
-besides its waits fell too, ~64.5 → ~62 ms at native and ~61 → ~58 at 853×480,
-a little in nearly every section. These patches do not touch the renderer, and
-from 0027 to 0029 its sections held to 0.1 ms, so part of the change may be the
-device's state or the engine's heap layout rather than the patches: a run of
-the 0029 build on the same boot would tell. After 0009, 960×540 (render scale 0.75) measured 4.7 FPS, ~214 ms, tick ~94,
+the noise. Patches 0030–0032 were measured together. Besides the collision
+traces' own time (~12 → ~8 ms a frame, about half the tick's drop), the rest of
+the tick and the render CPU besides its waits (~64.5 → ~62 ms at native, ~61 →
+~58 at 853×480) got faster with them. After 0009, 960×540 (render scale 0.75) measured 4.7 FPS, ~214 ms, tick ~94,
 render CPU ~118. From patch 0013 on, the hooks build with frame pointers for
 the sampling profiler, which costs ~1%: patch 0012 measured 5.4 FPS without
 them and 5.3 with. From patch 0018 on, native resolution is held back by the

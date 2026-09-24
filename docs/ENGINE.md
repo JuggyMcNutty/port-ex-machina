@@ -330,8 +330,6 @@ With 0013, these took the Smart Pro's script time from ~125 ms a frame to
   (0030's share included).
 
 0030–0032 were measured on the Smart Pro together: tick ~50 → ~39 ms, the
-collision traces ~12 → ~8 ms a frame. The render CPU fell ~2.5 ms as well,
-which they do not touch, so part of the tick's drop may be the device's state
-too ([the fight, patch by patch](../ports/trimui-smartpro/README.md#the-fight-patch-by-patch)).
-Each was checked with the actor-state hash on Liberty Island and UNATCO HQ
-(their messages say how).
+collision traces ~12 → ~8 ms a frame, and the render CPU ~2.5 ms less. Each
+was checked with the actor-state hash on Liberty Island and UNATCO HQ (their
+messages say how).
