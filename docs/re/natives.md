@@ -25,6 +25,8 @@ Which item is taken up, and when, is the owner's call.
   hook that typed console commands, tried saving and loading
   ([below](#saving-loading-and-travel)). One more, of Liberty Island, logged
   the conversations the fork gives each NPC ([conversations](#conversations)).
+  One more put eight of the game's texts through the fork's text parser
+  ([what the player reads](#what-the-player-reads)).
 - **The DLLs.** C++ that is not a native -- a class's own `Tick`, what the
   renderer does with an actor -- leaves no stub behind: only reading the
   original shows it is missing.
@@ -32,8 +34,8 @@ Which item is taken up, and when, is the owner's call.
   native does what it does. Found so far: `IsValidEnemy` (fixed by patch
   0034), and the ones under [not as the original](#implemented-not-as-the-original).
 - **The data.** Where a difference depends on content, the game's
-  conversation package and maps were read for what it reaches (a throwaway
-  reader of the package format).
+  conversation and text packages and its maps were read for what it reaches
+  (a throwaway reader of the package format).
   Code compiled out with `#if 0` also leaves no stub; the audit reports it as
   partial.
 
@@ -251,6 +253,56 @@ original.
   the original does. No conversation's lines name its owner's bark name, so
   the game shows no difference.
 
+## What the player reads
+
+Books, datacubes, newspapers, emails, bulletins and the credits are the
+game's 492 tagged texts, which `DeusExTextParser` breaks into tokens for the
+script ([the original](deusextext-dll.md)). The fork's parser is its own, and
+most texts come out differently. Read from the code and the texts; a run with
+a temporary hook put eight texts through the fork's parser and gave the
+tokens these follow from. What the screens then do is read from the script:
+to check by hand.
+
+- **No computer lists an email.** The fork reads an `EMAIL` tag as a file, so
+  every account's list is empty and its screen says there is no email: all
+  66 accounts, 136 emails. The passwords and codes they hold cannot be read.
+- **No bulletin opens.** The fork keeps the `=` of a `FILE` tag in the name
+  (`=01_Bulletin01`), so a board lists its bulletins' titles, and picking one
+  shows nothing.
+- **The designers' comments show.** The original hides a comment; the fork
+  shows its text, in 166 texts. Most are datacubes, which then open with
+  where they lie ("Datacube in Alex's office", "MJ12 lab"), and the note a
+  datacube adds keeps it too.
+- **Words run together.** The fork trims the spaces at both ends of each run
+  of text, so a space beside a tag goes: "From:Anon" for "From: Anon" in every
+  email's header, "Arms:Combat StrengthorMicrofibral Muscle" in a book. 395
+  places in 135 texts.
+- **Blank lines vanish.** The original's blank paragraph is a line of two
+  spaces. The fork's is an empty text window, which the fork makes no line
+  tall, so the paragraphs of 242 books and datacubes run together.
+- **Nothing is centred.** `JC` and `JR` do nothing in the fork: the titles of
+  90 books, newspapers and datacubes sit on the left.
+- **Raw tags.** At a tag it does not know, the fork gives the rest of the
+  text as it is, tags and all, where the original passes over the tag: `JL`
+  in a newspaper and a book, `<LOG ERROR>` in a Paris bulletin, and
+  `<"...">` in an email and a datacube. The fork also misses a tag that is a
+  text's last character: `</B>` or `</I>` shows at the end of 11 texts, and
+  the last row of 52 accounts and 8 boards is dropped.
+- **The player's first name** is empty (9 texts): "Hey, didn't have a chance"
+  for "Hey JC, didn't have a chance".
+- **The credits and the quotes** lose the blank lines between their sections:
+  the original prints a line for each line break between two tags, which the
+  fork skips.
+- **Smaller.** An email or bulletin starts with an empty line, where the
+  original swallows a text's first `<P>`; for the same reason the original's
+  datacube note runs the first two paragraphs together, and the fork's does
+  not. `DC` reads as black, but lands on an empty window the fork makes
+  before the first paragraph, so nothing shows it. `GotoLabel` is a stub, as
+  good as the original's, which does nothing; no script calls it.
+
+**The fix:** the original's parser, read in full: its tokens, its tag table
+and its reading to an end tag.
+
 ## Every NPC
 
 ### The native tick: `AScriptedPawn::Tick`
@@ -388,9 +440,9 @@ list differs in more than its stubs:
   row's last is read out of bounds. `GetFieldValue` reads through it and is
   always 0. The game's screens keep what a row stands for in a hidden column
   and read it back, so:
-  - on a computer, every email the player picks shows the first one
+  - on a computer, every email the player picks would show the first one
     (`ComputerScreenEmail.ListSelectionChanged` reads the email's number from
-    column 2);
+    column 2), once the fork lists any ([what the player reads](#what-the-player-reads));
   - loading a colour theme does nothing, and the colour editor cannot tell
     which colour it is editing;
   - the images screen never marks an image viewed or unloads its textures;
@@ -447,8 +499,9 @@ list differs in more than its stubs:
 
 ## Implemented, not as the original
 
-- **The list window, the flag base and conversations:** [lists](#lists),
-  [flags](#flags) and [conversations](#conversations).
+- **The list window, the flag base, conversations and the text parser:**
+  [lists](#lists), [flags](#flags), [conversations](#conversations) and
+  [what the player reads](#what-the-player-reads).
 - **`ScriptedPawn.GetPawnAllianceType(None)`.** The fork reads through the
   null pawn and crashes; the original answers Neutral. A distress call's
   sender or `GetPlayerPawn()` during a level change could be `None`.

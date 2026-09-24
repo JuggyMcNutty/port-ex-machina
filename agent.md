@@ -32,17 +32,19 @@ no facts of its own beyond those; each lives in one doc, and the
 - **The game's DLLs** are being reverse-engineered (from 2026-09-24):
   [`docs/re/`](docs/re/README.md) covers every binary, and an IDA database gets
   three scripts from `tools/ida/` (types, strings, names).
-  - **`DeusEx.dll`**, **`Engine.dll`**, **`Core.dll`**, **`Extension.dll`**
-    and **`ConSys.dll`** are read ([`deusex-dll.md`](docs/re/deusex-dll.md),
+  - **`DeusEx.dll`**, **`Engine.dll`**, **`Core.dll`**, **`Extension.dll`**,
+    **`ConSys.dll`** and **`DeusExText.dll`** are read
+    ([`deusex-dll.md`](docs/re/deusex-dll.md),
     [`engine-dll.md`](docs/re/engine-dll.md),
     [`core-dll.md`](docs/re/core-dll.md),
     [`extension-dll.md`](docs/re/extension-dll.md),
-    [`consys-dll.md`](docs/re/consys-dll.md)); their databases are typed,
-    named and backed up.
-  - **DeusExText** is not read yet.
+    [`consys-dll.md`](docs/re/consys-dll.md),
+    [`deusextext-dll.md`](docs/re/deusextext-dll.md)); their databases are
+    typed, named and backed up.
+  - **`Render.dll`** is not read yet.
   - **What Surreal lacks** of them is [`docs/re/natives.md`](docs/re/natives.md),
     from [`tools/natives_audit.py`](tools/natives_audit.py), five map runs and
-    three runs with a temporary hook (removed).
+    four runs with a temporary hook (removed).
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
@@ -127,7 +129,9 @@ no facts of its own beyond those; each lives in one doc, and the
      key in the game's Customize Keys screen, and a movement key held into a
      menu and let go there, by [natives.md](docs/re/natives.md#lists);
      walking up to Tech Sergeant Kaplan on Liberty Island, by
-     [natives.md](docs/re/natives.md#named-troopers-get-the-generic-troopers-conversations-seen).
+     [natives.md](docs/re/natives.md#named-troopers-get-the-generic-troopers-conversations-seen);
+     logging in to a computer, a public computer's bulletins and reading a
+     datacube, by [natives.md](docs/re/natives.md#what-the-player-reads).
      The desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is
@@ -149,9 +153,14 @@ no facts of its own beyond those; each lives in one doc, and the
      unregistered `GetConfig`).
    - **Loading** a game does nothing (seen).
    - **Flags and lists** (read from the code): at most 64 flags, and none
-     expire; every list field reads as empty, so a computer shows only its
-     first email; no list row activates, so the Customize Keys screen cannot
-     rebind ([flags](docs/re/natives.md#flags), [lists](docs/re/natives.md#lists)).
+     expire; every list field reads as empty; no list row activates, so the
+     Customize Keys screen cannot rebind ([flags](docs/re/natives.md#flags),
+     [lists](docs/re/natives.md#lists)).
+   - **What the player reads** ([its section](docs/re/natives.md#what-the-player-reads);
+     read from the code and the texts, the fork's parser run on eight): no
+     computer lists an email, and no bulletin opens; in most books,
+     datacubes and emails the designers' comments show, words beside a tag
+     run together, and blank lines and centring are gone.
    - **Conversations** ([conversations](docs/re/natives.md#conversations)):
      the fork deletes comment events, and 11 jumps go to a comment's label,
      so their conversations end early (read from the code and the data).
@@ -159,8 +168,8 @@ no facts of its own beyond those; each lives in one doc, and the
      can leave Max Chen unconvinced and the raid on the Lucky Money unstarted.
      Named troopers get the generic trooper's conversations before their own
      (seen on Liberty Island).
-   - **Next on it:** DeusExText, the books and datacubes
-     ([the binaries](docs/re/README.md#the-binaries)). The owner opens each
-     DLL in IDA (a new database beside it, in the window the bridge serves);
-     it gets the three scripts. `Render.dll` has what `Engine.dll` leaves to
-     it: the render iterators' loop, and likely what keeps `LastRenderTime`.
+   - **Next on it:** `Render.dll`, where a feature's drawing lives there
+     ([the binaries](docs/re/README.md#the-binaries)): what `Engine.dll`
+     leaves to it, the render iterators' loop, and likely what keeps
+     `LastRenderTime`. The owner opens it in IDA (a new database beside it,
+     in the window the bridge serves); it gets the three scripts.
