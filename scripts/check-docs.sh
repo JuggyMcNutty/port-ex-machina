@@ -34,7 +34,7 @@ ALLOW=(
     '^System/(Running\.ini|SE-DeusEx\.ini|SE-User\.ini|DeusExLauncher\.log)$'  # created at run time
     '^build/'                         # build output
     '^deps/'                          # fetched toolchains and sysroots
-    '^(Window|Launch|Core|Engine)/Inc/' # SDK headers inside reference/ReleaseSDK1112f/Headers/DxHeaders.zip
+    '^(Window|Launch|Core|Engine|DeusEx|DeusExText|Extension|ConSys)/Inc/' # SDK headers inside reference/ReleaseSDK1112f/Headers/DxHeaders.zip
     '^spruce/'                        # spruceOS on the device (/mnt/SDCARD/spruce/...)
     '^usr/'                           # device filesystem, named without its leading slash in tar lists
     '^Joy[A-Za-z0-9]*/'               # binding names written as alternatives: JoyX/JoyY

@@ -87,28 +87,10 @@ handheld: [its README](../ports/trimui-smartpro/README.md#performance).
 
 Where upstream has a Deus Ex native wrong or as a stub -- a stub logs
 `Unimplemented: <class>.<name>` the first time it runs in a session, and only
-then -- the original is in the game's `System/DeusEx.dll` and
-`System/Engine.dll`, 32-bit Windows code that `objdump` reads without IDA.
-Patch 0034 was read this way.
-
-- `objdump -p` lists the exports under their C++ names
-  (`?AICanSee@APawn@@QAEMPAVAActor@@MHHHH@Z`, and `?execAICanSee@...` for its
-  script entry); an `Engine.dll` export is a jump to the code, from
-  incremental linking, to follow. `objdump -d -M intel --start-address=...
-  --stop-address=...` gives the function, and its calls into `Core.dll`
-  resolve through the import table (`appAtan`, `FVector::Rotation`).
-- The `exec` function holds the defaults of the optional parameters: each is
-  set before its argument is read. Upstream's natives take them as
-  `std::optional`, and a default is not always false (`IsValidEnemy` checks
-  the alliance unless told not to).
-- The code reads fields at offsets from the object. After `UObject`'s 0x28
-  bytes a class's fields follow in the order the SDK declares them
-  (`EngineClasses.h`, `DeusExClasses.h`, in
-  `reference/ReleaseSDK1112f/Headers/DxHeaders.zip`; the same order as the
-  script source in the `.u` files): bools packed 32 to a dword, bytes packed,
-  the rest aligned to 4, an `FString` 12 bytes. Pin one field whose use is
-  plain and count from it; every other field the function reads should then
-  make sense.
+then -- the original is in the game's DLLs, and [`re/`](re/README.md) is what
+has been read of them: how to read them is
+[working on the binaries](re/README.md#working-on-the-binaries). Patch 0034
+was read this way.
 
 ## Upgrading Surreal Engine
 

@@ -7,11 +7,11 @@ writes the configuration the engine actually reads and then hands over to it.
 same on every port; what differs per device is in [`PORTING.md`](PORTING.md).
 
 It started from the original. `DeusEx.exe` was reverse-engineered first
-([`re/`](re/)), to have known behaviour to begin from, and the launcher kept
+([`re/launcher.md`](re/launcher.md)), to have known behaviour to begin from, and the launcher kept
 what still matters -- the `FirstRun` gates, the crash sentinel, the
 command-line parsing, the single-instance handoff. Its screens are new: most of
 the original's set things Surreal Engine never reads
-([what was kept and dropped](re/README.md#what-the-launcher-kept-and-dropped)).
+([what was kept and dropped](re/launcher.md#what-the-launcher-kept-and-dropped)).
 
 ## Where the settings actually live
 

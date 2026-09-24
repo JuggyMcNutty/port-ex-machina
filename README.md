@@ -53,7 +53,7 @@ Put the game files where the port's `launcher.ini` says (`GameDir`); a
 | [`docs/ENGINE.md`](docs/ENGINE.md) | the engine fork: how it is pinned and upgraded, running and profiling it, every patch |
 | [`docs/PORTING.md`](docs/PORTING.md) | how ports work, and how to add one |
 | `ports/<id>/README.md` | one device: status, what differs from linux-x86_64, measurements, what was verified |
-| [`docs/re/`](docs/re/) | the original `DeusEx.exe`, where the launcher began |
+| [`docs/re/`](docs/re/) | the original binaries: `DeusEx.exe`, where the launcher began, and the game's DLLs -- what their natives do, for the engine |
 
 ## Layout
 
@@ -67,9 +67,10 @@ src/ui/              SDL2 frontend: ui.c widgets, screens.c session + rows, tab_
 src/app.c            the launcher's sequence, shared by both front ends
 src/main.c           deusex-launcher;  src/cli_main.c: dxl-cli, the same sequence with no display
 tests/               host unit tests -- no display needed
-tools/               shots.c (dxl-shots: every screen as .bmp), probes/ (device probes)
+tools/               shots.c (dxl-shots: every screen as .bmp), probes/ (device probes),
+                     ida/ (IDA types from the game's script)
 engine-patches/      the engine fork as patches over a pinned upstream commit
-docs/                LAUNCHER, ENGINE, PORTING, DEVELOPMENT; re/ (the original DeusEx.exe)
+docs/                LAUNCHER, ENGINE, PORTING, DEVELOPMENT; re/ (the original DeusEx.exe and DLLs)
 scripts/             dx.sh, engine.sh, check-abi.sh, check-docs.sh, host-tools.sh, lib/common.sh,
                      sample-report.py (CPU samples from a device without perf)
 ports/common/        the base app every port ships unless it overrides it: run-game.sh, defaults

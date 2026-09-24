@@ -107,7 +107,7 @@ Device-specific ones are in each port's README. These apply everywhere:
   ([the Smart Pro's Performance](../ports/trimui-smartpro/README.md#performance)).
 - **Deus Ex's UnrealScript source is embedded in `System/DeusEx.u`**: search it
   before guessing what the game's script does
-  ([working on the binary](re/README.md#working-on-the-binary)).
+  ([working on the binaries](re/README.md#working-on-the-binaries)).
 - **CMake build directories cannot move.** Their caches hold absolute paths;
   after moving the tree, delete `build/` and rebuild.
 - **The profiling hooks go off before changing the engine**: a commit made with
