@@ -101,8 +101,8 @@ commands and showed three of these. The rest is read from the code:
     of the mission's other maps.
   - The `SaveInfo` has no picture, play time, save count or cheats flag.
   - Its date is wrong. `UpdateTimeStamp` counts the year from 1900 and the
-    month from 0, so the load list shows year 126, and sorts the fork's saves
-    before the original's.
+    month from 0, so a load list would show year 126 and, sorting by date,
+    put the fork's saves before the original's.
 - **The Save Game screen** stops the game, by the code
   ([`GetConfig`](#stops-the-game)).
 - **The Load Game screen** lists no save.
@@ -311,9 +311,9 @@ list differs in more than its stubs:
 - **No row is activated.** The fork counts every click as one and never sends
   `ListRowActivated`, for a double click or for Enter. The game's Customize
   Keys screen starts rebinding a key only that way, so no key can be rebound
-  there (read from the code, to check by hand). The load, save and new game
+  there (read from the code, to check by hand). The load and new game
   screens and a hacked computer's accounts have buttons for what a double
-  click does.
+  click does, and the save screen does it on a single click.
 - **No key moves in a list.** `MoveRow` is a stub, and the list's script sends
   it the arrow keys, Page Up and Down, Home and End. A pad whose d-pad is
   mapped to the arrows cannot move through a list either.

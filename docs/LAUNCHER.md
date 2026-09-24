@@ -56,6 +56,12 @@ So:
 
 A home screen with four tabs, switched with L1/R1; START launches from any tab.
 
+An install without the game's files gets one screen in its place
+(`core/install.c`): the game folder, and whether each of `System`, its
+`DeusEx.u`, `Engine.u` and `Core.u`, `Textures/Palettes.utx` and `Maps` is
+there, with Check again and Exit. With the files in, Check again opens the
+home screen.
+
 | Tab | Contents |
 | --- | --- |
 | Play | Play / Quit; what will happen (renderer and GPU, controller and layout, game folder); a crash banner quoting the engine's last error when `Running.ini` survived; notes when the launcher repaired `DeusEx.ini` or changed the pad layout |
@@ -125,8 +131,9 @@ PageUp/PageDown (or `,`/`.`/Tab), P/F5, Escape/Q (`ui/ui.c`).
 **In the game** ([engine patch 0003](ENGINE.md#running-on-our-devices)): the SDL2
 backend exposes the pad as polled state; `GamepadInput` turns it into the UE1
 joystick keys and axes, so what each control does is ordinary `User.ini`
-`[Engine.Input]` bindings — the same table as the keyboard, editable in the
-game's key menu too.
+`[Engine.Input]` bindings — the same table as the keyboard, which the game's
+key menu edits. In the fork that menu cannot start a rebinding yet
+([lists](re/natives.md#lists)).
 
 - Buttons: A=`Joy1` B=`Joy2` X=`Joy3` Y=`Joy4` L1=`Joy5` R1=`Joy6`
   SELECT=`Joy7` START=`Joy8` L2=`Joy11` R2=`Joy12` (triggers count past half

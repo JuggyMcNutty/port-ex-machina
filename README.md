@@ -21,7 +21,7 @@ an open-source UE1 re-implementation, with patches we develop targeting differen
 | [`linux-aarch64`](ports/linux-aarch64/) | aarch64 devices with an ordinary distro | Builds not tested |
 | [`trimui-smartpro`](ports/trimui-smartpro/) | TrimUI Smart Pro, spruceOS | builds and runs; performance work in progress |
 | [`android`](ports/android/) | Android | planned |
-| [`xbox360`](ports/x360/) | Xbox 360 | planned |
+| [`x360`](ports/x360/) | Xbox 360 | planned |
 
 ## Quick start
 
@@ -74,7 +74,7 @@ engine-patches/      the engine fork as patches over a pinned upstream commit
 docs/                LAUNCHER, ENGINE, PORTING, DEVELOPMENT; re/ (the original DeusEx.exe and DLLs)
 scripts/             dx.sh, engine.sh, check-abi.sh, check-docs.sh, host-tools.sh, lib/common.sh,
                      sample-report.py (CPU samples from a device without perf)
-ports/common/        the base app every port ships unless it overrides it: run-game.sh, defaults
+ports/common/        packaging/: the base app every port ships unless it overrides it (run-game.sh, defaults)
 ports/<port>/        one device: see docs/PORTING.md
 
 build/               (ignored) build/<port>/{launcher,engine,app}
