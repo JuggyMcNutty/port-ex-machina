@@ -27,6 +27,9 @@
 #   map      default 01_NYC_UNATCOIsland.dx (Liberty Island). The engine only
 #            takes --url=<map>; "-u <map>" silently loads the default map.
 #
+# The engine runs with the device's own Settings.json, and the log's settings:
+# line records its Distant AI and render scale.
+#
 # SURREAL_PERF_DETAIL=1 in the environment adds tick by actor class and script
 # functions by self time; those hooks slow what they measure. SAMPLE=1 samples
 # the main thread's CPU every millisecond into /tmp/dxl-test/samples-<label>

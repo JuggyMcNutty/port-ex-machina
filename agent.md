@@ -5,7 +5,7 @@ no facts of its own beyond those; each lives in one doc, and the
 [README's table](README.md#documentation) says which. Before working, read
 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
-## State (2026-09-23)
+## State (2026-09-24)
 
 - **The repository** is on `main`, public at
   https://github.com/JuggyMcNutty/port-ex-machina. Its history was rewritten

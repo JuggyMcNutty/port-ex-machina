@@ -112,3 +112,7 @@ Device-specific ones are in each port's README. These apply everywhere:
   after moving the tree, delete `build/` and rebuild.
 - **The profiling hooks go off before changing the engine**: a commit made with
   them on carries them ([the profiling hooks](ENGINE.md#the-profiling-hooks)).
+- **An unattended run tests no AI.** Liberty Island starts the player 7,000 to
+  20,000 units from every NSF, and no NPC reacts to a player it cannot see: to
+  check AI on the desktop, move the player in front of one with a temporary
+  hook.

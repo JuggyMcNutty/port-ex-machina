@@ -64,8 +64,10 @@ A home screen with four tabs, switched with L1/R1; START launches from any tab.
 | System | Last run (from `run-game.log`), the engine log on screen, clear crash marker, reset video / controls / game configuration (each confirmed first), game files, version |
 
 Every row has a line of help that says what it changes in the engine, not its
-name again. The rows are a table (`ui/screens_internal.h` `dxl_row`); drawing,
-scrolling, the help pane and button hints are written once in `ui/screens.c`.
+name again; a row whose choices differ in kind (CPU mode, Distant AI, Lighting,
+Gamma curve) says what the one it is on does. The rows are a table
+(`ui/screens_internal.h` `dxl_row`); drawing, scrolling, the help pane and
+button hints are written once in `ui/screens.c`.
 
 **Renderers** (`core/renderers.c`, `platform/posix/gpu_probe.c`). Two facts decide
 whether one can be chosen, and the picker shows both: whether the *engine build*
@@ -157,7 +159,8 @@ round-trip on the shipped files; the three command-line parsers including the
 `appStrfind` surprises; the entry matrix; config seeding, stub repair and the
 `SE-` file targeting; the JSON model and `Settings.json` rules (corrupt file
 replaced, every member written, choices validated, a member an older file
-lacks taken from the packaged default, the render resolutions offered);
+lacks taken from the packaged default, the render resolutions offered and the
+exact scale each is kept as);
 renderer resolution and the PowerVR MSAA rule; layouts, per-button remapping
 and retired-layout detection; argv construction for the exec; the device
 profiles -- the generic one, and each port's checked against its own

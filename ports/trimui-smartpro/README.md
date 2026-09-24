@@ -9,8 +9,8 @@ the spruceOS menu starts.
 
 The launcher and the engine both run on the device, and the game plays. It is
 not yet as fast as the target set for it: [Performance](#performance) has the
-numbers, and [`agent.md`](../../agent.md#decided) the target and the order of
-the work.
+numbers, and [`agent.md`](../../agent.md#decided) the target and the work
+toward it.
 
 ## Build and run
 
@@ -228,7 +228,7 @@ a PC.
 | The ports framework (2026-09-22) | `dx.sh deploy` put exactly the staged files on the device (checksums); `dxl-cli --dry-run --probe` ran there; the shared `run-game.sh` with this port's hooks started the out-of-tree engine build, the intro rendered at 31 FPS, and the CPU mode was applied and restored |
 | Deploy with checksums (2026-09-22) | `dx.sh deploy` built and staged, sent only the one changed file, kept the device's copy in `.prev-<date-time>` and verified all 13 files; `profile-map.sh` applied `launcher.ini`'s Overclock (four cores, 2.0 GHz) through `port-hooks.sh` and restored power-save after |
 | Engine upgraded to upstream `af860b3` (2026-09-23) | The fight runs and renders as before (framebuffer captures, with and without the profiling hooks); its log is the same as before apart from timings, and Distant AI's tallies match. On the desktop, Liberty Island's log was the same as the build before the upgrade, and synchronization validation was clean on both texture paths |
-| Engine patches 0004–0027 (2026-09-22/23) | Each one's check on this device -- the fight runs, framebuffer captures against the ones before it -- is with the patch in [`docs/ENGINE.md`](../../docs/ENGINE.md#what-the-fork-changes) |
+| Engine patches 0004–0034 (2026-09-22/24) | The fight runs with each on this device; each one's check -- framebuffer captures against the ones before it, from 0028 the actor-state hash on the desktop, for 0034 an NSF turning on the player there -- is with the patch in [`docs/ENGINE.md`](../../docs/ENGINE.md#what-the-fork-changes) |
 
 Verified with the earlier wizard build, on code paths unchanged since: install
 validation naming each missing file; `Running.ini` created at commit and
@@ -237,9 +237,11 @@ surviving to the next launch; the same sentinel with a live instance forwarding
 instead; the `FirstRun=500` clamp rewriting the ini with all 25 sections intact
 and no line losing its CR.
 
-Not yet exercised on hardware: the tabs by hand beyond the owner's first
-session; the Customize buttons screen; the retired-layout upgrade being written
-out; `DXL_NO_HOME=1`; the messenger half of the single-instance handoff.
+Used on the device since, as its launcher log records, and not yet reported
+on: the Customize buttons screen (seven bindings changed), the retired-layout
+upgrade written out, the CPU mode and Resolution chosen on the Video tab, the
+crash marker cleared on the System tab. Not yet exercised on hardware:
+`DXL_NO_HOME=1`; the messenger half of the single-instance handoff.
 
 ## Performance
 
@@ -349,7 +351,7 @@ script VM several times faster.
     work, but a wait on memory for each actor's state frame, state and class.
   - Pawns out of view think every third frame, every sixth beyond 4000 units
     (Distant AI).
-- **Render CPU ~57 ms** besides waits, lightmaps and uploads:
+- **Render CPU ~55 ms** besides waits, lightmaps and uploads:
   - visibility ~16 ms (~21 before patches 0020–0021; ~19 with the profile's
     per-part timers): the BSP walk,
     ~3,800 box tests and ~2,400 surface tests a frame against `BspClipper`'s
@@ -357,12 +359,12 @@ script VM several times faster.
     lists (`BspClipper::DrawSpan` ~3), triangle set-up and rasterising (~3.5),
     the BSP walk itself (`ProcessNode`/`ProcessNodeSurface` ~5, cache misses)
     and box tests (~2);
-  - actor meshes ~12 ms for ~40 in view: the per-vertex work (~8, lighting most
+  - actor meshes ~11 ms for ~40 in view: the per-vertex work (~8, lighting most
     of it) and the device's set-up per run of faces;
   - BSP surfaces ~8 ms for ~580 nodes, mostly each surface's lightmap lookup
     (`LightSystem::GetLightmap`, ~3 of self time);
-  - translucent 5.2; the sky portal 3.1; BSP set-up (`bsp-info`) 2.8; the end
-    of the frame (`unlock`) 2.3; `PostRenderFlash` (script) 1.6; the rest ~2.
+  - translucent 5.1; the sky portal 3.1; BSP set-up (`bsp-info`) 2.8; the end
+    of the frame (`unlock`) 2.2; `PostRenderFlash` (script) 1.6; the rest ~2.
 - **Lightmaps ~4 ms, texture uploads ~2 ms.** One `BarrelFire`, a dynamic light
   with the fire waver effect, has ~8 lightmaps rebuilt every frame, and each
   goes back to the GPU whole, converted from float on the CPU (the GE8300
@@ -373,11 +375,10 @@ script VM several times faster.
   plus the render's wait for it. Drawing alongside the tick cost the tick ~20
   ms: CPU and GPU compete for the SoC's shared memory. With the tick the
   shorter of the two, the render waits for the GPU at its start: ~3 ms after
-  patch 0018, ~26 after 0030–0032. Render CPU and `view+audio` grew ~1–1.5 ms
-  each from patch 0015 on. At 853×480 none of that happens, and the tick itself
-  is shorter there, from the GPU's lighter memory traffic: ~8 ms after patch
-  0029, ~2 after 0030–0032, whose collision work was the part that waited on
-  memory. `view+audio` is mostly `USurrealAudioDevice::StartAmbience`, which
+  patch 0018, ~24 now. Render CPU and `view+audio` grew ~1–1.5 ms each from
+  patch 0015 on. At 853×480 none of that happens, and the tick itself is
+  shorter there, from the GPU's lighter memory traffic: ~8 ms after patch 0029,
+  ~3 now -- 0030–0032's collision work was the part that waited on memory. `view+audio` is mostly `USurrealAudioDevice::StartAmbience`, which
   reads every actor's `AmbientSound` each frame (~2 ms).
 
 An OpenGL ES backend is not expected to help: the CPU is most of the frame.
