@@ -315,16 +315,23 @@ With 0013, these took the Smart Pro's script time from ~125 ms a frame to
   trace its dry run made. **Smart Pro:** tick ~56 → ~53 ms.
 - [**0030**](../engine-patches/0030-ray-plane-tests-first.patch)
   `ray-plane-tests-first` -- a ray tests a polygon's plane before reading its
-  vertex count and surface, which lie on other cache lines. **Smart Pro:** not
-  yet measured.
+  vertex count and surface, which lie on other cache lines. **Smart Pro:** the
+  sight rays' polygon tests (`NodeRayIntersect`) ~3.3 → ~1.9 ms.
 - [**0031**](../engine-patches/0031-collision-cell-table.patch)
   `collision-cell-table` -- each collision cell's actors found in an
   open-addressed table and kept in an array, not a `std::unordered_map` of
-  `std::list`s. **Smart Pro:** not yet measured.
+  `std::list`s. **Smart Pro:** the traces' walk of the cells
+  (`TraceTester::Trace`) ~1.4 → ~0.5 ms, and ~0.3 in the new `FindCell`.
 - [**0032**](../engine-patches/0032-collision-move-overheads.patch)
   `collision-move-overheads` -- a move asks once per actor whether it is a
   player or a projectile, and traces sort and sift their hits without heap
-  allocations. **Smart Pro:** not yet measured.
+  allocations. **Smart Pro:** `dynamic_cast` in the tick ~2.9 → ~1.5 ms;
+  `TraceTexture`, which collects every hit along a laser beam, ~1.9 → ~0.8
+  (0030's share included).
 
-0030–0032 were each checked with the actor-state hash on Liberty Island and
-UNATCO HQ (their messages say how).
+0030–0032 were measured on the Smart Pro together: tick ~50 → ~39 ms, the
+collision traces ~12 → ~8 ms a frame. The render CPU fell ~2.5 ms as well,
+which they do not touch, so part of the tick's drop may be the device's state
+too ([the fight, patch by patch](../ports/trimui-smartpro/README.md#the-fight-patch-by-patch)).
+Each was checked with the actor-state hash on Liberty Island and UNATCO HQ
+(their messages say how).

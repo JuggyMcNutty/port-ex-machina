@@ -283,10 +283,18 @@ columns were measured at some steps only; its GPU wait stayed ~0.2 ms throughout
 | 0027 | 7.3 | ~136 | ~53 | ~78 | ~14 | 9.3 | ~108 | ~44 | ~61 |
 | upstream `af860b3` | 7.3 | ~137 | ~55 | ~78 | ~13 | 9.2 | ~108 | ~45 | ~61 |
 | 0028 | 7.3 | ~137 | ~51 | ~81 | ~16 | 9.4 | ~106 | ~43 | ~60 |
-| **0029** | **7.3** | **~136** | **~50** | **~82** | **~17** | **9.5** | **~105** | **~42** | **~61** |
+| 0029 | 7.3 | ~136 | ~50 | ~82 | ~17 | 9.5 | ~105 | ~42 | ~61 |
+| **0030–0032** | **7.6** | **~131** | **~39** | **~88** | **~26** | **10.3** | **~97** | **~37** | **~58** |
 
 The upgrade to upstream `af860b3` (2026-09-23) measured the same as 0027 within
-the noise. After 0009, 960×540 (render scale 0.75) measured 4.7 FPS, ~214 ms, tick ~94,
+the noise. Patches 0030–0032 were measured together, on a device booted an
+hour and a half earlier. Their own functions account for about half of the
+tick's drop (the collision traces ~12 → ~8 ms a frame), and the render CPU
+besides its waits fell too, ~64.5 → ~62 ms at native and ~61 → ~58 at 853×480,
+a little in nearly every section. These patches do not touch the renderer, and
+from 0027 to 0029 its sections held to 0.1 ms, so part of the change may be the
+device's state or the engine's heap layout rather than the patches: a run of
+the 0029 build on the same boot would tell. After 0009, 960×540 (render scale 0.75) measured 4.7 FPS, ~214 ms, tick ~94,
 render CPU ~118. From patch 0013 on, the hooks build with frame pointers for
 the sampling profiler, which costs ~1%: patch 0012 measured 5.4 FPS without
 them and 5.3 with. From patch 0018 on, native resolution is held back by the
@@ -296,51 +304,53 @@ Indoors, UNATCO HQ runs at ~20 FPS.
 
 ### Where a frame goes
 
-At native resolution, facing the fight in overclock (~136 ms). The GPU draws
+At native resolution, facing the fight in overclock (~131 ms). The GPU draws
 the previous frame while the game tick runs (engine patch 0004), and the tick
 is now the shorter of the two, so **a frame is about the GPU's time plus the
 render CPU**: render-CPU savings count in full, and tick savings hardly at all
 (patch 0022 took ~2.6 ms off the tick and ~0.7 off the frame). At 853×480 the
 frame is the CPU's work, and both count. Reaching ~20 FPS (~50 ms) at native
-resolution therefore also needs the GPU's ~72 ms under ~50, and it needs the
+resolution therefore also needs the GPU's ~68 ms under ~50, and it needs the
 script VM several times faster.
 
-- **Game tick ~50 ms**, almost all NPCs. The device's CPU samples split it:
-  - ~19 ms under script calls, ~10 of which is the interpreter's own work
+- **Game tick ~39 ms**, almost all NPCs. The device's CPU samples split it:
+  - ~15 ms under script calls, ~9 of which is the interpreter's own work
     (the self time of `ExpressionEvaluator`, `Frame` and `ExpressionValue`;
     ~14 before patches 0028–0029) over ~10,000 VM calls a frame: statements
     (`Frame::Run` ~2), the expressions the typed and leaf paths do not cover
     (`ExpressionEvaluator::Value`, `Expr`), calls (`ExpressionEvaluator::Call`,
     `Frame::Call`, `CallScript`, `CallFastOperator`), the typed evaluators
-    themselves (~3). ~8 is the natives the scripts call, ~4 of that AI
-    sight traces (`CanSee`, `FastTrace`), ~2.4 `FindPathToward`, ~1.9
-    `TraceTexture`: a script VM with no cost of its own would take script
-    time down by about half, not more.
+    themselves (~2.6). The other ~5 is the natives the scripts call,
+    `FindPathToward` ~1.9 and `TraceTexture` ~0.8 the largest: a script VM
+    with no cost of its own would take script time down by about three
+    fifths, not more.
     `ScriptedPawn.CheckEnemyPresence` is still the costliest script function.
     Most of the interpreter's time is now the Cortex-A53 waiting on memory
     for each expression node. Next in the structure: calls without an
     `ExpressionValue` per argument; beyond that, a denser form of the code
     itself.
-  - ~6 ms of physics, mostly box sweeps for walking pawns (`TryMove`,
-    `TryStepToGround`). With the sight traces, ~13.5 ms of collision traces
-    in all, through `TraceAABBModel` and `TraceRayModel` (~21 before patches
-    0025–0027). Left, as measured before patches 0030–0032 (not yet measured
-    after them): the sight rays' polygon tests (`NodeRayIntersect` ~3.7), the
-    box sweeps' BSP walk (`TraceAABBModel::Trace` ~3.1, ~380 short sweeps a
-    frame, ~20 nodes each), the actor passes (~2.4, a third of it looking up
-    grid cells), and two `dynamic_cast`s a move. `TraceTexture` is ~1.9 of
-    it: `LaserEmitter.CalcTrace` traces each laser beam 5,000 units for
-    every one of its reflection points every tick, collecting every hit
-    along the way, and the player's floor and wall materials are two more
-    traces a frame.
+  - ~8 ms of physics (`TickPhysics`), mostly walking pawns: the step to the
+    ground (`TryStepToGround` ~4.4) and the move (`TryMove` ~2.1).
+  - ~3 ms of the AI's sight checks, from the pawns' own tick, not from
+    script (`UPawn::Tick` → `CanSee` → `FastTrace`).
+  - Across those three, ~7 ms of collision traces, ~8 a frame in all (~12
+    after patch 0029 by the same count), through `TraceAABBModel` and
+    `TraceRayModel`. Left: the box sweeps' BSP walk (`TraceAABBModel::Trace`
+    ~2.8, ~380 short sweeps a frame, ~20 nodes each), the sight rays' polygon
+    tests (`NodeRayIntersect` ~1.9), and the actor passes (~1.4, over a third
+    of it the `dynamic_cast` asking whether each actor is a mover).
+    `TraceTexture` is ~0.8 of it:
+    `LaserEmitter.CalcTrace` traces each laser beam 5,000 units for every one
+    of its reflection points every tick, collecting every hit along the way,
+    and the player's floor and wall materials are two more traces a frame.
   - ~12 ms of per-actor work around the scripts for the level's ~2,500 actors
-    (`ULevel::TickActor`, animation, event lookups). ~1.6 of it is
+    (`ULevel::TickActor`, animation, event lookups). ~1.5 of it is
     `UObject::IsEventEnabled` asking whether to send each actor `Tick`: little
     work, but a wait on memory for each actor's state frame, state and class.
   - Pawns out of view think every third frame, every sixth beyond 4000 units
     (Distant AI).
-- **Render CPU ~59 ms** besides waits, lightmaps and uploads:
-  - visibility ~16 ms (~21 before patches 0020–0021; ~20 with the profile's
+- **Render CPU ~57 ms** besides waits, lightmaps and uploads:
+  - visibility ~16 ms (~21 before patches 0020–0021; ~19 with the profile's
     per-part timers): the BSP walk,
     ~3,800 box tests and ~2,400 surface tests a frame against `BspClipper`'s
     occlusion grid, portal tests, actor set-up. Spread over the clipper's span
@@ -351,22 +361,24 @@ script VM several times faster.
     of it) and the device's set-up per run of faces;
   - BSP surfaces ~8 ms for ~580 nodes, mostly each surface's lightmap lookup
     (`LightSystem::GetLightmap`, ~3 of self time);
-  - translucent 5.3; the sky portal 3; BSP set-up (`bsp-info`) 2.9; the end of
-    the frame (`unlock`) 2.3; `PostRenderFlash` (script) 1.9; the rest ~2.
+  - translucent 5.2; the sky portal 3.1; BSP set-up (`bsp-info`) 2.8; the end
+    of the frame (`unlock`) 2.3; `PostRenderFlash` (script) 1.6; the rest ~2.
 - **Lightmaps ~4 ms, texture uploads ~2 ms.** One `BarrelFire`, a dynamic light
   with the fire waver effect, has ~8 lightmaps rebuilt every frame, and each
   goes back to the GPU whole, converted from float on the CPU (the GE8300
   cannot filter RGBA32F; engine patch 0002; in NEON since 0024), though only
   the rows its lights reach changed.
-- **GPU ~72 ms** at native resolution -- ~76 when last measured directly, as a
-  wait, before patch 0004; now the input, tick and view plus the render's wait
-  for it. Drawing alongside the tick cost the tick ~20 ms: CPU and GPU compete
-  for the SoC's shared memory. With the tick the shorter of the two, the render
-  waits ~3–14 ms for the GPU at its start (patch 0018 on), and render CPU and
-  `view+audio` grew ~1–1.5 ms each from patch 0015 on. At 853×480 none of that
-  happens, and the tick itself is ~11 ms shorter there, from the GPU's lighter
-  memory traffic. `view+audio` is mostly `USurrealAudioDevice::StartAmbience`,
-  which reads every actor's `AmbientSound` each frame (~2 ms).
+- **GPU ~68 ms** at native resolution (~72 after patch 0029) -- ~76 when last
+  measured directly, as a wait, before patch 0004; now the input, tick and view
+  plus the render's wait for it. Drawing alongside the tick cost the tick ~20
+  ms: CPU and GPU compete for the SoC's shared memory. With the tick the
+  shorter of the two, the render waits for the GPU at its start: ~3 ms after
+  patch 0018, ~26 after 0030–0032. Render CPU and `view+audio` grew ~1–1.5 ms
+  each from patch 0015 on. At 853×480 none of that happens, and the tick itself
+  is shorter there, from the GPU's lighter memory traffic: ~8 ms after patch
+  0029, ~2 after 0030–0032, whose collision work was the part that waited on
+  memory. `view+audio` is mostly `USurrealAudioDevice::StartAmbience`, which
+  reads every actor's `AmbientSound` each frame (~2 ms).
 
 An OpenGL ES backend is not expected to help: the CPU is most of the frame.
 
@@ -396,7 +408,11 @@ With the frame-time instrumentation in
 `scripts/dx.sh profile trimui-smartpro [seconds] [label] [cpu] [turn] [map]`.
 The script applies the CPU mode `launcher.ini` names, through the app's own
 `port-hooks.sh`, so a profile measures what playing gets; its header lists the
-arguments. It splits a map's frame time into input, tick, render CPU, GPU
+arguments. It runs with the engine settings the device has, and the log
+records its Distant AI and render scale: the fight's rows above are Distant AI
+on, at `RenderScale` 1 and 0.6666667 (853×480), set in the device's
+`Settings.json` for the run and put back afterwards when the owner's differ.
+It splits a map's frame time into input, tick, render CPU, GPU
 wait, lightmaps and texture uploads; the render CPU by section, and the
 visibility pass by part; the time under script calls. The whole log comes back
 to `build/trimui-smartpro/profile/perf-<label>.log`, and `SHOT=<seconds>`

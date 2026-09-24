@@ -21,9 +21,10 @@ no facts of its own beyond those; each lives in one doc, and the
   app ran the engine into the intro level on the development PC.
 - **trimui-smartpro**: the game runs; the performance work is in progress
   ([its Performance](ports/trimui-smartpro/README.md#performance)). The device
-  has every patch up to 0029, Overclock, Distant AI on, native resolution.
-  Patches 0030–0032 are not yet measured on it. It has no battery (its
-  battery warnings are off: [its Gotchas](ports/trimui-smartpro/README.md#gotchas)).
+  has every patch up to 0032 in a build with the profiling hooks, Overclock,
+  native resolution; Distant AI was off in its settings on 2026-09-23 (the
+  fight's profiles turn it on for the run). It has no battery (its battery
+  warnings are off: [its Gotchas](ports/trimui-smartpro/README.md#gotchas)).
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
@@ -55,9 +56,9 @@ no facts of its own beyond those; each lives in one doc, and the
      its own time is mostly the Cortex-A53 waiting on memory for each
      expression node: only a denser, compiled form of each function's code
      would change that -- a rewrite of the evaluator's core. Even with no cost
-     of its own, script time would only about halve: the natives the scripts
-     call are the rest. Smaller: calls without an `ExpressionValue` per
-     argument.
+     of its own, script time would only fall by about three fifths: the
+     natives the scripts call are the rest. Smaller: calls without an
+     `ExpressionValue` per argument.
    - **Per-actor work** around the scripts, `IsEventEnabled` among it.
    - **The audio update's scan** of every actor for an ambient sound.
    - **Actor meshes** (0018–0019 so far): the per-vertex work itself.

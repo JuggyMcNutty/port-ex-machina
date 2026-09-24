@@ -56,6 +56,8 @@ if [ "$MODE" = "launcher" ]; then
 fi
 C=/sys/devices/system/cpu
 echo "cpu: online=$(cat $C/online) gov=$(cat $C/cpu0/cpufreq/scaling_governor) max=$(cat $C/cpu0/cpufreq/scaling_max_freq) map=$MAP" >> $OUT
+# The engine runs with the device's own Settings.json: record what changes the frame.
+echo "settings: $(grep -E '"(AiLevelOfDetail|RenderScale)"' $APPDIR/home/.config/SurrealEngine/Settings.json | tr -d ' ",' | tr '\n' ' ')" >> $OUT
 cd /mnt/SDCARD/Roms/PORTS/DeusEx || exit 1
 export HOME=$APPDIR/home
 export LD_LIBRARY_PATH=$APPDIR:/usr/trimui/lib:/usr/lib:/lib
@@ -74,4 +76,4 @@ kill -9 $PID 2>/dev/null
 sleep 1
 echo "engines left: $(pidof SurrealEngine | wc -w)" >> $OUT
 cpu_after
-grep -E "^cpu|^perf:|engines left" $OUT
+grep -E "^cpu|^settings|^perf:|engines left" $OUT
