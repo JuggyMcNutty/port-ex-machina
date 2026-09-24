@@ -710,8 +710,9 @@ TCP, Join LAN's `DeusExLocalLink` listens over UDP, and `DeusExServerPing`
 queries each server over UDP. The master server is `MasterServerAddress`
 under `[DeusEx.MenuScreenJoinGame]` in `DeusEx.ini`; the GOG build's names
 GameSpy's, which closed in 2014. The original's protocol is
-[the network](network.md); `IpDrv.dll`'s sockets are not read yet
-([the reading](../../agent.md#decided)).
+[the network](network.md), its sockets [`IpDrv.dll`](ipdrv-dll.md); its
+`Validate` answers a master server with a key of six spaces for Deus Ex, where
+the fork's gives nothing.
 
 ## Not needed for single player
 

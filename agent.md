@@ -34,15 +34,17 @@ no facts of its own beyond those; each lives in one doc, and the
   binary read, and an IDA database gets three scripts from `tools/ida/`
   (types, strings, names).
   - **`DeusEx.dll`**, **`Engine.dll`**, **`Core.dll`**, **`Extension.dll`**,
-    **`ConSys.dll`**, **`DeusExText.dll`** and **`Render.dll`**, the last
-    where a feature's drawing lives there, and its mesh detail and lighting
+    **`ConSys.dll`**, **`DeusExText.dll`**, **`Render.dll`** -- where a
+    feature's drawing lives there, and its mesh detail and lighting -- and
+    **`IpDrv.dll`**
     ([`deusex-dll.md`](docs/re/deusex-dll.md),
     [`engine-dll.md`](docs/re/engine-dll.md),
     [`core-dll.md`](docs/re/core-dll.md),
     [`extension-dll.md`](docs/re/extension-dll.md),
     [`consys-dll.md`](docs/re/consys-dll.md),
     [`deusextext-dll.md`](docs/re/deusextext-dll.md),
-    [`render-dll.md`](docs/re/render-dll.md)); their databases are typed,
+    [`render-dll.md`](docs/re/render-dll.md),
+    [`ipdrv-dll.md`](docs/re/ipdrv-dll.md)); their databases are typed,
     named and backed up.
   - **What Surreal lacks** of them is [`docs/re/natives.md`](docs/re/natives.md),
     from [`tools/natives_audit.py`](tools/natives_audit.py), five map runs and
@@ -129,9 +131,9 @@ no facts of its own beyond those; each lives in one doc, and the
        sounds win when the channels run out.
      - **`Engine.dll`'s unread natives** (read: [traces](docs/re/engine-dll.md#traces),
        [moving](docs/re/engine-dll.md#moving), [small](docs/re/engine-dll.md#small)).
-     - **`Engine.dll`'s network code** (read: [the network](docs/re/network.md))
-       **and `IpDrv.dll`** (no database yet), for multiplayer (decided 5): the
-       net driver's UDP, the scripts' sockets and the master server.
+     - **`Engine.dll`'s network code and `IpDrv.dll`**, for multiplayer
+       (decided 5; read: [the network](docs/re/network.md),
+       [`IpDrv.dll`](docs/re/ipdrv-dll.md)).
    - **Only if a need comes up**: `D3DDrv.dll` (how the original looks:
      gamma, lightmap brightness, fog, detail textures), `SoftDrv.dll` (a
      software renderer, decided 3), `Fire.dll` (fire, water and ice
@@ -142,8 +144,7 @@ no facts of its own beyond those; each lives in one doc, and the
    a master server, and co-op is to be added one day; neither is scheduled.
    The fork has none of it ([multiplayer](docs/re/natives.md#multiplayer));
    the original's protocol is Unreal Tournament's
-   ([the network](docs/re/network.md)), and `IpDrv.dll` is still to be read
-   (decided 4).
+   ([the network](docs/re/network.md), [`IpDrv.dll`](docs/re/ipdrv-dll.md)).
 
 ## Open decisions
 
