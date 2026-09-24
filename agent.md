@@ -16,7 +16,10 @@ no facts of its own beyond those; each lives in one doc, and the
 - **The engine** is pinned at `engine-patches/UPSTREAM-BASE.txt` plus the
   patches in `engine-patches/`: upstream's latest when last upgraded
   (2026-09-23). Whether and when to take in newer upstream commits
-  (`scripts/engine.sh status`, then `upgrade`) is the owner's call.
+  (`scripts/engine.sh status`, then `upgrade`) is the owner's call. The
+  fork's tree has the profiling hooks on (uncommitted), and the desktop build
+  was built from it (2026-09-24): `scripts/engine.sh perf off` before changing
+  the engine.
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
   app ran the engine into the intro level on the development PC.
 - **trimui-smartpro**: the game runs; the performance work is in progress
@@ -27,11 +30,14 @@ no facts of its own beyond those; each lives in one doc, and the
   native for the run. It has no battery (its battery
   warnings are off: [its Gotchas](ports/trimui-smartpro/README.md#gotchas)).
 - **The game's DLLs** are being reverse-engineered (from 2026-09-24):
-  [`docs/re/`](docs/re/README.md) covers every binary, IDA databases get the
-  game's class layouts from [`tools/ida/ue1_types.py`](tools/ida/ue1_types.py),
-  and `DeusEx.dll`'s is typed. What Surreal lacks of them is
-  [`docs/re/natives.md`](docs/re/natives.md), from
-  [`tools/natives_audit.py`](tools/natives_audit.py) and five map runs.
+  [`docs/re/`](docs/re/README.md) covers every binary, and an IDA database gets
+  three scripts from `tools/ida/` (types, strings, names).
+  - **`DeusEx.dll`** is read ([`deusex-dll.md`](docs/re/deusex-dll.md)); its
+    database is typed, named and backed up.
+  - **Engine, Core, Extension, ConSys and DeusExText** are not read yet.
+  - **What Surreal lacks** of them is [`docs/re/natives.md`](docs/re/natives.md),
+    from [`tools/natives_audit.py`](tools/natives_audit.py), five map runs and
+    two runs with a temporary hook (removed).
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
@@ -80,6 +86,12 @@ no facts of its own beyond those; each lives in one doc, and the
    engine has. GLES means porting Surreal's desktop OpenGL 3.2 renderer (the
    Smart Pro's `renderers.ini` then needs only `EngineType=GLES`); Surreal has
    no software renderer at all.
+4. **Reverse-engineering the game's DLLs** (owner, 2026-09-24): all of
+   Deus Ex's -- DeusEx, Engine, Core, Extension, ConSys, DeusExText, and
+   Render.dll where a feature's drawing lives there -- documented in
+   [`docs/re/`](docs/re/README.md) as behaviour in our own words, never
+   decompiled code. Desktop engine runs as needed to see what fires in play.
+   IDA serves one database at a time: the owner opens the next DLL.
 
 ## Open decisions
 
@@ -96,8 +108,8 @@ no facts of its own beyond those; each lives in one doc, and the
    - On a desktop: `scripts/dx.sh run linux-x86_64`, the home screen driven
      into a game, a pad in game; opening Save Game (`GetConfig`) and Load
      Game (no save listed), by
-     [natives.md](docs/re/natives.md#saving-loading-and-travel). The desktop defaults (4x MSAA, VSync on) are
-     chosen by reasoning.
+     [natives.md](docs/re/natives.md#saving-loading-and-travel). The desktop
+     defaults (4x MSAA, VSync on) are chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is
    deliberately verbose for development; a final build needs a declutter pass,
@@ -117,6 +129,10 @@ no facts of its own beyond those; each lives in one doc, and the
      (seen with `QuickSave`). The Save Game screen does too, by the code (the
      unregistered `GetConfig`).
    - **Loading** a game does nothing (seen).
-   - **Next on it:** the rest of `DeusEx.dll`, then `Engine.dll` (AI events,
-     movement, render iterators) and the rest
+   - **Next on it:** `Engine.dll`. The owner opens
+     `gamefiles/System/Engine.dll` in IDA (a new database beside it); it gets
+     the three scripts; then its Deus Ex additions: the AI event manager and
+     the `AI*Event*` natives, `AICanHear`, `AIPickRandomDestination`,
+     `AIDirectionReachable`, `ReachablePathnodes`, render iterators, blend
+     animations. After it, Core, Extension, ConSys and DeusExText
      ([the binaries](docs/re/README.md#the-binaries)).

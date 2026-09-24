@@ -68,8 +68,8 @@ src/app.c            the launcher's sequence, shared by both front ends
 src/main.c           deusex-launcher;  src/cli_main.c: dxl-cli, the same sequence with no display
 tests/               host unit tests -- no display needed
 tools/               shots.c (dxl-shots: every screen as .bmp), probes/ (device probes),
-                     ida/ (IDA types from the game's script), natives_audit.py
-                     (the original's natives against the engine fork's)
+                     ida/ (IDA scripts: the game's types, strings, names),
+                     natives_audit.py (the original's natives against the fork's)
 engine-patches/      the engine fork as patches over a pinned upstream commit
 docs/                LAUNCHER, ENGINE, PORTING, DEVELOPMENT; re/ (the original DeusEx.exe and DLLs)
 scripts/             dx.sh, engine.sh, check-abi.sh, check-docs.sh, host-tools.sh, lib/common.sh,

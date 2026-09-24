@@ -9,12 +9,19 @@ Surreal registers some natives per game (`if (engine->LaunchInfo.IsDeusEx())`);
 the conditions are evaluated as Deus Ex 1112fm.
 
     python3 tools/natives_audit.py [--game DIR] [--engine DIR] [--tsv FILE]
-                                   [--runs LOG...]
+                                   [--runs LOG...] [--all]
 
-It prints the natives that are not simply implemented: stubs, partial ones
-(some code, or code compiled out with `#if 0`), empty bodies, iterators that make no iterator (a foreach over one stops the
-game), and the declared ones nothing registers (a call to one stops it too). --runs takes engine
-logs and adds which stubs fired, and where from. The judgement the listing
+It prints a tally per package, then the natives that are not simply
+implemented (--all: every native):
+
+- stubs, and partial ones: some code, or code compiled out with `#if 0` and
+  nothing real in an `#else`;
+- empty bodies;
+- iterators that make no iterator (a foreach over one stops the game);
+- declared natives nothing registers (a call to one stops the game too).
+
+--runs takes engine logs and adds which stubs fired, and where from; --tsv
+writes every native with its original's address. The judgement the listing
 cannot make -- whether an implemented native does what the original does --
 is docs/re/natives.md's.
 """

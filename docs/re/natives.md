@@ -21,7 +21,9 @@ Which item is taken up, and when, is the owner's call.
   `DX.dx`, `01_NYC_UNATCOIsland.dx`, `01_NYC_UNATCOHQ.dx`,
   `02_NYC_BatteryPark.dx` and `06_HongKong_WanChai_Market.dx`. A stub logs
   once per session, with the script function that called it, so a run shows
-  which stubs a map reaches, not how often.
+  which stubs a map reaches, not how often. Two more runs, with a temporary
+  hook that typed console commands, tried saving and loading
+  ([below](#saving-loading-and-travel)).
 - **The DLLs.** C++ that is not a native -- a class's own `Tick`, what the
   renderer does with an actor -- leaves no stub behind: only reading the
   original shows it is missing.
@@ -33,16 +35,17 @@ Which item is taken up, and when, is the owner's call.
 
 ## Stops the game
 
-Surreal ends the game on a script error: the engine exits and the launcher
-shows its crash banner.
+The fork ends the game on an error it does not catch -- a script error, an
+unknown native, a failed save: the engine exits with 1, and the launcher shows
+its crash banner.
 
 ### An NPC searching in Battery Park: `ReachablePathnodes`
 
 `Pawn.ReachablePathnodes` (native 1004) is an iterator: the script walks it
 with `foreach`. The fork registers it as a plain function that only logs, so
-the `foreach` has no iterator and the VM stops the game. `ScriptedPawn` reaches it
-from `GetOvershootDestination`, when an NPC in its Seeking state guesses where
-a lost target went, and from `ComputeAwayVector`. In the Battery Park run an
+the `foreach` has no iterator and the VM stops the game. `ScriptedPawn`
+reaches it from `GetOvershootDestination`, when an NPC in its Seeking state
+guesses where a lost target went, and from `ComputeAwayVector`. In the Battery Park run an
 NSF terrorist got there about 20 s in: "Iterator statement without an
 iterator in Terrorist11.GetOvershootDestination", exit 1. Before patch 0034
 no NPC saw anyone, so likely none searched. Now Battery Park's opening fight
@@ -58,8 +61,9 @@ made that object in the transient package, and the save refuses it: "Object
 does not belong to this package", exit 1. A run with a temporary hook typed
 `QuickSave` into the console in UNATCO HQ. The fork wrote the level, as
 `01_NYC_UNATCOHQ.dxs` in a directory `Save00-1`, and stopped the game before
-writing the save's info. A save from the Save Game screen takes the same path, when that
-screen gets that far ([saving, loading and travel](#saving-loading-and-travel)).
+writing the save's info. A save from the Save Game screen takes the same path,
+when that screen gets that far
+([saving, loading and travel](#saving-loading-and-travel)).
 
 ### The Save Game screen: `GetConfig` (read from the code, not yet seen)
 
@@ -95,7 +99,8 @@ commands and showed three of these. The rest is read from the code:
   - Its date is wrong. `UpdateTimeStamp` counts the year from 1900 and the
     month from 0, so the load list shows year 126, and sorts the fork's saves
     before the original's.
-- **The Save Game screen** stops the game ([`GetConfig`](#stops-the-game)).
+- **The Save Game screen** stops the game, by the code
+  ([`GetConfig`](#stops-the-game)).
 - **The Load Game screen** lists no save.
   - `GetSaveInfoFromDirectoryIndex` searches a list the fork never fills (the
     code that fills it is `#if 0`).
@@ -186,13 +191,14 @@ manager itself is a C++ class, `UEventManager`
 
 All are stubs.
 
-## Seen on screen
+## On screen
 
 ### Particles and lasers: render iterators
 
 An actor with a `RenderIteratorClass` is drawn as the many things its
 iterator lists. In UE1 the engine makes the iterator (`Actor.RenderInterface`)
-and draws each item it lists; where the original does this is still to be read. Deus Ex uses this for two classes:
+and draws each item it lists; where the original does this is still to be
+read. Deus Ex uses this for two classes:
 
 - **`ParticleGenerator`**: smoke, steam, water, sparks. It is in 32 maps, and
   fires, rockets, faucets, damaged robots and fragments spawn one.
@@ -213,8 +219,9 @@ likely in `Render.dll`.
 player's `ViewModelBlendPlay` call it; every map run did. Upstream's blend
 code is partly written and logs every call (`TweenBlendAnim: seq=...`,
 `DrawLodMeshDX blend[...]`): a line per mouth shape in a conversation, which a
-handheld pays for. How far the blending gets on screen is to be checked; the original is in `Engine.dll`, and the drawing of
-blended meshes is in `Render.dll`.
+handheld pays for. How far the blending gets on screen is to be checked. The
+original is in `Engine.dll`, and the drawing of blended meshes in
+`Render.dll`.
 
 ### The UI
 
@@ -254,6 +261,9 @@ In `Extension.dll`, all stubs or partial in the fork:
   kept object would go with it.
 - **`DeusExPlayer.GetDeusExVersion`.** The fork's own string, by choice; the
   original's is "Mon Mar 19 12:06:14 2001 v1.112fm".
+- **`LevelInfo`'s clock.** The fork's main loop fills `Year` counted from 1900
+  and `Month` from 0, as in its save dates; the original's are the full year
+  and 1 to 12. In Deus Ex only `StatLog` reads them.
 
 ## Housekeeping, not seen directly
 
