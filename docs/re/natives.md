@@ -76,7 +76,10 @@ asks for a snapshot, and its `Tick` then reads
 `GetConfig("Engine.Engine", "GameRenderDevice")` before taking one. To check
 by hand: open Save Game.
 
-- **The fix:** read one key from the ini, a few lines.
+- **The fix:** the original's, read: a key's value in the system ini (the
+  fork's `SE-DeusEx.ini`), or an empty string
+  ([`GetConfig`](core-dll.md#getconfig)). Past it, the screen asks for the
+  save's picture, which the fork does not make ([the UI](#the-ui)).
 
 ## Saving, loading and travel
 
@@ -307,6 +310,34 @@ In `Extension.dll`, all stubs or partial in the fork:
   quarter of pitch ([moving](engine-dll.md#moving)). An NPC sprinting aside in
   a fight always goes square to its enemy, and a `PawnGenerator`'s pawns all
   face its way.
+- **`Object.Enable` 117 and `Disable` 118.** The original keeps a bit per
+  probe on the state frame and sets them all afresh at every `GotoState`, even
+  into the state the object is in; a name that is not a probe it only logs
+  ([events and probes](core-dll.md#events-and-probes)). The fork keeps a set
+  of disabled names per state name, which no state change clears: a probe
+  disabled in a state is off whenever the object is back in that state, until
+  enabled, and any name can be disabled -- so every script call to an object
+  that has disabled anything, as most NPCs have `AnimEnd`, looks its name up
+  in the set. The game disables only probes, and the difference shows where
+  it disables one and then goes to the state it is in: `ScriptedPawn`'s
+  `Wandering.Bump` disables `AnimEnd` and goes to its `Wander` label, which
+  enables it again in the original and not in the fork. What that changes in
+  play is to be checked.
+- **Conversions**, the VM's tokens. The fork makes a bool `1` or `0`, where
+  the original makes it `True` or `False`; it reads a string as a bool only as
+  a number, so `True` is false, though only the server browser converts one;
+  it needs both commas to read a vector or rotator and makes it all 0 without
+  them, where the original reads what is there; it wraps a rotator's parts to
+  0–65535 when printing it; and it prints an object as its package and name,
+  not its path ([the originals](core-dll.md#the-natives)).
+- **`Object.Mid` 127** with a negative start: the original returns an empty
+  string, the fork counts from 0.
+- **Integer division by 0** (`/` 145, and `/=` 134 on a byte): 0 in the
+  original, which leaves the byte as it was. The fork divides, which on
+  x86-64 kills the engine; the Smart Pro's CPU gives 0.
+- **`Object.VRand` 252** (70 call sites). The fork keeps the points it draws
+  *outside* the unit sphere, so its directions lean toward the cube's
+  diagonals; the original keeps those inside, which lean nowhere.
 - **`Actor.LastRendered` 723 and `Actor.InStasis` 721:**
   [out of sight](#out-of-sight).
 
@@ -316,9 +347,13 @@ In `Extension.dll`, all stubs or partial in the fork:
   start (`MissionScript.InitStateMachine`) to drop flags set to expire. Flags
   never expire, so a later mission can read an earlier mission's flags. What
   that changes in play is not known yet.
-- **`Object.CriticalDelete` 751** (20 call sites): by its name and callers,
-  deletes an object at once (logs, notes, info windows, the credits' text).
-  The objects stay until collected. Its original is in `Core.dll`.
+- **`Object.CriticalDelete` 751** (20 call sites): the original frees the
+  object at once, whatever still refers to it
+  ([`CriticalDelete`](core-dll.md#criticaldelete)), and the game's callers
+  delete objects of their own and drop their reference. The fork's stub
+  leaves them to its garbage collector, which frees them later: no other
+  difference. Freeing at once would take the fork's kept `GameDirectory`
+  with it ([above](#implemented-not-as-the-original)).
 
 ## Small
 
@@ -328,23 +363,28 @@ In `Extension.dll`, all stubs or partial in the fork:
 - **`Pawn.FindStairRotation` 524:** with Look Up Stairs on, the player's view
   does not tilt on stairs. The original is UE1's
   ([`Engine.dll`](engine-dll.md#small)).
-- **`PlayerPawn.ResetKeyboard` 544** (every level change): the original
-  resets the config of the input's class (`Core.dll`'s `ResetConfig`); the
-  fork keeps its own bindings.
+- **`PlayerPawn.ResetKeyboard` 544** (every level change): the original's
+  `ResetConfig` of the input's class copies nothing in Deus Ex and has the
+  input read the player's bindings from `User.ini` again
+  ([configuration](core-dll.md#configuration)); the fork keeps its own
+  bindings. No difference in play.
 - **`Actor.AIGetLightLevel` 700:** returns 1. The original is the light
   patch 0034 computes for `AIVisibility` (`AILightAt`); no script calls it.
 - **`InputExt`:** `Extension.dll`'s input class. The multiplayer key
   bindings' `SET InputExt ...` commands fail on every map.
 - **`Object.>` for strings (native 116):** unregistered. The fork registers it
-  as 1186, likely a typo. No script is known to use it; a use would stop the
-  game.
+  as 1186, a typo: the original has 116. No script is known to use it; a use
+  would stop the game.
 
 ## Not needed for single player
 
 `DumpLocation` (21 stubs: Ion Storm's bug-location tool, though
 `DeusExGameInfo.Login` calls `HasLocationBeenSaved` on every map),
-`StatLog`/`StatLogFile`, `InternetLink`, `DebugInfo`, network numbers and
+`StatLog`/`StatLogFile`, `InternetLink`, `DebugInfo` (compiled out in the
+original too: [`DebugInfo`](core-dll.md#debuginfo)), network numbers and
 addresses, `SaveTimeDemo`, `Commandlet.Main`, and `Object`'s `clock`,
-`unclock` and `CyclesToSeconds`. `ComputerWindow` has 22 stubs, but no script
-calls them; the InfoLink's text window, its only user, calls only implemented
-ones. `ClipWindow`'s unit sizes are stubs with no callers.
+`unclock` and `CyclesToSeconds`
+([timing by hand](core-dll.md#clock-unclock-and-cyclestoseconds)).
+`ComputerWindow` has 22 stubs, but no script calls them; the InfoLink's text
+window, its only user, calls only implemented ones. `ClipWindow`'s unit sizes
+are stubs with no callers.

@@ -32,11 +32,12 @@ no facts of its own beyond those; each lives in one doc, and the
 - **The game's DLLs** are being reverse-engineered (from 2026-09-24):
   [`docs/re/`](docs/re/README.md) covers every binary, and an IDA database gets
   three scripts from `tools/ida/` (types, strings, names).
-  - **`DeusEx.dll`** and **`Engine.dll`** are read
+  - **`DeusEx.dll`**, **`Engine.dll`** and **`Core.dll`** are read
     ([`deusex-dll.md`](docs/re/deusex-dll.md),
-    [`engine-dll.md`](docs/re/engine-dll.md)); their databases are typed,
-    named and backed up.
-  - **Core, Extension, ConSys and DeusExText** are not read yet.
+    [`engine-dll.md`](docs/re/engine-dll.md),
+    [`core-dll.md`](docs/re/core-dll.md)); their databases are typed, named
+    and backed up.
+  - **Extension, ConSys and DeusExText** are not read yet.
   - **What Surreal lacks** of them is [`docs/re/natives.md`](docs/re/natives.md),
     from [`tools/natives_audit.py`](tools/natives_audit.py), five map runs and
     two runs with a temporary hook (removed).
@@ -73,8 +74,12 @@ no facts of its own beyond those; each lives in one doc, and the
      would change that -- a rewrite of the evaluator's core. Even with no cost
      of its own, script time would only fall by a little over half: the
      natives the scripts call are the rest. Smaller: calls without an
-     `ExpressionValue` per argument.
-   - **Per-actor work** around the scripts, `IsEventEnabled` among it.
+     `ExpressionValue` per argument. How the original does both -- its
+     bytecode run in place, each argument evaluated straight into the
+     callee's frame: [the script interpreter](docs/re/core-dll.md#the-script-interpreter).
+   - **Per-actor work** around the scripts, `IsEventEnabled` among it. The
+     original answers it from one mask on the state frame, and checks no call
+     to any other function ([events and probes](docs/re/core-dll.md#events-and-probes)).
    - **The audio update's scan** of every actor for an ambient sound.
    - **Actor meshes** (0018–0019 so far): the per-vertex work itself.
    - **Visibility** (0020–0021 so far): still the largest render item.
@@ -136,10 +141,10 @@ no facts of its own beyond those; each lives in one doc, and the
      (seen with `QuickSave`). The Save Game screen does too, by the code (the
      unregistered `GetConfig`).
    - **Loading** a game does nothing (seen).
-   - **Next on it:** `Core.dll`, which has `GetConfig` (the Save Game screen)
-     and `CriticalDelete`. The owner opens `gamefiles/System/Core.dll` in IDA
-     (a new database beside it); it gets the three scripts. After it,
-     Extension, ConSys and DeusExText
-     ([the binaries](docs/re/README.md#the-binaries)). `Render.dll` has what
-     `Engine.dll` leaves to it: the render iterators' loop, and likely what
-     keeps `LastRenderTime`.
+   - **Next on it:** `Extension.dll`, the UI's classes, where most of the
+     fork's stubs are ([the UI](docs/re/natives.md#the-ui)). The owner opens
+     `gamefiles/System/Extension.dll` in IDA (a new database beside it, in
+     the window the bridge serves); it gets the three scripts. After it,
+     ConSys and DeusExText ([the binaries](docs/re/README.md#the-binaries)).
+     `Render.dll` has what `Engine.dll` leaves to it: the render iterators'
+     loop, and likely what keeps `LastRenderTime`.
