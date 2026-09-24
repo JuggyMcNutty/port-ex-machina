@@ -26,6 +26,12 @@ no facts of its own beyond those; each lives in one doc, and the
   often) on and 853×480 (2026-09-23), which the fight's native rows switch to
   native for the run. It has no battery (its battery
   warnings are off: [its Gotchas](ports/trimui-smartpro/README.md#gotchas)).
+- **The game's DLLs** are being reverse-engineered (from 2026-09-24):
+  [`docs/re/`](docs/re/README.md) covers every binary, IDA databases get the
+  game's class layouts from [`tools/ida/ue1_types.py`](tools/ida/ue1_types.py),
+  and `DeusEx.dll`'s is typed. What Surreal lacks of them is
+  [`docs/re/natives.md`](docs/re/natives.md), from
+  [`tools/natives_audit.py`](tools/natives_audit.py) and five map runs.
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
@@ -88,7 +94,8 @@ no facts of its own beyond those; each lives in one doc, and the
      (`Speed=3.75`/`2.25`) and pointer speed are calibrated by reasoning, not by
      feel.
    - On a desktop: `scripts/dx.sh run linux-x86_64`, the home screen driven
-     into a game, a pad in game. The desktop defaults (4x MSAA, VSync on) are
+     into a game, a pad in game; opening Save Game (`GetConfig`,
+     [natives.md](docs/re/natives.md#stops-the-game)). The desktop defaults (4x MSAA, VSync on) are
      chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is
@@ -102,9 +109,11 @@ no facts of its own beyond those; each lives in one doc, and the
 4. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
    engine's libraries, as the Smart Pro has); Android (its README lists the
    work, starting with an in-process hand-over).
-5. **The rest of Deus Ex's AI**: NPCs see since patch 0034. Still stubs, as
-   upstream never had them: the AI event system that carries gunfire, noises,
-   alarms and bodies to NPCs (`AISetEventCallback`, `AISendEvent` and their
-   kin) and `AICanHear`, so NPCs hear nothing; `AIDirectionReachable` (moving
-   in a fight) and `AIPickRandomDestination_Deus` (wandering). Potential work,
-   for the owner to take up.
+5. **What Surreal lacks of the original**: potential work, in no order, for
+   the owner to take up: [`docs/re/natives.md`](docs/re/natives.md). Two
+   items stop the game. Since patch 0034's fights, an NPC searching in Battery
+   Park reaches `ReachablePathnodes`, an iterator the fork lacks: seen in a
+   run. The Save Game screen calls the unregistered `GetConfig`: read from the
+   code, not yet seen. Next on it: `DeusEx.dll` in full, then `Engine.dll`
+   (AI events, movement, render iterators) and the rest
+   ([the binaries](docs/re/README.md#the-binaries)).

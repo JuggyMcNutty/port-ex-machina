@@ -89,8 +89,9 @@ Where upstream has a Deus Ex native wrong or as a stub -- a stub logs
 `Unimplemented: <class>.<name>` the first time it runs in a session, and only
 then -- the original is in the game's DLLs, and [`re/`](re/README.md) is what
 has been read of them: how to read them is
-[working on the binaries](re/README.md#working-on-the-binaries). Patch 0034
-was read this way.
+[working on the binaries](re/README.md#working-on-the-binaries), and what the
+fork still lacks is [`re/natives.md`](re/natives.md) (`tools/natives_audit.py`
+lists it). Patch 0034 was read this way.
 
 ## Upgrading Surreal Engine
 
