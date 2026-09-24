@@ -366,8 +366,9 @@ All are stubs; the originals are read: [moving](engine-dll.md#moving).
 
 ## Out of sight
 
-The original records when each actor was last drawn (`LastRenderTime`), and
-the engine and the scripts skip work for what the player has not seen lately
+The original's renderer records when each actor and each zone was last drawn
+([render time](render-dll.md#render-time)), and the engine and the scripts
+skip work for what the player has not seen lately
 ([stasis and render time](engine-dll.md#stasis-and-render-time)). The fork's
 renderer marks only whether an actor was drawn in the last frame
 (`LastVisibleFrame`), for Distant AI, which has pawns neither seen nor near
@@ -375,12 +376,15 @@ think every third or sixth frame
 ([its patches](../ENGINE.md#settings-the-launcher-exposes)); the rest it runs.
 
 - **Render time.** The fork never sets `LastRenderTime`, and its
-  `LastRendered()` returns 0 for every actor but a decal: everything counts as
-  just drawn. So what the script spares actors out of sight, it never does: a
+  `LastRendered()` returns 0 for every actor, and for a decal the decal's
+  `LastRenderedTime`, which it never sets either: everything counts as just
+  drawn. So what the script spares actors out of sight, it never does: a
   `ParticleGenerator` unseen for 2 s goes on; an NPC with `bTickVisibleOnly`
   more than 600 units away and unseen for 5 s still looks for enemies other
   than the player, and beyond 1,200 still looks for bodies; any NPC out of
-  sight still checks for light beams. On the handheld all of that runs.
+  sight still checks for light beams; and an NPC's shadow is traced down and
+  laid again each tick the NPC moves, where the original does it only while
+  the NPC was drawn in the last second. On the handheld all of that runs.
 - **Stasis.** The original skips the whole tick of an actor in stasis --
   `bStasis`, not drawn for 5 s, not moving, and far from the player or in a
   zone not drawn -- and destroys a `bTransient` one. The fork ticks every
@@ -399,7 +403,7 @@ think every third or sixth frame
 
 An actor with a `RenderIteratorClass` is drawn as the many things its
 iterator lists: the renderer makes the iterator (`Actor.RenderInterface`) and
-draws each item it lists ([render iterators](engine-dll.md#render-iterators)).
+draws each item it lists ([render iterators](render-dll.md#render-iterators)).
 Deus Ex uses this for two classes:
 
 - **`ParticleGenerator`**: smoke, steam, water, sparks. It is in 32 maps, and
@@ -411,8 +415,26 @@ The fork never makes a `RenderInterface` (its accessor is commented out), and
 `ParticleIterator.UpdateParticles` 3017 is a stub. So the script's
 `ParticleIterator(RenderInterface)` is always `None`: no particle is made, and
 no beam is drawn. The originals, `UParticleIterator` and `ULaserIterator`, are
-in `DeusEx.dll`, and `URenderIterator` in `Engine.dll`; the loop that makes and
-draws them is in `Render.dll`, not yet read.
+in `DeusEx.dll`, `URenderIterator` in `Engine.dll`, and the loop that makes,
+runs and draws them in `Render.dll`. Besides the loop, the fork's renderer
+would need each item's glow, scale, place and turn kept with it as the item
+is listed: the iterators move one proxy actor from item to item.
+
+### Coronas
+
+A light with `bCorona` and a `Skin` texture shows a glow over it on screen
+([the original](render-dll.md#coronas)). The fork's are its own, and differ
+(read from both codes; to check by hand):
+
+- **Which lights:** the fork takes those in the parts of the level it draws,
+  within 2,000 units in Deus Ex; the original, those shining into the
+  player's own leaf of the BSP, at any distance.
+- **Hidden by:** in the fork, the world; in the original, movers, pawns and
+  other actors too, but the player's own pawn.
+- **Coming and going:** the fork shows one or not; the original fades each
+  in and out over about a third of a second.
+- **Brightness:** the fork's are 2.5 times the light's colour; the
+  original's, the colour times the fade. The size is the same.
 
 ### Head turns and lip sync: blend animations
 

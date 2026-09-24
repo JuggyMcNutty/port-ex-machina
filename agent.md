@@ -29,19 +29,20 @@ no facts of its own beyond those; each lives in one doc, and the
   often) on and 853×480 (2026-09-23), which the fight's native rows switch to
   native for the run. It has no battery (its battery
   warnings are off: [its Gotchas](ports/trimui-smartpro/README.md#gotchas)).
-- **The game's DLLs** are being reverse-engineered (from 2026-09-24):
-  [`docs/re/`](docs/re/README.md) covers every binary, and an IDA database gets
-  three scripts from `tools/ida/` (types, strings, names).
+- **The game's DLLs** are read (2026-09-24): [`docs/re/`](docs/re/README.md)
+  covers every binary, and an IDA database gets three scripts from
+  `tools/ida/` (types, strings, names).
   - **`DeusEx.dll`**, **`Engine.dll`**, **`Core.dll`**, **`Extension.dll`**,
-    **`ConSys.dll`** and **`DeusExText.dll`** are read
+    **`ConSys.dll`**, **`DeusExText.dll`** and **`Render.dll`**, the last
+    where a feature's drawing lives there
     ([`deusex-dll.md`](docs/re/deusex-dll.md),
     [`engine-dll.md`](docs/re/engine-dll.md),
     [`core-dll.md`](docs/re/core-dll.md),
     [`extension-dll.md`](docs/re/extension-dll.md),
     [`consys-dll.md`](docs/re/consys-dll.md),
-    [`deusextext-dll.md`](docs/re/deusextext-dll.md)); their databases are
-    typed, named and backed up.
-  - **`Render.dll`** is not read yet.
+    [`deusextext-dll.md`](docs/re/deusextext-dll.md),
+    [`render-dll.md`](docs/re/render-dll.md)); their databases are typed,
+    named and backed up.
   - **What Surreal lacks** of them is [`docs/re/natives.md`](docs/re/natives.md),
     from [`tools/natives_audit.py`](tools/natives_audit.py), five map runs and
     four runs with a temporary hook (removed).
@@ -131,7 +132,9 @@ no facts of its own beyond those; each lives in one doc, and the
      walking up to Tech Sergeant Kaplan on Liberty Island, by
      [natives.md](docs/re/natives.md#named-troopers-get-the-generic-troopers-conversations-seen);
      logging in to a computer, a public computer's bulletins and reading a
-     datacube, by [natives.md](docs/re/natives.md#what-the-player-reads).
+     datacube, by [natives.md](docs/re/natives.md#what-the-player-reads);
+     coronas near and far and behind an NPC, by
+     [natives.md](docs/re/natives.md#coronas).
      The desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is
@@ -168,8 +171,8 @@ no facts of its own beyond those; each lives in one doc, and the
      can leave Max Chen unconvinced and the raid on the Lucky Money unstarted.
      Named troopers get the generic trooper's conversations before their own
      (seen on Liberty Island).
-   - **Next on it:** `Render.dll`, where a feature's drawing lives there
-     ([the binaries](docs/re/README.md#the-binaries)): what `Engine.dll`
-     leaves to it, the render iterators' loop, and likely what keeps
-     `LastRenderTime`. The owner opens it in IDA (a new database beside it,
-     in the window the bridge serves); it gets the three scripts.
+   - **On screen** ([its section](docs/re/natives.md#on-screen); read from
+     the code): no particle or beam is drawn (render iterators); coronas are
+     chosen, hidden and faded differently.
+   - **Reading is done** for every DLL in scope; a fix that needs more opens
+     its DLL again (its database is backed up in `reference/idb-backup/`).
