@@ -90,10 +90,11 @@ no facts of its own beyond those; each lives in one doc, and the
    - **Visibility** (0020–0021 so far): still the largest render item.
    - **Lightmap uploads**: re-uploading only the rows a light changed, and each
      surface's lightmap lookup.
-   - **What is out of sight** (from reading `Engine.dll`): the original spares
-     more of it than Distant AI does -- actors in stasis do not tick, and the
-     scripts skip work for what was not drawn lately -- and the fork keeps
-     neither stasis nor the time an actor was drawn
+   - **What is out of sight** (from reading `Engine.dll` and `Render.dll`):
+     the original spares more of it than Distant AI does -- actors in stasis
+     do not tick, and the scripts skip work for what was not drawn lately, an
+     NPC's shadow among it -- and the fork keeps neither stasis nor the time
+     an actor or a zone was drawn
      ([out of sight](docs/re/natives.md#out-of-sight)).
 
    At native resolution the game tick does not move the frame until the GPU's
@@ -109,7 +110,7 @@ no facts of its own beyond those; each lives in one doc, and the
    Render.dll where a feature's drawing lives there -- documented in
    [`docs/re/`](docs/re/README.md) as behaviour in our own words, never
    decompiled code. Desktop engine runs as needed to see what fires in play.
-   IDA serves one database at a time: the owner opens the next DLL.
+   IDA serves one database at a time, which the owner opens.
 
 ## Open decisions
 

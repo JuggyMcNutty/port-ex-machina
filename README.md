@@ -53,7 +53,7 @@ Put the game files where the port's `launcher.ini` says (`GameDir`); a
 | [`docs/ENGINE.md`](docs/ENGINE.md) | the engine fork: how it is pinned and upgraded, running and profiling it, every patch |
 | [`docs/PORTING.md`](docs/PORTING.md) | how ports work, and how to add one |
 | `ports/<id>/README.md` | one device: status, what differs from linux-x86_64, measurements, what was verified |
-| [`docs/re/`](docs/re/) | the original binaries: `DeusEx.exe`, where the launcher began, and the game's DLLs -- what their natives do, for the engine |
+| [`docs/re/`](docs/re/) | the original binaries: `DeusEx.exe`, where the launcher began, and the game's DLLs -- what they do, and what the engine lacks of them |
 
 ## Layout
 
@@ -68,7 +68,7 @@ src/app.c            the launcher's sequence, shared by both front ends
 src/main.c           deusex-launcher;  src/cli_main.c: dxl-cli, the same sequence with no display
 tests/               host unit tests -- no display needed
 tools/               shots.c (dxl-shots: every screen as .bmp), probes/ (device probes),
-                     ida/ (IDA scripts: the game's types, strings, names),
+                     ida/ (IDA scripts: the game's types, strings, names; Render.dll's types),
                      natives_audit.py (the original's natives against the fork's)
 engine-patches/      the engine fork as patches over a pinned upstream commit
 docs/                LAUNCHER, ENGINE, PORTING, DEVELOPMENT; re/ (the original DeusEx.exe and DLLs)

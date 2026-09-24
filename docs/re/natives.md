@@ -521,9 +521,9 @@ list differs in more than its stubs:
 
 ## Implemented, not as the original
 
-- **The list window, the flag base, conversations and the text parser:**
-  [lists](#lists), [flags](#flags), [conversations](#conversations) and
-  [what the player reads](#what-the-player-reads).
+- **The list window, the flag base, conversations, the text parser and
+  coronas:** [lists](#lists), [flags](#flags), [conversations](#conversations),
+  [what the player reads](#what-the-player-reads) and [coronas](#coronas).
 - **`ScriptedPawn.GetPawnAllianceType(None)`.** The fork reads through the
   null pawn and crashes; the original answers Neutral. A distress call's
   sender or `GetPlayerPawn()` during a level change could be `None`.
