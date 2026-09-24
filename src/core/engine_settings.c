@@ -46,8 +46,9 @@ static const dxl_es_info fields[DXL_ES_FIELD_COUNT] = {
 
     /* Off unless the port's packaged default turns it on: a desktop has the CPU. */
     [DXL_ES_AI_LOD]            = { PF, "AiLevelOfDetail",   DXL_ES_BOOL,   NULL, NULL, 0,    0, 1, 1 },
-    /* The engine clamps to 0.25..1; the UI offers dxl_es_render_heights. */
-    [DXL_ES_RENDER_SCALE]      = { PF, "RenderScale",       DXL_ES_NUMBER, NULL, NULL, 1.00, 0.25, 1.00, 0.05 },
+    /* The engine clamps to 0.25..1; the UI offers dxl_es_render_heights. No
+     * step: a height's exact fraction of the panel is kept, off any grid. */
+    [DXL_ES_RENDER_SCALE]      = { PF, "RenderScale",       DXL_ES_NUMBER, NULL, NULL, 1.00, 0.25, 1.00, 0    },
 };
 
 int dxl_es_render_heights(int panel_h, int *heights, int max) {
