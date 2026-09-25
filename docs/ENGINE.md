@@ -380,3 +380,11 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   (`MyDeusExSaveInfo`), the save listing and kept infos, and DELETEGAME.
   **Checked:** against the original's reference saves; the commit's message
   has the runs.
+- [**loading**](https://github.com/JuggyMcNutty/SurrealEngine/commit/0058015cccdadd262b56eb819bbd00f7213426a3) --
+  `?loadgame=N` as the original's `Browse`: the slot's SaveInfo names the
+  map, Current takes the slot's copy, the map loads from Current, the saved
+  pawn is possessed; -1 the quick save. Behind it, the save info in a
+  package of its own, and packages born empty carrying version 68 -- with
+  either wrong, a written SaveInfo.dxs cannot be read back. **Checked:** a
+  slot and the quick save round-trip in play; the original's saves stop at
+  their saved event manager (ported with the AI event system, later).

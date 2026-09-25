@@ -84,10 +84,13 @@ commands and showed three of these. The rest is read from the code:
   infos fill, and `GetSaveInfo(-1)` knows the quick save. What its rows
   show hangs on the list window's fields ([lists](#lists)); to check by
   hand.
-- **Loading does nothing** (seen: `LoadGame -1` and `LoadGame 3` ran, and
-  nothing happened). The game asks for `?loadgame=N`, and the fork looks only
-  for an option named `load`. It also looks for a file
-  `Save<N>.<ext>`, not the directory it saved to.
+- **Loading works for the fork's own saves** (seen: a slot and the quick
+  save round-trip, the saved pawn possessed, 2026-09-24). `?loadgame=N`
+  does what the original's `Browse` does: the slot's `SaveInfo` names the
+  map, `Current` is emptied, the slot copied in, and the map loads from
+  `Current`. The original game's saves do not load yet: they carry its
+  saved event manager, a C++-only class the fork lacks until the AI event
+  system is ported ([hearing](#hearing-the-ai-event-system)).
 - **Deleting** works: the screens' `DeleteGame N` console command removes
   the slot, and `DeleteSaveInfo` lets go of a kept info without touching
   the disk, as the original's does. To check by hand.
@@ -107,12 +110,12 @@ fork already (2026-09-24): `SaveGame`, `CopySaveGameFiles`,
 
 - the engine's `Browse` and `SaveCurrentLevel` with the mission numbers and
   `PruneTravelActors`: the travel that fills `Current`;
-- loading (`?loadgame=N`, and the screens');
 - `CreateHistoryObject` and its kin making their objects in the level;
 - the save's picture ([the UI](#the-ui)).
 
-Done the original's way, the fork might also read the original game's saves;
-to be checked.
+The fork reads its own saves back (2026-09-24). The original game's saves
+stop at its saved event manager; to be retried once the event manager is
+ported.
 
 ## Flags
 

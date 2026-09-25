@@ -60,8 +60,9 @@ All read; the inventory is
       travel ([flags](re/natives.md#flags)).
 - [ ] The save screens work: the list window's `GetField`, and save pictures
       ([lists](re/natives.md#lists), [the UI](re/natives.md#the-ui)).
-- [ ] Acceptance: our own saves round-trip, and the original's reference
-      saves are tried (natives.md's "to be checked").
+- [x] Acceptance: our own saves round-trip (a slot and the quick save,
+      2026-09-24); the original's reference saves were tried and stop at
+      the original's saved event manager -- retry after M3.
 
 ## M2 -- the story stays intact
 
