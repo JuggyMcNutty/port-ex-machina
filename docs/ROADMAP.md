@@ -141,11 +141,21 @@ All read; the inventory is
 
 ## M5 -- the sound
 
-[Sound](re/natives.md#sound), all of it: sounds behind walls, zone reverb
-(EFX; the owner's copied `ALAudio.dll` as a reference,
-[the binaries](re/README.md#the-binaries)), ambient sounds on lights, the
-music's fades and its place kept, the Speech slider, loudness and fall-off
-and Doppler, and the smaller notes.
+[Sound](re/natives.md#sound), all of it; each item's inventory and by-hand
+check live there.
+
+- [x] Loudness: the script's volume, fall-off linear to the radius, the
+      cap at full (2026-09-25).
+- [ ] The Speech slider.
+- [ ] Sounds behind walls.
+- [ ] Ambient sounds on lights.
+- [ ] Doppler.
+- [ ] Music: the fades, its place kept in `SongSection`, section 255 as
+      silence.
+- [ ] Zone reverb (EFX; the owner's copied `ALAudio.dll` as a reference,
+      [the binaries](re/README.md#the-binaries)).
+- [ ] The smaller notes: a sound beyond its radius dropped, the mouth
+      shapes' `M` band, `bIsSpeaking` the script's alone.
 
 ## M6 -- polish
 

@@ -595,7 +595,8 @@ checks:
 The fork's audio is its own, over OpenAL; the original's is `Galaxy.dll`
 ([`galaxy-dll.md`](galaxy-dll.md)). Both scan every actor for ambient sounds
 each frame, keep one record a channel and choose which sound wins alike. They
-differ (read from both codes; to check by hand):
+differed when read from both codes; a landed item carries its date and its
+by-hand check, the rest are still the fork's own:
 
 - **Sounds behind walls are not muffled.** In the original a sound fades over
   half a second to a third of its volume while the level's BSP stands between
@@ -625,13 +626,15 @@ differ (read from both codes; to check by hand):
   `SpeechVolume` is no setting of its audio device. The original plays speech
   at the Speech slider and the rest at the Sound slider
   ([volume](galaxy-dll.md#volume)).
-- **Loudness.** The fork plays every sound at half the Sound slider and
-  speech at twice its volume, and rescales the rest but ambient sounds --
-  (volume − 1) × 0.25 + 1, and 0.8 from 8 up, so a volume of 0 plays at
-  0.75; the original plays the script's volume, up to full. The
-  original's fall-off is linear from the sound to its radius; the fork's
-  (OpenAL's clamped linear model) is full within a tenth of the radius and
-  silent from about nine-tenths.
+- **Loudness.** Landed (2026-09-25): the fork plays the script's volume
+  as the original does -- no rescale toward 1, no halving -- with
+  fall-off linear from the sound to its radius and silent there, and the
+  product capped at full, the Sound slider its ceiling
+  ([volume](galaxy-dll.md#volume)). Not carried: the original's 1/256
+  volume floor, an integer artifact. Other games keep the fork's old
+  loudness. To check by hand: a humming light or a generator fading
+  steadily on the walk away and silent right at its radius, not gone
+  early; effects sitting louder against the music than before.
 - **Doppler.** The original shifts only an ambient sound's pitch, by its
   actor's own speed, at `DopplerSpeed` 6,500 units a second; the fork shifts
   every sound by the player's speed (its sources have none), at about 14,800.

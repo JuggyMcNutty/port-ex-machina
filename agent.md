@@ -60,8 +60,13 @@ no facts of its own beyond those; each lives in one doc, and the
   [`docs/ROADMAP.md`](docs/ROADMAP.md)): only its by-hand checks remain
   ([open decision 1](#open-decisions)), judged against the original's
   display driver, now read
-  ([`d3ddrv-dll.md`](docs/re/d3ddrv-dll.md), 2026-09-25) -- then M5, the
-  sound. Landed 2026-09-25: render iterators -- smoke, steam and
+  ([`d3ddrv-dll.md`](docs/re/d3ddrv-dll.md), 2026-09-25) -- and M5, the
+  sound, is begun (2026-09-25, [its list](docs/ROADMAP.md#m5----the-sound)):
+  loudness landed -- the script's volume, the original's linear fall-off
+  and cap at full ([what changed](docs/re/natives.md#sound), its by-hand
+  check in [open decision 1](#open-decisions)); the distrobox reaches
+  real audio now
+  ([this machine](docs/DEVELOPMENT.md#this-machine)). Landed 2026-09-25: render iterators -- smoke, steam and
   sparks spew, and laser tripwires, electricity and laser sights draw
   their beams
   ([what changed](docs/re/natives.md#particles-and-lasers-render-iterators));
@@ -240,7 +245,9 @@ no facts of its own beyond those; each lives in one doc, and the
      tripwire on Liberty Island, and a door's highlight, by
      [natives.md](docs/re/natives.md#implemented-not-as-the-original); a
      sound behind a wall, a light's hum, the music after a fight and the
-     Speech slider, by [natives.md](docs/re/natives.md#sound) (with the
+     Speech slider, and a humming light or generator fading steadily on
+     the walk away and silent right at its radius, effects louder against
+     the music than before, by [natives.md](docs/re/natives.md#sound) (with the
      desktop's audio: [linux-x86_64's](ports/linux-x86_64/README.md#audio));
      a shot fired around a corner turning the guards, and a body found
      raising the alarm, by

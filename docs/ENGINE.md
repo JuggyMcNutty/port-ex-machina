@@ -597,3 +597,13 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   animated add alone, shadows held, the wall's brightness alternating
   with the flicker across frame dumps; 75 s runs on both maps after the
   hooks' exact-text removal are clean.
+- [**loudness**](https://github.com/JuggyMcNutty/SurrealEngine/commit/f8d46930a679474967358626ccfefa1f3b1e0a6c) --
+  M5's first item: Deus Ex plays the script's volume -- no rescale
+  toward 1, no halving -- with fall-off linear from the sound to its
+  radius and silent there, and the product capped at full, the Sound
+  slider its ceiling ([sound](re/natives.md#sound)); a slider move
+  reaches playing sounds now, where a stored value used to wait for the
+  sound's own volume to change. Other games keep the fork's old
+  loudness. **Checked:** a 90 s Liberty Island run with real audio (the
+  distrobox reaches PipeWire since 2026-09-25): the device initializes,
+  ambient sounds play, no AL errors.
