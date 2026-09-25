@@ -56,7 +56,16 @@ no facts of its own beyond those; each lives in one doc, and the
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
-- **Next**: M4 ([decided 6](#decided), [`docs/ROADMAP.md`](docs/ROADMAP.md)).
+- **Next**: M4's remainder ([decided 6](#decided),
+  [`docs/ROADMAP.md`](docs/ROADMAP.md)): mesh detail and lighting (both
+  **[perf]**), coronas, blend animations, and the `D3DDrv.dll` read (IDA,
+  so the owner opens the database). M4's first item landed (2026-09-25):
+  render iterators -- smoke, steam and sparks spew, and laser tripwires,
+  electricity and laser sights draw their beams
+  ([what changed](docs/re/natives.md#particles-and-lasers-render-iterators);
+  by-hand checks in [open decision 1](#open-decisions)). Proving it turned
+  up two engine findings from before it, recorded in
+  [M0's list](docs/ROADMAP.md#m0----nothing-stops-the-game).
   M3's code landed whole (2026-09-25) -- render time and stasis, the AI
   event system, `ScriptedPawn`'s native tick, moving, and the
   traces-moves-probes-conversions item -- so NPCs hear, their timers run,
@@ -224,7 +233,11 @@ no facts of its own beyond those; each lives in one doc, and the
      [natives.md](docs/re/natives.md#the-native-tick-ascriptedpawntick);
      NPCs wandering their bit of Liberty Island and a searching NSF
      stepping around corners, by
-     [natives.md](docs/re/natives.md#moving-wandering-and-tactical-movement).
+     [natives.md](docs/re/natives.md#moving-wandering-and-tactical-movement);
+     steam from a Hell's Kitchen street grate against the original, a
+     laser tripwire's visible beam on Liberty Island, electricity arcing
+     and a weapon's laser sight, by
+     [natives.md](docs/re/natives.md#particles-and-lasers-render-iterators).
      The desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is

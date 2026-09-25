@@ -41,6 +41,13 @@ its area in the maps that did, the matching by-hand checks pass
       [the original's layout](re/deusex-dll.md#the-game-engine-travel-and-saving)
       has it. Still wanted: the acceptance captures.
 
+- [ ] Found while proving M4's render iterators (2026-09-25), both at the
+      engine pin before that work and unjudged whether normal play (travel
+      in, real audio) hits them: `09_NYC_ShipBelow` loaded directly
+      (`--url=`) crashes in a falling actor's trace against a brush model
+      (`TraceAABBModel::Trace`); `14_OceanLab_Lab` stops on a fatal
+      "Failed to play AL source" under the null OpenAL driver.
+
 ## M1 -- a playthrough survives: saving, loading, travel
 
 All read; the inventory is
@@ -111,8 +118,9 @@ All read; the inventory is
 
 ## M4 -- the look
 
-- [ ] Render iterators: particles and beams
-      ([its section](re/natives.md#particles-and-lasers-render-iterators)).
+- [x] Render iterators: particles and beams (2026-09-25;
+      [its section](re/natives.md#particles-and-lasers-render-iterators)
+      has what changed and the by-hand checks left).
 - [ ] Mesh detail ([its section](re/natives.md#mesh-detail)). **[perf]**
 - [ ] Lighting ([its section](re/natives.md#lighting)). **[perf]**
 - [ ] Coronas ([coronas](re/natives.md#coronas)).

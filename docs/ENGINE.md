@@ -508,3 +508,20 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   all-on -- round-trips a quick save exactly; the intro's scene plays 238
   lip-sync lines through the new mask; 60-70 s runs on both maps after the
   hook's removal are clean.
+- [**render iterators**](https://github.com/JuggyMcNutty/SurrealEngine/commit/14d981b3be8b2053efd55888eb8e689f05ec6f13) --
+  the roadmap's first M4 item: an actor with a `RenderIteratorClass` is
+  drawn as the items its iterator lists and gets no sprite of its own --
+  the interface made and dropped as the original's renderer does, the
+  Init, First, IsDone, CurrentItem, Next protocol each scene frame, each
+  item keeping the proxy's place, turn, scale and glow as it was listed,
+  and the proxy's `LastRenderTime` stamped per item, which the generators'
+  freeze logic reads; `ParticleIterator.UpdateParticles` 3017 and both
+  iterators' native `CurrentItem`
+  ([particles and lasers](re/natives.md#particles-and-lasers-render-iterators)).
+  **Checked:** temporary hooks hopped the player past every generator and
+  emitter -- Hell's Kitchen's street steam rises, grows and fades from its
+  grates; Liberty Island's tripwire lasers draw their segment runs across
+  the statue room, and crossing one raised the alarm infolink; its
+  electricity emitters list every segment when in view; frozen generators
+  list nothing until their proxy is seen; 75 s runs on both maps after the
+  hooks' removal are clean.

@@ -390,14 +390,34 @@ Deus Ex uses this for two classes:
 - **`LaserEmitter`**: the beams of `LaserTrigger` (18 maps) and `BeamTrigger`
   (11), a weapon's laser sight, and `ElectricityEmitter` (21 maps).
 
-The fork never makes a `RenderInterface` (its accessor is commented out), and
-`ParticleIterator.UpdateParticles` 3017 is a stub. So the script's
-`ParticleIterator(RenderInterface)` is always `None`: no particle is made, and
-no beam is drawn. The originals, `UParticleIterator` and `ULaserIterator`, are
-in `DeusEx.dll`, `URenderIterator` in `Engine.dll`, and the loop that makes,
-runs and draws them in `Render.dll`. Besides the loop, the fork's renderer
-would need each item's glow, scale, place and turn kept with it as the item
-is listed: the iterators move one proxy actor from item to item.
+The fork keeps the whole mechanism now (2026-09-25): the interface made and
+dropped as the original's renderer does; Init, First, IsDone, CurrentItem
+and Next each scene frame; each item drawn as the proxy stood when listed --
+place, turn, scale and glow -- a sprite at its captured place, a mesh with
+the proxy put back for the draw and restored after; and the proxy's
+`LastRenderTime` stamped per listed item, which the generators' freeze logic
+reads. `UpdateParticles` 3017 ages, drifts, rises or sinks, grows, fades and
+moves the 64 particles; `LaserIterator` lists an item every 16 units of each
+beam, every 15 with `bRandomBeam`, whose segment ends jitter by a random
+unit vector and chain -- the electricity -- and one extra item at a segment
+chosen at random, where the proxy is left. Differences, read from both
+codes:
+
+- **Occlusion.** The original occludes each item's sprite through its span
+  buffer; the fork clips items to the view (and a portal's spans) before
+  its BSP walk, and the depth buffer hides what a wall covers -- the cost
+  of a hidden item is paid, the look is the same.
+- **The particle curves.** The documented shapes are kept -- the drift
+  offset -3 to +2 a frame, growth from 0.01 to 3 times the draw scale over
+  the life, the fade with the remaining life, the rise as acceleration at
+  the rise rate -- but the original's exact curves are unread: whether
+  smoke reads the same is the by-hand check's judgement.
+
+To check by hand: steam from a Hell's Kitchen street grate against the
+original -- drift, growth, fade; a laser tripwire's beam seen on Liberty
+Island (its trace fix is
+[implemented, not as the original](#implemented-not-as-the-original)'s);
+electricity arcing on a damaged panel; a weapon's laser sight in play.
 
 ### Coronas
 
