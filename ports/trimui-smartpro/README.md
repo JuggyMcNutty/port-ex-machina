@@ -306,6 +306,10 @@ Indoors, UNATCO HQ runs at ~20 FPS.
 
 ### Where a frame goes
 
+The numbers below predate M3's engine work of 2026-09-25 (the stasis tick
+skip, `IsEventEnabled` from one mask, the trace iterators' first-wall stop):
+the game-tick items it touches are to be re-measured on the device.
+
 At native resolution, facing the fight in overclock (~129 ms). The GPU draws
 the previous frame while the game tick runs (engine patch 0004), and the tick
 is now the shorter of the two, so **a frame is about the GPU's time plus the

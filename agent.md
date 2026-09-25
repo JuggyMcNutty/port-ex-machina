@@ -105,9 +105,12 @@ no facts of its own beyond those; each lives in one doc, and the
      `ExpressionValue` per argument. How the original does both -- its
      bytecode run in place, each argument evaluated straight into the
      callee's frame: [the script interpreter](docs/re/core-dll.md#the-script-interpreter).
-   - **Per-actor work** around the scripts, `IsEventEnabled` among it. The
-     original answers it from one mask on the state frame, and checks no call
-     to any other function ([events and probes](docs/re/core-dll.md#events-and-probes)).
+   - **Per-actor work** around the scripts. `IsEventEnabled` answers from
+     one mask on the object now, and checks no call to any other function,
+     as the original's (landed with M3's probe-mask work, 2026-09-25;
+     [events and probes](docs/re/core-dll.md#events-and-probes)); its share
+     of the tick is to be re-measured on the device. The rest of the
+     per-actor work remains.
    - **The audio update's scan** of every actor for an ambient sound. The
      original does the same scan every frame
      ([each frame](docs/re/galaxy-dll.md#each-frame)): nothing of it to port.
@@ -122,12 +125,11 @@ no facts of its own beyond those; each lives in one doc, and the
      animated and moving lights, over its kept static part, and its
      `NoDynamicLights` stops that altogether
      ([lighting](docs/re/natives.md#lighting)).
-   - **What is out of sight** (from reading `Engine.dll` and `Render.dll`):
-     the original spares more of it than Distant AI does -- actors in stasis
-     do not tick, and the scripts skip work for what was not drawn lately, an
-     NPC's shadow among it -- and the fork keeps neither stasis nor the time
-     an actor or a zone was drawn
-     ([out of sight](docs/re/natives.md#out-of-sight)).
+   - **What is out of sight**: landed with M3 (2026-09-25) -- the fork
+     keeps render time and stasis now, so actors in stasis do not tick and
+     the scripts spare what was not drawn lately, an NPC's shadow among it
+     ([out of sight](docs/re/natives.md#out-of-sight)). What it buys the
+     device is to be measured there (**[perf]** re-measure).
 
    At native resolution the game tick does not move the frame until the GPU's
    time comes down (open decision 3); at 853×480 it does.
