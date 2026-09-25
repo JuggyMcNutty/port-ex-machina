@@ -57,18 +57,21 @@ no facts of its own beyond those; each lives in one doc, and the
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
 - **Next**: M4's remainder ([decided 6](#decided),
-  [`docs/ROADMAP.md`](docs/ROADMAP.md)): lighting (**[perf]**) and the
-  `D3DDrv.dll` read (IDA, so the owner opens the database). Landed
-  2026-09-25: render iterators -- smoke, steam and sparks spew, and
-  laser tripwires, electricity and laser sights draw their beams
+  [`docs/ROADMAP.md`](docs/ROADMAP.md)): the light-maps half of lighting
+  (**[perf]**) and the `D3DDrv.dll` read (IDA, so the owner opens the
+  database). Landed 2026-09-25: render iterators -- smoke, steam and
+  sparks spew, and laser tripwires, electricity and laser sights draw
+  their beams
   ([what changed](docs/re/natives.md#particles-and-lasers-render-iterators));
   mesh detail -- a distant mesh drawn with fewer vertices, the original's
   budget (**[perf]** re-measure on the device;
   [what changed](docs/re/natives.md#mesh-detail)); coronas -- the
   viewer's leaf, kept and fading, as the original's
-  ([what changed](docs/re/natives.md#coronas)); and blend animations --
+  ([what changed](docs/re/natives.md#coronas)); blend animations --
   head turns and lip sync ticking as the original's
   ([what changed](docs/re/natives.md#head-turns-and-lip-sync-blend-animations));
+  and mesh lighting -- the original's pick, shadows, fades and formula
+  ([what changed](docs/re/natives.md#lighting));
   each with by-hand checks in [open decision 1](#open-decisions). Proving
   the iterators turned up two engine findings from before them, recorded
   in [M0's list](docs/ROADMAP.md#m0----nothing-stops-the-game).
@@ -252,7 +255,10 @@ no facts of its own beyond those; each lives in one doc, and the
      shows it, by [natives.md](docs/re/natives.md#coronas); a
      conversation partner's mouth moving with the speech, an NPC's head
      turning to follow the player and easing back, and blinking, by
-     [natives.md](docs/re/natives.md#head-turns-and-lip-sync-blend-animations).
+     [natives.md](docs/re/natives.md#head-turns-and-lip-sync-blend-animations);
+     an NPC under a street lamp, one walking from light into shadow, and
+     a fire's glow on a face, by
+     [natives.md](docs/re/natives.md#lighting).
      The desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is

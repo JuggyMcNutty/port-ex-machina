@@ -565,3 +565,19 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   mouth through its shapes with tweens caught mid-flight; the audit
   counts `PlayBlendAnim` implemented; 75 s runs on the intro and Liberty
   Island after the hook's exact-text removal are clean.
+- [**mesh lighting**](https://github.com/JuggyMcNutty/SurrealEngine/commit/cdf259354a7e925f8761155f7a26d8a1e9cd710d) --
+  the meshes half of the roadmap's M4 lighting item: an actor's lights
+  picked once a draw from its leaf's permeating list, the moving lights
+  near it and last frame's -- the strongest first, statics until 8, none
+  below an eighth of the strongest, `bCorona` lights counting -- shadows
+  checked through the BSP every 16 frames instead of on every move, each
+  light fading over about a third of a second, and the original's
+  per-vertex formula in place of the fork's own
+  ([lighting](re/natives.md#lighting)); the coronas' leaf walk moved to
+  `UModel::FindLeafAt`, shared. Other games keep the old path whole.
+  **Checked:** a temporary log through the intro shows 4-7 leaf lights
+  taken with fades ramping and a wall marking one shadowed; the
+  Page-Simons scene's frame dump shows faces in the chamber's ambient
+  and the suit under its key light, nothing blown out; 75 s runs on the
+  intro and Liberty Island after the hooks' exact-text removal are
+  clean.

@@ -124,7 +124,9 @@ All read; the inventory is
 - [x] Mesh detail (2026-09-25; [its section](re/natives.md#mesh-detail)
       has what changed and the by-hand check). **[perf]** re-measure on
       the device.
-- [ ] Lighting ([its section](re/natives.md#lighting)). **[perf]**
+- [ ] Lighting ([its section](re/natives.md#lighting)). **[perf]** The
+      meshes half landed (2026-09-25; the section has what changed and
+      the by-hand checks); the light maps half remains.
 - [x] Coronas (2026-09-25; [coronas](re/natives.md#coronas) has what
       changed and the by-hand checks).
 - [x] Blend animations: head turns and lip sync (2026-09-25;

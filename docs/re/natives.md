@@ -479,14 +479,21 @@ Read from both codes ([the original's](render-dll.md#lighting)):
   out.
 - **`LE_CloudCast`**: the fork builds it once; in the original its shape
   changes over time, and it is run every frame.
-- **Meshes.** The fork lights a mesh with the first 8 lights in reach that
-  its light tree lists, not the strongest, and keeps the weak ones the
-  original drops. It traces from each light in reach to the actor whenever
-  the actor has moved -- every frame for one walking -- where the original
-  checks each of its lights every 16 frames. It has no fading, and leaves out
-  lights with `bCorona`, which light meshes in the original. Its formula per
-  vertex is its own: a smooth falloff and plain diffuse, two square roots a
-  light, no highlight, and ambient and light scaled otherwise.
+- **Meshes.** The fork keeps the original's now (2026-09-25): the
+  candidates from the actor's leaf of the BSP plus the moving lights near
+  it and last frame's, the strongest picked first -- statics until 8, none
+  below an eighth of the strongest, `bCorona` lights counting -- shadows
+  checked through the BSP every 16 frames, each light fading in and out
+  over about a third of a second and lighting as it fades, and the
+  original's per-vertex formula: the (cos + 1)^2 - 1.5 diffuse, the
+  6 cos^2 highlight toward the eye, linear falloff, 1.4 x `ScaleGlow`,
+  ambient added, channels clamped. One knowing difference: the moving
+  lights come from the fork's light tree near the actor, not the leaf's
+  own list. Whether the brightness pairs with the fork's light maps as the
+  original's does is judged against the original's display driver
+  ([decided 4](../../agent.md#decided)); a by-hand look first: an NPC
+  under a street lamp, one walking from light into shadow (the fade), and
+  a fire's glow on a face.
 
 ### Head turns and lip sync: blend animations
 
