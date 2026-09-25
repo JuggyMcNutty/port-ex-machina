@@ -65,8 +65,9 @@ All read; the inventory is
       allows -- and the by-hand checks
       ([lists](re/natives.md#lists), [the UI](re/natives.md#the-ui)).
 - [x] Acceptance: our own saves round-trip (a slot and the quick save,
-      2026-09-24); the original's reference saves were tried and stop at
-      the original's saved event manager -- retry after M3.
+      2026-09-24); the original's reference saves load and play
+      (2026-09-25), their saved event manager skipped
+      ([hearing](re/natives.md#hearing-the-ai-event-system)).
 
 ## M2 -- the story stays intact
 
@@ -86,17 +87,21 @@ All read; the inventory is
 
 ## M3 -- the world behaves
 
-- [ ] First, render time and stasis: the native tick and the event manager
-      both read them ([out of sight](re/natives.md#out-of-sight)). **[perf]**
-- [ ] The AI event system, `UEventManager` and `AICanHear`: NPCs hear
-      gunfire, footsteps, alarms, distress and bodies
-      ([hearing](re/natives.md#hearing-the-ai-event-system)).
-- [ ] `ScriptedPawn`'s native tick: agitation and fear, the sixteen timers,
-      cloaking, bleeding, burning out, disappearing
-      ([its section](re/natives.md#the-native-tick-ascriptedpawntick)).
-- [ ] Moving: `AIPickRandomDestination`, `AIDirectionReachable`,
-      `ReachablePathnodes` in full, `ComputePathnodeDistances`
-      ([moving](re/natives.md#moving-wandering-and-tactical-movement)).
+- [x] First, render time and stasis: the native tick and the event manager
+      both read them (2026-09-25;
+      [out of sight](re/natives.md#out-of-sight)). **[perf]**
+- [x] The AI event system, `UEventManager` and `AICanHear`: NPCs hear
+      gunfire, footsteps, alarms, distress and bodies (2026-09-25;
+      [hearing](re/natives.md#hearing-the-ai-event-system) has what was
+      seen and the by-hand checks; the original game's saves load past
+      their saved manager now).
+- [x] `ScriptedPawn`'s native tick: agitation and fear, the sixteen timers,
+      cloaking, bleeding, burning out, disappearing (2026-09-25;
+      [its section](re/natives.md#the-native-tick-ascriptedpawntick)).
+- [x] Moving: `AIPickRandomDestination`, `AIDirectionReachable`,
+      `ReachablePathnodes` in full, `ComputePathnodeDistances` (2026-09-25,
+      with `RandomBiasedRotation` from the traces item;
+      [moving](re/natives.md#moving-wandering-and-tactical-movement)).
 - [ ] Traces and moves as the original: `ParabolicTrace`, `TraceTexture` and
       `TraceVisibleActors`, `StrafeTo` and `StrafeFacing`,
       `RandomBiasedRotation`, `SetPhysics`, `GetBoundingBox`, `Enable` and

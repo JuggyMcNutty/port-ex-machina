@@ -88,9 +88,11 @@ commands and showed three of these. The rest is read from the code:
   save round-trip, the saved pawn possessed, 2026-09-24). `?loadgame=N`
   does what the original's `Browse` does: the slot's `SaveInfo` names the
   map, `Current` is emptied, the slot copied in, and the map loads from
-  `Current`. The original game's saves do not load yet: they carry its
-  saved event manager, a C++-only class the fork lacks until the AI event
-  system is ported ([hearing](#hearing-the-ai-event-system)).
+  `Current`. The original game's saves load too (2026-09-25, seen: the
+  reference Liberty Island save loads and plays): their saved event manager
+  is recognized and skipped, its listeners lost
+  ([hearing](#hearing-the-ai-event-system)); what its NPCs still do is to
+  check by hand.
 - **Deleting** works: the screens' `DeleteGame N` console command removes
   the slot, and `DeleteSaveInfo` lets go of a kept info without touching
   the disk, as the original's does. To check by hand.
@@ -116,9 +118,10 @@ for one piece, in the fork (2026-09-25). Left:
   frame. The original itself saves none for its OpenGL driver, and the
   screens take a missing one.
 
-The fork reads its own saves back (2026-09-24). The original game's saves
-stop at its saved event manager; to be retried once the event manager is
-ported.
+The fork reads its own saves back (2026-09-24), and the original game's
+load past their saved event manager now (2026-09-25), the manager skipped
+and its listeners lost until its exact bytes are read
+([hearing](#hearing-the-ai-event-system)).
 
 ## Flags
 
@@ -255,97 +258,123 @@ note, a book's centred title, the credits' section breaks
 ### The native tick: `AScriptedPawn::Tick`
 
 Every `ScriptedPawn` has a C++ `Tick` in `DeusEx.dll`
-([what it does](deusex-dll.md#the-native-tick)), and the fork has nothing of
-it: no field it updates is written anywhere in the fork. Without it:
+([what it does](deusex-dll.md#the-native-tick)), and the fork runs it now
+(2026-09-25), before the actor tick, in the original's order. What was
+missing without it, each in place:
 
-- **Agitation and fear never decay.** Only this tick calls `UpdateAgitation`
-  and `UpdateFear`. The script has versions of both that nothing calls. An NPC
-  the player bumped or scared stays that way.
-- **Sixteen AI timers never count down:** `AlarmTimer`, `FireTimer`,
-  `SpecialTimer`, `ReloadTimer`, `AvoidWallTimer`, `AvoidBumpTimer`,
-  `ObstacleTimer`, `CloakEMPTimer`, `TakeHitTimer`, `CarcassCheckTimer`,
-  `PotentialEnemyTimer`, `BeamCheckTimer`, `FutzTimer`,
-  `PlayerAgitationTimer`, and the counting-up `WeaponTimer` and
-  `DistressTimer`. The script sets these and waits for them to reach zero.
-- **Cloaking NPCs never cloak** (`EnableCloak`).
-- **A burning NPC never goes out** (`ExtinguishFire`).
-- **A wounded NPC never bleeds** (`SpurtBlood`).
-- **A `bDisappear` NPC is never removed** once out of sight.
-- **An NPC's pivot never eases** to `DesiredPrePivot` (sitting, standing).
+- **Agitation and fear decay**: the tick calls `UpdateAgitation` and
+  `UpdateFear` -- the script's own versions, which nothing called and which
+  mirror the DLL's.
+- **The sixteen AI timers count** -- twelve down to zero; `ReloadTimer` and
+  the counting-up `WeaponTimer` only with a weapon; `PotentialEnemyTimer`
+  clearing `PotentialEnemyAlliance` as it runs out; `DistressTimer` counting
+  up until it passes `FearSustainTime` and becomes -1. Seen: a set
+  `AlarmTimer` of 5 read 2.0 three seconds on and 0 later, the
+  `DistressTimer` counting toward its 25.
+- **Cloaking**: with `bHasCloak`, the script's
+  `EnableCloak(Health <= CloakThreshold)` every tick.
+- **Burning out**: past `BurnPeriod`, the script's `ExtinguishFire`.
+- **Bleeding**: `SpurtBlood` as `DropCounter` passes the wound's period,
+  faster the harder it bleeds and the faster it moves, clotting away over
+  `ClotPeriod` -- and, with `bTickVisibleOnly`, only within 1,200 units of
+  the player (seen gated off beyond it).
+- **A `bDisappear` NPC** in stasis or unseen for 5 s is destroyed
+  ([render time and stasis](#out-of-sight)).
+- **The pivot eases** to `DesiredPrePivot` as `PrePivotTime` runs out, under
+  the script's own `PlayAnimPivot` values (seen).
+- **The advanced-tactics manoeuvre ends** once the pawn stops accelerating,
+  leaves walking or has no turn direction.
 
-The fix is the original, read in full. The fork needs a place for a class's
-own C++ tick, where Surreal's actor tick would call it; its disappearing also
-needs [render time and stasis](#out-of-sight).
+To check by hand: a cloaked commando, a burning NPC going out, a rat
+disappearing once out of sight
+([open decision 1](../../agent.md#open-decisions)).
 
 ### Hearing: the AI event system
 
 NPCs learn of gunfire, footsteps, noises, alarms, bodies and distress through
 events that actors raise and NPCs listen for
-([the original](engine-dll.md#the-ai-event-system)):
+([the original](engine-dll.md#the-ai-event-system)). The fork has the
+original's manager now (2026-09-25): `UEventManager`, one per level in
+`LevelInfo.EventManager`, ticked by the level after the actors and saved
+with it, with the raising and listening natives (`AISetEventCallback` 710,
+`AIClearEventCallback` 711, `AISendEvent` 713, `AIStartEvent` 714,
+`AIEndEvent` 715, `AIClearEvent` 716, `LevelInfo.InitEventManager` 650 --
+all stubs before, reached in every map run, so no NPC heard anything),
+`AICanHear` 706 as the original's, and `AICanSmell` 707 answering 0 as the
+original's does. Its class is the DLL's own with no script, made at startup
+into the Engine package. Seen on Liberty Island: terrorists took
+`HandleDistress` by sight of a distressed civilian, a security bot heard
+footstep pulses fade with distance, a raised `WeaponFire` reached
+`HandleShot` and the terrorists' answering gunfire became senders in turn,
+and a quick save carried 10 event types and 325 listeners through a load.
+To check by hand: a shot fired around a corner turning guards, a thrown
+body found ([open decision 1](../../agent.md#open-decisions)).
 
-- `AISetEventCallback` 710, `AIClearEventCallback` 711, `AISendEvent` 713,
-  `AIStartEvent` 714, `AIEndEvent` 715 and `AIClearEvent` 716, with about 100
-  script call sites between them;
-- `LevelInfo.InitEventManager` 650.
-
-The fork has them all as stubs, and every map run reached some of them. So no NPC
-hears anything: a shot, a thrown object or a body found raises nothing.
-
-- **The fix:** the original's manager, a C++ class (`UEventManager`) that the
-  level ticks and saves, and what it calls: `AICanHear` 706, a stub in the
-  fork, and `AICanSee`, ported. `AICanSmell` 707 returns 0 in the original
-  too. The manager also reads [render time](#out-of-sight), which the fork
-  does not keep.
+The fork saves the manager in a layout of its own. The original game's
+saved manager -- its exact bytes unread -- is recognized and skipped on
+load with a message, its listeners lost: what an original save's NPCs
+still hear is to be checked when those bytes are read.
 
 ### Moving: wandering and tactical movement
 
-- **`AIPickRandomDestination` 709** is how a wandering NPC picks where to go
-  (`ScriptedPawn.Wandering.PickDestination`); reached in every map but the
-  menu.
-- **`AIDirectionReachable` 708** has 17 call sites: `PickDestination`,
-  `TryLocation`, `GetNextLocation`, `FindBackupPoint`, `CleanerBot` and
-  animals. It is how an NPC tests a direction before moving there in a fight or
-  a search; reached in UNATCO HQ and Battery Park.
-- **`ReachablePathnodes` 1004** is an iterator: the script walks it with
-  `foreach`, from `GetOvershootDestination` -- an NPC in its Seeking state
-  guessing where a lost target went -- and `ComputeAwayVector`. The fork's
-  yields nothing, so a seeking NPC gets no overshoot destination.
-  `ComputePathnodeDistances` 1020 serves the same code.
+All the original's now (2026-09-25; the originals:
+[moving](engine-dll.md#moving)); they were stubs, so a wandering NPC never
+picked where to go, one in a fight or a search never tested a direction,
+and a seeking NPC got no overshoot destination:
 
-All are stubs; the originals are read: [moving](engine-dll.md#moving).
+- **`AIPickRandomDestination` 709** (`Wandering.PickDestination`, reached
+  in every map but the menu): up to its tries of biased random directions,
+  each tested through `AIDirectionReachable`, the multiplier stopping the
+  pawn short of what it can reach.
+- **`AIDirectionReachable` 708** (17 call sites: `PickDestination`,
+  `TryLocation`, `GetNextLocation`, `FindBackupPoint`, `CleanerBot`,
+  animals): the pawn itself walks, swims or flies the direction in steps of
+  its collision radius and is put back; walls, ledges, steps, the void,
+  pain zones and water stop it. Seen: a probe from a dock pawn found a spot
+  280 units along its facing inside the asked range.
+- **`ReachablePathnodes` 1004** (`GetOvershootDestination`,
+  `ComputeAwayVector`) iterates up to 32 nodes nearest first, from the
+  start node's usable reach specs, or the nearest reachable nodes within
+  1,000 units; `ComputePathnodeDistances` 1020 floods `visitedWeight` over
+  the network from the same list. Seen: 13 nodes nearest first by the dock,
+  and the flood reaching 876 of Liberty Island's 1,198 navpoints.
+
+To check by hand: NPCs wandering their bit of Liberty Island, and a
+searching NSF stepping around corners in a fight
+([open decision 1](../../agent.md#open-decisions)).
 
 ## Out of sight
 
 The original's renderer records when each actor and each zone was last drawn
 ([render time](render-dll.md#render-time)), and the engine and the scripts
 skip work for what the player has not seen lately
-([stasis and render time](engine-dll.md#stasis-and-render-time)). The fork's
-renderer marks only whether an actor was drawn in the last frame
-(`LastVisibleFrame`), for Distant AI, which has pawns neither seen nor near
-think every third or sixth frame
-([its patches](../ENGINE.md#settings-the-launcher-exposes)); the rest it runs.
+([stasis and render time](engine-dll.md#stasis-and-render-time)). The fork
+keeps both now (2026-09-25), beside Distant AI's own `LastVisibleFrame`
+([its patches](../ENGINE.md#settings-the-launcher-exposes)):
 
-- **Render time.** The fork never sets `LastRenderTime`, and its
-  `LastRendered()` returns 0 for every actor, and for a decal the decal's
-  `LastRenderedTime`, which it never sets either: everything counts as just
-  drawn. So what the script spares actors out of sight, it never does: a
-  `ParticleGenerator` unseen for 2 s goes on; an NPC with `bTickVisibleOnly`
-  more than 600 units away and unseen for 5 s still looks for enemies other
-  than the player, and beyond 1,200 still looks for bodies; any NPC out of
-  sight still checks for light beams; and an NPC's shadow is traced down and
-  laid again each tick the NPC moves, where the original does it only while
-  the NPC was drawn in the last second. On the handheld all of that runs.
-- **Stasis.** The original skips the whole tick of an actor in stasis --
-  `bStasis`, not drawn for 5 s, not moving, and far from the player or in a
-  zone not drawn -- and destroys a `bTransient` one. The fork ticks every
-  actor, and its `InStasis()` returns `bStasis || bForceStasis`: whether stasis
-  is allowed, not whether the actor is in it. Its script users are `Shadow`,
-  which leaves the shadow of an owner in stasis where it is -- in the fork, of
-  any owner with `bStasis`, moving or not -- and a debug window. Which actors
-  the game's maps set `bStasis` on is to be checked.
-- **The event manager**, once there, reads both: a listener drawn in the last
-  5 s weighs senders at any distance, one unseen and more than 1,200 units
-  from the player only those within 400.
+- **Render time.** `LastRenderTime` is stamped where the renderer's own
+  visibility test passes, a spawned actor starts 10 s undrawn, and a zone's
+  is the frame's own zone and both zones a visible portal borders (this
+  renderer draws the BSP whole behind a span clipper, not zone by zone as
+  the original's `OccludeBsp`). `LastRendered()` answers the time since,
+  never below 0 -- it returned 0 for every actor, so everything counted as
+  just drawn and the scripts spared nothing: `ParticleGenerator`s unseen
+  for 2 s, `bTickVisibleOnly` NPCs' enemy and body checks, light-beam
+  checks, and NPC shadows laid each tick all ran, on the handheld too. A
+  decal's own `LastRenderedTime` is stamped when drawn and never read, as
+  the original's: a `Shadow` never counts as drawn.
+- **Stasis.** `InStasis()` is the original's -- `bStasis`; `bForceStasis`,
+  or physics none or rotating; not drawn for 5 s; its zone not drawn for
+  5 s, or more than 1,200 units from the player -- where the fork's old one
+  answered whether stasis was *allowed*. The tick of an actor in stasis
+  does nothing -- no script tick, physics, animation or timers -- and
+  destroys a `bTransient` one. Seen on Liberty Island: of ~2,600 actors,
+  ~220 allow stasis, and the count in it grew from 6 to 30 over 40 s as
+  unseen trees and lamps aged past 5 s. **[perf]** To re-measure on the
+  Smart Pro when M3's AI work lands with it.
+- **The event manager** reads both: a listener drawn in the last 5 s or
+  within 1,200 units, and not in stasis, weighs every sender; any other
+  only those within 400 ([hearing](#hearing-the-ai-event-system)).
 
 ## On screen
 
@@ -574,12 +603,12 @@ differ (read from both codes; to check by hand):
 - **`LevelInfo`'s clock.** The fork's main loop fills `Year` counted from 1900
   and `Month` from 0, as in its save dates; the original's are the full year
   and 1 to 12. In Deus Ex only `StatLog` reads them.
-- **`Actor.RandomBiasedRotation` 717.** The fork never scales its random
-  offsets to rotator units, so it returns the central yaw and pitch give or
-  take one unit; the original spreads them over up to half a turn of yaw and a
-  quarter of pitch ([moving](engine-dll.md#moving)). An NPC sprinting aside in
-  a fight always goes square to its enemy, and a `PawnGenerator`'s pawns all
-  face its way.
+- **`Actor.RandomBiasedRotation` 717**: the original's now (2026-09-25,
+  with [moving](#moving-wandering-and-tactical-movement)). The fork never
+  scaled its random offsets to rotator units, so it returned the central yaw
+  and pitch give or take one unit: an NPC sprinting aside in a fight always
+  went square to its enemy, and a `PawnGenerator`'s pawns all faced its way
+  ([the original](engine-dll.md#moving)).
 - **`Object.Enable` 117 and `Disable` 118.** The original keeps a bit per
   probe on the state frame and sets them all afresh at every `GotoState`, even
   into the state the object is in; a name that is not a probe it only logs

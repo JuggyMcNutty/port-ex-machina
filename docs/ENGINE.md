@@ -447,3 +447,51 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   a temporary in-engine self-test drove sorting (name, number, reverse),
   the number reader (hex, octal, hours and minutes), the format, the moves
   and a delete's focus; a 70 s run after its removal is clean.
+- [**render time and stasis**](https://github.com/JuggyMcNutty/SurrealEngine/commit/c7b3e00624c314757db5655caf8f35f9549d40c7) --
+  the roadmap's first M3 item: the renderer stamps when each actor, zone
+  and decal was last drawn, `LastRendered()` answers the time since, and
+  the tick of an actor in stasis -- the original's full test, not "stasis
+  allowed" -- does nothing and destroys a transient one
+  ([out of sight](re/natives.md#out-of-sight)). **[perf]** to re-measure on
+  the Smart Pro with M3's AI work. **Checked:** a temporary snapshot hook
+  counted Liberty Island each 8 s -- unseen trees and lamps entered stasis
+  as they aged past 5 s while the drawn-recently count fell; a 70 s run
+  after its removal is clean.
+- [**the AI event system**](https://github.com/JuggyMcNutty/SurrealEngine/commit/248538769f65b8e3393d102bdf6136ebe369ed22) --
+  the roadmap's M3 hearing item: the original's `UEventManager`, one per
+  level, saved with it -- senders' 16-frame rings and current levels,
+  receivers in one ring walked under the original's turn and 2 ms rules,
+  scores, senses (`AICanSee`, the original's `AICanHear`), and Begin, End,
+  Pulse and ChangeBest to the listeners' script
+  ([hearing](re/natives.md#hearing-the-ai-event-system)). The manager's
+  class is synthesized into the Engine package, so a save's import of it
+  resolves; the original game's saved manager is recognized and skipped,
+  which is what lets the original's saves load now. **Checked:** a
+  temporary hook stood the player beside a terrorist and raised
+  WeaponFire -- distress seen by sight, footsteps heard fading, HandleShot
+  fired, and the terrorists' own gunfire became senders; a quick save
+  carried 10 event types and 325 listeners through a load; the reference
+  Liberty Island save of the original game loads and plays; a 75 s run
+  after the hooks' removal is clean.
+- [**ScriptedPawn's native tick**](https://github.com/JuggyMcNutty/SurrealEngine/commit/4bd245b6e24503319ae5da17eee8c84ddc1e67cd) --
+  the roadmap's M3 tick item: disappearing, the pivot's easing, agitation
+  and fear (the script's own unused `UpdateAgitation` and `UpdateFear`),
+  the sixteen AI timers, cloaking, the advanced-tactics manoeuvre's end,
+  burning out and bleeding, in the original's order before the actor tick
+  ([the native tick](re/natives.md#the-native-tick-ascriptedpawntick)).
+  **Checked:** a temporary hook set a patrolling terrorist's fields and
+  read the timers counting, the distress rising, the pivot tweening under
+  the script's own values and the bleeding correctly gated off beyond
+  1,200 units; 90 s and 65 s runs show no script error.
+- [**moving**](https://github.com/JuggyMcNutty/SurrealEngine/commit/9df38d9520c7daed9d78fc28bdf59eef6934d9c8) --
+  the roadmap's M3 moving item plus the traces item's
+  `RandomBiasedRotation`: `AIDirectionReachable` walks, swims or flies the
+  pawn itself along a direction and puts it back; `AIPickRandomDestination`
+  tries biased random directions through it; `ReachablePathnodes` iterates
+  the original's `GetPathnodeList` and `ComputePathnodeDistances` floods
+  the network from it
+  ([moving](re/natives.md#moving-wandering-and-tactical-movement)).
+  **Checked:** temporary probes on Liberty Island -- a spot found 280
+  units along a pawn's facing, 13 pathnodes nearest first, the flood
+  reaching 876 of 1,198 navpoints; a 70 s run after their removal is
+  clean, no moving native left unimplemented in it.

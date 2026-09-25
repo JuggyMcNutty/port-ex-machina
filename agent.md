@@ -56,15 +56,22 @@ no facts of its own beyond those; each lives in one doc, and the
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
-- **Next**: M3 ([decided 6](#decided), [`docs/ROADMAP.md`](docs/ROADMAP.md)).
-  M2's code landed (2026-09-25) -- conversations, the text parser and the
-  list window, each as the original's -- with its by-hand checks in
-  [open decision 1](#open-decisions). M1 landed (2026-09-25) but for the
-  save picture -- a renderer capture point its frame overlap allows,
-  deferred to the render work -- and the by-hand save-screen checks; M0's
-  acceptance captures also remain. The Smart Pro's work
-  ([decided 2](#decided)) and the next ports
-  ([open decision 4](#open-decisions)) run beside it, at the owner's pick.
+- **Next**: M3 ([decided 6](#decided), [`docs/ROADMAP.md`](docs/ROADMAP.md))
+  is in progress: render time and stasis, the AI event system,
+  `ScriptedPawn`'s native tick and moving landed (2026-09-25) -- NPCs hear,
+  their timers run, they pick where to go, and the original game's saves
+  load past their saved event manager -- left, the traces-and-moves item
+  (`ParabolicTrace`, the trace iterators, the strafes, `SetPhysics`,
+  `GetBoundingBox`, `Enable`/`Disable`, `VRand`, the conversions;
+  `RandomBiasedRotation` of it landed with moving). M2's code landed (2026-09-25) -- conversations, the text
+  parser and the list window, each as the original's -- with its by-hand
+  checks in [open decision 1](#open-decisions). M1 landed (2026-09-25) but
+  for the save picture -- a renderer capture point its frame overlap
+  allows, deferred to the render work -- and the by-hand save-screen
+  checks; M0's acceptance captures also remain. The Smart Pro's work
+  ([decided 2](#decided), the stasis and AI work is **[perf]**: re-measure
+  there) and the next ports ([open decision 4](#open-decisions)) run beside
+  it, at the owner's pick.
 
 ## Decided
 
@@ -205,7 +212,18 @@ no facts of its own beyond those; each lives in one doc, and the
      [natives.md](docs/re/natives.md#implemented-not-as-the-original); a
      sound behind a wall, a light's hum, the music after a fight and the
      Speech slider, by [natives.md](docs/re/natives.md#sound) (with the
-     desktop's audio: [linux-x86_64's](ports/linux-x86_64/README.md#audio)).
+     desktop's audio: [linux-x86_64's](ports/linux-x86_64/README.md#audio));
+     a shot fired around a corner turning the guards, and a body found
+     raising the alarm, by
+     [natives.md](docs/re/natives.md#hearing-the-ai-event-system); one of
+     the original game's reference saves played on for a while
+     ([natives.md](docs/re/natives.md#saving-loading-and-travel)); a
+     cloaked commando, a burning NPC going out and a rat disappearing
+     once out of sight, by
+     [natives.md](docs/re/natives.md#the-native-tick-ascriptedpawntick);
+     NPCs wandering their bit of Liberty Island and a searching NSF
+     stepping around corners, by
+     [natives.md](docs/re/natives.md#moving-wandering-and-tactical-movement).
      The desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is
