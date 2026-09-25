@@ -32,7 +32,12 @@ its area in the maps that did, the matching by-hand checks pass
       quick save, numbered slots, a mid-mission save past a hub map), and
       watching what was read but never seen -- a comment-jump conversation, a
       sound behind a wall, a zone's reverb, coronas, a laser tripwire -- as
-      each fix's acceptance reference.
+      each fix's acceptance reference. Banked so far (2026-09-24,
+      `reference/original-saves/`, this machine only -- saves hold the
+      game's data and are never committed): Save0001 from Liberty Island's
+      start, as [the original's layout](re/deusex-dll.md#the-game-engine-travel-and-saving)
+      has it. Still wanted: a quick save, and a mid-mission save past a hub
+      map, which brings the `Current` directory.
 
 ## M1 -- a playthrough survives: saving, loading, travel
 
