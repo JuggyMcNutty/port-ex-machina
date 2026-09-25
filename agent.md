@@ -56,22 +56,21 @@ no facts of its own beyond those; each lives in one doc, and the
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
-- **Next**: M3 ([decided 6](#decided), [`docs/ROADMAP.md`](docs/ROADMAP.md))
-  is in progress: render time and stasis, the AI event system,
-  `ScriptedPawn`'s native tick and moving landed (2026-09-25) -- NPCs hear,
-  their timers run, they pick where to go, and the original game's saves
-  load past their saved event manager -- left, the traces-and-moves item
-  (`ParabolicTrace`, the trace iterators, the strafes, `SetPhysics`,
-  `GetBoundingBox`, `Enable`/`Disable`, `VRand`, the conversions;
-  `RandomBiasedRotation` of it landed with moving). M2's code landed (2026-09-25) -- conversations, the text
-  parser and the list window, each as the original's -- with its by-hand
-  checks in [open decision 1](#open-decisions). M1 landed (2026-09-25) but
-  for the save picture -- a renderer capture point its frame overlap
-  allows, deferred to the render work -- and the by-hand save-screen
-  checks; M0's acceptance captures also remain. The Smart Pro's work
-  ([decided 2](#decided), the stasis and AI work is **[perf]**: re-measure
-  there) and the next ports ([open decision 4](#open-decisions)) run beside
-  it, at the owner's pick.
+- **Next**: M4 ([decided 6](#decided), [`docs/ROADMAP.md`](docs/ROADMAP.md)).
+  M3's code landed whole (2026-09-25) -- render time and stasis, the AI
+  event system, `ScriptedPawn`'s native tick, moving, and the
+  traces-moves-probes-conversions item -- so NPCs hear, their timers run,
+  they pick where to go, grenades are judged, lasers stop at people, and
+  the original game's saves load past their saved event manager (its exact
+  bytes still unread). M2's code landed too (2026-09-25) -- conversations,
+  the text parser and the list window, each as the original's. Their
+  by-hand checks are in [open decision 1](#open-decisions). M1 landed
+  (2026-09-25) but for the save picture -- a renderer capture point its
+  frame overlap allows, deferred to the render work -- and the by-hand
+  save-screen checks; M0's acceptance captures also remain. The Smart
+  Pro's work ([decided 2](#decided); M3's stasis and AI work is **[perf]**:
+  re-measure there) and the next ports
+  ([open decision 4](#open-decisions)) run beside it, at the owner's pick.
 
 ## Decided
 

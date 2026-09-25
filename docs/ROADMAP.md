@@ -102,11 +102,12 @@ All read; the inventory is
       `ReachablePathnodes` in full, `ComputePathnodeDistances` (2026-09-25,
       with `RandomBiasedRotation` from the traces item;
       [moving](re/natives.md#moving-wandering-and-tactical-movement)).
-- [ ] Traces and moves as the original: `ParabolicTrace`, `TraceTexture` and
+- [x] Traces and moves as the original: `ParabolicTrace`, `TraceTexture` and
       `TraceVisibleActors`, `StrafeTo` and `StrafeFacing`,
       `RandomBiasedRotation`, `SetPhysics`, `GetBoundingBox`, `Enable` and
-      `Disable`, `VRand`, the conversions
-      ([implemented, not as the original](re/natives.md#implemented-not-as-the-original)).
+      `Disable`, `VRand`, the conversions (2026-09-25;
+      [implemented, not as the original](re/natives.md#implemented-not-as-the-original)
+      has what each was and the by-hand checks).
 
 ## M4 -- the look
 

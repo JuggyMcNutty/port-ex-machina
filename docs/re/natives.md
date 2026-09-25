@@ -603,80 +603,52 @@ differ (read from both codes; to check by hand):
 - **`LevelInfo`'s clock.** The fork's main loop fills `Year` counted from 1900
   and `Month` from 0, as in its save dates; the original's are the full year
   and 1 to 12. In Deus Ex only `StatLog` reads them.
-- **`Actor.RandomBiasedRotation` 717**: the original's now (2026-09-25,
-  with [moving](#moving-wandering-and-tactical-movement)). The fork never
-  scaled its random offsets to rotator units, so it returned the central yaw
-  and pitch give or take one unit: an NPC sprinting aside in a fight always
-  went square to its enemy, and a `PawnGenerator`'s pawns all faced its way
-  ([the original](engine-dll.md#moving)).
-- **`Object.Enable` 117 and `Disable` 118.** The original keeps a bit per
-  probe on the state frame and sets them all afresh at every `GotoState`, even
-  into the state the object is in; a name that is not a probe it only logs
-  ([events and probes](core-dll.md#events-and-probes)). The fork keeps a set
-  of disabled names per state name, which no state change clears: a probe
-  disabled in a state is off whenever the object is back in that state, until
-  enabled, and any name can be disabled -- so every script call to an object
-  that has disabled anything, as most NPCs have `AnimEnd`, looks its name up
-  in the set. The game disables only probes, and the difference shows where
-  it disables one and then goes to the state it is in: `ScriptedPawn`'s
-  `Wandering.Bump` disables `AnimEnd` and goes to its `Wander` label, which
-  enables it again in the original and not in the fork. What that changes in
-  play is to be checked.
-- **Conversions**, the VM's tokens. The fork makes a bool `1` or `0`, where
-  the original makes it `True` or `False`; it reads a string as a bool only as
-  a number, so `True` is false, though only the server browser converts one;
-  it needs both commas to read a vector or rotator and makes it all 0 without
-  them, where the original reads what is there; it wraps a rotator's parts to
-  0–65535 when printing it; and it prints an object as its package and name,
-  not its path ([the originals](core-dll.md#the-natives)).
+- **The roadmap's M3 traces-and-moves item is the original's now**
+  (2026-09-25; the originals: [traces](engine-dll.md#traces),
+  [moving](engine-dll.md#moving),
+  [events and probes](core-dll.md#events-and-probes),
+  [the natives](core-dll.md#the-natives)). What each was:
+  - **`Object.Enable` 117 and `Disable` 118**: one probe mask per object,
+    set afresh at every `GotoState` even into the same state, saved as the
+    original's `FStateFrame` keeps it. The fork kept per-state sets of
+    disabled names that no state change cleared and that every scripted
+    call looked its name up in -- `Wandering.Bump`'s disabled `AnimEnd`
+    stayed off, where the state's `Wander` label re-enables it now. To
+    check by hand with the rest of M3's AI.
+  - **Conversions**: a bool prints `True`/`False` and reads back as one; a
+    vector or rotator reads what is there, a missing part 0; a rotator
+    prints its parts unwrapped; an object prints its path name.
+  - **`Object.VRand` 252** (70 call sites): the points kept are those
+    inside the unit sphere, which lean nowhere.
+  - **`Actor.RandomBiasedRotation` 717**: the offsets spread over the
+    range at last -- an NPC sprinting aside in a fight no longer always
+    goes square to its enemy.
+  - **The trace iterators `TraceTexture` 1000 and `TraceVisibleActors`
+    1003** run over the original's `MultiLineCheck`: nothing beyond the
+    first wall, the wall itself listed as the `LevelInfo`, a level hit
+    giving the surface's texture and `PolyFlags` and an actor hit no
+    texture. A laser beam stops at the player and NPCs now (they have no
+    `Skin`, which the fork required) and at walls; an NPC seeking a spot
+    no longer sees it through a wall. To check by hand: Liberty Island's
+    laser tripwires.
+  - **`Actor.ParabolicTrace` 722**: the original's defaults, gravity the
+    right way up, the zone's velocity, terminal velocity and water,
+    per-step tracing, bounces, and failure to the start. NPCs judge a
+    grenade's landing again.
+  - **`Actor.GetBoundingBox` 724** with a test place or rotation puts the
+    actor there for the moment: the HUD's highlight on a door and a
+    `DeusExMover`'s area sit right. To check by hand: a door's highlight.
+  - **`Actor.SetPhysics` 3970** takes the floor it is given as the base
+    (its `SupportActor` event): a grenade or pool ball coming to rest
+    moves with what it landed on.
+  - **`Pawn.StrafeTo` 504 and `StrafeFacing` 506** take Deus Ex's speed:
+    an NPC strafing in a fight runs at its full `MaxDesiredSpeed`.
 - **`Object.Mid` 127** with a negative start: the original returns an empty
   string, the fork counts from 0.
-- **`Object.VRand` 252** (70 call sites). The fork keeps the points it draws
-  *outside* the unit sphere, so its directions lean toward the cube's
-  diagonals; the original keeps those inside, which lean nowhere.
 - **`Actor.LastRendered` 723 and `Actor.InStasis` 721:**
   [out of sight](#out-of-sight).
-- **The trace iterators, `TraceTexture` 1000 and `TraceVisibleActors`
-  1003** (read from both codes; [the originals](engine-dll.md#traces)). The
-  fork's line goes on past walls, and its hit on the level has no actor, where
-  the original's is the `LevelInfo`. Its `TraceTexture` gives an actor's
-  `Skin` as its texture and passes over an actor without one, and gives the
-  texture's flags, not the surface's; its `TraceVisibleActors` lists only
-  actors of the class that are not hidden, so never the level. In play, by the
-  code:
-  - **Laser tripwires.** A `LaserTrigger`'s beam stops at the first actor
-    `TraceTexture` gives. The player and the NPCs wear `MultiSkins` and have no
-    `Skin`, so the beam passes through them and trips nothing, while an actor
-    with a `Skin` beyond a wall trips it. A beam reflects only off a texture
-    flagged as a mirror, where the original's reflects off a mirrored surface.
-    Liberty Island has laser tripwires.
-  - **An NPC seeking a spot** within its seek distance takes it as seen
-    through a wall, and goes no closer.
-- **`Actor.ParabolicTrace` 722** (read from both codes;
-  [the original](engine-dll.md#traces)). The fork has no default for an
-  argument the script leaves out and reads an empty value -- the NPCs' check
-  of a falling grenade gives no step --; adds the zone's gravity with the wrong
-  sign, so a thrown thing falls upward; leaves out the zone's velocity, its
-  terminal velocity and water; traces each step from the start; and never
-  fails. NPCs misjudge where a grenade will land, and whether their own throw
-  is safe.
-- **`Actor.GetBoundingBox` 724** with a test place or rotation, as every script
-  call gives: the fork moves the actor's box, already in the world, by them,
-  so it is off by the actor's own place ([the original](engine-dll.md#traces)).
-  By the code, the HUD's highlight on a door is drawn in the wrong place, and
-  a `DeusExMover`'s area is wrong: which NPCs step out of its way, and which
-  pawns it tells when it stops.
 - **`Actor.PlaySound` 264** with no radius, from an actor with no
   `TransientSoundRadius`: 800 units in the original, 1,500 in the fork.
-- **`Actor.SetPhysics` 3970** ignores the floor it is given
-  ([the original](engine-dll.md#moving)): a grenade, pool ball, basketball or
-  fragment coming to rest does not take what it landed on as its base, and
-  stays put when that moves.
-- **`Pawn.StrafeTo` 504 and `StrafeFacing` 506** ignore the speed
-  ([the originals](engine-dll.md#moving)). The fork's `StrafeTo` gives an NPC
-  0.8 of its `MaxDesiredSpeed`, where the original gives all of it (the scripts
-  give no speed), and its `StrafeFacing` keeps the speed the NPC had and its
-  `bReducedSpeed`. NPCs strafe as they run and fire in a fight.
 
 ## Housekeeping, not seen directly
 

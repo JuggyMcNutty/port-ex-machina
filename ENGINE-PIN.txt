@@ -2,4 +2,4 @@
 # check verifies it, pin (after pushing a fork commit) moves it. docs/ENGINE.md.
 repo    https://github.com/JuggyMcNutty/SurrealEngine.git
 branch  deusex
-commit  9df38d9520c7daed9d78fc28bdf59eef6934d9c8
+commit  6f9b5e80cde903b4341d5656ffefc188515b39c1

@@ -495,3 +495,16 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   units along a pawn's facing, 13 pathnodes nearest first, the flood
   reaching 876 of 1,198 navpoints; a 70 s run after their removal is
   clean, no moving native left unimplemented in it.
+- [**traces, moves, probes and conversions**](https://github.com/JuggyMcNutty/SurrealEngine/commit/6f9b5e80cde903b4341d5656ffefc188515b39c1) --
+  the roadmap's last M3 item: one probe mask per object set at every
+  `GotoState` and saved as the original's `FStateFrame` keeps it (a save
+  from before this commit restores its pawns' probes wrongly -- dev saves
+  only); the bool, vector, rotator and object conversions; `VRand` inside
+  the unit sphere; the trace iterators over the original's
+  `MultiLineCheck`; `ParabolicTrace` whole; `GetBoundingBox` at a test
+  place; `SetPhysics` taking its floor; the strafes at Deus Ex's speed
+  ([implemented, not as the original](re/natives.md#implemented-not-as-the-original)).
+  **Checked:** a terrorist's probe mask -- a real sparse mask, not the old
+  all-on -- round-trips a quick save exactly; the intro's scene plays 238
+  lip-sync lines through the new mask; 60-70 s runs on both maps after the
+  hook's removal are clean.
