@@ -1,1 +1,0 @@
-af860b366e6c24370dd4e4e7865902a3b550df02 Fix bool properties in structs not getting serialized
