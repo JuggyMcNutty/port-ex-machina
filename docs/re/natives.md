@@ -437,17 +437,25 @@ A light with `bCorona` and a `Skin` texture shows a glow over it on screen
 
 ### Mesh detail
 
-The fork draws every LOD mesh whole, at any distance: it loads the tables for
-dropping detail and never uses them (read from the code). The original works
-out a vertex budget from the depth and the view each draw
-([mesh detail](render-dll.md#mesh-detail)): a trooper keeps its 370 vertices to
-about 2,700 units deep at 853 pixels wide, and has about 200 at 5,000 and 100
-at 10,000. Porting it is a filter on the faces (`FaceLevel`) and a walk down
-each corner's collapse list; the fork already works out each vertex once, the
-first time a face uses it, so its per-vertex work would fall with the faces.
-Morphing, for the look, is apart. On the Smart Pro the per-vertex work of
-~40 meshes is ~8 ms of the render
+The fork works the original's vertex budget out each draw now (2026-09-25;
+[the formula and its numbers](render-dll.md#mesh-detail)): faces whose
+`FaceLevel` is past the clamped budget go, each kept corner walks down its
+collapse list into it, and the top `LODMorph` fraction of the raw budget
+slides toward what it collapses to, texture coordinates with it, so detail
+fades rather than pops. A temporary log matched the doc's own numbers on
+Liberty Island (a trooper's 244 vertices at 7,865 deep at 1,920 pixels wide
+is the doc's ~200 at 5,000 at 853, scaled by the resolution term). The
+per-vertex work falls with the faces, since the fork animates and lights a
+vertex once a draw, the first time a kept face uses it. **[perf]** To
+re-measure on the Smart Pro: the per-vertex work of ~40 meshes was ~8 ms of
+the render
 ([where a frame goes](../../ports/trimui-smartpro/README.md#where-a-frame-goes)).
+Still different: the original's exact morph curve is unread (the fork
+slides linearly over the zone), and the original lights only the vertices
+of faces turned to the eye, which is [lighting](#lighting)'s to take up.
+
+To check by hand: an NPC walking away on Liberty Island -- detail fades
+with no pop or seam as it recedes, and reads whole again as it comes back.
 
 ### Lighting
 

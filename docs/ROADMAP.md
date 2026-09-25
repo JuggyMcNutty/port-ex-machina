@@ -121,7 +121,9 @@ All read; the inventory is
 - [x] Render iterators: particles and beams (2026-09-25;
       [its section](re/natives.md#particles-and-lasers-render-iterators)
       has what changed and the by-hand checks left).
-- [ ] Mesh detail ([its section](re/natives.md#mesh-detail)). **[perf]**
+- [x] Mesh detail (2026-09-25; [its section](re/natives.md#mesh-detail)
+      has what changed and the by-hand check). **[perf]** re-measure on
+      the device.
 - [ ] Lighting ([its section](re/natives.md#lighting)). **[perf]**
 - [ ] Coronas ([coronas](re/natives.md#coronas)).
 - [ ] Blend animations: head turns and lip sync

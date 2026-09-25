@@ -525,3 +525,17 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   electricity emitters list every segment when in view; frozen generators
   list nothing until their proxy is seen; 75 s runs on both maps after the
   hooks' removal are clean.
+- [**mesh detail**](https://github.com/JuggyMcNutty/SurrealEngine/commit/e8f93e31385fadb0a7f10ab96622121e16e30fd7) --
+  the roadmap's M4 mesh-detail item: the original's vertex budget worked
+  out each draw -- falling as one over the actor's depth in the view,
+  sooner for a complex mesh -- where the fork drew every LOD mesh whole at
+  any distance; faces past the budget go, each kept corner walks its
+  collapse list, and the top `LODMorph` fraction slides toward what it
+  collapses to, so detail fades rather than pops
+  ([mesh detail](re/natives.md#mesh-detail)). The per-vertex work falls
+  with the faces. **[perf]** to re-measure on the Smart Pro, where ~40
+  meshes' per-vertex work was ~8 ms of the render. **Checked:** a
+  temporary budget log matched the RE doc's own trooper numbers scaled to
+  the window; a forced-coarse run drew pawns at the floor without
+  breaking the scene; 75 s runs on both maps after the hooks' exact-text
+  removal are clean.
