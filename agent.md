@@ -29,15 +29,15 @@ no facts of its own beyond those; each lives in one doc, and the
   often) on and 853×480 (2026-09-23), which the fight's native rows switch to
   native for the run. It has no battery (its battery
   warnings are off: [its Gotchas](ports/trimui-smartpro/README.md#gotchas)).
-- **The game's DLLs**: both passes are read but for `Galaxy.dll`
-  (2026-09-24; [decided 4](#decided)). [`docs/re/`](docs/re/README.md) covers
+- **The game's DLLs**: both passes are read (2026-09-24;
+  [decided 4](#decided)). [`docs/re/`](docs/re/README.md) covers
   each binary read, and an IDA database gets three scripts from `tools/ida/`
   (types, strings, names).
   - **`DeusEx.dll`**, **`Engine.dll`** (its network code in
     [`network.md`](docs/re/network.md)), **`Core.dll`**, **`Extension.dll`**,
     **`ConSys.dll`**, **`DeusExText.dll`**, **`Render.dll`** (where a
-    feature's drawing lives there, its mesh detail and lighting) and
-    **`IpDrv.dll`**
+    feature's drawing lives there, its mesh detail and lighting),
+    **`IpDrv.dll`** and **`Galaxy.dll`**
     ([`deusex-dll.md`](docs/re/deusex-dll.md),
     [`engine-dll.md`](docs/re/engine-dll.md),
     [`core-dll.md`](docs/re/core-dll.md),
@@ -45,7 +45,8 @@ no facts of its own beyond those; each lives in one doc, and the
     [`consys-dll.md`](docs/re/consys-dll.md),
     [`deusextext-dll.md`](docs/re/deusextext-dll.md),
     [`render-dll.md`](docs/re/render-dll.md),
-    [`ipdrv-dll.md`](docs/re/ipdrv-dll.md)); their databases are typed,
+    [`ipdrv-dll.md`](docs/re/ipdrv-dll.md),
+    [`galaxy-dll.md`](docs/re/galaxy-dll.md)); their databases are typed,
     named and backed up.
   - **What Surreal lacks** of them is [`docs/re/natives.md`](docs/re/natives.md),
     from [`tools/natives_audit.py`](tools/natives_audit.py), five map runs and
@@ -89,7 +90,9 @@ no facts of its own beyond those; each lives in one doc, and the
    - **Per-actor work** around the scripts, `IsEventEnabled` among it. The
      original answers it from one mask on the state frame, and checks no call
      to any other function ([events and probes](docs/re/core-dll.md#events-and-probes)).
-   - **The audio update's scan** of every actor for an ambient sound.
+   - **The audio update's scan** of every actor for an ambient sound. The
+     original does the same scan every frame
+     ([each frame](docs/re/galaxy-dll.md#each-frame)): nothing of it to port.
    - **Actor meshes** (0018–0019 so far): the per-vertex work itself. The
      original draws a distant mesh with fewer vertices, and lights a vertex
      with the strongest lights only, checking their shadows every 16 frames
@@ -122,26 +125,22 @@ no facts of its own beyond those; each lives in one doc, and the
    IDA serves one database at a time, which the owner opens.
    - **The first pass** (done): DeusEx, Engine, Core, Extension, ConSys,
      DeusExText, and Render.dll where a feature's drawing lives there.
-   - **The second** (done but for `Galaxy.dll`): Render.dll's
+   - **The second** (done): Render.dll's
      [mesh detail](docs/re/render-dll.md#mesh-detail) and
      [lighting](docs/re/render-dll.md#lighting); Engine.dll's last natives
      ([traces](docs/re/engine-dll.md#traces), [moving](docs/re/engine-dll.md#moving),
      [small](docs/re/engine-dll.md#small)) and its
-     [network code](docs/re/network.md); [`IpDrv.dll`](docs/re/ipdrv-dll.md).
-   - **Next: `Galaxy.dll`**, the audio (no database yet): sounds muffled
-     behind level geometry, which the fork plays at full volume; the
-     per-frame update's search for ambient sounds (the audio scan, decided
-     2); which sounds win when the channels run out. It is the one to read
-     for what the game should sound like -- recommended over the two the
-     owner copied beside it, `ALAudio.dll` and `RGalaxy.dll`
-     ([what they are](docs/re/README.md#the-binaries)): ALAudio only for what
-     the original lacks, if wanted (reverb, HRTF).
+     [network code](docs/re/network.md); [`IpDrv.dll`](docs/re/ipdrv-dll.md);
+     [`Galaxy.dll`](docs/re/galaxy-dll.md), the audio.
    - **Only if a need comes up**: `D3DDrv.dll` (how the original looks:
      gamma, lightmap brightness, fog, detail textures), `SoftDrv.dll` (a
      software renderer, decided 3), `Fire.dll` (fire, water and ice
-     textures), `WinDrv.dll` (mouse and keyboard). **Not at all**:
+     textures), `WinDrv.dll` (mouse and keyboard), and the owner's copied
+     `ALAudio.dll` for what the original lacks (an EFX take on the reverb,
+     HRTF; [what it is](docs/re/README.md#the-binaries)). **Not at all**:
      `Editor.dll`, `Window.dll`, the Glide, Metal and SGL drivers,
-     `Setup.exe` and the GOG DLL.
+     `Setup.exe`, the GOG DLL and `RGalaxy.dll` (Galaxy.dll renamed, with one
+     change).
 5. **Multiplayer** (owner, 2026-09-24): Deus Ex's PvP servers are still up on
    a master server, and co-op is to be added one day; neither is scheduled.
    The fork has none of it ([multiplayer](docs/re/natives.md#multiplayer));
@@ -173,7 +172,10 @@ no facts of its own beyond those; each lives in one doc, and the
      coronas near and far and behind an NPC, by
      [natives.md](docs/re/natives.md#coronas); walking through a laser
      tripwire on Liberty Island, and a door's highlight, by
-     [natives.md](docs/re/natives.md#implemented-not-as-the-original).
+     [natives.md](docs/re/natives.md#implemented-not-as-the-original); a
+     sound behind a wall, a light's hum, the music after a fight and the
+     Speech slider, by [natives.md](docs/re/natives.md#sound) (with the
+     desktop's audio: [linux-x86_64's](ports/linux-x86_64/README.md#audio)).
      The desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is
@@ -215,6 +217,11 @@ no facts of its own beyond those; each lives in one doc, and the
      chosen, hidden and faded differently; every mesh is drawn whole at any
      distance; lights are sorted, picked and shadowed differently, and
      `NoDynamicLights` does nothing.
+   - **Sound** ([its section](docs/re/natives.md#sound); read from both codes
+     and the maps): sounds behind walls are not muffled; no zone reverb
+     (16 maps); ambient sounds on lights (402) play steady, as if unlit; the
+     music switches without fading and does not go on where it was; the
+     Speech slider does nothing; loudness, fall-off and Doppler differ.
    - **Traces and moves** ([not as the original](docs/re/natives.md#implemented-not-as-the-original);
      read from the code): laser tripwires pass through the player and NPCs;
      a seeking NPC sees through walls; NPCs misjudge grenades

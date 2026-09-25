@@ -564,6 +564,58 @@ list differs in more than its stubs:
   field), and `RootWindow.LockMouse` (the pointer held while a key is being
   bound) are stubs.
 
+## Sound
+
+The fork's audio is its own, over OpenAL; the original's is `Galaxy.dll`
+([`galaxy-dll.md`](galaxy-dll.md)). Both scan every actor for ambient sounds
+each frame, keep one record a channel and choose which sound wins alike. They
+differ (read from both codes; to check by hand):
+
+- **Sounds behind walls are not muffled.** In the original a sound fades over
+  half a second to a third of its volume while the level's BSP stands between
+  the player's eyes and its actor, speech excepted
+  ([sounds behind walls](galaxy-dll.md#sounds-behind-walls)); the fork plays
+  it as in the open. Porting it is the same line test for each playing sound
+  each frame -- up to 16 -- and a gain kept on each channel.
+- **No reverb.** The fork has none (its EFX is to do). The original gives a
+  zone with `bReverbZone` its own reverb, from its `MasterGain`, `CutoffHz`
+  and six echoes ([reverb](galaxy-dll.md#reverb)): 21 zones in 16 maps, from
+  Battery Park to the endgame (the data). OldUnreal's `ALAudio.dll` emulates
+  it with OpenAL's EFX ([the binaries](README.md#the-binaries)).
+- **Ambient sounds on lights.** 402 actors in 46 maps have both an ambient
+  sound and a light: lights, spotlights and cage lights (the data). The
+  original scales such a sound by `LightBrightness` ÷ 255 -- a quarter or
+  less for 235 of them -- and makes it follow the light's pulse or flicker
+  (42 of them) ([each frame](galaxy-dll.md#each-frame)); the fork plays each
+  steady, as if unlit.
+- **Music** ([the original's](galaxy-dll.md#music)). The fork switches at
+  once, where the original fades out over 1 s, over 5 s after a fight and
+  over 1/3 s into one. It never writes the order playing back into
+  `SongSection`, so after a fight or a conversation the ambient music starts
+  its section again, where the original goes on where it was. Section 255,
+  silence in the original, plays the song's first section.
+- **The Speech slider does nothing.** The fork has no speech volume: speech
+  follows the Sound slider, `Actor.SetInstantSpeechVolume` 269 is a stub, and
+  `SpeechVolume` is no setting of its audio device. The original plays speech
+  at the Speech slider and the rest at the Sound slider
+  ([volume](galaxy-dll.md#volume)).
+- **Loudness.** The fork plays every sound at half the Sound slider and
+  speech at twice its volume, and rescales the rest but ambient sounds --
+  (volume − 1) × 0.25 + 1, and 0.8 from 8 up, so a volume of 0 plays at
+  0.75; the original plays the script's volume, up to full. The
+  original's fall-off is linear from the sound to its radius; the fork's
+  (OpenAL's clamped linear model) is full within a tenth of the radius and
+  silent from about nine-tenths.
+- **Doppler.** The original shifts only an ambient sound's pitch, by its
+  actor's own speed, at `DopplerSpeed` 6,500 units a second; the fork shifts
+  every sound by the player's speed (its sources have none), at about 14,800.
+- **Smaller.** A sound beyond its radius takes a free channel in the fork,
+  silent (its priority is kept at 0 or more); the original drops it. The
+  fork's mouth shapes follow the original's bands but for `M`, which it gives
+  from 100 to 250 Hz and the original never does ([lip sync](galaxy-dll.md#lip-sync)),
+  and it sets `bIsSpeaking` itself whenever a pawn's speech plays, where the
+  original moves a mouth only while the script has set it.
+
 ## Implemented, not as the original
 
 - **The list window, the flag base, conversations, the text parser and
@@ -673,9 +725,6 @@ list differs in more than its stubs:
 
 ## Small
 
-- **`Actor.SetInstantSpeechVolume` 269:** the speech volume slider's change
-  is not applied as it moves. The original hands it to the audio subsystem at
-  once, as the fork does for sound and music.
 - **`Pawn.FindStairRotation` 524:** with Look Up Stairs on, the player's view
   does not tilt on stairs. The original is UE1's
   ([`Engine.dll`](engine-dll.md#small)).
