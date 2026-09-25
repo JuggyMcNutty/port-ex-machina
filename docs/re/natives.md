@@ -469,7 +469,11 @@ Read from both codes ([the original's](render-dll.md#lighting)):
   shadowless per-frame pass; and a mover's maps are rebuilt when the
   mover moved or turned since, not every frame. Still the fork's own:
   the maps are floats, converted for the Smart Pro's GPU on the CPU
-  (engine patches 0002 and 0024), where the original's are bytes; a
+  (engine patches 0002 and 0024), where the original's are bytes -- and
+  the fork clamps each texel at 1.0 on upload, where the original's byte
+  reaches twice unit brightness (64 unit, 127 double:
+  [the driver](d3ddrv-dll.md#the-light-maps-brightness)), so its
+  brightest lights top out at half the original's overbright; a
   changed map goes to the GPU whole in both; the lookup is a `std::map`
   where the original's cache hashes and first checks the item it found
   last; and a still-shaped animated light is re-run rather than kept as
