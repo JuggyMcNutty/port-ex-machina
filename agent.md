@@ -57,17 +57,19 @@ no facts of its own beyond those; each lives in one doc, and the
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
 - **Next**: M4's remainder ([decided 6](#decided),
-  [`docs/ROADMAP.md`](docs/ROADMAP.md)): lighting (**[perf]**), coronas,
-  blend animations, and the `D3DDrv.dll` read (IDA, so the owner opens
-  the database). Landed 2026-09-25: render iterators -- smoke, steam and
+  [`docs/ROADMAP.md`](docs/ROADMAP.md)): lighting (**[perf]**), blend
+  animations, and the `D3DDrv.dll` read (IDA, so the owner opens the
+  database). Landed 2026-09-25: render iterators -- smoke, steam and
   sparks spew, and laser tripwires, electricity and laser sights draw
   their beams
-  ([what changed](docs/re/natives.md#particles-and-lasers-render-iterators))
-  -- and mesh detail -- a distant mesh drawn with fewer vertices, the
-  original's budget (**[perf]** re-measure on the device;
-  [what changed](docs/re/natives.md#mesh-detail)); both with by-hand
-  checks in [open decision 1](#open-decisions). Proving the iterators
-  turned up two engine findings from before them, recorded in
+  ([what changed](docs/re/natives.md#particles-and-lasers-render-iterators));
+  mesh detail -- a distant mesh drawn with fewer vertices, the original's
+  budget (**[perf]** re-measure on the device;
+  [what changed](docs/re/natives.md#mesh-detail)); and coronas -- the
+  viewer's leaf, kept and fading, as the original's
+  ([what changed](docs/re/natives.md#coronas)); each with by-hand checks
+  in [open decision 1](#open-decisions). Proving the iterators turned up
+  two engine findings from before them, recorded in
   [M0's list](docs/ROADMAP.md#m0----nothing-stops-the-game).
   M3's code landed whole (2026-09-25) -- render time and stasis, the AI
   event system, `ScriptedPawn`'s native tick, moving, and the
@@ -244,7 +246,9 @@ no facts of its own beyond those; each lives in one doc, and the
      and a weapon's laser sight, by
      [natives.md](docs/re/natives.md#particles-and-lasers-render-iterators);
      an NPC walking away keeping its shape as detail fades, by
-     [natives.md](docs/re/natives.md#mesh-detail).
+     [natives.md](docs/re/natives.md#mesh-detail); a lamp's corona coming
+     up and going over about a third of a second as a corner hides and
+     shows it, by [natives.md](docs/re/natives.md#coronas).
      The desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is

@@ -539,3 +539,16 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   the window; a forced-coarse run drew pawns at the floor without
   breaking the scene; 75 s runs on both maps after the hooks' exact-text
   removal are clean.
+- [**coronas**](https://github.com/JuggyMcNutty/SurrealEngine/commit/c475705704feb8deef5b4e2c23f88e49a0736938) --
+  the roadmap's M4 coronas item: the lights shining into the viewer's own
+  leaf of the BSP at any distance, seen past the world, movers, pawns and
+  other actors but the viewer's own pawn, fading in and out over about a
+  third of a second on real time with up to 32 kept from frame to frame,
+  and drawn in the light's colour times the fade
+  ([coronas](re/natives.md#coronas)); the fork's old take -- drawn parts
+  of the level within 2,000 units, world-only hiding, popping at 2.5
+  times the colour -- stays for other games. **Checked:** a temporary log
+  on Liberty Island listed the spawn leaf's two dock-lamp coronas fading
+  0 to 1 in the first third of a second, and a frame dump shows the
+  lamp's glow drawn at its head; a 75 s run after the hooks' exact-text
+  removal is clean.

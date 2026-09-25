@@ -125,7 +125,8 @@ All read; the inventory is
       has what changed and the by-hand check). **[perf]** re-measure on
       the device.
 - [ ] Lighting ([its section](re/natives.md#lighting)). **[perf]**
-- [ ] Coronas ([coronas](re/natives.md#coronas)).
+- [x] Coronas (2026-09-25; [coronas](re/natives.md#coronas) has what
+      changed and the by-hand checks).
 - [ ] Blend animations: head turns and lip sync
       ([its section](re/natives.md#head-turns-and-lip-sync-blend-animations)).
 - [ ] `D3DDrv.dll` is read here ([decided 4](../agent.md#decided)): whether a

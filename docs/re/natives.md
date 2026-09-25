@@ -422,18 +422,18 @@ electricity arcing on a damaged panel; a weapon's laser sight in play.
 ### Coronas
 
 A light with `bCorona` and a `Skin` texture shows a glow over it on screen
-([the original](render-dll.md#coronas)). The fork's are its own, and differ
-(read from both codes; to check by hand):
+([the original](render-dll.md#coronas)). The fork keeps the original's now
+(2026-09-25): the lights shining into the player's own leaf of the BSP at
+any distance -- the leaf's permeating list, and the dynamic corona lights
+standing in it -- hidden by the world, movers, pawns and other actors but
+the player's own pawn; each fading in and out over about a third of a
+second on real time, up to 32 kept from frame to frame; drawn in the
+colour of the light's hue and saturation times the fade, at the same
+screen size as before. Other games keep the fork's old take.
 
-- **Which lights:** the fork takes those in the parts of the level it draws,
-  within 2,000 units in Deus Ex; the original, those shining into the
-  player's own leaf of the BSP, at any distance.
-- **Hidden by:** in the fork, the world; in the original, movers, pawns and
-  other actors too, but the player's own pawn.
-- **Coming and going:** the fork shows one or not; the original fades each
-  in and out over about a third of a second.
-- **Brightness:** the fork's are 2.5 times the light's colour; the
-  original's, the colour times the fade. The size is the same.
+To check by hand: coronas near and far and behind an NPC (already in the
+list below), and a lamp's glow coming up and going over about a third of
+a second as a corner hides and shows it.
 
 ### Mesh detail
 
