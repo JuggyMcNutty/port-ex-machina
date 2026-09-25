@@ -56,10 +56,12 @@ no facts of its own beyond those; each lives in one doc, and the
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
-- **Next**: M4's remainder ([decided 6](#decided),
-  [`docs/ROADMAP.md`](docs/ROADMAP.md)): only the `D3DDrv.dll` read (IDA,
-  so the owner opens the database) -- the look-matching judge -- and the
-  M4 by-hand checks; the code items are landed. Landed 2026-09-25: render iterators -- smoke, steam and
+- **Next**: M4's items are all in ([decided 6](#decided),
+  [`docs/ROADMAP.md`](docs/ROADMAP.md)): only its by-hand checks remain
+  ([open decision 1](#open-decisions)), judged against the original's
+  display driver, now read
+  ([`d3ddrv-dll.md`](docs/re/d3ddrv-dll.md), 2026-09-25) -- then M5, the
+  sound. Landed 2026-09-25: render iterators -- smoke, steam and
   sparks spew, and laser tripwires, electricity and laser sights draw
   their beams
   ([what changed](docs/re/natives.md#particles-and-lasers-render-iterators));
@@ -177,11 +179,12 @@ no facts of its own beyond those; each lives in one doc, and the
      [small](docs/re/engine-dll.md#small)) and its
      [network code](docs/re/network.md); [`IpDrv.dll`](docs/re/ipdrv-dll.md);
      [`Galaxy.dll`](docs/re/galaxy-dll.md), the audio.
-   - **Only if a need comes up**: `D3DDrv.dll` (how the original looks:
-     gamma, lightmap brightness, fog, detail textures -- the need comes with
-     the roadmap's on-screen milestone ([`docs/ROADMAP.md`](docs/ROADMAP.md)):
-     whether a reimplemented look matches is judged through the original's
-     display driver), `SoftDrv.dll` (a
+   - **The third** (done, 2026-09-25, with M4): `D3DDrv.dll` -- how the
+     original looks: gamma, the light maps' brightness on screen, fog,
+     detail textures, each pass's blending
+     ([`d3ddrv-dll.md`](docs/re/d3ddrv-dll.md)); the reimplemented look is
+     judged against it.
+   - **Only if a need comes up**: `SoftDrv.dll` (a
      software renderer, decided 3), `Fire.dll` (fire, water and ice
      textures), `WinDrv.dll` (mouse and keyboard), and the owner's copied
      `ALAudio.dll` for what the original lacks (an EFX take on the reverb,

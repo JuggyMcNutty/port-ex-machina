@@ -495,8 +495,9 @@ Read from both codes ([the original's](render-dll.md#lighting)):
   ambient added, channels clamped. One knowing difference: the moving
   lights come from the fork's light tree near the actor, not the leaf's
   own list. Whether the brightness pairs with the fork's light maps as the
-  original's does is judged against the original's display driver
-  ([decided 4](../../agent.md#decided)); a by-hand look first: an NPC
+  original's does is judged against the original's display driver, read
+  in [`d3ddrv-dll.md`](d3ddrv-dll.md) (the light maps' brightness, the
+  blends); a by-hand look first: an NPC
   under a street lamp, one walking from light into shadow (the fade), and
   a fire's glow on a face.
 

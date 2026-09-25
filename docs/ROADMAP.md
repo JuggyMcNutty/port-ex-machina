@@ -133,9 +133,11 @@ All read; the inventory is
 - [x] Blend animations: head turns and lip sync (2026-09-25;
       [its section](re/natives.md#head-turns-and-lip-sync-blend-animations)
       has what changed and the by-hand checks).
-- [ ] `D3DDrv.dll` is read here ([decided 4](../agent.md#decided)): whether a
-      reimplemented look matches is judged through the original's display
-      driver.
+- [x] `D3DDrv.dll` read (2026-09-25; [decided 4](../agent.md#decided)):
+      whether a reimplemented look matches is judged through the original's
+      display driver -- gamma, the light maps' brightness, fog, detail
+      textures and each pass's blending, in
+      [`re/d3ddrv-dll.md`](re/d3ddrv-dll.md).
 
 ## M5 -- the sound
 
