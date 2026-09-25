@@ -490,17 +490,21 @@ Read from both codes ([the original's](render-dll.md#lighting)):
 
 ### Head turns and lip sync: blend animations
 
-`Actor.PlayBlendAnim` 1010 is partial in the fork. `Pawn.PlayTurnHead`
-(NPCs turning to look), `Pawn.LipSynch` (mouths in conversations) and the
-player's `ViewModelBlendPlay` call it; every map run did. Upstream's blend
-code is partly written and logs every call (`TweenBlendAnim: seq=...`,
-`DrawLodMeshDX blend[...]`): a line per mouth shape in a conversation, which a
-handheld pays for. How far the blending gets on screen is to be checked. The
-original is all in `Engine.dll`, and read
-([blend animations](engine-dll.md#blend-animations)): the natives, the slots'
-tick and the blending of the mesh's vertices. Its tick moves the slots only
-while the main animation plays, and up to three times their rate: what the
-game's head turns and lip sync were made with.
+The fork keeps the original's now (2026-09-25;
+[blend animations](engine-dll.md#blend-animations)): `PlayBlendAnim` with
+the original's defaults, `TweenBlendAnim` as TweenAnim for a slot from its
+kept last pose, and the slots' tick moving only while the main animation
+plays or tweens, up to three times their rate -- what the game's head
+turns and lip sync were made with -- a slot that ends leaving the rest
+only the time over. `Pawn.PlayTurnHead` (NPCs turning to look),
+`Pawn.LipSynch` (mouths in conversations) and the player's
+`ViewModelBlendPlay` drive it. The per-call logs a handheld paid for are
+gone. The mesh side was already upstream's: each slot's pose added as its
+difference from the mesh's first frame.
+
+To check by hand: a conversation partner's mouth moving with the speech
+(Tech Sergeant Kaplan is in the conversations list already), an NPC's head
+turning to follow the player and easing back, and blinking.
 
 ### Lists
 

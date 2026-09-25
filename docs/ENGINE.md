@@ -552,3 +552,16 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   0 to 1 in the first third of a second, and a frame dump shows the
   lamp's glow drawn at its head; a 75 s run after the hooks' exact-text
   removal is clean.
+- [**blend animations**](https://github.com/JuggyMcNutty/SurrealEngine/commit/8ff8289da6ad7f54229fe91638af16f9ce5454f4) --
+  the roadmap's M4 blend-animations item: the four slots over the main
+  animation (head turns, lip sync, blinking) tick as the original's --
+  only while the main animation plays or tweens, up to three times their
+  rate, a slot that ends leaving the rest only the time over;
+  `TweenBlendAnim` tweens from the slot's kept last pose (the old take
+  set a positive frame and never tweened); the original's defaults; and
+  the per-call logs a handheld paid for are gone
+  ([its section](re/natives.md#head-turns-and-lip-sync-blend-animations)).
+  **Checked:** a temporary slot log through the intro walks Bob Page's
+  mouth through its shapes with tweens caught mid-flight; the audit
+  counts `PlayBlendAnim` implemented; 75 s runs on the intro and Liberty
+  Island after the hook's exact-text removal are clean.

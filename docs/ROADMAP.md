@@ -127,8 +127,9 @@ All read; the inventory is
 - [ ] Lighting ([its section](re/natives.md#lighting)). **[perf]**
 - [x] Coronas (2026-09-25; [coronas](re/natives.md#coronas) has what
       changed and the by-hand checks).
-- [ ] Blend animations: head turns and lip sync
-      ([its section](re/natives.md#head-turns-and-lip-sync-blend-animations)).
+- [x] Blend animations: head turns and lip sync (2026-09-25;
+      [its section](re/natives.md#head-turns-and-lip-sync-blend-animations)
+      has what changed and the by-hand checks).
 - [ ] `D3DDrv.dll` is read here ([decided 4](../agent.md#decided)): whether a
       reimplemented look matches is judged through the original's display
       driver.
