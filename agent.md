@@ -54,6 +54,10 @@ no facts of its own beyond those; each lives in one doc, and the
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
+- **Next**: nothing is queued. The reading of the DLLs is done; what to take
+  up -- the Smart Pro's work ([decided 2](#decided)), what Surreal lacks and
+  the next ports ([open decisions](#open-decisions) 5 and 4) -- is the
+  owner's pick.
 
 ## Decided
 
@@ -212,6 +216,11 @@ no facts of its own beyond those; each lives in one doc, and the
      can leave Max Chen unconvinced and the raid on the Lucky Money unstarted.
      Named troopers get the generic trooper's conversations before their own
      (seen on Liberty Island).
+   - **Every NPC** ([its section](docs/re/natives.md#every-npc); read from the
+     code, the stubs reached in play): the fork has none of an NPC's native
+     tick, so agitation and fear never decay, 16 AI timers never count down,
+     and no NPC cloaks, bleeds or stops burning; no NPC hears anything (the AI
+     event system is stubs); wandering and a fight's moves go through stubs.
    - **On screen** ([its section](docs/re/natives.md#on-screen); read from
      the code): no particle or beam is drawn (render iterators); coronas are
      chosen, hidden and faded differently; every mesh is drawn whole at any

@@ -28,8 +28,8 @@ Which item is taken up, and when, is the owner's call.
   One more put eight of the game's texts through the fork's text parser
   ([what the player reads](#what-the-player-reads)).
 - **The DLLs.** C++ that is not a native -- a class's own `Tick`, what the
-  renderer does with an actor -- leaves no stub behind: only reading the
-  original shows it is missing.
+  renderer does with an actor, the audio -- leaves no stub behind: only
+  reading the original shows it is missing.
 - **Reading both.** Only reading the original shows whether an implemented
   native does what it does. Found so far: `IsValidEnemy` (fixed by patch
   0034), and the ones under [not as the original](#implemented-not-as-the-original).

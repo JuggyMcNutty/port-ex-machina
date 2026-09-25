@@ -378,8 +378,10 @@ script VM several times faster.
   patch 0018, ~24 now. Render CPU and `view+audio` grew ~1–1.5 ms each from
   patch 0015 on. At 853×480 none of that happens, and the tick itself is
   shorter there, from the GPU's lighter memory traffic: ~8 ms after patch 0029,
-  ~3 now -- 0030–0032's collision work was the part that waited on memory. `view+audio` is mostly `USurrealAudioDevice::StartAmbience`, which
-  reads every actor's `AmbientSound` each frame (~2 ms).
+  ~3 now -- 0030–0032's collision work was the part that waited on memory.
+  `view+audio` is mostly `USurrealAudioDevice::StartAmbience`, which reads
+  every actor's `AmbientSound` each frame (~2 ms), as the original does
+  ([its update](../../docs/re/galaxy-dll.md#each-frame)).
 
 A GLES renderer is planned ([renderers](../../agent.md#decided)); what it does
 to the GPU's time and the render CPU here is for it to measure.
