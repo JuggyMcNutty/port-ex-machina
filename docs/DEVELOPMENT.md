@@ -39,9 +39,12 @@ scripts/dx.sh check            # the drift guards
 
 Claude runs in an Arch Linux distrobox on a Fedora Atomic host: `/home` here is
 `/var/home` there, and paths configured in one differ from the other (the old
-CMake caches, the engine's embedded source paths). The container has no
-`libpipewire`/`libpulse`, so the engine cannot open audio in it: run it with
-the null OpenAL driver ([linux-x86_64's README](../ports/linux-x86_64/README.md#audio)).
+CMake caches, the engine's embedded source paths). The container has
+`libpipewire`/`libpulse` (installed 2026-09-25, for M5's audio work), so the
+engine reaches the desktop's audio -- a test run is audible on the owner's
+speakers as well as visible on their screen. The null OpenAL driver remains
+the way to run silently
+([linux-x86_64's README](../ports/linux-x86_64/README.md#audio)).
 
 ## Commits
 
