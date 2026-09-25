@@ -56,11 +56,14 @@ no facts of its own beyond those; each lives in one doc, and the
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
-- **Next**: M2 ([decided 6](#decided), [`docs/ROADMAP.md`](docs/ROADMAP.md)).
-  M1 landed (2026-09-25) but for the save picture -- a renderer capture
-  point its frame overlap allows, deferred to the render work -- and the
-  by-hand save-screen checks; M0's acceptance captures also remain. The
-  Smart Pro's work ([decided 2](#decided)) and the next ports
+- **Next**: M3 ([decided 6](#decided), [`docs/ROADMAP.md`](docs/ROADMAP.md)).
+  M2's code landed (2026-09-25) -- conversations, the text parser and the
+  list window, each as the original's -- with its by-hand checks in
+  [open decision 1](#open-decisions). M1 landed (2026-09-25) but for the
+  save picture -- a renderer capture point its frame overlap allows,
+  deferred to the render work -- and the by-hand save-screen checks; M0's
+  acceptance captures also remain. The Smart Pro's work
+  ([decided 2](#decided)) and the next ports
   ([open decision 4](#open-decisions)) run beside it, at the owner's pick.
 
 ## Decided
@@ -182,12 +185,20 @@ no facts of its own beyond those; each lives in one doc, and the
      and deleting one, and a hub map keeping its state over a travel out
      and back, by
      [natives.md](docs/re/natives.md#saving-loading-and-travel); rebinding a
-     key in the game's Customize Keys screen, and a movement key held into a
-     menu and let go there, by [natives.md](docs/re/natives.md#lists);
-     walking up to Tech Sergeant Kaplan on Liberty Island, by
-     [natives.md](docs/re/natives.md#named-troopers-get-the-generic-troopers-conversations-seen);
-     logging in to a computer, a public computer's bulletins and reading a
-     datacube, by [natives.md](docs/re/natives.md#what-the-player-reads);
+     key in the game's Customize Keys screen (a double click or Enter starts
+     it), the Load Game list sorted by date and re-sorted from its headers,
+     moving through a list with the keys and a pad's d-pad, and a movement
+     key held into a menu and let go there, by
+     [natives.md](docs/re/natives.md#lists);
+     walking up to Tech Sergeant Kaplan on Liberty Island, an NPC's
+     one-time chatter holding its last line, a conversation partner killed
+     mid-line ending it, and -- deep in a Hong Kong game -- Maggie Chow's
+     and Max Chen's meetings playing past their comment-label jumps, by
+     [natives.md](docs/re/natives.md#conversations);
+     logging in to a computer and its emails, a public computer's
+     bulletins, reading a datacube and its kept note, a book's centred
+     title and the credits' section breaks, by
+     [natives.md](docs/re/natives.md#what-the-player-reads);
      coronas near and far and behind an NPC, by
      [natives.md](docs/re/natives.md#coronas); walking through a laser
      tripwire on Liberty Island, and a door's highlight, by

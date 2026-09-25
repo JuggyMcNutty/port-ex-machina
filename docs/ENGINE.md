@@ -417,3 +417,33 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   the prune deletes the departing level's flags as the original's does.
   GameDirectory objects are made per call again. **Checked:** 21 flags
   set across the buckets survive a travel and a save's load-back.
+- [**conversations as the original's**](https://github.com/JuggyMcNutty/SurrealEngine/commit/39e9df99bee7938823ec3ee9ddf5a21468d1d0e6) --
+  the roadmap's M2 conversations item: comment events kept, an actor's
+  conversations bound by the original's bark rule from the list the level's
+  `ConversationPackage` names, the bound-actor slots filled so a destroyed
+  actor ends its conversation, cycle-once chatter holding its last line,
+  and each line's sound loaded alone, by name
+  ([conversations](re/natives.md#conversations)). **Checked:** the intro's
+  scene plays its lines at their own lengths; a temporary hook printed
+  Liberty Island's bound lists, the named troopers owning their own
+  conversations plus the `_Bark`s; 90 s and 75 s runs clean.
+- [**the text parser as the original's**](https://github.com/JuggyMcNutty/SurrealEngine/commit/752ff87d222426b2aa305eac563b74344bc88ca5) --
+  the roadmap's M2 parser item: the original's tokens (CR and LF as spaces,
+  nothing trimmed, the first `<P>` swallowed), its 30-name tag table matched
+  by start, its fields split at commas, its hiding to an end tag, the
+  player's first name, and the colours read
+  ([what the player reads](re/natives.md#what-the-player-reads)). **Checked:**
+  a temporary hook put five texts through it against their SDK sources --
+  emails list with their fields, bulletins open, comments hide, header
+  spaces and blank lines keep, `PLAYERFIRSTNAME` gives the first name; a
+  70 s run after the hook's removal is clean.
+- [**the list window as the original's**](https://github.com/JuggyMcNutty/SurrealEngine/commit/48c0987a562d64820081012a2602ff3e61425d85) --
+  the roadmap's M2 lists item: rows activate on a double click or Enter
+  (`ListRowActivated`, which key rebinding hangs on), `MoveRow` takes the
+  keys and a pad's d-pad through a list, the original's sorting and column
+  keys, auto-expanding columns and the original's new-column defaults,
+  hidden columns unseen, float fields keeping their number and shown
+  through the column's format ([lists](re/natives.md#lists)). **Checked:**
+  a temporary in-engine self-test drove sorting (name, number, reverse),
+  the number reader (hex, octal, hours and minutes), the format, the moves
+  and a delete's focus; a 70 s run after its removal is clean.

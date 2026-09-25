@@ -70,14 +70,19 @@ All read; the inventory is
 
 ## M2 -- the story stays intact
 
-- [ ] Conversations: comment events kept, the original's bark-name binding,
+- [x] Conversations: comment events kept, the original's bark-name binding,
       lines that cycle once, an actor destroyed mid-conversation, one sound
-      loaded per line ([conversations](re/natives.md#conversations)).
-- [ ] The text parser the original's way: its tokens, its tag table, its
-      reading to an end tag
-      ([what the player reads](re/natives.md#what-the-player-reads)).
-- [ ] Lists: rows activate (key rebinding hangs on it), keys move, sorting,
-      columns ([lists](re/natives.md#lists)).
+      loaded per line (2026-09-25;
+      [conversations](re/natives.md#conversations) has what each was and the
+      by-hand checks left, in
+      [open decision 1](../agent.md#open-decisions)).
+- [x] The text parser the original's way: its tokens, its tag table, its
+      reading to an end tag (2026-09-25;
+      [what the player reads](re/natives.md#what-the-player-reads) has what
+      changed and the by-hand checks left).
+- [x] Lists: rows activate (key rebinding hangs on it), keys move, sorting,
+      columns (2026-09-25; [lists](re/natives.md#lists) has what each was
+      and the by-hand checks left).
 
 ## M3 -- the world behaves
 

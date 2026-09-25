@@ -149,135 +149,106 @@ and the mission scripts set their events' flags
 ## Conversations
 
 What the original binds and plays is ConSys's ([`ConSys.dll`](consys-dll.md));
-the game's script does the rest.
+the game's script does the rest. The fork's differences here were closed on
+2026-09-25; what each was, and what remains to check by hand:
 
-### Jumps to a comment's label end the conversation
-
-When a level loads, the fork deletes the comment events from its mission's
-conversations. The original keeps them, and the script passes over one: its
-event switch has no case for it. But a comment can carry a label, and 11 jumps
-in 10 conversations go to a label only a comment has. In the fork that label
-is gone, so the conversation logs "Label ... NOT FOUND" and ends there, marked
-played. Read from the code and the data; to check by hand.
-
-- **Maggie Chow's meeting** (`MeetMaggie`, Hong Kong), for a player who has
-  not heard of the Dragon's Tooth, ends after "A nanotech blade.". Lost: the
-  goal to search the Wan Chai police station, the notes of its vault code, the
-  Luminous Path and Max Chen, the `KnowsAboutNanoSword` flag and the
-  `MaggieWanders` trigger. It plays once.
-- **Max Chen's meeting** (`MeetMaxChen`), for a player who brings the evidence
-  without having heard of the sword, ends before its two goals and before
-  `MaxChenConvinced`, the flag that starts the MJ12 raid on the Lucky Money
-  (`Mission06`) and that only this conversation sets. It plays once. The
-  player hears of the sword from Gordon Quick, the market's waiter or
-  newswoman, or Maggie past her break.
-- Smaller: Jughead's deal at the Brooklyn Bridge station (`M03MeetJugHead`),
-  and lines of Harley Filben, a sick bum, three goths, Carmela and the
-  mission 4 troopers.
-
-**The fix:** keep the comment events.
-
-### Named troopers get the generic trooper's conversations (seen)
-
-The fork gives an actor every conversation its `BarkBindName` owns, not only
-the barks, and puts them first in its list; the original gives it only barks
-by that name ([an actor's conversations](consys-dll.md#an-actors-conversations)).
-490 of the maps' actors have a bark name other than their own name, and two
-of those names own other conversations:
-
-- `UNATCOTroop`: the named troopers of missions 1 to 4 -- Corporal Collins,
-  Tech Sergeant Kaplan, Private Lloyd, the HQ's guards, the Battery Park,
-  clinic and hotel guards and more.
-- `MetroCop`: two Paris policemen.
-
-The script starts the first conversation in the list that qualifies. So
-walking up to one of these, or frobbing them, starts the generic trooper's
-instead of their own, such as Kaplan's `MeetKaplan`: on Liberty Island
-`UNATCOTroopInitialBarks`, then `UNATCOTroopSecondBarks` once the statue
-mission is complete. Its lines are bound by name to an actor called
-`UNATCOTroop`: on Liberty Island the one generic trooper, wherever it stands.
-A Liberty Island run with a temporary hook showed the lists: Collins, Kaplan,
-Lloyd, the custody trooper and the five post-mission troopers each start with
-the generic two. What then plays is read from the script; to check by hand.
-
-**The fix:** the original's binding. The fork also finds the list by the
-mission's number in `DeusExConText`; the original loads the one the level's
-`ConversationPackage` names, so a mod's own conversations bind only in the
-original.
-
-### Smaller
-
-- **Lines that cycle once loop.** 169 of the game's random-label events give
-  their lines in turn and then keep the last, 164 of them in the chatter of
-  NPCs. The fork's `GetRandomLabel` starts them over
-  ([random labels](consys-dll.md#random-labels)).
-- **An actor destroyed mid-conversation** does not end it. The fork's
-  `BindEvents` never fills the script's list of the conversation's actors,
-  which is how `ActorDestroyed` knows them. A pawn killed is destroyed.
-- **Speech loads a whole package.** The fork finds a line through the audio
-  package's list, and loading the list loads every sound in the package the
-  first time any line from it plays: 12.4 MB for mission 1, 14.8 MB for the
-  NPCs' barks, 31.7 MB for Hong Kong's. The original loads the one sound by
-  name, the same sound ([speech audio](consys-dll.md#speech-audio)). The fork
-  also names the package `DeusExConAudio<name>`, where the original takes it
-  from the conversation's own package, as a mod's would need.
-- **Bindings are cleared.** The fork's `ClearBindEvents` empties every
-  event's actors, and its `BindEvents` empties a name no actor has; the
-  original never empties one. No difference in play is known.
-- **`ownerRefCount`** is never counted, so the script never calls
-  `BindActorEvents`, and the fork never binds the invoker by its bark name as
-  the original does. No conversation's lines name its owner's bark name, so
-  the game shows no difference.
+- **Comment events are kept.** The fork deleted them from a mission's
+  conversations at level load; the script passes over one, but a comment can
+  carry a label, and 11 jumps in 10 conversations go to a label only a
+  comment has, which logged "Label ... NOT FOUND" and ended the conversation,
+  marked played. The two large ones, each playing once: Maggie Chow's meeting
+  (`MeetMaggie`, Hong Kong), for a player who has not heard of the Dragon's
+  Tooth, ended after "A nanotech blade." -- losing the goal to search the Wan
+  Chai police station, the notes of its vault code, the `KnowsAboutNanoSword`
+  flag and the `MaggieWanders` trigger -- and Max Chen's meeting
+  (`MeetMaxChen`), for a player who brings the evidence without having heard
+  of the sword, ended before its goals and before `MaxChenConvinced`, the
+  flag that starts the MJ12 raid on the Lucky Money (`Mission06`) and that
+  only this conversation sets. Smaller: Jughead's deal at the Brooklyn Bridge
+  station (`M03MeetJugHead`), and lines of Harley Filben, a sick bum, three
+  goths, Carmela and the mission 4 troopers. To check by hand: both meetings
+  play past those lines.
+- **An actor's conversations bind as the original's** (seen: a Liberty
+  Island run with a temporary hook printed the lists, 2026-09-25). A bark
+  (`_Bark` in its name) is owned by the actor's `BarkBindName`, or its
+  `BindName` when it has none; any other conversation by its `BindName`,
+  never its bark name
+  ([an actor's conversations](consys-dll.md#an-actors-conversations)). The
+  fork gave an actor every conversation its bark name owns, so the 490
+  actors with a bark name not their own -- the named troopers of missions 1
+  to 4 under `UNATCOTroop`, two Paris policemen under `MetroCop` -- started
+  the generic conversations instead of their own, Kaplan's `MeetKaplan`
+  among them. The list is now the one the level's `ConversationPackage`
+  names, as a mod's own conversations need, and each binding counts into
+  `ownerRefCount`, so the script rebinds a shared conversation's invoker
+  (`BindActorEvents`, matching by bark name only for the invoker). To check
+  by hand: Kaplan's own greeting on Liberty Island.
+- **Lines that cycle once keep the last.** 169 of the game's random-label
+  events give their lines in turn and then hold the last, 164 of them the
+  chatter of NPCs walked up to or frobbed; the fork's `GetRandomLabel`
+  started them over ([random labels](consys-dll.md#random-labels)).
+- **A destroyed actor ends its conversation.** `BindEvents` empties and
+  fills the script's ten bound-actor slots with each actor an event took,
+  which is how `ActorDestroyed` knows the conversation's actors; the fork
+  never filled them. A pawn killed is destroyed. Each event binds by name --
+  or by bark name for the invoker (speech) or in a first-person conversation
+  (transfer, trade, animation) -- and of several actors with one name, the
+  invoker is the one bound. A transfer's and a check's item class loads as
+  the event binds; `ClearBindEvents` does nothing, as the original's, so an
+  event keeps the last actor bound to it. To check by hand: a conversation
+  partner killed mid-line.
+- **Speech loads one sound per line** (seen: the intro's lines played at
+  their own lengths, 2026-09-25). `GetSpeechAudio` loads
+  `ConAudio<name>_<id>` by name from `<package>Audio<name>.u`, `<package>`
+  the conversation's own package less a final `Text`
+  ([speech audio](consys-dll.md#speech-audio)). The fork went through the
+  package's audio list, which loaded every sound in the package the first
+  time any line from it played -- 12.4 MB for mission 1, 14.8 MB for the
+  NPCs' barks, 31.7 MB for Hong Kong's -- and named the package
+  `DeusExConAudio<name>` outright, where the original's prefix follows the
+  conversation's package, as a mod's would need. `GetSpeechLength` answers
+  0 for -1 or no sound, as the original.
 
 ## What the player reads
 
 Books, datacubes, newspapers, emails, bulletins and the credits are the
 game's 492 tagged texts, which `DeusExTextParser` breaks into tokens for the
-script ([the original](deusextext-dll.md)). The fork's parser is its own, and
-most texts come out differently. Read from the code and the texts; a run with
-a temporary hook put eight texts through the fork's parser and gave the
-tokens these follow from. What the screens then do is read from the script:
-to check by hand.
+script ([the original](deusextext-dll.md)). The fork's parser now reads as
+the original's -- its tokens, its tag table, its reading to an end tag
+(2026-09-25; a run with a temporary hook put five texts through it against
+their SDK sources). Its own tokenizer changed most texts:
 
-- **No computer lists an email.** The fork reads an `EMAIL` tag as a file, so
-  every account's list is empty and its screen says there is no email: all
-  66 accounts, 136 emails. The passwords and codes they hold cannot be read.
-- **No bulletin opens.** The fork keeps the `=` of a `FILE` tag in the name
-  (`=01_Bulletin01`), so a board lists its bulletins' titles, and picking one
-  shows nothing.
-- **The designers' comments show.** The original hides a comment; the fork
-  shows its text, in 166 texts. Most are datacubes, which then open with
-  where they lie ("Datacube in Alex's office", "MJ12 lab"), and the note a
-  datacube adds keeps it too.
-- **Words run together.** The fork trims the spaces at both ends of each run
-  of text, so a space beside a tag goes: "From:Anon" for "From: Anon" in every
-  email's header, "Arms:Combat StrengthorMicrofibral Muscle" in a book. 395
-  places in 135 texts.
-- **Blank lines vanish.** The original's blank paragraph is a line of two
-  spaces. The fork's is an empty text window, which the fork makes no line
-  tall, so the paragraphs of 242 books and datacubes run together.
-- **Nothing is centred.** `JC` and `JR` do nothing in the fork: the titles of
-  90 books, newspapers and datacubes sit on the left.
-- **Raw tags.** At a tag it does not know, the fork gives the rest of the
-  text as it is, tags and all, where the original passes over the tag: `JL`
-  in a newspaper and a book, `<LOG ERROR>` in a Paris bulletin, and
-  `<"...">` in an email and a datacube. The fork also misses a tag that is a
-  text's last character: `</B>` or `</I>` shows at the end of 11 texts, and
-  the last row of 52 accounts and 8 boards is dropped.
-- **The player's first name** is empty (9 texts): "Hey, didn't have a chance"
-  for "Hey JC, didn't have a chance".
-- **The credits and the quotes** lose the blank lines between their sections:
-  the original prints a line for each line break between two tags, which the
-  fork skips.
-- **Smaller.** An email or bulletin starts with an empty line, where the
-  original swallows a text's first `<P>`; for the same reason the original's
-  datacube note runs the first two paragraphs together, and the fork's does
-  not. `DC` reads as black, but lands on an empty window the fork makes
-  before the first paragraph, so nothing shows it. `GotoLabel` is a stub, as
-  good as the original's, which does nothing; no script calls it.
+- **No computer listed an email** (an `EMAIL` tag read as a file: all 66
+  accounts, 136 emails, and the passwords and codes they hold) and **no
+  bulletin opened** (the `=` of a `FILE` tag kept in the name). The fields
+  now split at commas and trim, a missing one empty, and the last row of an
+  account or board -- a tag at the text's very end, which the fork missed
+  with 10 others' closing `</B>`/`</I>` -- is kept.
+- **The designers' comments showed** in 166 texts (where a datacube lies,
+  whose inbox an email is); `NOTE`, `GOAL` and `COMMENT` now hide what they
+  hold, to their end tag. One of the original's quirks is not kept: at a
+  comment with no end tag it reads past the text's end
+  (`09_EmailMenu_ShipOps`, whose listing there depends on the memory after
+  it); the fork stops at the end, hiding the rest.
+- **Words ran together** ("From:Anon", 395 places in 135 texts) and **blank
+  lines vanished** (242 texts): a token's text now keeps its spaces, nothing
+  trimmed, each CR and LF a space, so a blank paragraph is the original's
+  line of two spaces.
+- **Raw tags showed**: at a tag it did not know the fork gave the rest of
+  the text raw, where a tag is now the first of the 30 names its content
+  starts with (`<LOG ERROR>` an `L`) and an unknown one is `TT_None`, which
+  the script passes over.
+- **The player's first name was empty** (9 texts): `SetPlayerName` now keeps
+  the part before the first space. `DC` and `C` read their colours (the
+  fork's integer reader took its target by value: every colour was black),
+  and the first `<P>` is swallowed, so an email no longer starts with an
+  empty line and a datacube's note runs its first two paragraphs together,
+  as the original's does. `JC`/`JL`/`JR` come through as tokens; what the
+  screens do with them is the script's.
 
-**The fix:** the original's parser, read in full: its tokens, its tag table
-and its reading to an end tag.
+To check by hand: a computer's emails and bulletins, a datacube and its
+note, a book's centred title, the credits' section breaks
+([open decision 1](../../agent.md#open-decisions)).
 
 ## Every NPC
 
@@ -478,36 +449,39 @@ game's head turns and lip sync were made with.
 
 The list window is behind the load and save screens, emails, the logs,
 images, the conversation history, the key bindings, the colour themes and a
-new game's skills ([the original](extension-dll.md#lists)). The fork's own
-list differs in more than its stubs:
+new game's skills ([the original](extension-dll.md#lists)). Its differences
+were closed on 2026-09-25 (an in-engine self-test drove the sorting, the
+number reading, the moves and the focus); what each was, and the by-hand
+checks:
 
 - **Fields read back** (2026-09-25; the test was the wrong way round, and a
   field past the row's last was read out of bounds). The screens that keep
   what a row stands for in a hidden column -- the load and save screens'
-  slots, the colour editor, the images screen -- get their data now; what
-  each then does is to check by hand. A computer's emails still hang on
-  the parser listing any ([what the player reads](#what-the-player-reads)).
-- **No row is activated.** The fork counts every click as one and never sends
-  `ListRowActivated`, for a double click or for Enter. The game's Customize
-  Keys screen starts rebinding a key only that way, so no key can be rebound
-  there (read from the code, to check by hand). The load and new game
-  screens and a hacked computer's accounts have buttons for what a double
-  click does, and the save screen does it on a single click.
-- **No key moves in a list.** `MoveRow` is a stub, and the list's script sends
-  it the arrow keys, Page Up and Down, Home and End. A pad whose d-pad is
-  mapped to the arrows cannot move through a list either.
-- **Nothing is sorted.** `Sort`, `SetSortColumn`, `AddSortColumn` and
-  `ResetSortColumns` are stubs, and `EnableAutoSort` sets its flag. The load
-  game list, emails, the conversation history, images and logs stay in the
-  order they were filled: once the load list lists saves, by directory, not
-  by date.
-- **Columns.** `EnableAutoExpandColumns` sets its flag and widens nothing;
-  the original widens a column to each field put in it, and does so by
-  default. The fork's new columns are 0 wide, the original's 26. The fork
-  draws hidden columns too, after the others.
-- **Small.** A float column keeps its text as given, where the original shows
-  the number through the column's format. A click below the last row selects
-  nothing, where the original selects the last row.
+  slots, the colour editor, the images screen -- get their data; a float
+  field keeps the number its text reads as, which `GetFieldValue` answers,
+  and shows it through the column's format
+  ([the original](extension-dll.md#rows-and-fields)).
+- **Rows activate.** A double click or Enter sends `ListRowActivated` to
+  the list's parents with the activate sound; the fork counted every click
+  as one and never sent it, so the game's Customize Keys screen -- which
+  starts rebinding a key only that way -- could rebind nothing. To check by
+  hand: rebinding a key there.
+- **Keys move.** `MoveRow` moves the focus row up, down, a page, first or
+  last -- clamped, selecting or extending from the anchor, the move sound
+  played, the row scrolled into view -- and the list's script sends it the
+  arrow keys, Page Up and Down, Home and End, so a pad whose d-pad maps to
+  the arrows moves through a list too. To check by hand with a pad.
+- **Sorting is the original's.** The keys are an ordered list with reverse
+  and case flags per column (`SetSortColumn`, `AddSortColumn`,
+  `ResetSortColumns`, `Sort`, and auto sort keeping new and changed rows in
+  place); a float or time column compares its numbers, a string column its
+  text, stable ([the original](extension-dll.md#sorting)). The load game
+  list now sorts by its hidden date column, and emails by sender or subject
+  from their headers' clicks; to check by hand.
+- **Columns.** A new column is 26 wide (20 plus both margins), the window's
+  text colour and font, and a sort key; auto-expanding columns, on by
+  default, widen a column to each field put in it; hidden columns take no
+  space and do not draw. A click below the last row selects the last row.
 
 ### The UI
 
