@@ -52,6 +52,7 @@ Put the game files where the port's `launcher.ini` says (`GameDir`); a
 | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | how to work here: the base port, cold start, commits, docs rules, gotchas |
 | [`docs/LAUNCHER.md`](docs/LAUNCHER.md) | the launcher: the settings files the engine really reads, the screens, controller support |
 | [`docs/ENGINE.md`](docs/ENGINE.md) | the engine fork: how it is pinned and upgraded, running and profiling it, every patch |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | the reimplementation roadmap: the milestones, their order, where each stands |
 | [`docs/PORTING.md`](docs/PORTING.md) | how ports work, and how to add one |
 | `ports/<id>/README.md` | one device: status, what differs from linux-x86_64, measurements, what was verified |
 | [`docs/re/`](docs/re/) | the original binaries: `DeusEx.exe`, where the launcher began, and the game's DLLs -- what they do, and what the engine lacks of them |

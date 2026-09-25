@@ -4,7 +4,8 @@ Deus Ex's natives and native C++ against the engine fork's: what is missing or
 wrong, what the player sees of it, and the work that would fill it. What each
 original function does is in its DLL's doc ([the binaries](README.md#the-binaries));
 what each patch changed is in [what the fork changes](../ENGINE.md#what-the-fork-changes).
-Which item is taken up, and when, is the owner's call.
+Which item is taken up, and when, is the owner's call; the decided order is
+[`ROADMAP.md`](../ROADMAP.md).
 
 ## How it is known
 

@@ -54,10 +54,10 @@ no facts of its own beyond those; each lives in one doc, and the
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
-- **Next**: nothing is queued. The reading of the DLLs is done; what to take
-  up -- the Smart Pro's work ([decided 2](#decided)), what Surreal lacks and
-  the next ports ([open decisions](#open-decisions) 5 and 4) -- is the
-  owner's pick.
+- **Next**: the roadmap's M0 ([decided 6](#decided),
+  [`docs/ROADMAP.md`](docs/ROADMAP.md)). The Smart Pro's work
+  ([decided 2](#decided)) and the next ports
+  ([open decision 4](#open-decisions)) run beside it, at the owner's pick.
 
 ## Decided
 
@@ -138,10 +138,10 @@ no facts of its own beyond those; each lives in one doc, and the
      [network code](docs/re/network.md); [`IpDrv.dll`](docs/re/ipdrv-dll.md);
      [`Galaxy.dll`](docs/re/galaxy-dll.md), the audio.
    - **Only if a need comes up**: `D3DDrv.dll` (how the original looks:
-     gamma, lightmap brightness, fog, detail textures -- the need comes when
-     the on-screen items of open decision 5 are taken up: whether a
-     reimplemented look matches is judged through the original's display
-     driver), `SoftDrv.dll` (a
+     gamma, lightmap brightness, fog, detail textures -- the need comes with
+     the roadmap's on-screen milestone ([`docs/ROADMAP.md`](docs/ROADMAP.md)):
+     whether a reimplemented look matches is judged through the original's
+     display driver), `SoftDrv.dll` (a
      software renderer, decided 3), `Fire.dll` (fire, water and ice
      textures), `WinDrv.dll` (mouse and keyboard), and the owner's copied
      `ALAudio.dll` for what the original lacks (an EFX take on the reverb,
@@ -154,6 +154,11 @@ no facts of its own beyond those; each lives in one doc, and the
    The fork has none of it ([multiplayer](docs/re/natives.md#multiplayer));
    the original's protocol is Unreal Tournament's
    ([the network](docs/re/network.md), [`IpDrv.dll`](docs/re/ipdrv-dll.md)).
+6. **The order of reimplementation** (owner, 2026-09-24):
+   [`docs/ROADMAP.md`](docs/ROADMAP.md) -- crashes, then saving and travel,
+   then the story, the world's behaviour, the look, the sound, polish;
+   multiplayer last. The milestones' status is tracked there. The engine
+   moved to a full fork repository for this work (decided 1).
 
 ## Open decisions
 
@@ -197,55 +202,3 @@ no facts of its own beyond those; each lives in one doc, and the
 4. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
    engine's libraries, as the Smart Pro has); Android (its README lists the
    work, starting with an in-process hand-over).
-5. **What Surreal lacks of the original**: potential work, in no order, for
-   the owner to take up: [`docs/re/natives.md`](docs/re/natives.md).
-   Groundwork, potential work like the rest (2026-09-24), both a run of the
-   original game: a reference set of its saves (a quick save, numbered
-   slots, a mid-mission save past a hub map) to pin the on-disk truth for
-   the save work and settle whether the fork could read them
-   ([saving, loading and travel](docs/re/natives.md#saving-loading-and-travel));
-   and watching it do what was read but never seen -- a comment-jump
-   conversation, a sound behind a wall, a zone's reverb, coronas, a laser
-   tripwire -- for each fix's acceptance reference.
-   - **Stops the game:** an NPC searching in Battery Park (the fork lacks the
-     `ReachablePathnodes` iterator; since patch 0034's fights) and any save
-     (seen with `QuickSave`). The Save Game screen does too, by the code (the
-     unregistered `GetConfig`).
-   - **Loading** a game does nothing (seen).
-   - **Flags and lists** (read from the code): at most 64 flags, and none
-     expire; every list field reads as empty; no list row activates, so the
-     Customize Keys screen cannot rebind ([flags](docs/re/natives.md#flags),
-     [lists](docs/re/natives.md#lists)).
-   - **What the player reads** ([its section](docs/re/natives.md#what-the-player-reads);
-     read from the code and the texts, the fork's parser run on eight): no
-     computer lists an email, and no bulletin opens; in most books,
-     datacubes and emails the designers' comments show, words beside a tag
-     run together, and blank lines and centring are gone.
-   - **Conversations** ([conversations](docs/re/natives.md#conversations)):
-     the fork deletes comment events, and 11 jumps go to a comment's label,
-     so their conversations end early (read from the code and the data).
-     Maggie Chow's and Max Chen's meetings in Hong Kong are among them, and
-     can leave Max Chen unconvinced and the raid on the Lucky Money unstarted.
-     Named troopers get the generic trooper's conversations before their own
-     (seen on Liberty Island).
-   - **Every NPC** ([its section](docs/re/natives.md#every-npc); read from the
-     code, the stubs reached in play): the fork has none of an NPC's native
-     tick, so agitation and fear never decay, 16 AI timers never count down,
-     and no NPC cloaks, bleeds or stops burning; no NPC hears anything (the AI
-     event system is stubs); wandering and a fight's moves go through stubs.
-   - **On screen** ([its section](docs/re/natives.md#on-screen); read from
-     the code): no particle or beam is drawn (render iterators); coronas are
-     chosen, hidden and faded differently; every mesh is drawn whole at any
-     distance; lights are sorted, picked and shadowed differently, and
-     `NoDynamicLights` does nothing.
-   - **Sound** ([its section](docs/re/natives.md#sound); read from both codes
-     and the maps): sounds behind walls are not muffled; no zone reverb
-     (16 maps); ambient sounds on lights (402) play steady, as if unlit; the
-     music switches without fading and does not go on where it was; the
-     Speech slider does nothing; loudness, fall-off and Doppler differ.
-   - **Traces and moves** ([not as the original](docs/re/natives.md#implemented-not-as-the-original);
-     read from the code): laser tripwires pass through the player and NPCs;
-     a seeking NPC sees through walls; NPCs misjudge grenades
-     (`ParabolicTrace`'s gravity points up) and strafe at a different speed;
-     a door's highlight and a mover's area are off; things coming to rest
-     take no base; a sound with no radius carries 1,500 units, not 800.
