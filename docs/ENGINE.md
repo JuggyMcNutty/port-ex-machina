@@ -408,3 +408,12 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   stands for in a hidden column read nothing. The save picture stays
   missing until the renderer gets a capture point its frame overlap
   allows.
+- [**flags kept and carried**](https://github.com/JuggyMcNutty/SurrealEngine/commit/c8bf4374ac27a97ea80d04487ad9406ee930d52f) --
+  the flag base and its flags live in the level package, so a save keeps
+  them, and they cross a travel in the pawn's travel graph: the travel
+  serialization walks every element of a fixed-array object property (the
+  base's 64 buckets), travelled non-actors land in the new level's
+  package, the travel info is captured before the pre-travel prune, and
+  the prune deletes the departing level's flags as the original's does.
+  GameDirectory objects are made per call again. **Checked:** 21 flags
+  set across the buckets survive a travel and a save's load-back.

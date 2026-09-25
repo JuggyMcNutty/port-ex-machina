@@ -137,10 +137,14 @@ and the mission scripts set their events' flags
   wrote every flag's type as bool, so an int or float flag could be set
   but never read. The original's exact CRC polynomial is unread; it
   matters only for reading the original game's own saved chains.
-- **Not yet.** The fork's flags are transient objects in the transient
-  package: a save keeps none of them, and none cross a travel. The
-  original's live inside the flag base, which a save keeps; how its flags
-  cross a travel is the script's doing, still to be read.
+- **Kept and carried** (2026-09-25, seen: 21 flags set across the buckets,
+  travelled and loaded back). The flag base and its flags live in the
+  level package, so a save keeps them, and they cross a travel in the
+  pawn's travel graph -- the base is the pawn's travel property, and the
+  fork's travel now walks every element of a fixed-array object property,
+  which the base's 64 buckets are. The pre-travel prune deletes them from
+  the departing level, as the original's does, so they are not saved
+  twice.
 
 ## Conversations
 
@@ -596,10 +600,6 @@ differ (read from both codes; to check by hand):
 - **The list window, the flag base, conversations, the text parser and
   coronas:** [lists](#lists), [flags](#flags), [conversations](#conversations),
   [what the player reads](#what-the-player-reads) and [coronas](#coronas).
-- **`DeusExPlayer.CreateGameDirectoryObject`.** The fork keeps one object;
-  the original makes a new one each call. The scripts `CriticalDelete` it
-  after use: harmless while that is a stub, but once it deletes, the fork's
-  kept object would go with it.
 - **`DeusExPlayer.GetDeusExVersion`.** The fork's own string, by choice; the
   original's is "Mon Mar 19 12:06:14 2001 v1.112fm".
 - **`LevelInfo`'s clock.** The fork's main loop fills `Year` counted from 1900
@@ -687,8 +687,8 @@ differ (read from both codes; to check by hand):
   ([`CriticalDelete`](core-dll.md#criticaldelete)), and the game's callers
   delete objects of their own and drop their reference. The fork's stub
   leaves them to its garbage collector, which frees them later: no other
-  difference. Freeing at once would take the fork's kept `GameDirectory`
-  with it ([above](#implemented-not-as-the-original)).
+  difference, now that `CreateGameDirectoryObject` makes a new object each
+  call as the original does (2026-09-25).
 
 ## Small
 

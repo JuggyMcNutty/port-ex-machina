@@ -51,13 +51,14 @@ All read; the inventory is
       `DeleteSaveGameFiles`, `DeleteGame` and the mission numbers; a mission's
       maps keep their state
       ([the original](re/deusex-dll.md#the-game-engine-travel-and-saving)).
-- [ ] `GameDirectory`: the listing, the save info and the slot numbering are
-      in (2026-09-24); left, the per-call object freed by `CriticalDelete`
+- [x] `GameDirectory`: the listing, the save info, the slot numbering and
+      the per-call object; `CriticalDelete` stays the garbage collector's,
+      with no difference left
       ([housekeeping](re/natives.md#housekeeping-not-seen-directly)).
 - [x] `UpdateTimeStamp`, and the player's history, log and notes made in the
       level, so a save keeps them.
-- [ ] Flags: the chains past 64 and the expiry are in (2026-09-25); left,
-      living in the flag base a save keeps, and crossing a travel
+- [x] Flags: chains past 64, expiry, kept by saves in the level package,
+      and carried across travel in the pawn's travel graph
       ([flags](re/natives.md#flags)).
 - [ ] The save screens: the list window's `GetField` is in (2026-09-25);
       left, the picture -- a capture point the renderer's frame overlap
