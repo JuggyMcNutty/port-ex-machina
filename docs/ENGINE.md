@@ -373,3 +373,10 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   string `>` is native 116, not the typo 1186. **Checked:** an 80 s Battery
   Park run and quick saves in two maps run out their clocks; the commit's
   message has the rest.
+- [**saves, the original's way**](https://github.com/JuggyMcNutty/SurrealEngine/commit/4dfc7a6dd5b1571d7fbab03fac6fd4e5a899d78b) --
+  the first slice of the roadmap's M1: slots numbered highest-plus-one, the
+  quick save in QuickSave, Current copied into the slot with the level saved
+  on top, the SaveInfo filled and named as the original's
+  (`MyDeusExSaveInfo`), the save listing and kept infos, and DELETEGAME.
+  **Checked:** against the original's reference saves; the commit's message
+  has the runs.

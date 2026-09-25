@@ -67,51 +67,49 @@ and the game's own screens and keys cannot save or load with it. Two runs
 with a temporary hook (2026-09-24, UNATCO HQ) typed the game's console
 commands and showed three of these. The rest is read from the code:
 
-- **Saving.**
-  - A save writes the level and its `SaveInfo.dxs` (seen with `QuickSave`,
-    2026-09-24), but wrongly, as follows.
-  - A new save always writes `Save0000`: the Save Game screen passes slot 0,
-    and the original takes the next free slot. The quick save writes
-    `Save00-1`, where the original writes `QuickSave` (seen).
-  - Either holds only the level being played. There is no `Current`, so none
-    of the mission's other maps.
-  - The `SaveInfo` has no picture, play time, save count or cheats flag.
-  - Its date is wrong. `UpdateTimeStamp` counts the year from 1900 and the
-    month from 0, so a load list would show year 126 and, sorting by date,
-    put the fork's saves before the original's.
+- **Saving** follows the original (seen with a console hook, 2026-09-24):
+  slot 0 takes the highest `SaveNNNN` plus one, the quick save writes
+  `QuickSave`, the slot is emptied and `Current` copied in with the level
+  saved on top, and the `SaveInfo` -- `MyDeusExSaveInfo`, as the original
+  names it -- carries the description (the level's `Title` without one),
+  the place, the map, the slot, the player's save count, play time and
+  cheats flag, and the full-date time stamp. Still missing: the picture
+  ([the UI](#the-ui)), and nothing fills `Current` until travel is ported,
+  so a slot copies only what an original run left there.
 - **The Save Game screen** reads `GetConfig("Engine.Engine",
   "GameRenderDevice")` every time it opens (registered, answered from the
   system ini) and then asks for the save's picture, which the fork does not
   make ([the UI](#the-ui)). To check by hand: open Save Game.
-- **The Load Game screen** lists no save.
-  - `GetSaveInfoFromDirectoryIndex` searches a list the fork never fills (the
-    code that fills it is `#if 0`).
-  - `GetSaveInfo(-1)` does not know the quick save.
+- **The Load Game screen**'s save infos now load: the listing and the kept
+  infos fill, and `GetSaveInfo(-1)` knows the quick save. What its rows
+  show hangs on the list window's fields ([lists](#lists)); to check by
+  hand.
 - **Loading does nothing** (seen: `LoadGame -1` and `LoadGame 3` ran, and
   nothing happened). The game asks for `?loadgame=N`, and the fork looks only
   for an option named `load`. It also looks for a file
   `Save<N>.<ext>`, not the directory it saved to.
-- **Deleting** a save from either screen leaves it on disk. The screens send
-  the console command `DeleteGame N`, which the fork lacks (seen: "Unknown
-  command: DeleteGame 1").
+- **Deleting** works: the screens' `DeleteGame N` console command removes
+  the slot, and `DeleteSaveInfo` lets go of a kept info without touching
+  the disk, as the original's does. To check by hand.
 - **Maps forget.** `LoadMap` loads every map fresh from `Maps/` ("To do:
-  handle level hubs"), and `DeleteSaveGameFiles` 3012 is a stub. A map
-  revisited within a mission is back as it started: its enemies alive, its
-  items back, its doors locked. New York's and Hong Kong's hub maps are
-  revisited throughout.
+  handle level hubs"): a map revisited within a mission is back as it
+  started, its enemies alive, its items back, its doors locked. New York's
+  and Hong Kong's hub maps are revisited throughout.
 - **The player's history, log and notes** are made transient
   (`CreateHistoryObject` and its kin). The original makes them in the level,
   which a save keeps.
 
-**The fix:** the original's travel and save logic in the fork's `Engine` and
-its `GameDirectory` natives, all of it now read:
+**The fix:** the original's travel and save logic, all of it read. In the
+fork already (2026-09-24): `SaveGame`, `CopySaveGameFiles`,
+`DeleteSaveGameFiles`, `DeleteGame` with its console command,
+`GameDirectory`'s listing, save info and new-slot numbering, and
+`UpdateTimeStamp`. Left:
 
-- the engine's `Browse`, `SaveGame`, `SaveCurrentLevel`,
-  `PruneTravelActors`, `CopySaveGameFiles`, `DeleteSaveGameFiles` and
-  `DeleteGame`, with the mission numbers;
-- `GameDirectory`'s listing, save info and new-slot numbering;
-- `UpdateTimeStamp` and `CreateHistoryObject` and its kin;
-- the `DeleteGame` console command.
+- the engine's `Browse` and `SaveCurrentLevel` with the mission numbers and
+  `PruneTravelActors`: the travel that fills `Current`;
+- loading (`?loadgame=N`, and the screens');
+- `CreateHistoryObject` and its kin making their objects in the level;
+- the save's picture ([the UI](#the-ui)).
 
 Done the original's way, the fork might also read the original game's saves;
 to be checked.
@@ -596,8 +594,6 @@ differ (read from both codes; to check by hand):
 - **The list window, the flag base, conversations, the text parser and
   coronas:** [lists](#lists), [flags](#flags), [conversations](#conversations),
   [what the player reads](#what-the-player-reads) and [coronas](#coronas).
-- **`GameDirectory.GetNewSaveFileIndex`.** The fork takes the first free
-  number; the original takes the highest plus one and never refills a gap.
 - **`DeusExPlayer.CreateGameDirectoryObject`.** The fork keeps one object;
   the original makes a new one each call. The scripts `CriticalDelete` it
   after use: harmless while that is a stub, but once it deletes, the fork's
