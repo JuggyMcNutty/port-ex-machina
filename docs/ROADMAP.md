@@ -46,19 +46,22 @@ its area in the maps that did, the matching by-hand checks pass
 All read; the inventory is
 [saving, loading and travel](re/natives.md#saving-loading-and-travel).
 
-- [ ] The engine's travel and saves the original's way: `Browse`, `SaveGame`,
+- [x] The engine's travel and saves the original's way: `Browse`, `SaveGame`,
       `SaveCurrentLevel`, `PruneTravelActors`, `CopySaveGameFiles`,
       `DeleteSaveGameFiles`, `DeleteGame` and the mission numbers; a mission's
       maps keep their state
       ([the original](re/deusex-dll.md#the-game-engine-travel-and-saving)).
-- [ ] `GameDirectory`: the listing, the save info, the slot numbering; a new
-      object per call, freed by `CriticalDelete`
+- [ ] `GameDirectory`: the listing, the save info and the slot numbering are
+      in (2026-09-24); left, the per-call object freed by `CriticalDelete`
       ([housekeeping](re/natives.md#housekeeping-not-seen-directly)).
-- [ ] `UpdateTimeStamp`, and the player's history, log and notes made in the
+- [x] `UpdateTimeStamp`, and the player's history, log and notes made in the
       level, so a save keeps them.
-- [ ] Flags in the flag base, which a save keeps: chains past 64, expiry on
-      travel ([flags](re/natives.md#flags)).
-- [ ] The save screens work: the list window's `GetField`, and save pictures
+- [ ] Flags: the chains past 64 and the expiry are in (2026-09-25); left,
+      living in the flag base a save keeps, and crossing a travel
+      ([flags](re/natives.md#flags)).
+- [ ] The save screens: the list window's `GetField` is in (2026-09-25);
+      left, the picture -- a capture point the renderer's frame overlap
+      allows -- and the by-hand checks
       ([lists](re/natives.md#lists), [the UI](re/natives.md#the-ui)).
 - [x] Acceptance: our own saves round-trip (a slot and the quick save,
       2026-09-24); the original's reference saves were tried and stop at

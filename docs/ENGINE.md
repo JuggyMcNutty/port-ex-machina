@@ -388,3 +388,23 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   either wrong, a written SaveInfo.dxs cannot be read back. **Checked:** a
   slot and the quick save round-trip in play; the original's saves stop at
   their saved event manager (ported with the AI event system, later).
+- [**travel keeps the mission**](https://github.com/JuggyMcNutty/SurrealEngine/commit/1a654c7e481bcf5ab223d702df14d85c4f76a11f) --
+  within a mission the departing level is pruned and saved into Current,
+  and a map saved there is revisited as the player left it, its pawn found
+  again by the game's own login; a new mission, a new game or ?restart
+  empties Current. **Checked:** a travel out and back revisits from
+  Current, and the slot save after it has the reference hub save's shape.
+- [**history in the level**](https://github.com/JuggyMcNutty/SurrealEngine/commit/33c1e3f896010ca4138d912becc71be732063f82) --
+  the player's history, log and notes are made in the level, as the
+  original's, so a save keeps them.
+- [**flags as the original's**](https://github.com/JuggyMcNutty/SurrealEngine/commit/cd973b15a6dbf9042173c2a1039dd55b6dbc3d98) --
+  chains past 64 by a CRC of the name, stamped expirations, expiry to a
+  criteria, -1 for a missing flag, and typed flags found again. Its cleanup
+  of a test hook cut real main-loop code, restored by
+  [the commit after](https://github.com/JuggyMcNutty/SurrealEngine/commit/4f6ed66a469ac232245e3fa1493d44c24b4dc0c0).
+  **Checked:** an in-engine self-test for the flags; a 60 s run for the loop.
+- [**list fields read back**](https://github.com/JuggyMcNutty/SurrealEngine/commit/fb7b29d64cbca6e48a81032b99197200e430b7e9) --
+  GetField's column test was inverted, so every screen keeping what a row
+  stands for in a hidden column read nothing. The save picture stays
+  missing until the renderer gets a capture point its frame overlap
+  allows.

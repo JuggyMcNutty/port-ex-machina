@@ -94,24 +94,27 @@ commands and showed three of these. The rest is read from the code:
 - **Deleting** works: the screens' `DeleteGame N` console command removes
   the slot, and `DeleteSaveInfo` lets go of a kept info without touching
   the disk, as the original's does. To check by hand.
-- **Maps forget.** `LoadMap` loads every map fresh from `Maps/` ("To do:
-  handle level hubs"): a map revisited within a mission is back as it
-  started, its enemies alive, its items back, its doors locked. New York's
-  and Hong Kong's hub maps are revisited throughout.
-- **The player's history, log and notes** are made transient
-  (`CreateHistoryObject` and its kin). The original makes them in the level,
-  which a save keeps.
+- **Maps remember** (seen: a travel out and back, the revisit loaded from
+  `Current` with the saved pawn found and reused by the game's own login,
+  2026-09-25). Within a mission the departing level is pruned and saved
+  into `Current`; a new mission, a player starting a new game, or
+  `?restart` empties it. The pruning destroys the augmentations and skills
+  with their managers, as the original's does; the fork keeps no offset
+  for a carried decoration, the original's other prune, and saves the
+  destroyed actors the original drops. To check by hand: a hub map's
+  doors and bodies staying as left.
+- **The player's history, log and notes** are made in the level
+  (`CreateHistoryObject` and its kin, 2026-09-25), as the original makes
+  them, so a save keeps them; to check by hand with the screens.
 
-**The fix:** the original's travel and save logic, all of it read. In the
-fork already (2026-09-24): `SaveGame`, `CopySaveGameFiles`,
-`DeleteSaveGameFiles`, `DeleteGame` with its console command,
-`GameDirectory`'s listing, save info and new-slot numbering, and
-`UpdateTimeStamp`. Left:
+**The fix:** the original's travel and save logic, all of it read and, but
+for one piece, in the fork (2026-09-25). Left:
 
-- the engine's `Browse` and `SaveCurrentLevel` with the mission numbers and
-  `PruneTravelActors`: the travel that fills `Current`;
-- `CreateHistoryObject` and its kin making their objects in the level;
-- the save's picture ([the UI](#the-ui)).
+- the save's picture ([the UI](#the-ui)): the fork's frame read-back tears
+  down the frame its renderer overlaps, wherever it is called, so the
+  picture needs a capture point built into the renderer's own end of
+  frame. The original itself saves none for its OpenGL driver, and the
+  screens take a missing one.
 
 The fork reads its own saves back (2026-09-24). The original game's saves
 stop at its saved event manager; to be retried once the event manager is
@@ -124,24 +127,20 @@ conversation played sets `<name>_Played` (the game has 1,955 conversations),
 and the mission scripts set their events' flags
 ([the original](extension-dll.md#flags)).
 
-- **At most 64.** The fork keeps one flag in each of the script's 64 slots,
-  where the original chains any number from each. Past 64, a new flag is not
-  made ("Could not create flag ...: no room in FlagBase.HashTable") and
-  `SetBool` returns false: a conversation not marked played plays again, and
-  a mission event not marked is not remembered. Read from the code; a 70 s
-  unattended run of Liberty Island set too few to see it.
-- **None expire.** `DeleteExpiredFlags` is a stub. In the original a flag set
-  with no expiration of its own, as the conversations' are, is deleted when
-  the next mission's first level is reached by travel. In the fork every flag
-  stays, so a later mission can read an earlier mission's flags, and the 64
-  fill sooner.
-- **Smaller.** A new flag gets its expiration only when set again.
-  `GetExpiration` looks a flag up as a bool whatever its type, and gives 0 for
-  a flag that is not there, where the original gives -1. The fork's flags are
-  transient objects in the transient package; the original's are inside the
-  flag base, which a save keeps.
-
-**The fix:** the original's chains and expiry, read in full.
+- **As the original's now** (2026-09-25, checked by an in-engine
+  self-test): 64 buckets by a CRC of the flag's name in upper case, each a
+  chain in order of hash then type, with no limit; every set stamps the
+  expiration -- the one given, or the base's default for -1 -- an
+  expiration of 0 never expires, `DeleteExpiredFlags` deletes up to its
+  criteria, and `GetExpiration` answers -1 for a flag that is not there
+  and reads the flag's own type. A typed flag is found again: the fork
+  wrote every flag's type as bool, so an int or float flag could be set
+  but never read. The original's exact CRC polynomial is unread; it
+  matters only for reading the original game's own saved chains.
+- **Not yet.** The fork's flags are transient objects in the transient
+  package: a save keeps none of them, and none cross a travel. The
+  original's live inside the flag base, which a save keeps; how its flags
+  cross a travel is the script's doing, still to be read.
 
 ## Conversations
 

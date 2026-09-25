@@ -54,11 +54,14 @@ no facts of its own beyond those; each lives in one doc, and the
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
-- **Next**: the roadmap's M0 groundwork -- runs of the original game -- then
-  M1 ([decided 6](#decided), [`docs/ROADMAP.md`](docs/ROADMAP.md)); M0's code
-  fixes landed (2026-09-24). The Smart Pro's work ([decided 2](#decided)) and
-  the next ports ([open decision 4](#open-decisions)) run beside it, at the
-  owner's pick.
+- **Next**: M1's remainder -- the save picture's renderer capture point,
+  flags kept by saves and crossing travel, `GameDirectory`'s per-call
+  object -- then M2 ([decided 6](#decided),
+  [`docs/ROADMAP.md`](docs/ROADMAP.md)). M1's saves, loading, travel,
+  history objects and flag chains landed (2026-09-25); M0's acceptance
+  captures and the by-hand save-screen checks remain. The Smart Pro's work
+  ([decided 2](#decided)) and the next ports
+  ([open decision 4](#open-decisions)) run beside it, at the owner's pick.
 
 ## Decided
 
