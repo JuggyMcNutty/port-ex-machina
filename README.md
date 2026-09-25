@@ -29,7 +29,7 @@ re-implementation, carrying the changes our platforms and Deus Ex need.
 ```sh
 scripts/dx.sh test                         # unit tests (the base port's build)
 scripts/engine.sh fetch                    # once: the engine fork, into engine/SurrealEngine
-scripts/engine.sh status                   # how far upstream is past the pin (upgrade: docs/ENGINE.md)
+scripts/engine.sh status                   # how far upstream is past the fork (upgrade: docs/ENGINE.md)
 
 scripts/dx.sh deps   <port>                # toolchains and sysroot, if the port needs them
 scripts/dx.sh build  <port>                # launcher, then engine

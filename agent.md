@@ -5,7 +5,7 @@ no facts of its own beyond those; each lives in one doc, and the
 [README's table](README.md#documentation) says which. Before working, read
 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
-## State (2026-09-24)
+## State (2026-09-25)
 
 - **The repository** is on `main`, public at
   https://github.com/JuggyMcNutty/port-ex-machina. Its history was rewritten
@@ -19,9 +19,11 @@ no facts of its own beyond those; each lives in one doc, and the
   upstream's latest when last merged (2026-09-24); whether and when to merge
   newer upstream commits (`scripts/engine.sh status`, then `upgrade`) is the
   owner's call. The profiling hooks are off, and the desktop build is at the
-  pin (2026-09-24).
+  pin (2026-09-25).
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
-  app ran the engine into the intro level on the development PC.
+  app ran the engine into the intro level on the development PC, and
+  unattended runs drove saves, loads and hub travel through in play
+  (2026-09-25).
 - **trimui-smartpro**: the game runs; the performance work is in progress
   ([its Performance](ports/trimui-smartpro/README.md#performance)). The device
   has every patch up to 0034 in a build with the profiling hooks, Overclock;
@@ -49,8 +51,8 @@ no facts of its own beyond those; each lives in one doc, and the
     [`galaxy-dll.md`](docs/re/galaxy-dll.md)); their databases are typed,
     named and backed up.
   - **What Surreal lacks** of them is [`docs/re/natives.md`](docs/re/natives.md),
-    from [`tools/natives_audit.py`](tools/natives_audit.py), five map runs and
-    four runs with a temporary hook (removed).
+    from [`tools/natives_audit.py`](tools/natives_audit.py), map runs, and
+    runs with temporary hooks (each removed before committing).
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
@@ -175,8 +177,10 @@ no facts of its own beyond those; each lives in one doc, and the
      (`Speed=3.75`/`2.25`) and pointer speed are calibrated by reasoning, not by
      feel.
    - On a desktop: `scripts/dx.sh run linux-x86_64`, the home screen driven
-     into a game, a pad in game; opening Save Game (`GetConfig`) and Load
-     Game (no save listed), by
+     into a game, a pad in game; the Save and Load Game screens listing the
+     saves with description and date, saving into a new slot, loading one
+     and deleting one, and a hub map keeping its state over a travel out
+     and back, by
      [natives.md](docs/re/natives.md#saving-loading-and-travel); rebinding a
      key in the game's Customize Keys screen, and a movement key held into a
      menu and let go there, by [natives.md](docs/re/natives.md#lists);

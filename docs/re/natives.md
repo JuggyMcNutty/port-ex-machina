@@ -481,18 +481,12 @@ images, the conversation history, the key bindings, the colour themes and a
 new game's skills ([the original](extension-dll.md#lists)). The fork's own
 list differs in more than its stubs:
 
-- **Every field reads as empty.** The fork's `GetField` tests the column the
-  wrong way round: a field that is there comes back empty, and one past the
-  row's last is read out of bounds. `GetFieldValue` reads through it and is
-  always 0. The game's screens keep what a row stands for in a hidden column
-  and read it back, so:
-  - on a computer, every email the player picks would show the first one
-    (`ComputerScreenEmail.ListSelectionChanged` reads the email's number from
-    column 2), once the fork lists any ([what the player reads](#what-the-player-reads));
-  - loading a colour theme does nothing, and the colour editor cannot tell
-    which colour it is editing;
-  - the images screen never marks an image viewed or unloads its textures;
-  - the load and save screens take every save for slot 0, once they list any.
+- **Fields read back** (2026-09-25; the test was the wrong way round, and a
+  field past the row's last was read out of bounds). The screens that keep
+  what a row stands for in a hidden column -- the load and save screens'
+  slots, the colour editor, the images screen -- get their data now; what
+  each then does is to check by hand. A computer's emails still hang on
+  the parser listing any ([what the player reads](#what-the-player-reads)).
 - **No row is activated.** The fork counts every click as one and never sends
   `ListRowActivated`, for a double click or for Enter. The game's Customize
   Keys screen starts rebinding a key only that way, so no key can be rebound
@@ -534,10 +528,11 @@ list differs in more than its stubs:
   the centre over its length, where the original tiles them at one texel a
   pixel ([borders](extension-dll.md#borders)). The game passes no margins,
   which is all the fork handles.
-- **Save pictures** (`RootWindow.GenerateSnapshot` and `SetSnapshotSize`,
-  stubs): none, where the original's are grey 160 × 120 images
-  ([save pictures](extension-dll.md#save-pictures)). `SaveGame` takes them too
-  ([saving](#saving-loading-and-travel)).
+- **Save pictures**: none, where the original's are grey 160 × 120 images
+  ([save pictures](extension-dll.md#save-pictures)). `SetSnapshotSize` keeps
+  its sizes now, and `GenerateSnapshot` returns nothing on purpose until
+  the renderer gets a capture point its frame overlap allows
+  ([the fix](#saving-loading-and-travel)).
 - **Keys.** `MoveTabGroupNext` and `Prev` (Tab and Shift+Tab between
   controls), `EditWindow.Undo` and `Redo` (Ctrl+Z and Ctrl+Y in an edit
   field), and `RootWindow.LockMouse` (the pointer held while a key is being

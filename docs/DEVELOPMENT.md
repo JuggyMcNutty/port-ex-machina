@@ -54,7 +54,11 @@ the null OpenAL driver ([linux-x86_64's README](../ports/linux-x86_64/README.md#
   is public; `tests/fixtures` are written stand-ins, and `test_gamefiles` reads
   the real ones from `gamefiles/` in place.
 - **Temporary debug hooks** (screenshots from the renderer, extra logging)
-  carry a `TEMPORARY DEBUG TOOL` comment and are reverted before committing.
+  carry a `TEMPORARY DEBUG TOOL` comment and are reverted before committing --
+  by replacing their exact text, never by a looser scripted cut: one such cut
+  took live main-loop code with it, the build still compiled, and the engine
+  died half a minute into a run. A slice's proving run goes 60 s or more:
+  25 s once hid exactly that.
 - A change and the docs it affects go in the same commit.
 
 ## Docs
