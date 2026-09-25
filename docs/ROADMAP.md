@@ -20,15 +20,14 @@ its area in the maps that did, the matching by-hand checks pass
 
 ## M0 -- nothing stops the game
 
-- [ ] `ReachablePathnodes` yields as an iterator -- empty for now, the real
+- [x] `ReachablePathnodes` yields as an iterator -- empty for now, the real
       walk is M3's ([stops the game](re/natives.md#stops-the-game)).
-- [ ] The save's `DeusExSaveInfo` made in package DeusEx, not transient --
+- [x] The save's `DeusExSaveInfo` made in package DeusEx, not transient --
       the crash only; the save itself is M1's.
-- [ ] `GetConfig` registered ([the original's](re/core-dll.md#getconfig)).
-- [ ] The crash-shaped strays: `GetPawnAllianceType(None)` answers Neutral,
+- [x] `GetConfig` registered ([the original's](re/core-dll.md#getconfig)).
+- [x] The crash-shaped strays: `GetPawnAllianceType(None)` answers Neutral,
       integer division by zero gives 0, string `>` registered as 116
-      ([implemented, not as the original](re/natives.md#implemented-not-as-the-original),
-      [small](re/natives.md#small)).
+      ([stops the game](re/natives.md#stops-the-game)).
 - [ ] Groundwork, runs of the original game: a reference set of its saves (a
       quick save, numbered slots, a mid-mission save past a hub map), and
       watching what was read but never seen -- a comment-jump conversation, a

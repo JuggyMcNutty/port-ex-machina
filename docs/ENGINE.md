@@ -364,3 +364,12 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   the player moved in front of it, made the player its enemy ~3.5 s later
   (the build-up the script gives a faint sighting at night), and it and two
   more shot at the player; NPCs of hostile alliances check each other.
+- [**what stopped the game**](https://github.com/JuggyMcNutty/SurrealEngine/commit/db0df9a1205ef9f55c9abf83d61c7da26efdbac0) --
+  the roadmap's M0 ([`ROADMAP.md`](ROADMAP.md)): `ReachablePathnodes` makes
+  an (empty) iterator instead of stopping the VM in Battery Park's opening
+  fight; the save's `DeusExSaveInfo` lives in package DeusEx, so a save no
+  longer dies writing it; `GetConfig` answers from the system ini;
+  `GetPawnAllianceType(None)` is Neutral; integer division by zero gives 0;
+  string `>` is native 116, not the typo 1186. **Checked:** an 80 s Battery
+  Park run and quick saves in two maps run out their clocks; the commit's
+  message has the rest.

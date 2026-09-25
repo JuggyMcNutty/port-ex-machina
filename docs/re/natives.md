@@ -42,51 +42,20 @@ Which item is taken up, and when, is the owner's call; the decided order is
 
 ## Stops the game
 
-The fork ends the game on an error it does not catch -- a script error, an
-unknown native, a failed save: the engine exits with 1, and the launcher shows
-its crash banner.
-
-### An NPC searching in Battery Park: `ReachablePathnodes`
-
-`Pawn.ReachablePathnodes` (native 1004) is an iterator: the script walks it
-with `foreach`. The fork registers it as a plain function that only logs, so
-the `foreach` has no iterator and the VM stops the game. `ScriptedPawn`
-reaches it from `GetOvershootDestination`, when an NPC in its Seeking state
-guesses where a lost target went, and from `ComputeAwayVector`. In the Battery Park run an
-NSF terrorist got there about 20 s in: "Iterator statement without an
-iterator in Terrorist11.GetOvershootDestination", exit 1. Before patch 0034
-no NPC saw anyone, so likely none searched. Now Battery Park's opening fight
-ends the game.
-
-- **The least that stops the crash:** an empty iterator.
-- **The fix:** the original's, read:
-  [`ReachablePathnodes`](engine-dll.md#moving).
-
-### Saving: any save (seen)
-
-The fork saves a Deus Ex game's `DeusExSaveInfo` into package `DeusEx`, but it
-made that object in the transient package, and the save refuses it: "Object
-does not belong to this package", exit 1. A run with a temporary hook typed
-`QuickSave` into the console in UNATCO HQ. The fork wrote the level, as
-`01_NYC_UNATCOHQ.dxs` in a directory `Save00-1`, and stopped the game before
-writing the save's info. A save from the Save Game screen takes the same path,
-when that screen gets that far
-([saving, loading and travel](#saving-loading-and-travel)).
-
-### The Save Game screen: `GetConfig` (read from the code, not yet seen)
-
-`Object.GetConfig(section, key)` is a Deus Ex native with no number, called by
-name, and the fork registers nothing under that name. A call to it throws
-"Unknown native function", the same way the iterator's error does.
-`MenuScreenSaveGame` makes that call every time it opens: its `InitWindow`
-asks for a snapshot, and its `Tick` then reads
-`GetConfig("Engine.Engine", "GameRenderDevice")` before taking one. To check
-by hand: open Save Game.
-
-- **The fix:** the original's, read: a key's value in the system ini (the
-  fork's `SE-DeusEx.ini`), or an empty string
-  ([`GetConfig`](core-dll.md#getconfig)). Past it, the screen asks for the
-  save's picture, which the fork does not make ([the UI](#the-ui)).
+Nothing known does. The fork still ends the game on an error it does not
+catch -- a script error, an unknown native, a failed save: the engine exits
+with 1, and the launcher shows its crash banner -- but each trigger found is
+fixed: `Pawn.ReachablePathnodes` makes an iterator, which yields nothing
+([moving](#moving-wandering-and-tactical-movement)); the save's
+`DeusExSaveInfo` lives in package DeusEx, which its save once refused
+([saving, loading and travel](#saving-loading-and-travel)); `GetConfig` is
+registered, as the original's ([`GetConfig`](core-dll.md#getconfig));
+`GetPawnAllianceType(None)` answers Neutral; integer division by zero gives
+0; and string `>` is native 116. An 80 s Battery Park run, whose opening
+fight once ended the game about 20 s in ("Iterator statement without an
+iterator in Terrorist11.GetOvershootDestination"), and a quick save in
+UNATCO HQ, which once died on "Object does not belong to this package",
+both ran out their clocks (2026-09-24).
 
 ## Saving, loading and travel
 
@@ -99,8 +68,8 @@ with a temporary hook (2026-09-24, UNATCO HQ) typed the game's console
 commands and showed three of these. The rest is read from the code:
 
 - **Saving.**
-  - Any save stops the game ([above](#saving-any-save-seen)), after writing
-    the level. Seen with `QuickSave`.
+  - A save writes the level and its `SaveInfo.dxs` (seen with `QuickSave`,
+    2026-09-24), but wrongly, as follows.
   - A new save always writes `Save0000`: the Save Game screen passes slot 0,
     and the original takes the next free slot. The quick save writes
     `Save00-1`, where the original writes `QuickSave` (seen).
@@ -110,8 +79,10 @@ commands and showed three of these. The rest is read from the code:
   - Its date is wrong. `UpdateTimeStamp` counts the year from 1900 and the
     month from 0, so a load list would show year 126 and, sorting by date,
     put the fork's saves before the original's.
-- **The Save Game screen** stops the game, by the code
-  ([`GetConfig`](#stops-the-game)).
+- **The Save Game screen** reads `GetConfig("Engine.Engine",
+  "GameRenderDevice")` every time it opens (registered, answered from the
+  system ini) and then asks for the save's picture, which the fork does not
+  make ([the UI](#the-ui)). To check by hand: open Save Game.
 - **The Load Game screen** lists no save.
   - `GetSaveInfoFromDirectoryIndex` searches a list the fork never fills (the
     code that fills it is `#if 0`).
@@ -360,8 +331,11 @@ hears anything: a shot, a thrown object or a body found raises nothing.
   `TryLocation`, `GetNextLocation`, `FindBackupPoint`, `CleanerBot` and
   animals. It is how an NPC tests a direction before moving there in a fight or
   a search; reached in UNATCO HQ and Battery Park.
-- **`ReachablePathnodes`**, above, and `ComputePathnodeDistances` 1020 serve
-  the same code.
+- **`ReachablePathnodes` 1004** is an iterator: the script walks it with
+  `foreach`, from `GetOvershootDestination` -- an NPC in its Seeking state
+  guessing where a lost target went -- and `ComputeAwayVector`. The fork's
+  yields nothing, so a seeking NPC gets no overshoot destination.
+  `ComputePathnodeDistances` 1020 serves the same code.
 
 All are stubs; the originals are read: [moving](engine-dll.md#moving).
 
@@ -622,9 +596,6 @@ differ (read from both codes; to check by hand):
 - **The list window, the flag base, conversations, the text parser and
   coronas:** [lists](#lists), [flags](#flags), [conversations](#conversations),
   [what the player reads](#what-the-player-reads) and [coronas](#coronas).
-- **`ScriptedPawn.GetPawnAllianceType(None)`.** The fork reads through the
-  null pawn and crashes; the original answers Neutral. A distress call's
-  sender or `GetPlayerPawn()` during a level change could be `None`.
 - **`GameDirectory.GetNewSaveFileIndex`.** The fork takes the first free
   number; the original takes the highest plus one and never refills a gap.
 - **`DeusExPlayer.CreateGameDirectoryObject`.** The fork keeps one object;
@@ -664,9 +635,6 @@ differ (read from both codes; to check by hand):
   not its path ([the originals](core-dll.md#the-natives)).
 - **`Object.Mid` 127** with a negative start: the original returns an empty
   string, the fork counts from 0.
-- **Integer division by 0** (`/` 145, and `/=` 134 on a byte): 0 in the
-  original, which leaves the byte as it was. The fork divides, which on
-  x86-64 kills the engine; the Smart Pro's CPU gives 0.
 - **`Object.VRand` 252** (70 call sites). The fork keeps the points it draws
   *outside* the unit sphere, so its directions lean toward the cube's
   diagonals; the original keeps those inside, which lean nowhere.
@@ -743,9 +711,6 @@ differ (read from both codes; to check by hand):
   position given as world X and Y. The original plays it a unit away, turned
   by the window's place on screen when positional sound is on
   ([window sounds](extension-dll.md#window-sounds)).
-- **`Object.>` for strings (native 116):** unregistered. The fork registers it
-  as 1186, a typo: the original has 116. No script is known to use it; a use
-  would stop the game.
 
 ## Multiplayer
 

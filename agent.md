@@ -16,10 +16,10 @@ no facts of its own beyond those; each lives in one doc, and the
 - **The engine** is our own fork repository
   (https://github.com/JuggyMcNutty/SurrealEngine, branch `deusex`), pinned by
   `ENGINE-PIN.txt`; the patch stack was retired into it (2026-09-24). It holds
-  upstream's latest when last upgraded (2026-09-23); whether and when to merge
+  upstream's latest when last merged (2026-09-24); whether and when to merge
   newer upstream commits (`scripts/engine.sh status`, then `upgrade`) is the
-  owner's call. The profiling hooks are off in the tree (2026-09-24); the
-  desktop build (2026-09-24) was built with them on.
+  owner's call. The profiling hooks are off, and the desktop build is at the
+  pin (2026-09-24).
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
   app ran the engine into the intro level on the development PC.
 - **trimui-smartpro**: the game runs; the performance work is in progress
@@ -54,10 +54,11 @@ no facts of its own beyond those; each lives in one doc, and the
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
-- **Next**: the roadmap's M0 ([decided 6](#decided),
-  [`docs/ROADMAP.md`](docs/ROADMAP.md)). The Smart Pro's work
-  ([decided 2](#decided)) and the next ports
-  ([open decision 4](#open-decisions)) run beside it, at the owner's pick.
+- **Next**: the roadmap's M0 groundwork -- runs of the original game -- then
+  M1 ([decided 6](#decided), [`docs/ROADMAP.md`](docs/ROADMAP.md)); M0's code
+  fixes landed (2026-09-24). The Smart Pro's work ([decided 2](#decided)) and
+  the next ports ([open decision 4](#open-decisions)) run beside it, at the
+  owner's pick.
 
 ## Decided
 
