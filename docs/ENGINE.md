@@ -581,3 +581,19 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   and the suit under its key light, nothing blown out; 75 s runs on the
   intro and Liberty Island after the hooks' exact-text removal are
   clean.
+- [**light maps**](https://github.com/JuggyMcNutty/SurrealEngine/commit/1cba281581db6c206eccb912f4e242ab444429b7) --
+  the light-maps half of the M4 lighting item: a surface's still lights
+  are its kept static map and only its animating lights are added over
+  the loaded colors each frame, through their own shadow bits, where an
+  animated light used to rebuild the whole list -- ambient, shadows and
+  all -- every frame; `NoDynamicLights` works (animated stilled into the
+  map, moving left out); a mover's maps rebuild only when it moved,
+  turned or a light changed ([lighting](re/natives.md#lighting), with
+  what stays the fork's own). **[perf]** the Smart Pro's lightmap-upload
+  item shares this shape; measure there. **Checked:** temporary counters
+  -- both test maps bake their static maps once and rebuild nothing from
+  their spawn views (the island's movers rebuilt every frame before);
+  at the 'Ton's flickering sconces ~90 surfaces a frame go through the
+  animated add alone, shadows held, the wall's brightness alternating
+  with the flicker across frame dumps; 75 s runs on both maps after the
+  hooks' exact-text removal are clean.

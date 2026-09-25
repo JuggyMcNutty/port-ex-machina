@@ -461,24 +461,29 @@ with no pop or seam as it recedes, and reads whole again as it comes back.
 
 Read from both codes ([the original's](render-dll.md#lighting)):
 
-- **Light maps.** The fork sorts a surface's lights in two: the level's list
-  for the surface, and the lights near it that are neither `bStatic` nor
-  `bNoDelete`. It keeps the first group's light and adds the second's again
-  when one of them changes, as the original does with its static and moving
-  lights. But when a light of the surface's list pulses, flickers or has an
-  animated effect, the fork builds the whole list again every frame, ambient,
-  shadows and all; the original keeps the steady ones in its static map and
-  adds only the animated one, from its light on the surface kept in the cache
-  when its shape holds still. The fork's maps are floats, converted for the
-  Smart Pro's GPU on the CPU (engine patches 0002 and 0024); the original's
-  are bytes. Both send a changed map to the GPU whole. The fork looks each
-  surface's map up in a `std::map`; the original's cache hashes, and first
-  checks the item it found last.
-- **`NoDynamicLights`**: the fork reads and saves the setting, and nothing
-  uses it. In the original it stills animated lights and leaves moving ones
-  out.
-- **`LE_CloudCast`**: the fork builds it once; in the original its shape
-  changes over time, and it is run every frame.
+- **Light maps.** The fork keeps the original's three kinds now
+  (2026-09-25): a surface's still lights are its static map, built once
+  and kept until one changes; its animating lights -- pulse, flicker, an
+  animating effect -- are added over the loaded static colors every
+  frame, each through its own shadow bits; the moving lights stay the
+  shadowless per-frame pass; and a mover's maps are rebuilt when the
+  mover moved or turned since, not every frame. Still the fork's own:
+  the maps are floats, converted for the Smart Pro's GPU on the CPU
+  (engine patches 0002 and 0024), where the original's are bytes; a
+  changed map goes to the GPU whole in both; the lookup is a `std::map`
+  where the original's cache hashes and first checks the item it found
+  last; and a still-shaped animated light is re-run rather than kept as
+  its shadowed light and rescaled. To check by hand: a flickering
+  sconce's wall (the 'Ton's entrance), a pulsing light throbbing, and a
+  triggered light going dark, each with its shadows still there.
+- **`NoDynamicLights`**: works now (2026-09-25) -- animated lights count
+  as still and bake into the static map, and moving ones are left out;
+  by hand with the ini setting on.
+- **`LE_CloudCast`**: the fork builds it once, and its effect's shape is
+  a placeholder (upstream's to-do), as are the torch and fire wavers and
+  the watery shimmer; in the original the cloud shape changes over time
+  and is run every frame, and the wavers dim each texel by up to 5% and
+  20% as a map is merged. The formulas are unread.
 - **Meshes.** The fork keeps the original's now (2026-09-25): the
   candidates from the actor's leaf of the BSP plus the moving lights near
   it and last frame's, the strongest picked first -- statics until 8, none

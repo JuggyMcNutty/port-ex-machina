@@ -57,9 +57,9 @@ no facts of its own beyond those; each lives in one doc, and the
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
 - **Next**: M4's remainder ([decided 6](#decided),
-  [`docs/ROADMAP.md`](docs/ROADMAP.md)): the light-maps half of lighting
-  (**[perf]**) and the `D3DDrv.dll` read (IDA, so the owner opens the
-  database). Landed 2026-09-25: render iterators -- smoke, steam and
+  [`docs/ROADMAP.md`](docs/ROADMAP.md)): only the `D3DDrv.dll` read (IDA,
+  so the owner opens the database) -- the look-matching judge -- and the
+  M4 by-hand checks; the code items are landed. Landed 2026-09-25: render iterators -- smoke, steam and
   sparks spew, and laser tripwires, electricity and laser sights draw
   their beams
   ([what changed](docs/re/natives.md#particles-and-lasers-render-iterators));
@@ -70,9 +70,12 @@ no facts of its own beyond those; each lives in one doc, and the
   ([what changed](docs/re/natives.md#coronas)); blend animations --
   head turns and lip sync ticking as the original's
   ([what changed](docs/re/natives.md#head-turns-and-lip-sync-blend-animations));
-  and mesh lighting -- the original's pick, shadows, fades and formula
-  ([what changed](docs/re/natives.md#lighting));
-  each with by-hand checks in [open decision 1](#open-decisions). Proving
+  and lighting whole -- the original's mesh-light pick, shadows, fades
+  and formula, and the light maps' kept static part with animated lights
+  added over it, `NoDynamicLights`, movers rebuilt only on a move
+  ([what changed](docs/re/natives.md#lighting), with what stays the
+  fork's own); each with by-hand checks in
+  [open decision 1](#open-decisions). Proving
   the iterators turned up two engine findings from before them, recorded
   in [M0's list](docs/ROADMAP.md#m0----nothing-stops-the-game).
   M3's code landed whole (2026-09-25) -- render time and stasis, the AI
@@ -140,11 +143,13 @@ no facts of its own beyond those; each lives in one doc, and the
      shadows every 16 frames ([lighting](docs/re/natives.md#lighting)):
      still to port.
    - **Visibility** (0020–0021 so far): still the largest render item.
-   - **Lightmap uploads**: re-uploading only the rows a light changed, and each
-     surface's lightmap lookup. The original rebuilds a map only for its
-     animated and moving lights, over its kept static part, and its
-     `NoDynamicLights` stops that altogether
-     ([lighting](docs/re/natives.md#lighting)).
+   - **Lightmap uploads**: the original's rebuild shape landed with M4
+     (2026-09-25) -- a map rebuilt only for its animated and moving
+     lights over its kept static part, `NoDynamicLights` stopping that
+     altogether, movers only when moved; **[perf]** re-measure on the
+     device. Left: re-uploading only the rows a light changed, byte maps
+     (the fork's floats convert on the CPU), and each surface's lightmap
+     lookup ([lighting](docs/re/natives.md#lighting)).
    - **What is out of sight**: landed with M3 (2026-09-25) -- the fork
      keeps render time and stasis now, so actors in stasis do not tick and
      the scripts spare what was not drawn lately, an NPC's shadow among it
@@ -257,8 +262,9 @@ no facts of its own beyond those; each lives in one doc, and the
      turning to follow the player and easing back, and blinking, by
      [natives.md](docs/re/natives.md#head-turns-and-lip-sync-blend-animations);
      an NPC under a street lamp, one walking from light into shadow, and
-     a fire's glow on a face, by
-     [natives.md](docs/re/natives.md#lighting).
+     a fire's glow on a face, and a flickering sconce's wall, a pulsing
+     light throbbing and a triggered light going dark with their shadows
+     still there, by [natives.md](docs/re/natives.md#lighting).
      The desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is
