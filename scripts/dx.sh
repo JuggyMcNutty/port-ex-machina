@@ -9,7 +9,7 @@
 #   scripts/dx.sh run     <port> [args]       run the staged app here (native ports)
 #   scripts/dx.sh profile <port> [args]       frame-time profile on the device (port-specific)
 #   scripts/dx.sh test                        host build + unit tests
-#   scripts/dx.sh check                       docs paths, engine patches, ABI, port files
+#   scripts/dx.sh check                       docs paths, the engine pin, ABI, port files
 #
 # What each port provides is in docs/PORTING.md.
 set -euo pipefail
@@ -110,7 +110,7 @@ cmd_check() {
     say "== docs"
     "$DX_ROOT/scripts/check-docs.sh" || rc=1
 
-    say "== engine patches"
+    say "== engine pin"
     if [ -d "$DX_ROOT/engine/SurrealEngine/.git" ]; then
         "$DX_ROOT/scripts/engine.sh" check || rc=1
     else

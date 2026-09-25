@@ -16,7 +16,7 @@ ports that exist are listed in the [root README](../README.md#ports).
 | The device profile | `src/platform/target.h`; `ports/<id>/target.c` | Data only: a port may supply one |
 | The OS: handing over to the game, the GPU probe | `src/platform/launch.h`, `src/platform/posix/` | Only for a non-POSIX platform (below) |
 | The screens | `src/ui/` (SDL2) | No |
-| The engine | the fork in `engine/SurrealEngine`, patches in `engine-patches/` | Built per port from `ports/<id>/engine.cmake` |
+| The engine | the fork in `engine/SurrealEngine`, pinned by `ENGINE-PIN.txt` | Built per port from `ports/<id>/engine.cmake` |
 | The app around the binaries | `ports/common/packaging/` (the base app, what linux-x86_64 ships) + `ports/<id>/packaging/` | The port's files are laid over the base |
 
 ## What a port is
@@ -40,7 +40,7 @@ port id; it only adds the toolchain file for a cross port).
 
 ```sh
 scripts/dx.sh deps   <port>        # port_deps: toolchains and sysroot into deps/
-scripts/engine.sh fetch            # once: clone the engine fork (upstream + engine-patches/)
+scripts/engine.sh fetch            # once: clone the engine fork at the pin
 scripts/dx.sh build  <port>        # the launcher preset, then scripts/engine.sh build <port>
 scripts/dx.sh stage  <port>        # build/<port>/app, exactly what ships
 scripts/dx.sh deploy <port>        # build, stage, then port_deploy

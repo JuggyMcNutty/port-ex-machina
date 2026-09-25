@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Report on the engine's own CPU samples (SURREAL_PERF_SAMPLE, a hook in
-engine-patches/optional/perf-instrumentation.patch), for devices without perf.
+scripts/perf-instrumentation.patch), for devices without perf.
 
   scripts/sample-report.py <samples> <engine binary> [--root NAME] [--callers NAME]
                            [--skip N] [--top N] [--sysroot DIR]

@@ -13,13 +13,13 @@ no facts of its own beyond those; each lives in one doc, and the
   address.
 - **The launcher** runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2).
-- **The engine** is pinned at `engine-patches/UPSTREAM-BASE.txt` plus the
-  patches in `engine-patches/`: upstream's latest when last upgraded
-  (2026-09-23). Whether and when to take in newer upstream commits
-  (`scripts/engine.sh status`, then `upgrade`) is the owner's call. The
-  fork's tree has the profiling hooks on (uncommitted), and the desktop build
-  was built from it (2026-09-24): `scripts/engine.sh perf off` before changing
-  the engine.
+- **The engine** is our own fork repository
+  (https://github.com/JuggyMcNutty/SurrealEngine, branch `deusex`), pinned by
+  `ENGINE-PIN.txt`; the patch stack was retired into it (2026-09-24). It holds
+  upstream's latest when last upgraded (2026-09-23); whether and when to merge
+  newer upstream commits (`scripts/engine.sh status`, then `upgrade`) is the
+  owner's call. The profiling hooks are off in the tree (2026-09-24); the
+  desktop build (2026-09-24) was built with them on.
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
   app ran the engine into the intro level on the development PC.
 - **trimui-smartpro**: the game runs; the performance work is in progress
@@ -64,9 +64,10 @@ no facts of its own beyond those; each lives in one doc, and the
 1. **What the project is** (owner, 2026-09-23). A modern, cross-platform
    launcher for Deus Ex (UE1) of our own: the original `DeusEx.exe` was
    reverse-engineered as a starting point, not as a contract to stay faithful
-   to. The engine is Surreal Engine as a vendored dependency: pinned, not
-   following upstream, and upgraded to a newer upstream only when the owner
-   chooses ([`docs/ENGINE.md`](docs/ENGINE.md#how-it-is-kept)). **linux-x86_64 is
+   to. The engine is Surreal Engine as a vendored dependency: our own fork
+   repository, pinned, not following upstream, and upgraded to a newer
+   upstream only when the owner chooses
+   ([`docs/ENGINE.md`](docs/ENGINE.md#how-it-is-kept)). **linux-x86_64 is
    the base**: the project is developed there and every port starts from it
    ([`docs/PORTING.md`](docs/PORTING.md)).
 2. **Smart Pro performance** (owner, 2026-09-22): the target is **~20 FPS in

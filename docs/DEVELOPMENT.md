@@ -16,10 +16,11 @@ compiler.
 ## Two repositories
 
 This one, and `engine/SurrealEngine`: the engine fork, a separate clone this
-one ignores (so do `build/`, `deps/`, `gamefiles/` and `reference/`). The fork is
-upstream at `engine-patches/UPSTREAM-BASE.txt` plus one commit per patch file;
-`scripts/engine.sh check` proves that, and `scripts/engine.sh fetch` recreates
-it from nothing ([`ENGINE.md`](ENGINE.md)).
+one ignores (so do `build/`, `deps/`, `gamefiles/` and `reference/`). The fork
+is our own repository, forked from upstream; `ENGINE-PIN.txt` names the commit
+this one builds, `scripts/engine.sh check` proves the clone is at it, and
+`scripts/engine.sh fetch` recreates the clone from nothing
+([`ENGINE.md`](ENGINE.md)).
 
 ## Cold start
 
@@ -47,8 +48,8 @@ the null OpenAL driver ([linux-x86_64's README](../ports/linux-x86_64/README.md#
 - **Commit as JuggyMcNutty** (`11588877+JuggyMcNutty@users.noreply.github.com`),
   never the machine's global git identity, which is a personal address. This
   clone and the engine clone set it in their local git config; a fresh clone
-  needs it before its first commit. The engine patches' `From:` lines carry it,
-  and `scripts/engine.sh fetch` commits with it.
+  needs it before its first commit; `scripts/engine.sh fetch` sets it in a
+  fresh engine clone.
 - **Never commit the game's files** -- not an ini, not a `.int`. The repository
   is public; `tests/fixtures` are written stand-ins, and `test_gamefiles` reads
   the real ones from `gamefiles/` in place.
@@ -74,8 +75,8 @@ rename fails loudly instead of leaving stale instructions:
 - `scripts/check-docs.sh` (also the `docs_paths` test): every repository path
   a doc names in backticks or links must exist, and every link to a heading
   (`#anchor`) must find one.
-- `scripts/engine.sh check`: the fork's commits over `UPSTREAM-BASE.txt` are
-  exactly `engine-patches/*.patch`, in order.
+- `scripts/engine.sh check`: the engine clone is at the commit
+  `ENGINE-PIN.txt` names, on the fork's branch.
 - `test_target_<port>`: each CPU mode a profile offers is handled by its
   `port-hooks.sh`, the hooks' fallback (`CPU_MODE_DEFAULT`) is the profile's
   default, and the profile's id is its port's.

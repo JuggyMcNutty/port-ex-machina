@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
-# The Surreal Engine fork: engine/SurrealEngine, branch deusex-handheld, which
-# is upstream at engine-patches/UPSTREAM-BASE.txt plus one commit per patch.
+# The Surreal Engine fork: engine/SurrealEngine, a clone of our own repository,
+# forked from dpjudas/SurrealEngine. ENGINE-PIN.txt (repo, branch, commit)
+# names the one commit this repository builds.
 #
-#   scripts/engine.sh fetch                   clone upstream and apply engine-patches/ (if absent)
+#   scripts/engine.sh fetch                   clone the fork at the pin (if absent)
 #   scripts/engine.sh build <port>            build/<port>/engine from ports/<port>/engine.cmake
-#   scripts/engine.sh check                   the fork's commits are exactly engine-patches/*.patch
-#   scripts/engine.sh status                  the pin, and how far upstream has moved past it
-#   scripts/engine.sh upgrade [<ref>]         move the pin to an upstream commit (default: its latest);
+#   scripts/engine.sh check                   the clone is at the pin, on its branch
+#   scripts/engine.sh status                  the pin, the fork, and how far upstream has moved
+#   scripts/engine.sh pin                     write the clone's HEAD to ENGINE-PIN.txt
+#   scripts/engine.sh upgrade [<ref>]         merge upstream into the fork (default: its latest);
 #                             --continue|--abort   after resolving conflicts, or to give up
-#   scripts/engine.sh export <commit> <NNNN-name>   write a fork commit to engine-patches/
-#   scripts/engine.sh perf on|off|save        apply/revert engine-patches/optional/perf-instrumentation.patch;
+#   scripts/engine.sh perf on|off|save        apply/revert scripts/perf-instrumentation.patch;
 #                                             save writes it from the tree (after re-basing the hooks)
 #
 # The fork stays a fork: see docs/ENGINE.md before sharing any of it.
@@ -17,29 +18,20 @@ set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
 ENGINE_DIR="${ENGINE_DIR:-$DX_ROOT/engine/SurrealEngine}"
-PATCHES="$DX_ROOT/engine-patches"
+PIN_FILE="$DX_ROOT/ENGINE-PIN.txt"
 UPSTREAM="https://github.com/dpjudas/SurrealEngine.git"
-UPSTREAM_REF=origin/master          # upstream's own branch, as the clone fetches it
-BRANCH=deusex-handheld
+UPSTREAM_REF=upstream/master        # upstream's own branch, as the clone fetches it
+
+[ -f "$PIN_FILE" ] || die "no ENGINE-PIN.txt at the repository root"
+pinned() { awk -v k="$1" '$1 == k { print $2 }' "$PIN_FILE"; }
+FORK_URL="$(pinned repo)"
+BRANCH="$(pinned branch)"
 
 usage() { sed -n '2,14p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
-base() { awk 'NR == 1 { print $1 }' "$PATCHES/UPSTREAM-BASE.txt"; }
 eng() { git -C "$ENGINE_DIR" "$@"; }
 
 need_clone() { [ -d "$ENGINE_DIR/.git" ] || die "no engine clone -- scripts/engine.sh fetch"; }
-
-# Applies engine-patches/ in order onto the current branch. Each fork commit
-# was committed by its author at its author date, so applying a patch with
-# that identity and date reproduces the commit id the patch records -- on any
-# machine, whatever its git identity.
-apply_patches() {
-    local p from
-    for p in "$PATCHES"/[0-9][0-9][0-9][0-9]-*.patch; do
-        from=$(sed -n 's/^From: //p' "$p" | head -n 1)
-        GIT_COMMITTER_NAME="${from% <*}" GIT_COMMITTER_EMAIL="$(printf '%s' "$from" | sed 's/.*<\(.*\)>.*/\1/')" \
-            eng am --quiet --committer-date-is-author-date "$p"
-    done
-}
+ensure_upstream() { eng remote get-url upstream >/dev/null 2>&1 || eng remote add upstream "$UPSTREAM"; }
 
 cmd_fetch() {
     if [ -d "$ENGINE_DIR/.git" ]; then
@@ -47,9 +39,11 @@ cmd_fetch() {
         return 0
     fi
     mkdir -p "$(dirname "$ENGINE_DIR")"
-    git clone "$UPSTREAM" "$ENGINE_DIR"
-    eng checkout -b "$BRANCH" "$(base)"
-    apply_patches
+    git clone --branch "$BRANCH" "$FORK_URL" "$ENGINE_DIR"
+    ensure_upstream
+    eng checkout -q -B "$BRANCH" "$(pinned commit)"
+    eng config user.name JuggyMcNutty
+    eng config user.email 11588877+JuggyMcNutty@users.noreply.github.com
     say "engine ready: $ENGINE_DIR ($BRANCH at $(eng rev-parse --short HEAD))"
 }
 
@@ -88,169 +82,132 @@ cmd_build() {
     fi
 }
 
-# A patch file is its commit's format-patch output. Compared without the
-# first line (the commit id), the "index" lines (git abbreviates blob ids
-# longer as a repository grows, so the same diff prints differently in a
-# fuller clone) and the git version signature at the end.
-normalize() { sed -e '1d' -e '/^index [0-9a-f]*\.\.[0-9a-f]*/d' -e '/^-- $/,$d'; }
-
 cmd_check() {
     need_clone
-    local b; b="$(base)"
-    eng cat-file -e "$b^{commit}" 2>/dev/null || die "upstream base $b is not in the clone"
-    mapfile -t commits < <(eng rev-list --reverse "$b..$BRANCH")
-    mapfile -t files < <(ls "$PATCHES"/[0-9][0-9][0-9][0-9]-*.patch)
-    local rc=0 i
-    if [ "${#commits[@]}" != "${#files[@]}" ]; then
-        echo "FAIL $BRANCH has ${#commits[@]} commits over $b, engine-patches/ has ${#files[@]} patches" >&2
+    local want head rc=0
+    want="$(pinned commit)"
+    eng cat-file -e "$want^{commit}" 2>/dev/null ||
+        die "the pinned commit $want is not in the clone -- git -C engine/SurrealEngine fetch origin"
+    head="$(eng rev-parse HEAD)"
+    if [ "$head" = "$want" ]; then
+        echo "OK   the clone is at the pin: $(eng log -1 --format='%h %s')"
+    else
+        echo "FAIL the clone is not at the pin" >&2
+        echo "     pinned $(eng log -1 --format='%h %s' "$want")" >&2
+        echo "     HEAD   $(eng log -1 --format='%h %s' "$head")" >&2
+        if eng merge-base --is-ancestor "$want" "$head" 2>/dev/null; then
+            echo "     HEAD is $(eng rev-list --count "$want..$head") commits past the pin -- scripts/engine.sh pin records it" >&2
+        fi
         rc=1
     fi
-    for i in "${!files[@]}"; do
-        local f="${files[$i]}" c="${commits[$i]:-}" name
-        name="$(basename "$f")"
-        if [ -z "$c" ]; then echo "FAIL $name: no matching commit" >&2; rc=1; continue; fi
-        if diff -q <(eng format-patch -1 "$c" --stdout | normalize) <(normalize < "$f") >/dev/null; then
-            echo "OK   $name = $(eng log -1 --format='%h %s' "$c")"
-        else
-            echo "FAIL $name differs from $(eng log -1 --format=%h "$c") -- scripts/engine.sh export $(eng log -1 --format=%h "$c") ${name%.patch}" >&2
-            rc=1
-        fi
-    done
+    if [ "$(eng rev-parse --abbrev-ref HEAD)" != "$BRANCH" ]; then
+        echo "FAIL the clone is not on $BRANCH" >&2
+        rc=1
+    fi
     local dirty
     dirty=$(eng status --porcelain --untracked-files=no)
-    [ -z "$dirty" ] || say "note: uncommitted changes in the engine tree (not in any patch):"$'\n'"$dirty"
+    [ -z "$dirty" ] || say "note: uncommitted changes in the engine tree:"$'\n'"$dirty"
     return "$rc"
 }
-
-# ---- the pin, and moving it ------------------------------------------------
-# The engine follows upstream only when someone asks: "upgrade" rebases the
-# fork onto the upstream commit it is given, writes each rebased commit back
-# to its own patch file, moves UPSTREAM-BASE.txt, and rebuilds the branch from
-# the patches as "fetch" would, so the commit ids stay reproducible.
 
 oneline() { eng log -1 --format='%h  %cs  %s' "$1"; }
 commits() { if [ "$1" = 1 ]; then echo "1 commit"; else echo "$1 commits"; fi; }
 
 cmd_status() {
     need_clone
-    eng fetch --quiet --force --tags origin
-    local b n; b="$(base)"
-    printf 'pinned    %s\n' "$(oneline "$b")"
+    ensure_upstream
+    eng fetch --quiet --force --tags upstream
+    eng fetch --quiet origin
+    local want mb n
+    want="$(pinned commit)"
+    printf 'pinned    %s\n' "$(oneline "$want")"
+    printf 'fork      %s  (origin/%s)\n' "$(oneline "origin/$BRANCH")" "$BRANCH"
     printf 'upstream  %s  (%s)\n' "$(oneline "$UPSTREAM_REF")" "$UPSTREAM_REF"
-    n=$(eng rev-list --count "$b..$UPSTREAM_REF")
+    mb="$(eng merge-base "$UPSTREAM_REF" "$BRANCH")"
+    n=$(eng rev-list --count "$mb..$UPSTREAM_REF")
     if [ "$n" = 0 ]; then
-        echo "the pin is upstream's latest"
+        echo "the fork has all of upstream"
     else
-        echo "upstream is $(commits "$n") past the pin -- scripts/engine.sh upgrade takes them in"
+        echo "upstream is $(commits "$n") past the fork -- scripts/engine.sh upgrade merges them in"
     fi
-    if cmd_check >/dev/null 2>&1; then
-        echo "the fork matches engine-patches/ ($(eng rev-list --count "$b..$BRANCH") patches)"
+    if [ "$(eng rev-parse HEAD)" = "$(eng rev-parse "$want^{commit}")" ]; then
+        echo "the clone is at the pin"
     else
-        echo "the fork does not match engine-patches/ -- scripts/engine.sh check"
+        echo "the clone is not at the pin -- scripts/engine.sh check"
     fi
-    [ ! -f "$(upgrade_state)" ] || echo "an upgrade is in progress -- scripts/engine.sh upgrade --continue or --abort"
+    [ ! -f "$(eng rev-parse --absolute-git-dir)/MERGE_HEAD" ] ||
+        echo "a merge is in progress -- scripts/engine.sh upgrade --continue or --abort"
 }
 
-upgrade_state() { printf '%s/dx-upgrade\n' "$(eng rev-parse --absolute-git-dir)"; }
-rebasing() {
-    local g; g="$(eng rev-parse --absolute-git-dir)"
-    [ -d "$g/rebase-merge" ] || [ -d "$g/rebase-apply" ]
-}
-
-# The subject a patch file records, unfolded, without its [PATCH] tag.
-patch_subject() {
-    awk '/^Subject: / { s = substr($0, 10); sub(/^\[PATCH[^]]*\] /, "", s)
-                        while ((getline l) > 0 && l ~ /^[ \t]/) s = s l
-                        print s; exit }' "$1"
+# The pin moves only to a commit the fork repository has: a pin no one can
+# fetch would break every other clone's cold start.
+cmd_pin() {
+    need_clone
+    [ "$(eng rev-parse --abbrev-ref HEAD)" = "$BRANCH" ] || die "the engine clone is not on $BRANCH"
+    [ -z "$(eng status --porcelain --untracked-files=no)" ] ||
+        die "uncommitted changes in the engine tree -- commit them (or scripts/engine.sh perf off) first"
+    ! eng grep -q 'TEMPORARY DEBUG TOOL' "$BRANCH" -- SurrealEngine 2>/dev/null ||
+        die "TEMPORARY DEBUG TOOL hooks are committed on $BRANCH -- remove them before pinning"
+    local head; head="$(eng rev-parse HEAD)"
+    eng fetch --quiet origin
+    eng merge-base --is-ancestor "$head" "origin/$BRANCH" 2>/dev/null ||
+        die "HEAD is not on origin/$BRANCH -- push it first, or fetch cannot reproduce this pin"
+    {
+        printf '# The engine fork this repository builds: scripts/engine.sh fetch clones it,\n'
+        printf '# check verifies it, pin (after pushing a fork commit) moves it. docs/ENGINE.md.\n'
+        printf 'repo    %s\n' "$FORK_URL"
+        printf 'branch  %s\n' "$BRANCH"
+        printf 'commit  %s\n' "$head"
+    } > "$PIN_FILE"
+    say "pinned $BRANCH at $(eng log -1 --format='%h %s') -- commit ENGINE-PIN.txt with what depends on it"
 }
 
 cmd_upgrade() {
     need_clone
-    local state; state="$(upgrade_state)"
+    ensure_upstream
+    local g; g="$(eng rev-parse --absolute-git-dir)"
     case "${1:-}" in
         --continue)
-            [ -f "$state" ] || die "no upgrade in progress"
-            if rebasing; then
-                eng -c core.editor=true rebase --continue ||
-                    die "still conflicts -- resolve them in $ENGINE_DIR, then scripts/engine.sh upgrade --continue"
-            fi
-            upgrade_finish "$(cat "$state")"
+            [ -f "$g/MERGE_HEAD" ] || die "no merge in progress"
+            eng -c core.editor=true merge --continue ||
+                die "still conflicts -- resolve them in $ENGINE_DIR (git add each file), then scripts/engine.sh upgrade --continue"
+            upgrade_finish
             return ;;
         --abort)
-            [ -f "$state" ] || die "no upgrade in progress"
-            if rebasing; then eng rebase --abort; fi
-            rm -f "$state"
+            [ -f "$g/MERGE_HEAD" ] || die "no merge in progress"
+            eng merge --abort
             say "upgrade abandoned: $BRANCH is as it was, the pin unchanged"
             return ;;
         -*) die "upgrade [<upstream ref>] | --continue | --abort" ;;
     esac
-    [ ! -f "$state" ] || die "an upgrade is in progress -- scripts/engine.sh upgrade --continue or --abort"
+    [ ! -f "$g/MERGE_HEAD" ] || die "a merge is in progress -- scripts/engine.sh upgrade --continue or --abort"
     [ "$(eng rev-parse --abbrev-ref HEAD)" = "$BRANCH" ] || die "the engine clone is not on $BRANCH"
     [ -z "$(eng status --porcelain --untracked-files=no)" ] ||
         die "uncommitted changes in the engine tree (the profiling hooks? scripts/engine.sh perf off)"
-    cmd_check >/dev/null || die "the fork does not match engine-patches/ -- scripts/engine.sh check"
+    [ "$(eng rev-parse HEAD)" = "$(eng rev-parse "$(pinned commit)^{commit}")" ] ||
+        die "the clone is not at the pin -- scripts/engine.sh check"
 
-    local ref="${1:-$UPSTREAM_REF}" b target
-    b="$(eng rev-parse "$(base)^{commit}")"
-    eng fetch --quiet --force --tags origin
+    eng fetch --quiet --force --tags upstream
+    local ref="${1:-$UPSTREAM_REF}" target
     target="$(eng rev-parse --verify --quiet "$ref^{commit}")" || die "no such commit in the engine clone: $ref"
-    if [ "$target" = "$b" ]; then
-        say "already pinned at $ref ($(eng rev-parse --short "$b"))"
+    if eng merge-base --is-ancestor "$target" HEAD; then
+        say "the fork already has $ref ($(eng rev-parse --short "$target"))"
         return 0
     fi
-    eng merge-base --is-ancestor "$b" "$target" ||
-        say "note: $ref does not descend from the pin -- upstream's history was rewritten, or it is older"
-    say "upgrading over $(commits "$(eng rev-list --count "$b..$target")") of upstream, $(eng rev-parse --short "$b") -> $(eng rev-parse --short "$target")"
-    printf '%s\n' "$target" > "$state"
-    if ! eng rebase --onto "$target" "$b" "$BRANCH"; then
-        say "the patches conflict with upstream: resolve them in $ENGINE_DIR (git add each file),"
+    say "merging $(commits "$(eng rev-list --count "HEAD..$target")") of upstream into $BRANCH"
+    if ! eng merge -m "Merge upstream SurrealEngine: $(eng log -1 --format=%s "$target")" "$target"; then
+        say "upstream conflicts with the fork: resolve the files in $ENGINE_DIR (git add each one),"
         say "then scripts/engine.sh upgrade --continue -- or --abort to leave everything as it was"
         return 1
     fi
-    upgrade_finish "$target"
+    upgrade_finish
 }
 
 upgrade_finish() {
-    local target="$1" state; state="$(upgrade_state)"
-    [ "$(eng rev-parse --abbrev-ref HEAD)" = "$BRANCH" ] && eng merge-base --is-ancestor "$target" HEAD ||
-        die "$BRANCH is not on $(eng rev-parse --short "$target") yet -- finish the rebase in $ENGINE_DIR"
-    local commits files keep=() dropped=() f i=0
-    mapfile -t commits < <(eng rev-list --reverse "$target..$BRANCH")
-    mapfile -t files < <(ls "$PATCHES"/[0-9][0-9][0-9][0-9]-*.patch)
-    # A patch the rebase has no commit for became empty: upstream has it now.
-    for f in "${files[@]}"; do
-        if [ "$i" -lt "${#commits[@]}" ] && [ "$(eng log -1 --format=%s "${commits[$i]}")" = "$(patch_subject "$f")" ]; then
-            keep+=("$f"); i=$((i + 1))
-        else
-            dropped+=("$f")
-        fi
-    done
-    [ "$i" = "${#commits[@]}" ] ||
-        die "$BRANCH's commits over the new base do not line up with engine-patches/ -- sort it out by hand, then upgrade --continue"
-    for i in "${!commits[@]}"; do eng format-patch -1 "${commits[$i]}" --stdout > "${keep[$i]}"; done
-    for f in "${dropped[@]}"; do
-        rm -f -- "$f"
-        say "dropped $(basename "$f"): upstream's new commits make it empty"
-    done
-    printf '%s %s\n' "$target" "$(eng log -1 --format=%s "$target")" > "$PATCHES/UPSTREAM-BASE.txt"
-    # Rebuilt as fetch builds it, so the commit ids are reproducible, then
-    # exported once more so the patch files record those ids.
-    eng checkout --quiet -B "$BRANCH" "$target"
-    apply_patches
-    mapfile -t commits < <(eng rev-list --reverse "$target..$BRANCH")
-    for i in "${!commits[@]}"; do eng format-patch -1 "${commits[$i]}" --stdout > "${keep[$i]}"; done
-    rm -f "$state"
-    cmd_check >/dev/null
-    say "pinned at $(eng rev-parse --short "$target"); ${#keep[@]} patches re-exported, ${#dropped[@]} dropped. Next:"
-    say "  build and run linux-x86_64; scripts/engine.sh perf on (then perf save if the hooks moved);"
-    say "  profile on the devices; commit engine-patches/ with docs/ENGINE.md brought up to date."
-}
-
-cmd_export() {
-    local c="${1:-}" name="${2:-}"
-    [ -n "$c" ] && [ -n "$name" ] || die "usage: scripts/engine.sh export <commit> <NNNN-name>"
-    eng format-patch -1 "$c" --stdout > "$PATCHES/${name%.patch}.patch"
-    say "wrote engine-patches/${name%.patch}.patch"
+    say "merged. Next:"
+    say "  build and run linux-x86_64; check the Vulkan validation layer;"
+    say "  scripts/engine.sh perf on (then perf save if the hooks moved); profile on the devices;"
+    say "  push $BRANCH, then scripts/engine.sh pin, committed with docs/ENGINE.md brought up to date."
 }
 
 # The profiling hooks are a patch against the fork's head, so a fork commit
@@ -258,7 +215,7 @@ cmd_export() {
 # merge; after one (and after resolving any conflict it leaves), "save"
 # rewrites the patch from the tree so "off" and the next "on" apply cleanly.
 cmd_perf() {
-    local p="$PATCHES/optional/perf-instrumentation.patch"
+    local p="$DX_ROOT/scripts/perf-instrumentation.patch"
     case "${1:-}" in
         on)
             if eng apply "$p" 2>/dev/null; then
@@ -286,7 +243,7 @@ cmd_perf() {
             eng diff > "$p"
             [ ${#new[@]} -eq 0 ] || eng reset -q -- "${new[@]}"
             grep -q '^+.*TEMPORARY DEBUG TOOL' "$p" || die "no TEMPORARY DEBUG TOOL lines in the tree -- are the hooks applied?"
-            say "wrote engine-patches/optional/perf-instrumentation.patch from the engine tree"
+            say "wrote scripts/perf-instrumentation.patch from the engine tree"
             ;;
         *)   die "perf on|off|save" ;;
     esac
@@ -298,8 +255,9 @@ case "$cmd" in
     build)  cmd_build "$@" ;;
     check)  cmd_check ;;
     status) cmd_status ;;
+    pin)    cmd_pin ;;
     upgrade) cmd_upgrade "$@" ;;
-    export) cmd_export "$@" ;;
+    export) die "retired: the fork is its own repository -- commit there, push, then scripts/engine.sh pin" ;;
     perf)   cmd_perf "$@" ;;
     -h|--help|help) usage ;;
     *)      die "unknown command '$cmd' (scripts/engine.sh help)" ;;

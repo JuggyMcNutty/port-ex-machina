@@ -8,8 +8,9 @@
 
 **The launcher** A reverse engineered modern launcher for the deus ex engine.
 
-**The engine** is a fork of [Surreal Engine](https://github.com/dpjudas/SurrealEngine),
-an open-source UE1 re-implementation, with patches we develop targeting different platforms.
+**The engine** is [our fork](https://github.com/JuggyMcNutty/SurrealEngine) of
+[Surreal Engine](https://github.com/dpjudas/SurrealEngine), an open-source UE1
+re-implementation, carrying the changes our platforms and Deus Ex need.
 
 **The ports** linux-x86_64 is the base target with linux-aarch64, android, and platform specific builds.
 
@@ -37,7 +38,7 @@ scripts/dx.sh run    <port>                # native ports
 scripts/dx.sh deploy <port>                # device ports: builds and stages first
 scripts/dx.sh profile <port>               # device ports: a frame-time profile (scripts/engine.sh perf on)
 
-scripts/dx.sh check                        # drift guards: docs, engine patches, ports, ABI
+scripts/dx.sh check                        # drift guards: docs, the engine pin, ports, ABI
 ```
 
 Put the game files where the port's `launcher.ini` says (`GameDir`); a
@@ -70,10 +71,11 @@ tests/               host unit tests -- no display needed
 tools/               shots.c (dxl-shots: every screen as .bmp), probes/ (device probes),
                      ida/ (IDA scripts: the game's types, strings, names; Render.dll's types),
                      natives_audit.py (the original's natives against the fork's)
-engine-patches/      the engine fork as patches over a pinned upstream commit
+ENGINE-PIN.txt       the engine fork's version: its repository, branch and commit
 docs/                LAUNCHER, ENGINE, PORTING, DEVELOPMENT; re/ (the original DeusEx.exe and DLLs)
 scripts/             dx.sh, engine.sh, check-abi.sh, check-docs.sh, host-tools.sh, lib/common.sh,
-                     sample-report.py (CPU samples from a device without perf)
+                     sample-report.py (CPU samples from a device without perf),
+                     perf-instrumentation.patch (the engine's optional profiling hooks)
 ports/common/        packaging/: the base app every port ships unless it overrides it (run-game.sh, defaults)
 ports/<port>/        one device: see docs/PORTING.md
 
@@ -86,8 +88,8 @@ reference/           (ignored) the 1112f SDK, the DeusExe launcher source, IDA a
 
 ## License
 
-[zlib](LICENSE), for everything in this repository, the engine patches
-included. Surreal Engine has its own licences, in its `LICENSE.md`.
+[zlib](LICENSE), for everything in this repository and for our commits in the
+engine fork. Surreal Engine has its own licences, in its `LICENSE.md`.
 
 Deus Ex belongs to its owners; this project is not affiliated with or endorsed
 by them.

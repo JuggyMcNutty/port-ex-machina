@@ -1,7 +1,7 @@
 #!/bin/sh
 # Frame-time profile of one map, on the handheld.
 #
-# Needs an engine built with engine-patches/optional/perf-instrumentation.patch
+# Needs an engine built with scripts/perf-instrumentation.patch
 # applied (the hooks are temporary and never committed -- see the patch header
 # comments). From the repository root:
 #

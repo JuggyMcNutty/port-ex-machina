@@ -406,7 +406,7 @@ then on.
 ### Measuring
 
 With the frame-time instrumentation in
-`engine-patches/optional/perf-instrumentation.patch` (`scripts/engine.sh perf on`;
+`scripts/perf-instrumentation.patch` (`scripts/engine.sh perf on`;
 [the profiling hooks](../../docs/ENGINE.md#the-profiling-hooks)) and
 [`tools/profile-map.sh`](tools/profile-map.sh), run with
 `scripts/dx.sh profile trimui-smartpro [seconds] [label] [cpu] [turn] [map]`.
