@@ -137,7 +137,10 @@ no facts of its own beyond those; each lives in one doc, and the
      [network code](docs/re/network.md); [`IpDrv.dll`](docs/re/ipdrv-dll.md);
      [`Galaxy.dll`](docs/re/galaxy-dll.md), the audio.
    - **Only if a need comes up**: `D3DDrv.dll` (how the original looks:
-     gamma, lightmap brightness, fog, detail textures), `SoftDrv.dll` (a
+     gamma, lightmap brightness, fog, detail textures -- the need comes when
+     the on-screen items of open decision 5 are taken up: whether a
+     reimplemented look matches is judged through the original's display
+     driver), `SoftDrv.dll` (a
      software renderer, decided 3), `Fire.dll` (fire, water and ice
      textures), `WinDrv.dll` (mouse and keyboard), and the owner's copied
      `ALAudio.dll` for what the original lacks (an EFX take on the reverb,
@@ -195,6 +198,14 @@ no facts of its own beyond those; each lives in one doc, and the
    work, starting with an in-process hand-over).
 5. **What Surreal lacks of the original**: potential work, in no order, for
    the owner to take up: [`docs/re/natives.md`](docs/re/natives.md).
+   Groundwork, potential work like the rest (2026-09-24), both a run of the
+   original game: a reference set of its saves (a quick save, numbered
+   slots, a mid-mission save past a hub map) to pin the on-disk truth for
+   the save work and settle whether the fork could read them
+   ([saving, loading and travel](docs/re/natives.md#saving-loading-and-travel));
+   and watching it do what was read but never seen -- a comment-jump
+   conversation, a sound behind a wall, a zone's reverb, coronas, a laser
+   tripwire -- for each fix's acceptance reference.
    - **Stops the game:** an NPC searching in Battery Park (the fork lacks the
      `ReachablePathnodes` iterator; since patch 0034's fights) and any save
      (seen with `QuickSave`). The Save Game screen does too, by the code (the
