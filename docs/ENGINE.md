@@ -135,6 +135,10 @@ SurrealEngine --no-launcher /path/to/deusex --url=01_NYC_UNATCOIsland.dx
   becomes a stray argument, so the intro loads with no warning.
 - **The engine ignores SIGTERM**: stop it with SIGKILL (`timeout -s KILL`). That
   leaves `Running.ini` behind like any crash.
+- `--ini=<file>` and `--userini=<file>` name the inis to read and write back,
+  as the original's `INI=` and `USERINI=`; the `shot` console command writes
+  the next `ShotNNNN.bmp` into the game's System folder. [Scripted runs](DEVELOPMENT.md#scripted-runs-of-both-engines)
+  use both.
 - Where there is no audio device (a container), give OpenAL Soft the null
   driver ([linux-x86_64's README](../ports/linux-x86_64/README.md#audio)).
 
@@ -773,3 +777,15 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   temporary hooks named the mover, the NaN actors and the failing audio
   call; 70 s runs of both maps after their removal are clean, OceanLab's
   with real audio.
+- [**the root window starts with the world drawn**](https://github.com/JuggyMcNutty/SurrealEngine/commit/48fd9b9055ca99734622e99be7537ccfa14c6fcc) --
+  the save picture commit had the renderer skip the world while the root's
+  rendering is off, and the fork made its root with it off where the
+  original's init turns it on: a freshly loaded map drew only the HUD until
+  a menu opened. Its runs drove the menus first and never showed it.
+  **Checked:** `scripts/dxcap.sh prove` on Liberty Island -- both shots
+  drawn.
+- [**`--ini`, `--userini` and `shot`**](https://github.com/JuggyMcNutty/SurrealEngine/commit/eae19f339465de4383f356eb86760df08ac53bc4) --
+  the original's `INI=` and `USERINI=`, and its `SHOT` command, for
+  [scripted runs](DEVELOPMENT.md#scripted-runs-of-both-engines).
+  **Checked:** one console class drove both engines to Liberty Island's
+  start and shot it.

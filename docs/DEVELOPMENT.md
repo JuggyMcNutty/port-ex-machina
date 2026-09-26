@@ -60,9 +60,49 @@ the way to run silently
   carry a `TEMPORARY DEBUG TOOL` comment and are reverted before committing --
   by replacing their exact text, never by a looser scripted cut: one such cut
   took live main-loop code with it, the build still compiled, and the engine
-  died half a minute into a run. A slice's proving run goes 60 s or more:
-  25 s once hid exactly that.
+  died half a minute into a run. A slice's proving run goes 60 s or more --
+  25 s once hid exactly that -- and looks at what was drawn:
+  `scripts/dxcap.sh prove <map>` ([scripted runs](#scripted-runs-of-both-engines)).
+  A clean log once hid a world that was not drawn at all.
 - A change and the docs it affects go in the same commit.
+
+## Scripted runs of both engines
+
+`scripts/dxcap.sh` runs the original game (under Proton, on the host) and the
+engine fork alike, each driven by a console class of the DXCapture package --
+UnrealScript in `tools/dxcap`, compiled by the SDK's `UCC.exe`
+(`reference/ReleaseSDK1112f`) into `build/dxcap`. Each run gets a private ini
+made from the game's own, naming the console class; the game's inis are never
+written. The class moves the player, takes shots with the engines' own `shot`
+command and ends the run with `exit`; a run's shots and log land in
+`build/dxcap/runs/`.
+
+```sh
+scripts/dxcap.sh setup && scripts/dxcap.sh compile   # once, and after changing tools/dxcap
+scripts/dxcap.sh prove 01_NYC_UNATCOIsland.dx        # the fork: shots at 20 s and 60 s, checked, exit at 65 s
+scripts/dxcap.sh fork <console> <map>                # the fork with any console class
+scripts/dxcap.sh original <console>                  # the original, from its menu map
+```
+
+What it takes to run the original there, each found the hard way:
+
+- **Its shots read back only through OpenGL** under Proton: D3D's come back
+  as noise and the software renderer's black, so the original's run draws
+  through the stock `OpenGLDrv` -- darker than D3D, the same things drawn.
+- **It boots its menu map** whatever map its command line or ini names; a
+  console class travels with `open <map>` itself.
+- **UCC needs a short base directory** (a long one crashes it while it reads
+  its ini) and both `UCC.ini` and `DeusEx.ini`; hence `build/dxcap`.
+- **A stale `Running.ini` opens the recovery wizard**, which waits for a
+  click: the script removes it first. Every run of the original overwrites
+  `System/DeusEx.log`, as any launch of it does.
+- **It needs the X session's authority**: without it Wine found no usable
+  display and the game never ran its console.
+- **A killed run keeps running**: Proton's container outlives `umu-run`, so
+  the script waits for the game's own process and kills only it -- the
+  prefix may hold IDA too.
+
+Both engines' windows open on this machine's desktop, as any run's do.
 
 ## Docs
 

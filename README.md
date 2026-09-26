@@ -70,11 +70,13 @@ src/app.c            the launcher's sequence, shared by both front ends
 src/main.c           deusex-launcher;  src/cli_main.c: dxl-cli, the same sequence with no display
 tests/               host unit tests -- no display needed
 tools/               shots.c (dxl-shots: every screen as .bmp), probes/ (device probes),
+                     dxcap/ (the console classes that script runs of both engines),
                      ida/ (IDA scripts: the game's types, strings, names; Render.dll's types),
                      natives_audit.py (the original's natives against the fork's)
 ENGINE-PIN.txt       the engine fork's version: its repository, branch and commit
 docs/                LAUNCHER, ENGINE, PORTING, DEVELOPMENT; re/ (the original DeusEx.exe and DLLs)
 scripts/             dx.sh, engine.sh, check-abi.sh, check-docs.sh, host-tools.sh, lib/common.sh,
+                     dxcap.sh (scripted runs of the original and the fork),
                      sample-report.py (CPU samples from a device without perf),
                      perf-instrumentation.patch (the engine's optional profiling hooks)
 ports/common/        packaging/: the base app every port ships unless it overrides it (run-game.sh, defaults)
