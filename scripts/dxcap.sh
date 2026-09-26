@@ -8,6 +8,7 @@
 #   scripts/dxcap.sh compile                       tools/dxcap -> build/dxcap/System/DXCapture.u (UCC, under Proton)
 #   scripts/dxcap.sh original <console> [<secs>]   the original, from its menu map (it takes no map to start)
 #   scripts/dxcap.sh fork <console> <map> [<secs>] the fork's linux-x86_64 build, straight into <map>
+#                                                  (or joining a server: <map> an address, as 127.0.0.1:7790)
 #   scripts/dxcap.sh prove <map>                   the fork's proving run: shots at 20 s and 60 s, exit at 65 s
 #
 # A run's shots and log land in build/dxcap/runs/<engine>-<console>-<time>/.
@@ -26,7 +27,7 @@ CAP="$DX_ROOT/build/dxcap"
 SDK="$DX_ROOT/reference/ReleaseSDK1112f/System"
 ENGINE_BIN="$DX_ROOT/build/linux-x86_64/engine/SurrealEngine"
 
-usage() { sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,21p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 
 # The recording: a null sink on the host that the game's stream goes to
 # (PULSE_SINK), and parecord on its monitor, detached so it outlives the
@@ -92,6 +93,10 @@ if os.environ.get('DXCAP_RECORD') == '1':
 # The Join Internet screen asks a live master server: the game's names
 # GameSpy's, closed.
 put('MasterServerAddress', 'master.333networks.com')
+# A run's server never tells the master servers about itself.
+s, n = re.subn(r'^ServerActors=IpServer\.UdpServerUplink.*\r?\n', '', s, flags=re.M)
+if n == 0:
+    sys.exit('no ServerActors=IpServer.UdpServerUplink in ' + src)
 # Both engines take the game's settings from it; both run in a window of
 # the same size.
 put('WindowedViewportX', '1280')

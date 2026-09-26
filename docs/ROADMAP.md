@@ -196,14 +196,15 @@ be.
 
 - [x] The script's sockets: `InternetLink`, `TcpLink`, `UdpLink` -- the
       Join Internet screen lists the live servers (2026-09-26).
-- [ ] A server's address in a URL: protocol, host and port, as the
-      original's.
-- [ ] The net driver and a connection: UDP packets, acks, bunches, the
+- [x] A server's address in a URL: protocol, host and port, as the
+      original's (2026-09-26).
+- [x] The net driver and a connection: UDP packets, acks, bunches, the
       reliable ordering, and the control channel's handshake to `WELCOME`
-      and `JOIN`, with the original as the server.
-- [ ] The package map and actor channels: objects by package and index,
+      and `JOIN`, with the original as the server (2026-09-26).
+- [x] The package map and actor channels: objects by package and index,
       actors spawned and their properties replicated -- a live server's
-      world seen from the fork.
+      world seen from the fork (2026-09-26; the original's listen server's,
+      the live servers' still to see).
 - [ ] Remote functions and the player's moves: playing on a live server.
 - [ ] The server: accepting, relevancy and priority, replication out --
       the original joining the fork.

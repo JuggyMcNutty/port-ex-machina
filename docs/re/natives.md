@@ -889,10 +889,31 @@ All landed 2026-09-25:
 
 ## Multiplayer
 
-The fork has none of the protocol yet (read from the code). Every level runs
-standalone (`LevelInfo.NetMode` 0): there is no net driver -- `IpDrv.dll`'s
-`TcpNetDriver` -- and none of `Engine.dll`'s connections, channels or
-replication. The original's protocol is [the network](network.md).
+The fork joins a server and sees its world (2026-09-26): a client's side of
+[the network](network.md) up to its player possessed. An address in a URL
+joins it -- the Join screens' `open`, or the command line --, while the
+menu's map plays on; the driver is the fork's own over UDP with
+`[IpDrv.TcpNetDriver]`'s timeouts, the connection, its channels and the
+handshake the original's; the map loads as a client's; the package map
+numbers as the original's; actor channels spawn or find the server's actors,
+take their properties and run the server's calls, `PostNetReceive`'s moves
+and unpacking with them; the server's pawn is possessed. Until it arrives the
+fork draws no world. A lost or refusing server takes the fork back to the
+menu's map; quitting or leaving closes the connection.
+
+Checked against the original, run as a listen server on DXMP_Cathedral
+(`ServeConsole`): the fork joined twice, the server logging `Join succeeded`
+for each and the second's leaving as a close, and showed the level from its
+player's spawn with the HUD and the belt's items; its handshake matched the
+server's 32 packages, `CoreTexDetail.utx` among them by its heritage GUID.
+
+Not yet, of a client: anything it sends after `JOIN` -- its calls to the
+server run where they are called, `ServerMove` among them, so its player
+never moves on the server --, the VM's rule that a simulated proxy runs only
+simulated functions, downloads (a package missing or different from the
+server's ends the join), and the world-stats checksum (`NoChecksum` always).
+Nothing of a server. Each bunch goes on its own: the original merges one into
+the last when both are the same channel's, which only saves bits.
 
 The scripts' sockets are the original's now (2026-09-26,
 [the script's links](ipdrv-dll.md#the-scripts-links)): `InternetLink`'s

@@ -814,3 +814,11 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   the sky's view turned by the inverse of the sky zone's rotation: Liberty
   Island's city had stood 56° off the original's ([a frame](re/render-dll.md#a-frame)).
   **Checked:** the skyline where the original's is in three captures.
+- [**joining a server**](https://github.com/JuggyMcNutty/SurrealEngine/commit/deb094e39e644ad40981361e597338add798ba5a) --
+  a client's side of the original's protocol: a server's address
+  in a URL, the UDP connection and channels, the handshake, the map loaded as
+  a client's, the package map, actor channels receiving the server's actors,
+  properties and calls, the player possessed; an older package's GUID from
+  its heritage ([multiplayer](re/natives.md#multiplayer)). **Checked:** the
+  fork joined the original's listen server twice and showed its world; the
+  server logged both joins.

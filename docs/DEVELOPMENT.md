@@ -94,6 +94,13 @@ The console classes:
   logged, 333networks' master server asked for Deus Ex's servers and five
   of them pinged, then the game's own Join Internet screen opened (the
   run's ini names that master server: the game's names GameSpy's, closed).
+- **`ServeConsole`**: a listen server for the other engine to join -- a
+  deathmatch on DXMP_Cathedral, never on the master servers' lists (the
+  run's ini has no uplink); it exits after 290 s. Give the original's run
+  300 s (`scripts/dxcap.sh original ServeConsole 300`) and, while it serves,
+  `scripts/dxcap.sh fork ProveConsole 127.0.0.1:7790` joins it; the fork
+  sends its `HELLO` each second until the server answers, some 13 s after
+  the original starts here.
 - **`SoundConsole`**: M0's sounds -- a steady sound heard in the open and from
   behind a wall, shots in a reverb zone and out of it, and beeps from the
   right, the left and ahead. It silences the level first (ambient sounds,
