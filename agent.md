@@ -5,7 +5,7 @@ no facts of its own beyond those; each lives in one doc, and the
 [README's table](README.md#documentation) says which. Before working, read
 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
-## State (2026-09-25)
+## State (2026-09-26)
 
 - **The repository** is on `main`, public at
   https://github.com/JuggyMcNutty/port-ex-machina. Its history was rewritten
@@ -56,80 +56,23 @@ no facts of its own beyond those; each lives in one doc, and the
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
-- **Next**: M4's items are all in ([decided 6](#decided),
-  [`docs/ROADMAP.md`](docs/ROADMAP.md)): only its by-hand checks remain
-  ([open decision 1](#open-decisions)), judged against the original's
-  display driver, now read
-  ([`d3ddrv-dll.md`](docs/re/d3ddrv-dll.md), 2026-09-25) -- and M5, the
-  sound, landed whole (2026-09-25,
-  [its list](docs/ROADMAP.md#m5----the-sound)): loudness with the
-  original's fall-off and cap, the Speech slider, Doppler (the ambient
-  sound's alone), sounds behind walls (the fade to a third, BSP only,
-  speech excepted), ambient sounds on lights, the music (the fades, the
-  same song jumping not reloading, its place written back, section 255
-  silent), zone reverb over EFX (the mapping the fork's own), and the
-  smaller notes (beyond-radius sounds dropped, no `M` mouth shape,
-  `bIsSpeaking` the script's alone)
-  ([what changed](docs/re/natives.md#sound)). Only its by-hand checks
-  remain, in [open decision 1](#open-decisions), heard with real audio,
-  which the distrobox reaches now
-  ([this machine](docs/DEVELOPMENT.md#this-machine)); no sound-area
-  stub fired in the session's map runs (`natives_audit.py --runs`).
-  M6, polish, is begun (2026-09-25,
-  [its list](docs/ROADMAP.md#m6----polish)): keys released under a
-  menu landed -- the UI taking a key releases everything held, a taken
-  mouse button clears only fire -- showing and hiding landed --
-  `Show`/`Hide` ask the parent, `SetChildVisibility` whole, the HUD
-  laying itself out again as the InfoLink and the log come and go --
-  borders landed, tiled at one texel a pixel -- the key stubs
-  landed: a real edit undo list (Ctrl+Z/Y), Tab between tab groups,
-  the pointer held while binding a key
-  ([what changed](docs/re/natives.md#the-ui)) -- and the small
-  leftovers landed: the stairs tilt, bindings re-read on travel, the
-  AI light level, `SET InputExt` binding the multiplayer keys once,
-  positional window sounds
-  ([what changed](docs/re/natives.md#small)) -- and `GC.DrawActor`
-  landed, the vision augmentation's heat sources drawn through the
-  renderer and everything put back
-  ([what changed](docs/re/natives.md#the-ui)). **M6's code is all in**
-  (2026-09-25) but for M1's deferred save picture (a renderer capture
-  point); only the by-hand checks remain. Then, by
-  [the roadmap](docs/ROADMAP.md): multiplayer, unscheduled -- the
-  reimplementation's coded milestones are done, and the Smart Pro's
-  performance work ([decided 2](#decided)) and the next ports
-  ([open decision 4](#open-decisions)) are what remain. Landed 2026-09-25: render iterators -- smoke, steam and
-  sparks spew, and laser tripwires, electricity and laser sights draw
-  their beams
-  ([what changed](docs/re/natives.md#particles-and-lasers-render-iterators));
-  mesh detail -- a distant mesh drawn with fewer vertices, the original's
-  budget (**[perf]** re-measure on the device;
-  [what changed](docs/re/natives.md#mesh-detail)); coronas -- the
-  viewer's leaf, kept and fading, as the original's
-  ([what changed](docs/re/natives.md#coronas)); blend animations --
-  head turns and lip sync ticking as the original's
-  ([what changed](docs/re/natives.md#head-turns-and-lip-sync-blend-animations));
-  and lighting whole -- the original's mesh-light pick, shadows, fades
-  and formula, and the light maps' kept static part with animated lights
-  added over it, `NoDynamicLights`, movers rebuilt only on a move
-  ([what changed](docs/re/natives.md#lighting), with what stays the
-  fork's own); each with by-hand checks in
-  [open decision 1](#open-decisions). Proving
-  the iterators turned up two engine findings from before them, recorded
-  in [M0's list](docs/ROADMAP.md#m0----nothing-stops-the-game).
-  M3's code landed whole (2026-09-25) -- render time and stasis, the AI
-  event system, `ScriptedPawn`'s native tick, moving, and the
-  traces-moves-probes-conversions item -- so NPCs hear, their timers run,
-  they pick where to go, grenades are judged, lasers stop at people, and
-  the original game's saves load past their saved event manager (its exact
-  bytes still unread). M2's code landed too (2026-09-25) -- conversations,
-  the text parser and the list window, each as the original's. Their
-  by-hand checks are in [open decision 1](#open-decisions). M1 landed
-  (2026-09-25) but for the save picture -- a renderer capture point its
-  frame overlap allows, deferred to the render work -- and the by-hand
-  save-screen checks; M0's acceptance captures also remain. The Smart
-  Pro's work ([decided 2](#decided); M3's stasis and AI work is **[perf]**:
-  re-measure there) and the next ports
-  ([open decision 4](#open-decisions)) run beside it, at the owner's pick.
+- **Next**: the reimplementation's coded milestones are done -- M0
+  through M6's code is all in (2026-09-25;
+  [`docs/ROADMAP.md`](docs/ROADMAP.md) tracks each item, and
+  [natives.md](docs/re/natives.md) says what changed and what stays the
+  fork's own) -- but for M1's save picture (a renderer capture point its
+  frame overlap allows, deferred to the render work) and M0's
+  groundwork: the acceptance captures, and two engine findings to judge
+  ([M0's list](docs/ROADMAP.md#m0----nothing-stops-the-game)). What
+  remains of the milestones is by hand: the checks in
+  [open decision 1](#open-decisions), the sound's heard with real
+  audio, which the distrobox reaches now
+  ([this machine](docs/DEVELOPMENT.md#this-machine)). The **[perf]**
+  items that landed with M3 and M4 are to be re-measured on the device
+  (decided 2's list carries each). Beside that, by the roadmap:
+  multiplayer, unscheduled; the Smart Pro's performance work
+  ([decided 2](#decided)) and the next ports
+  ([open decision 4](#open-decisions)), at the owner's pick.
 
 ## Decided
 
