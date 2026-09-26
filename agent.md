@@ -81,10 +81,15 @@ no facts of its own beyond those; each lives in one doc, and the
   mouse button clears only fire -- showing and hiding landed --
   `Show`/`Hide` ask the parent, `SetChildVisibility` whole, the HUD
   laying itself out again as the InfoLink and the log come and go --
-  borders landed, tiled at one texel a pixel -- and the key stubs
+  borders landed, tiled at one texel a pixel -- the key stubs
   landed: a real edit undo list (Ctrl+Z/Y), Tab between tab groups,
   the pointer held while binding a key
-  ([what changed](docs/re/natives.md#the-ui)). Landed 2026-09-25: render iterators -- smoke, steam and
+  ([what changed](docs/re/natives.md#the-ui)) -- and the small
+  leftovers landed: the stairs tilt, bindings re-read on travel, the
+  AI light level, `SET InputExt` binding the multiplayer keys once,
+  positional window sounds
+  ([what changed](docs/re/natives.md#small)). Left in M6: the vision
+  augmentation's heat sources (`GC.DrawActor`). Landed 2026-09-25: render iterators -- smoke, steam and
   sparks spew, and laser tripwires, electricity and laser sights draw
   their beams
   ([what changed](docs/re/natives.md#particles-and-lasers-render-iterators));
@@ -253,9 +258,12 @@ no facts of its own beyond those; each lives in one doc, and the
      place as it appears and goes, a selection border in the
      inventory crisp with its pattern repeating rather than smearing,
      Ctrl+Z and Ctrl+Y in a save name, Tab between a screen's control
-     groups, and the pointer pinned while binding a key, by
-     [natives.md](docs/re/natives.md#lists) and
-     [the UI](docs/re/natives.md#the-ui);
+     groups, the pointer pinned while binding a key, Look Up Stairs
+     tilting the view down UNATCO's stairs and easing level, and (with
+     positional sound on) a click at a screen's left edge sounding from
+     the left, by [natives.md](docs/re/natives.md#lists),
+     [the UI](docs/re/natives.md#the-ui) and
+     [small](docs/re/natives.md#small);
      walking up to Tech Sergeant Kaplan on Liberty Island, an NPC's
      one-time chatter holding its last line, a conversation partner killed
      mid-line ending it, and -- deep in a Hong Kong game -- Maggie Chow's

@@ -178,7 +178,9 @@ item's inventory and by-hand check live there.
       (2026-09-25).
 - [x] The key stubs: `MoveTabGroupNext`/`Prev`, `EditWindow` undo and
       redo, `RootWindow.LockMouse` (2026-09-25).
-- [ ] What remains of [small](re/natives.md#small).
+- [x] What remains of [small](re/natives.md#small): the stairs tilt,
+      bindings re-read, the AI light level, `SET InputExt`, positional
+      window sounds (2026-09-25).
 
 ## Later -- multiplayer
 

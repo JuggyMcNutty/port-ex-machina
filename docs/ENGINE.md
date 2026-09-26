@@ -722,3 +722,18 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   characters and two backspaces made exactly 3 changes, undo walking
   'hel' → 'hell' → 'hello' → '' and redo back; a 75 s run after the
   hook's exact-text removal is clean.
+- [**the small leftovers**](https://github.com/JuggyMcNutty/SurrealEngine/commit/a24bcc10396c5aae63567bd6ee350a6e68f496f0) --
+  `FindStairRotation` eases the view down (−5,000) or up (5,400) a
+  flight of stairs from a floor probe ahead at eye height (the probe
+  distances and easing rate the fork's reading);
+  `ResetKeyboard` re-reads the bindings from `User.ini`;
+  `AIGetLightLevel` returns the AI-sight work's own light;
+  `SET InputExt` lands in the key bindings, so the multiplayer keys
+  bind once instead of failing on every map; and a window sound plays
+  one unit from the player, turned by the point's place across the
+  screen when positional sound is on
+  ([small](re/natives.md#small)). **Checked:** the two log-visible
+  fixes directly -- the InputExt failures and the ResetKeyboard stub
+  line are gone from a 75 s run, leaving only DumpLocation's known
+  not-needed stub; the stairs tilt and the positional sound need
+  their options switched on by hand.

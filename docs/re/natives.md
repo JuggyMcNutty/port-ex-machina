@@ -766,23 +766,33 @@ what changed, what stays the fork's own, and its by-hand check:
 
 ## Small
 
-- **`Pawn.FindStairRotation` 524:** with Look Up Stairs on, the player's view
-  does not tilt on stairs. The original is UE1's
-  ([`Engine.dll`](engine-dll.md#small)).
-- **`PlayerPawn.ResetKeyboard` 544** (every level change): the original's
-  `ResetConfig` of the input's class copies nothing in Deus Ex and has the
-  input read the player's bindings from `User.ini` again
-  ([configuration](core-dll.md#configuration)); the fork keeps its own
-  bindings. No difference in play.
-- **`Actor.AIGetLightLevel` 700:** returns 1. The original is the light
-  patch 0034 computes for `AIVisibility` (`AILightAt`); no script calls it.
-- **`InputExt`:** the fork has no class of that name
-  ([the original](extension-dll.md#the-engine-and-the-input)), so the
-  multiplayer key bindings' `SET InputExt ...` commands fail on every map.
-- **Window sounds:** the fork plays a UI sound at the player, and takes a
-  position given as world X and Y. The original plays it a unit away, turned
-  by the window's place on screen when positional sound is on
-  ([window sounds](extension-dll.md#window-sounds)).
+All landed 2026-09-25:
+
+- **`Pawn.FindStairRotation` 524:** with Look Up Stairs on, the view
+  eases toward looking down (−5,000) or up (5,400) a flight of stairs,
+  or back to level, from a floor probe ahead at eye height with a frame
+  of 0.33 s or less, as the original's
+  ([`Engine.dll`](engine-dll.md#small)); the probe distances and the
+  easing rate are the fork's own reading. To check by hand: Look Up
+  Stairs on, the view tilting down UNATCO's stairs and easing level at
+  the bottom.
+- **`PlayerPawn.ResetKeyboard` 544** (every level change): reads the
+  player's bindings from `User.ini` again, the original's effective
+  behaviour in Deus Ex ([configuration](core-dll.md#configuration)).
+- **`Actor.AIGetLightLevel` 700:** the light the AI-sight work computes
+  (`AILightAt`); no script calls it.
+- **`InputExt`:** `SET InputExt ...` lands in the key bindings as
+  `SET Input` does, Deus Ex's input class being Extension's
+  ([the original](extension-dll.md#the-engine-and-the-input)): the
+  multiplayer key bindings bind once instead of failing on every map.
+- **Window sounds:** a UI sound plays one unit from the player, turned
+  left or right by the point's place across the screen (a quarter turn
+  at either edge) when positional sound is on, the point defaulting to
+  the window's centre and the volume to the window's own where set
+  ([window sounds](extension-dll.md#window-sounds)); an unset window
+  volume falls back to full, the native default unread. To check by
+  hand: with positional sound on, a click at a screen's left edge
+  sounding from the left.
 
 ## Multiplayer
 
