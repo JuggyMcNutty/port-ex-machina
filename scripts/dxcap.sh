@@ -89,6 +89,9 @@ if n != 1:
     sys.exit('no Paths=..\\System\\*.u in ' + src)
 if os.environ.get('DXCAP_RECORD') == '1':
     put('MusicVolume', '0')
+# The Join Internet screen asks a live master server: the game's names
+# GameSpy's, closed.
+put('MasterServerAddress', 'master.333networks.com')
 # Both engines take the game's settings from it; both run in a window of
 # the same size.
 put('WindowedViewportX', '1280')

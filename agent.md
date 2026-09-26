@@ -56,7 +56,9 @@ no facts of its own beyond those; each lives in one doc, and the
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
-- **Next**: multiplayer (the owner's ask, 2026-09-26; [decided 5](#decided)).
+- **Next**: multiplayer, M7 (the owner's ask, 2026-09-26;
+  [decided 5](#decided)): the scripts' sockets are in -- the Join Internet
+  screen lists the live servers --, the net driver next.
   The reimplementation's milestones are done -- M0 through M6 all in
   (2026-09-26, M0's acceptance captures last;
   [`docs/ROADMAP.md`](docs/ROADMAP.md) tracks each item, and
@@ -176,9 +178,10 @@ no facts of its own beyond those; each lives in one doc, and the
      `Setup.exe`, the GOG DLL and `RGalaxy.dll` (Galaxy.dll renamed, with one
      change).
 5. **Multiplayer** (owner, 2026-09-24): Deus Ex's PvP servers are still up on
-   a master server, and co-op is to be added one day; neither is scheduled.
-   The fork has none of it ([multiplayer](docs/re/natives.md#multiplayer));
-   the original's protocol is Unreal Tournament's
+   a master server, and co-op is to be added one day. PvP is under way
+   (owner's ask, 2026-09-26): M7 in [`docs/ROADMAP.md`](docs/ROADMAP.md),
+   the fork's state in [multiplayer](docs/re/natives.md#multiplayer); the
+   original's protocol is Unreal Tournament's
    ([the network](docs/re/network.md), [`IpDrv.dll`](docs/re/ipdrv-dll.md)).
 6. **The order of reimplementation** (owner, 2026-09-24):
    [`docs/ROADMAP.md`](docs/ROADMAP.md) -- crashes, then saving and travel,

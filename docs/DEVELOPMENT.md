@@ -90,6 +90,10 @@ The console classes:
 - **`CaptureConsole`**: M0's pictures -- Liberty Island's lasers and coronas,
   a tripwire walked into, and in Brooklyn a conversation whose jump lands on
   a comment's label, played through.
+- **`NetConsole`**: the scripts' sockets -- conversions and GameSpy answers
+  logged, 333networks' master server asked for Deus Ex's servers and five
+  of them pinged, then the game's own Join Internet screen opened (the
+  run's ini names that master server: the game's names GameSpy's, closed).
 - **`SoundConsole`**: M0's sounds -- a steady sound heard in the open and from
   behind a wall, shots in a reverb zone and out of it, and beeps from the
   right, the left and ahead. It silences the level first (ambient sounds,

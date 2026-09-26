@@ -889,20 +889,25 @@ All landed 2026-09-25:
 
 ## Multiplayer
 
-The fork has none of it (read from the code). Every level runs standalone
-(`LevelInfo.NetMode` 0): there is no net driver -- `IpDrv.dll`'s
+The fork has none of the protocol yet (read from the code). Every level runs
+standalone (`LevelInfo.NetMode` 0): there is no net driver -- `IpDrv.dll`'s
 `TcpNetDriver` -- and none of `Engine.dll`'s connections, channels or
-replication. The scripts' sockets, which the multiplayer menus use, are
-partial: a `TcpLink` never opens, a `UdpLink` sends but never receives, and
-`InternetLink`'s `ParseURL` and `Validate` are stubs. So neither Join screen
-finds a server: Join Internet's `DeusExGSpyLink` asks the master server over
-TCP, Join LAN's `DeusExLocalLink` listens over UDP, and `DeusExServerPing`
-queries each server over UDP. The master server is `MasterServerAddress`
-under `[DeusEx.MenuScreenJoinGame]` in `DeusEx.ini`; the GOG build's names
-GameSpy's, which closed in 2014. The original's protocol is
-[the network](network.md), its sockets [`IpDrv.dll`](ipdrv-dll.md); its
-`Validate` answers a master server with a key of six spaces for Deus Ex, where
-the fork's gives nothing.
+replication. The original's protocol is [the network](network.md).
+
+The scripts' sockets are the original's now (2026-09-26,
+[the script's links](ipdrv-dll.md#the-scripts-links)): `InternetLink`'s
+lookups, conversions and GameSpy answer, `UdpLink` and `TcpLink` with their
+events, set up with the original constructor's link and receive modes, which
+the class defaults lack. Checked against the original with a scripted run
+(`NetConsole`): the same conversions and answers, and both asked
+333networks' master server (`master.333networks.com`, TCP 28900) for Deus
+Ex's servers as the Join Internet screen asks, got the same list, and pinged
+the first five for their status over UDP; then the game's own Join
+Internet screen, opened in both, asked and pinged alike, and the fork's
+listed the live servers with their maps, game types, players and pings.
+The game's own `MasterServerAddress` (`[DeusEx.MenuScreenJoinGame]` in
+`DeusEx.ini`) names GameSpy's, which closed in 2014: the screen lists
+servers once it names a live one, as the scripted runs' ini does.
 
 ## Not needed for single player
 

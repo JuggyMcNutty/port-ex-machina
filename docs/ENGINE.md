@@ -803,6 +803,13 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   sections, not left at the engine's defaults.
   **Checked:** a recorded run's music off as its ini says, its window at
   the ini's size.
+- [**the script's sockets**](https://github.com/JuggyMcNutty/SurrealEngine/commit/c47b8b29df56560c4397ad0014fdaa952b9a65c0) --
+  `InternetLink`, `TcpLink` and `UdpLink` as `IpDrv.dll`'s: the original
+  constructor's link and receive modes, host-order addresses, GameSpy's
+  `Validate`, one read a tick raised by link mode, the TCP states
+  ([multiplayer](re/natives.md#multiplayer)). **Checked:** both engines
+  asked 333networks' master server and pinged its servers alike; the Join
+  Internet screen lists the live servers.
 - [**the sky zone turned the right way**](https://github.com/JuggyMcNutty/SurrealEngine/commit/11e582e6c005a5b7cd8eaea527f58a277fdd91e4) --
   the sky's view turned by the inverse of the sky zone's rotation: Liberty
   Island's city had stood 56° off the original's ([a frame](re/render-dll.md#a-frame)).

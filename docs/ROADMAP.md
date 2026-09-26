@@ -186,9 +186,25 @@ item's inventory and by-hand check live there.
       bindings re-read, the AI light level, `SET InputExt`, positional
       window sounds (2026-09-25).
 
-## Later -- multiplayer
+## M7 -- multiplayer
 
-The net driver, connections, channels and replication
+Joining Deus Ex's live PvP servers, and hosting for the original's clients
 ([multiplayer](re/natives.md#multiplayer), [the network](re/network.md),
-[`IpDrv.dll`](re/ipdrv-dll.md)). To be added one day, unscheduled
-([decided 5](../agent.md#decided)).
+[`IpDrv.dll`](re/ipdrv-dll.md); [decided 5](../agent.md#decided)). Each
+step is checked against the original, run as the other side where it can
+be.
+
+- [x] The script's sockets: `InternetLink`, `TcpLink`, `UdpLink` -- the
+      Join Internet screen lists the live servers (2026-09-26).
+- [ ] A server's address in a URL: protocol, host and port, as the
+      original's.
+- [ ] The net driver and a connection: UDP packets, acks, bunches, the
+      reliable ordering, and the control channel's handshake to `WELCOME`
+      and `JOIN`, with the original as the server.
+- [ ] The package map and actor channels: objects by package and index,
+      actors spawned and their properties replicated -- a live server's
+      world seen from the fork.
+- [ ] Remote functions and the player's moves: playing on a live server.
+- [ ] The server: accepting, relevancy and priority, replication out --
+      the original joining the fork.
+- [ ] The uplink: a fork server on the master servers' lists.
