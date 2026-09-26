@@ -146,7 +146,8 @@ check live there.
 
 - [x] Loudness: the script's volume, fall-off linear to the radius, the
       cap at full (2026-09-25).
-- [ ] The Speech slider.
+- [x] The Speech slider: `SpeechVolume` a real setting, speech gained by
+      it, the instant-volume natives set the sliders (2026-09-25).
 - [ ] Sounds behind walls.
 - [ ] Ambient sounds on lights.
 - [ ] Doppler.

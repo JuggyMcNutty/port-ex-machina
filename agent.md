@@ -63,8 +63,10 @@ no facts of its own beyond those; each lives in one doc, and the
   ([`d3ddrv-dll.md`](docs/re/d3ddrv-dll.md), 2026-09-25) -- and M5, the
   sound, is begun (2026-09-25, [its list](docs/ROADMAP.md#m5----the-sound)):
   loudness landed -- the script's volume, the original's linear fall-off
-  and cap at full ([what changed](docs/re/natives.md#sound), its by-hand
-  check in [open decision 1](#open-decisions)); the distrobox reaches
+  and cap at full -- and the Speech slider landed, a real `SpeechVolume`
+  gained by speech alone with the instant-volume natives setting the
+  sliders ([what changed](docs/re/natives.md#sound), by-hand checks in
+  [open decision 1](#open-decisions)); the distrobox reaches
   real audio now
   ([this machine](docs/DEVELOPMENT.md#this-machine)). Landed 2026-09-25: render iterators -- smoke, steam and
   sparks spew, and laser tripwires, electricity and laser sights draw

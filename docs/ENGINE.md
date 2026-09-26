@@ -607,3 +607,11 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   loudness. **Checked:** a 90 s Liberty Island run with real audio (the
   distrobox reaches PipeWire since 2026-09-25): the device initializes,
   ambient sounds play, no AL errors.
+- [**the Speech slider**](https://github.com/JuggyMcNutty/SurrealEngine/commit/7fb656a02a0fbc958c6931b8e9dad2a9caf7e594) --
+  `SpeechVolume` is a setting of the fork's audio device, served over
+  the property interface the game's menu binds; speech (the talk slot)
+  gains by it, the rest by the Sound slider; the three instant-volume
+  natives set the subsystem's sliders, so a menu drag holds instead of
+  lasting one frame, and `SetInstantSpeechVolume` 269 is no stub
+  ([sound](re/natives.md#sound)). **Checked:** a 90 s intro run -- its
+  conversation exercises the talk slot -- with no AL errors.

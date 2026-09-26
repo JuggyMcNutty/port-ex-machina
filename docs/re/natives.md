@@ -621,11 +621,14 @@ by-hand check, the rest are still the fork's own:
   `SongSection`, so after a fight or a conversation the ambient music starts
   its section again, where the original goes on where it was. Section 255,
   silence in the original, plays the song's first section.
-- **The Speech slider does nothing.** The fork has no speech volume: speech
-  follows the Sound slider, `Actor.SetInstantSpeechVolume` 269 is a stub, and
-  `SpeechVolume` is no setting of its audio device. The original plays speech
-  at the Speech slider and the rest at the Sound slider
-  ([volume](galaxy-dll.md#volume)).
+- **The Speech slider.** Landed (2026-09-25): `SpeechVolume` is a setting
+  of the fork's audio device (default 255, the game's), speech -- the talk
+  slot -- gains by it and the rest by the Sound slider, and the three
+  instant-volume natives set the sliders themselves, so a menu drag holds
+  instead of lasting one frame ([volume](galaxy-dll.md#volume)). Not
+  carried: Galaxy's equal-sliders quirk, both scaled by the slider twice.
+  To check by hand: the Speech slider moving a conversation's loudness
+  mid-line and not the world's, the Sound slider the other way round.
 - **Loudness.** Landed (2026-09-25): the fork plays the script's volume
   as the original does -- no rescale toward 1, no halving -- with
   fall-off linear from the sound to its radius and silent there, and the
