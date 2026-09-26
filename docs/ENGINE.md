@@ -764,3 +764,12 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   game's reference save and showing that save's own picture, and the main
   menu over the snapshot and over black; a 70 s run after the hook's
   exact-text removal is clean.
+- [**M0's two findings**](https://github.com/JuggyMcNutty/SurrealEngine/commit/69daeb00a50cc6b06914a6077ad2171603141226) --
+  a mover with no brush collides as its cylinder and a model with no BSP
+  nodes is hit by nothing (`09_NYC_ShipBelow` crashed in a trace), and the
+  swimming gravity floors the mass at 1 (`14_OceanLab_Lab`'s massless
+  pawns made a NaN height its splash sounds died on)
+  ([stops the game](re/natives.md#stops-the-game)). **Checked:**
+  temporary hooks named the mover, the NaN actors and the failing audio
+  call; 70 s runs of both maps after their removal are clean, OceanLab's
+  with real audio.

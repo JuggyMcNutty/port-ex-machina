@@ -61,7 +61,7 @@ no facts of its own beyond those; each lives in one doc, and the
   [`docs/ROADMAP.md`](docs/ROADMAP.md) tracks each item, and
   [natives.md](docs/re/natives.md) says what changed and what stays the
   fork's own) -- but for M0's
-  groundwork: the acceptance captures, and two engine findings to judge
+  groundwork: the acceptance captures
   ([M0's list](docs/ROADMAP.md#m0----nothing-stops-the-game)). What
   remains of the milestones is by hand: the checks in
   [open decision 1](#open-decisions), the sound's heard with real

@@ -58,7 +58,20 @@ registered, as the original's ([`GetConfig`](core-dll.md#getconfig));
 fight once ended the game about 20 s in ("Iterator statement without an
 iterator in Terrorist11.GetOvershootDestination"), and a quick save in
 UNATCO HQ, which once died on "Object does not belong to this package",
-both ran out their clocks (2026-09-24).
+both ran out their clocks (2026-09-24). Two more, fixed 2026-09-26, each in
+its level whatever the way in
+([what an actor collides as](engine-dll.md#traces),
+[falling in water](engine-dll.md#moving)):
+
+- **`09_NYC_ShipBelow` crashed** in a falling actor's trace: its
+  `DeusExMover34` has no brush, and the fork's mover trace read a model that
+  was not there. A brushless mover collides as its cylinder now, as the
+  original's, and a model with no BSP nodes is hit by nothing.
+- **`14_OceanLab_Lab` stopped** on "Failed to play AL source": its
+  `GeneratorScout`s, pawns of mass 0, fall into water, where the fork's
+  swimming gravity divided 0 by 0; the NaN height reached their splash
+  sounds, which the audio layer refuses under any driver. The mass is
+  floored at 1, as the original's falling in water floors it.
 
 ## Saving, loading and travel
 
