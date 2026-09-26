@@ -583,8 +583,16 @@ checks:
   ([showing and hiding](extension-dll.md#showing-and-hiding)). To check
   by hand: an InfoLink message pushing the HUD's other parts into
   place as it appears and goes.
-- **The vision augmentation** (`GC.DrawActor`, a stub): no heat source is
-  drawn, only the tint ([actors in a window](extension-dll.md#actors-in-a-window)).
+- **The vision augmentation.** Landed (2026-09-25): `GC.DrawActor` draws
+  the actor through the renderer into the scene being drawn -- the GC's
+  style, the glow and unlit given, the draw scale multiplied, a given
+  skin replacing every skin, as if not hidden, all put back afterwards
+  -- so heat sources draw in their grid skin at twice their glow
+  ([actors in a window](extension-dll.md#actors-in-a-window)).
+  `bConstrain` is not honoured, the fork's own: the augmentation's
+  calls cover the whole view. To check by hand: the vision
+  augmentation at level 1 showing a warm NPC through its grid, and
+  what a wall in front does staying the renderer's.
 - **Borders.** Landed (2026-09-25): `GC.DrawBorders` tiles each edge and
   the centre at one texel a pixel, as the original's `DrawIconPattern`
   does, and honours the stretch flags the game never passes

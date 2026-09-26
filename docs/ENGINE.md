@@ -737,3 +737,15 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   line are gone from a 75 s run, leaving only DumpLocation's known
   not-needed stub; the stairs tilt and the positional sound need
   their options switched on by hand.
+- [**GC.DrawActor**](https://github.com/JuggyMcNutty/SurrealEngine/commit/ca39cb532a9a21d246b8bb2c3a88be44b765eddc) --
+  the vision augmentation's heat sources: the actor draws through the
+  renderer into the scene being drawn with the GC's style, the glow
+  and unlit given, the draw scale multiplied and a given skin
+  replacing every skin, as if not hidden, all put back afterwards;
+  `RenderSubsystem::DrawActor` restores the actor's own `bHidden`
+  instead of forcing it hidden (the Canvas natives shared that stomp);
+  `bConstrain` stays unhonoured, the augmentation's calls covering the
+  whole view ([the UI](re/natives.md#the-ui)). **Checked:** a
+  temporary hook drew a live visible pawn through the path for 120
+  canvas frames at glow 2 unlit, the fields reading back their own
+  values between frames; a 75 s run after removal is clean.

@@ -88,8 +88,16 @@ no facts of its own beyond those; each lives in one doc, and the
   leftovers landed: the stairs tilt, bindings re-read on travel, the
   AI light level, `SET InputExt` binding the multiplayer keys once,
   positional window sounds
-  ([what changed](docs/re/natives.md#small)). Left in M6: the vision
-  augmentation's heat sources (`GC.DrawActor`). Landed 2026-09-25: render iterators -- smoke, steam and
+  ([what changed](docs/re/natives.md#small)) -- and `GC.DrawActor`
+  landed, the vision augmentation's heat sources drawn through the
+  renderer and everything put back
+  ([what changed](docs/re/natives.md#the-ui)). **M6's code is all in**
+  (2026-09-25) but for M1's deferred save picture (a renderer capture
+  point); only the by-hand checks remain. Then, by
+  [the roadmap](docs/ROADMAP.md): multiplayer, unscheduled -- the
+  reimplementation's coded milestones are done, and the Smart Pro's
+  performance work ([decided 2](#decided)) and the next ports
+  ([open decision 4](#open-decisions)) are what remain. Landed 2026-09-25: render iterators -- smoke, steam and
   sparks spew, and laser tripwires, electricity and laser sights draw
   their beams
   ([what changed](docs/re/natives.md#particles-and-lasers-render-iterators));
@@ -259,9 +267,10 @@ no facts of its own beyond those; each lives in one doc, and the
      inventory crisp with its pattern repeating rather than smearing,
      Ctrl+Z and Ctrl+Y in a save name, Tab between a screen's control
      groups, the pointer pinned while binding a key, Look Up Stairs
-     tilting the view down UNATCO's stairs and easing level, and (with
+     tilting the view down UNATCO's stairs and easing level, (with
      positional sound on) a click at a screen's left edge sounding from
-     the left, by [natives.md](docs/re/natives.md#lists),
+     the left, and the vision augmentation at level 1 showing a warm
+     NPC through its grid, by [natives.md](docs/re/natives.md#lists),
      [the UI](docs/re/natives.md#the-ui) and
      [small](docs/re/natives.md#small);
      walking up to Tech Sergeant Kaplan on Liberty Island, an NPC's

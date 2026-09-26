@@ -173,7 +173,8 @@ item's inventory and by-hand check live there.
       (2026-09-25).
 - [x] Showing and hiding: `Show`/`Hide` ask the parent,
       `SetChildVisibility` whole, the HUD laying out again (2026-09-25).
-- [ ] The vision augmentation's heat sources (`GC.DrawActor`).
+- [x] The vision augmentation's heat sources (`GC.DrawActor`)
+      (2026-09-25).
 - [x] Borders tiled at one texel a pixel (`GC.DrawBorders`)
       (2026-09-25).
 - [x] The key stubs: `MoveTabGroupNext`/`Prev`, `EditWindow` undo and
