@@ -156,8 +156,9 @@ check live there.
       silence.
 - [ ] Zone reverb (EFX; the owner's copied `ALAudio.dll` as a reference,
       [the binaries](re/README.md#the-binaries)).
-- [ ] The smaller notes: a sound beyond its radius dropped, the mouth
-      shapes' `M` band, `bIsSpeaking` the script's alone.
+- [x] The smaller notes: a sound beyond its radius dropped, the mouth
+      shapes' `M` band gone, `bIsSpeaking` the script's alone
+      (2026-09-25).
 
 ## M6 -- polish
 

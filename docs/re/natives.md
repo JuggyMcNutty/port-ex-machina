@@ -646,12 +646,16 @@ by-hand check, the rest are still the fork's own:
   ([each frame](galaxy-dll.md#each-frame)). To check by hand: a walk
   toward and away from a humming light leaves its pitch alone, and only
   a moving ambient carrier (a patrolling bot's hum) bends.
-- **Smaller.** A sound beyond its radius takes a free channel in the fork,
-  silent (its priority is kept at 0 or more); the original drops it. The
-  fork's mouth shapes follow the original's bands but for `M`, which it gives
-  from 100 to 250 Hz and the original never does ([lip sync](galaxy-dll.md#lip-sync)),
-  and it sets `bIsSpeaking` itself whenever a pawn's speech plays, where the
-  original moves a mouth only while the script has set it.
+- **Smaller.** Landed (2026-09-25): a sound beyond its radius is dropped,
+  as the original drops it -- its priority goes negative, never beating an
+  empty channel; the mouth shapes lose the fork's own `M` band, `E`
+  reaching to 250 Hz as the original's table has it
+  ([lip sync](galaxy-dll.md#lip-sync)); and `bIsSpeaking` is the script's
+  alone -- the fork writes `nextPhoneme` only while ConPlay has it set,
+  and no longer forces the mouth closed on a channel's teardown, the
+  script's `LipSynch` closing it as the original's does. To check by
+  hand: an NPC's bark moving no mouth outside a conversation, and a
+  conversation partner's mouth closing on its own at a line's end.
 
 ## Implemented, not as the original
 

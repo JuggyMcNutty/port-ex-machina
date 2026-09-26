@@ -623,3 +623,12 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   sound by the player's speed at ~14,800
   ([sound](re/natives.md#sound)). **Checked:** a 75 s Liberty Island
   run with real audio, no AL errors.
+- [**the smaller sound notes**](https://github.com/JuggyMcNutty/SurrealEngine/commit/ebf27d6d2301ad350609e6c792df191d89683cf3) --
+  a sound beyond its radius is dropped as the original drops it (its
+  priority goes negative, never beating an empty channel); the mouth
+  shapes lose the fork's own `M` band, `E` reaching to 250 Hz; and
+  `bIsSpeaking` is the script's alone -- `nextPhoneme` written only
+  while ConPlay has it set, the mouth no longer forced closed on a
+  channel's teardown ([sound](re/natives.md#sound)). **Checked:** a
+  75 s intro run whose conversation drives the lip sync through
+  ConPlay's own flag, no AL errors.
