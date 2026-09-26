@@ -124,3 +124,9 @@ Device-specific ones are in each port's README. These apply everywhere:
   20,000 units from every NSF, and no NPC reacts to a player it cannot see: to
   check AI on the desktop, move the player in front of one with a temporary
   hook.
+- **`build` does not restage.** The staged app keeps whatever binary the last
+  `stage` copied; a run after `build` alone tests the old engine, which shows
+  up as long-fixed `Unimplemented` lines in its log (a three-day-old staged
+  binary cost a round of confusion, 2026-09-25). Stage before running -- and
+  never while the engine still runs: the copy fails with `Text file busy` and
+  the old binary runs again.
