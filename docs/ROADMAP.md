@@ -166,8 +166,17 @@ check live there.
 
 ## M6 -- polish
 
-- [ ] [The UI](re/natives.md#the-ui): keys released under a menu, showing
-      and hiding, the vision augmentation, borders, the remaining stubs.
+[The UI](re/natives.md#the-ui) and [small](re/natives.md#small); each
+item's inventory and by-hand check live there.
+
+- [x] Keys released under a menu; a taken mouse button clears only fire
+      (2026-09-25).
+- [ ] Showing and hiding: `Show`/`Hide` ask the parent,
+      `SetChildVisibility` whole, the HUD laying out again.
+- [ ] The vision augmentation's heat sources (`GC.DrawActor`).
+- [ ] Borders tiled at one texel a pixel (`GC.DrawBorders`).
+- [ ] The key stubs: `MoveTabGroupNext`/`Prev`, `EditWindow` undo and
+      redo, `RootWindow.LockMouse`.
 - [ ] What remains of [small](re/natives.md#small).
 
 ## Later -- multiplayer

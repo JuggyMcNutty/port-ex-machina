@@ -75,7 +75,11 @@ no facts of its own beyond those; each lives in one doc, and the
   which the distrobox reaches now
   ([this machine](docs/DEVELOPMENT.md#this-machine)); no sound-area
   stub fired in the session's map runs (`natives_audit.py --runs`).
-  Then M6, polish. Landed 2026-09-25: render iterators -- smoke, steam and
+  M6, polish, is begun (2026-09-25,
+  [its list](docs/ROADMAP.md#m6----polish)): keys released under a
+  menu landed -- the UI taking a key releases everything held, a taken
+  mouse button clears only fire
+  ([what changed](docs/re/natives.md#the-ui)). Landed 2026-09-25: render iterators -- smoke, steam and
   sparks spew, and laser tripwires, electricity and laser sights draw
   their beams
   ([what changed](docs/re/natives.md#particles-and-lasers-render-iterators));
@@ -238,8 +242,10 @@ no facts of its own beyond those; each lives in one doc, and the
      key in the game's Customize Keys screen (a double click or Enter starts
      it), the Load Game list sorted by date and re-sorted from its headers,
      moving through a list with the keys and a pad's d-pad, and a movement
-     key held into a menu and let go there, by
-     [natives.md](docs/re/natives.md#lists);
+     key held into a menu and let go there moving nothing when it
+     closes, and a click on the HUD mid-fight stopping fire but not the
+     walk, by [natives.md](docs/re/natives.md#lists) and
+     [the UI](docs/re/natives.md#the-ui);
      walking up to Tech Sergeant Kaplan on Liberty Island, an NPC's
      one-time chatter holding its last line, a conversation partner killed
      mid-line ending it, and -- deep in a Hong Kong game -- Maggie Chow's

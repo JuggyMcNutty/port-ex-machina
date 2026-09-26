@@ -563,11 +563,15 @@ checks:
 
 ### The UI
 
-- **Keys held under a menu.** The original releases every key held when a
-  menu takes the input ([the input](extension-dll.md#the-engine-and-the-input)).
-  The fork gives an open menu every key, releases included, and releases
-  nothing, so a movement key held as a menu opens and let go inside it is
-  still held when the menu closes (read from the code, to check by hand).
+- **Keys held under a menu.** Landed (2026-09-25): when the UI takes a
+  key, every key the input holds down is released -- the tracked buttons
+  false, the axes zero -- and when it takes a mouse button, only `bFire`
+  and `bAltFire` clear, both as the original's
+  ([the input](extension-dll.md#the-engine-and-the-input),
+  [the root window](extension-dll.md#the-root-window)). To check by
+  hand: a movement key held into a menu and let go there moves nothing
+  when the menu closes, and a click on the HUD mid-fight stops fire but
+  not the walk.
 - **Showing and hiding.** The fork's `Show` and `Hide` set the window's flag
   themselves. They do not ask the parent (`ChildRequestedVisibilityChange` is
   never sent; `SetChildVisibility` is a stub), and do not move focus from a

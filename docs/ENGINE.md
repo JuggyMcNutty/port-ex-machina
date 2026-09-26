@@ -678,3 +678,12 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   reverb zone: the watch fired once and the derivation came out exact
   (gain 0.392 = 100/255, gainhf 0.768, first tap 40 ms), no AL errors;
   a 75 s run after the hooks' exact-text removal is clean.
+- [**keys released under a menu**](https://github.com/JuggyMcNutty/SurrealEngine/commit/6a14fdb01e6fb4f9e5cb9cab2f14e994fe6d3cea) --
+  when the UI takes a key, every key the input holds down is released
+  (the tracked buttons false, the axes zero), and a taken mouse button
+  clears only `bFire`/`bAltFire`, both as the original's; a movement
+  key held into a menu no longer walks the player off when it closes
+  ([the UI](re/natives.md#the-ui)). **Checked:** a temporary hook
+  drove a synthetic held key into an opened menu -- 3 held axes
+  released on the first key event the menu took and stayed clear;
+  a 75 s run after the hook's exact-text removal is clean.
