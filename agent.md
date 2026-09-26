@@ -61,22 +61,21 @@ no facts of its own beyond those; each lives in one doc, and the
   ([open decision 1](#open-decisions)), judged against the original's
   display driver, now read
   ([`d3ddrv-dll.md`](docs/re/d3ddrv-dll.md), 2026-09-25) -- and M5, the
-  sound, is begun (2026-09-25, [its list](docs/ROADMAP.md#m5----the-sound)):
-  landed so far -- loudness (the script's volume, the original's linear
-  fall-off and cap at full), the Speech slider (a real `SpeechVolume`
-  gained by speech alone, the instant-volume natives setting the
-  sliders), Doppler (the ambient sound's alone, its actor's speed,
-  a real `DopplerSpeed`), the smaller notes (beyond-radius sounds
-  dropped, no `M` mouth shape, `bIsSpeaking` the script's alone),
-  sounds behind walls (the fade to a third over half a second, BSP
-  only, speech excepted), ambient sounds on lights (brightness and
-  the light's animation scale the hum), and the music (the fades, the
+  sound, landed whole (2026-09-25,
+  [its list](docs/ROADMAP.md#m5----the-sound)): loudness with the
+  original's fall-off and cap, the Speech slider, Doppler (the ambient
+  sound's alone), sounds behind walls (the fade to a third, BSP only,
+  speech excepted), ambient sounds on lights, the music (the fades, the
   same song jumping not reloading, its place written back, section 255
-  silent)
-  ([what changed](docs/re/natives.md#sound), by-hand checks in
-  [open decision 1](#open-decisions)); the distrobox reaches
-  real audio now
-  ([this machine](docs/DEVELOPMENT.md#this-machine)). Landed 2026-09-25: render iterators -- smoke, steam and
+  silent), zone reverb over EFX (the mapping the fork's own), and the
+  smaller notes (beyond-radius sounds dropped, no `M` mouth shape,
+  `bIsSpeaking` the script's alone)
+  ([what changed](docs/re/natives.md#sound)). Only its by-hand checks
+  remain, in [open decision 1](#open-decisions), heard with real audio,
+  which the distrobox reaches now
+  ([this machine](docs/DEVELOPMENT.md#this-machine)); no sound-area
+  stub fired in the session's map runs (`natives_audit.py --runs`).
+  Then M6, polish. Landed 2026-09-25: render iterators -- smoke, steam and
   sparks spew, and laser tripwires, electricity and laser sights draw
   their beams
   ([what changed](docs/re/natives.md#particles-and-lasers-render-iterators));
@@ -263,7 +262,10 @@ no facts of its own beyond those; each lives in one doc, and the
      a line's end, a generator dulling through a wall and opening back
      up in a doorway (never a conversation line), a security camera's
      hum quieter than an unlit machine's and a flickering light's hum
-     wavering with it, by
+     wavering with it, combat music in fast and the ambient back where
+     it left off (not from the top), and Battery Park's underground
+     echoing against the open park with the echo gone on stepping back
+     out, by
      [natives.md](docs/re/natives.md#sound) (with the
      desktop's audio: [linux-x86_64's](ports/linux-x86_64/README.md#audio));
      a shot fired around a corner turning the guards, and a body found

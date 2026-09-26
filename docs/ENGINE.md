@@ -666,3 +666,15 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   same-song jump to order 4 with no reload, a 5.08 s slow fade, and
   the write-back tracking the playing order; a 75 s run after the
   hooks' exact-text removal is clean.
+- [**zone reverb**](https://github.com/JuggyMcNutty/SurrealEngine/commit/ec7c4cd937d2c5cccfe52faf7c236be9b6181632) --
+  a zone with `bReverbZone` gives every sound its reverb through
+  OpenAL's EFX (one auxiliary slot each source sends to, a NULL effect
+  while no zone asks), set again only when the view target's zone
+  changes; the Galaxy-to-EFX mapping is the fork's own -- `MasterGain`
+  the gain, `CutoffHz` a one-pole lowpass at EFX's 5 kHz reference,
+  the echo train's longest tap the decay, the earliest the reflections
+  delay -- and music stays dry ([sound](re/natives.md#sound)).
+  **Checked:** a temporary hook dropped the player into Battery Park's
+  reverb zone: the watch fired once and the derivation came out exact
+  (gain 0.392 = 100/255, gainhf 0.768, first tap 40 ms), no AL errors;
+  a 75 s run after the hooks' exact-text removal is clean.

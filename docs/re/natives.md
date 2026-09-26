@@ -594,9 +594,9 @@ checks:
 
 The fork's audio is its own, over OpenAL; the original's is `Galaxy.dll`
 ([`galaxy-dll.md`](galaxy-dll.md)). Both scan every actor for ambient sounds
-each frame, keep one record a channel and choose which sound wins alike. They
-differed when read from both codes; a landed item carries its date and its
-by-hand check, the rest are still the fork's own:
+each frame, keep one record a channel and choose which sound wins alike.
+Every difference read from both codes landed 2026-09-25; each bullet says
+what changed, what stays the fork's own, and its by-hand check:
 
 - **Sounds behind walls.** Landed (2026-09-25): a sound fades over half a
   second to a third of its volume while the level's BSP stands between the
@@ -609,11 +609,19 @@ by-hand check, the rest are still the fork's own:
   boat's idle crossing both ways. To check by hand: a guard's radio or
   a generator dulling through a wall and opening back up in a doorway,
   never a conversation line.
-- **No reverb.** The fork has none (its EFX is to do). The original gives a
-  zone with `bReverbZone` its own reverb, from its `MasterGain`, `CutoffHz`
-  and six echoes ([reverb](galaxy-dll.md#reverb)): 21 zones in 16 maps, from
-  Battery Park to the endgame (the data). OldUnreal's `ALAudio.dll` emulates
-  it with OpenAL's EFX ([the binaries](README.md#the-binaries)).
+- **Reverb.** Landed (2026-09-25): a zone with `bReverbZone` gives every
+  sound its reverb -- 21 zones in 16 maps, Battery Park to the endgame
+  (the data) -- set again only when the view target's zone changes,
+  over OpenAL's EFX ([reverb](galaxy-dll.md#reverb)). The mapping is
+  the fork's own, since Galaxy's reverb is a six-tap echo network and
+  EFX's a reverb model: `MasterGain` the gain, `CutoffHz` a one-pole
+  lowpass read at EFX's 5 kHz reference, the echo train's longest tap
+  the decay time, its earliest the reflections delay; music stays dry,
+  as the original's. OldUnreal's `ALAudio.dll` remains the
+  read-if-needed reference for a closer take
+  ([the binaries](README.md#the-binaries)). To check by hand: Battery
+  Park's underground echoing against the open park, and the echo
+  gone on stepping back out.
 - **Ambient sounds on lights.** Landed (2026-09-25): the fork scales such
   a sound by `LightBrightness` ÷ 255 -- a quarter or less for 235 of the
   402 actors in 46 maps that carry both -- and follows the light's pulse,
