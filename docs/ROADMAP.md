@@ -67,10 +67,10 @@ All read; the inventory is
 - [x] Flags: chains past 64, expiry, kept by saves in the level package,
       and carried across travel in the pawn's travel graph
       ([flags](re/natives.md#flags)).
-- [ ] The save screens: the list window's `GetField` is in (2026-09-25);
-      left, the picture -- a capture point the renderer's frame overlap
-      allows -- and the by-hand checks
-      ([lists](re/natives.md#lists), [the UI](re/natives.md#the-ui)).
+- [x] The save screens: the list window's `GetField` (2026-09-25); the
+      picture, the menus' background, the lists drawn and the screens
+      saving (2026-09-26; [saving](re/natives.md#saving-loading-and-travel),
+      [lists](re/natives.md#lists), [the UI](re/natives.md#the-ui)).
 - [x] Acceptance: our own saves round-trip (a slot and the quick save,
       2026-09-24); the original's reference saves load and play
       (2026-09-25), their saved event manager skipped

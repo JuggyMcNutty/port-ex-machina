@@ -76,17 +76,22 @@ commands and showed three of these. The rest is read from the code:
   saved on top, and the `SaveInfo` -- `MyDeusExSaveInfo`, as the original
   names it -- carries the description (the level's `Title` without one),
   the place, the map, the slot, the player's save count, play time and
-  cheats flag, and the full-date time stamp. Still missing: the picture
-  ([the UI](#the-ui)), and nothing fills `Current` until travel is ported,
-  so a slot copies only what an original run left there.
-- **The Save Game screen** reads `GetConfig("Engine.Engine",
-  "GameRenderDevice")` every time it opens (registered, answered from the
-  system ini) and then asks for the save's picture, which the fork does not
-  make ([the UI](#the-ui)). To check by hand: open Save Game.
-- **The Load Game screen**'s save infos now load: the listing and the kept
-  infos fill, and `GetSaveInfo(-1)` knows the quick save. What its rows
-  show hangs on the list window's fields ([lists](#lists)); to check by
-  hand.
+  cheats flag, the full-date time stamp, and the picture
+  ([save pictures](#the-ui)).
+- **The save screens** work through the game's own script (seen,
+  2026-09-26, with a hook driving them): the Save Game screen shows the new
+  save's picture and saves through its own button, and the Load Game
+  screen lists every save, newest first, with the selected one's picture,
+  place, save count, play time and size -- the original game's saves too,
+  their pictures read from their `SaveInfo`. Before, both lists were drawn
+  empty ([lists](#lists)), `GetSaveInfoFromDirectoryIndex` took a slot
+  number for the listing's place (one row read "SAVEINFO.DXS Missing!!!"
+  and the newest save never listed), the free space was measured on an
+  unread path and threw, so the Save Game screen took the disk for full
+  and never saved, a slot's size was in bytes where the screen expects KB,
+  and the new save's row was dated 00/00/0 for want of the temporary save
+  info. To check by hand: saving into a new slot from the screen, and each
+  save's picture in the Load Game screen.
 - **Loading works for the fork's own saves** (seen: a slot and the quick
   save round-trip, the saved pawn possessed, 2026-09-24). `?loadgame=N`
   does what the original's `Browse` does: the slot's `SaveInfo` names the
@@ -112,19 +117,11 @@ commands and showed three of these. The rest is read from the code:
   (`CreateHistoryObject` and its kin, 2026-09-25), as the original makes
   them, so a save keeps them; to check by hand with the screens.
 
-**The fix:** the original's travel and save logic, all of it read and, but
-for one piece, in the fork (2026-09-25). Left:
-
-- the save's picture ([the UI](#the-ui)): the fork's frame read-back tears
-  down the frame its renderer overlaps, wherever it is called, so the
-  picture needs a capture point built into the renderer's own end of
-  frame. The original itself saves none for its OpenGL driver, and the
-  screens take a missing one.
-
-The fork reads its own saves back (2026-09-24), and the original game's
-load past their saved event manager now (2026-09-25), the manager skipped
-and its listeners lost until its exact bytes are read
-([hearing](#hearing-the-ai-event-system)).
+**The fix:** the original's travel and save logic, all of it read and in
+the fork (2026-09-26, the picture last). The fork reads its own saves back
+(2026-09-24), and the original game's load past their saved event manager
+now (2026-09-25), the manager skipped and its listeners lost until its
+exact bytes are read ([hearing](#hearing-the-ai-event-system)).
 
 ## Flags
 
@@ -563,6 +560,14 @@ checks:
   text colour and font, and a sort key; auto-expanding columns, on by
   default, widen a column to each field put in it; hidden columns take no
   space and do not draw. A click below the last row selects the last row.
+- **Its size.** Landed (2026-09-26): the list asks for the original's size
+  -- its visible columns side by side, a row size for each row, the row
+  size its tallest column font plus the row margins -- and every change to
+  its rows or columns asks its parent to lay it out again
+  ([the list's size](extension-dll.md#the-lists-size)). The fork's list
+  asked for nothing, so every list in a scroll area -- the save screens,
+  and likely the emails, logs, key bindings and the rest -- was sized to
+  nothing and drew no rows. To check by hand with the checks above.
 
 ### The UI
 
@@ -603,11 +608,20 @@ checks:
   passes either, stay unimplemented. To check by hand: a selection
   border in the inventory and a themed HUD frame crisp, their patterns
   repeating instead of smearing over the run.
-- **Save pictures**: none, where the original's are grey 160 × 120 images
-  ([save pictures](extension-dll.md#save-pictures)). `SetSnapshotSize` keeps
-  its sizes now, and `GenerateSnapshot` returns nothing on purpose until
-  the renderer gets a capture point its frame overlap allows
-  ([the fix](#saving-loading-and-travel)).
+- **Save pictures.** Landed (2026-09-26): `GenerateSnapshot` makes the
+  original's grey picture of the frame last drawn, read back between
+  frames -- a read inside one ends the frame the renderer is still
+  recording, which is what had kept it out -- and a save takes its
+  160 × 120 one when it is asked for, into a texture beside its save info
+  ([save pictures](extension-dll.md#save-pictures)); the screens show it
+  ([saving](#saving-loading-and-travel)).
+- **The menus' background.** Landed (2026-09-26): the UI background
+  option's Snapshot and Black work -- with the root's rendering off the
+  world is not drawn, and the raw background is drawn under the windows
+  ([the raw background](extension-dll.md#the-raw-background)); before,
+  the world was drawn under every menu whatever the option. To check by
+  hand: the option's three settings under the main menu, and the credits
+  over black.
 - **Keys.** Landed (2026-09-25): `EditWindow.Undo` and `Redo` walk a real
   change list -- typing joins, `maxUndos` caps, Ctrl+Z and Ctrl+Y call
   them -- with two edit bugs fixed on the way (inserting over a selection

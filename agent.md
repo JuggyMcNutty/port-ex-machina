@@ -19,7 +19,7 @@ no facts of its own beyond those; each lives in one doc, and the
   upstream's latest when last merged (2026-09-24); whether and when to merge
   newer upstream commits (`scripts/engine.sh status`, then `upgrade`) is the
   owner's call. The profiling hooks are off, and the desktop build is at the
-  pin (2026-09-25).
+  pin (2026-09-26).
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
   app ran the engine into the intro level on the development PC, and
   unattended runs drove saves, loads and hub travel through in play
@@ -57,11 +57,10 @@ no facts of its own beyond those; each lives in one doc, and the
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
 - **Next**: the reimplementation's coded milestones are done -- M0
-  through M6's code is all in (2026-09-25;
+  through M6's code is all in (2026-09-26, M1's save picture last;
   [`docs/ROADMAP.md`](docs/ROADMAP.md) tracks each item, and
   [natives.md](docs/re/natives.md) says what changed and what stays the
-  fork's own) -- but for M1's save picture (a renderer capture point its
-  frame overlap allows, deferred to the render work) and M0's
+  fork's own) -- but for M0's
   groundwork: the acceptance captures, and two engine findings to judge
   ([M0's list](docs/ROADMAP.md#m0----nothing-stops-the-game)). What
   remains of the milestones is by hand: the checks in
@@ -197,9 +196,12 @@ no facts of its own beyond those; each lives in one doc, and the
    - On a desktop: `scripts/dx.sh run linux-x86_64`, the home screen driven
      into a game, a pad in game; the Save and Load Game screens listing the
      saves with description and date, saving into a new slot, loading one
-     and deleting one, and a hub map keeping its state over a travel out
+     and deleting one, each save's picture there (the original game's
+     saves' too), and a hub map keeping its state over a travel out
      and back, by
-     [natives.md](docs/re/natives.md#saving-loading-and-travel); rebinding a
+     [natives.md](docs/re/natives.md#saving-loading-and-travel); the UI
+     background option's three settings under the main menu and the
+     credits over black, by [the UI](docs/re/natives.md#the-ui); rebinding a
      key in the game's Customize Keys screen (a double click or Enter starts
      it), the Load Game list sorted by date and re-sorted from its headers,
      moving through a list with the keys and a pad's d-pad, and a movement

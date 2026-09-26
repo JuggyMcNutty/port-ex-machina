@@ -405,9 +405,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   **Checked:** an in-engine self-test for the flags; a 60 s run for the loop.
 - [**list fields read back**](https://github.com/JuggyMcNutty/SurrealEngine/commit/fb7b29d64cbca6e48a81032b99197200e430b7e9) --
   GetField's column test was inverted, so every screen keeping what a row
-  stands for in a hidden column read nothing. The save picture stays
-  missing until the renderer gets a capture point its frame overlap
-  allows.
+  stands for in a hidden column read nothing.
 - [**flags kept and carried**](https://github.com/JuggyMcNutty/SurrealEngine/commit/c8bf4374ac27a97ea80d04487ad9406ee930d52f) --
   the flag base and its flags live in the level package, so a save keeps
   them, and they cross a travel in the pawn's travel graph: the travel
@@ -749,3 +747,20 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   temporary hook drew a live visible pawn through the path for 120
   canvas frames at glow 2 unlit, the fields reading back their own
   values between frames; a 75 s run after removal is clean.
+- [**the save picture, the menus' background and the save screens' lists**](https://github.com/JuggyMcNutty/SurrealEngine/commit/7ea6d871602fc6b8440693fca85dfadc905459da) --
+  the roadmap's last M1 item: the original's grey snapshot of the frame
+  last drawn, read back between frames, which a save takes when asked
+  into a texture beside its save info; the UI background's Snapshot and
+  Black, the world not drawn under them and the raw background drawn
+  under the windows; and the save screens working through the game's
+  script -- the list window sized as the original's (every list in a
+  scroll area had drawn no rows), the listing read by place, the free
+  space measured on the save path, sizes in KB, the temporary save info
+  made ([saving](re/natives.md#saving-loading-and-travel),
+  [lists](re/natives.md#lists), [the UI](re/natives.md#the-ui)).
+  **Checked:** a temporary hook drove the game's own screens -- a save
+  through the Save Game screen's button, its picture read back from disk,
+  the Load Game screen listing it with the quick save and the original
+  game's reference save and showing that save's own picture, and the main
+  menu over the snapshot and over black; a 70 s run after the hook's
+  exact-text removal is clean.
