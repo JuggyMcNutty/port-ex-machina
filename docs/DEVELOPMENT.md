@@ -96,11 +96,16 @@ The console classes:
   run's ini names that master server: the game's names GameSpy's, closed).
 - **`ServeConsole`**: a listen server for the other engine to join -- a
   deathmatch on DXMP_Cathedral, never on the master servers' lists (the
-  run's ini has no uplink); it exits after 290 s. Give the original's run
-  300 s (`scripts/dxcap.sh original ServeConsole 300`) and, while it serves,
-  `scripts/dxcap.sh fork ProveConsole 127.0.0.1:7790` joins it; the fork
-  sends its `HELLO` each second until the server answers, some 13 s after
-  the original starts here.
+  run's ini has no uplink). Once another player is in, the host's own player
+  stands in front of it and walks to and fro across its view; where each
+  player stands is logged every 2 s. It exits after 290 s: give the
+  original's run 300 s (`scripts/dxcap.sh original ServeConsole 300`).
+- **`JoinConsole`**: the joining side -- from the menu map it opens
+  `127.0.0.1:7790`, stands its player 5 s, walks it forward 5 s and stands
+  again, logging each second where it and every other pawn stand, and shots
+  at the stops (`scripts/dxcap.sh fork JoinConsole DX.dx`). Start it once
+  the server answers, some 13 s after the original starts here; the
+  server's log comes at its exit.
 - **`SoundConsole`**: M0's sounds -- a steady sound heard in the open and from
   behind a wall, shots in a reverb zone and out of it, and beeps from the
   right, the left and ahead. It silences the level first (ambient sounds,

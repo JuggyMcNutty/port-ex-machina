@@ -205,7 +205,9 @@ be.
       actors spawned and their properties replicated -- a live server's
       world seen from the fork (2026-09-26; the original's listen server's,
       the live servers' still to see).
-- [ ] Remote functions and the player's moves: playing on a live server.
+- [x] Remote functions and the player's moves: playing on a live server
+      (2026-09-26; on the original's listen server, the live servers still
+      to try).
 - [ ] The server: accepting, relevancy and priority, replication out --
       the original joining the fork.
 - [ ] The uplink: a fork server on the master servers' lists.

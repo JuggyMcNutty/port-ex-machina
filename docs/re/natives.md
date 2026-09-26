@@ -907,11 +907,19 @@ for each and the second's leaving as a close, and showed the level from its
 player's spawn with the HUD and the belt's items; its handshake matched the
 server's 32 packages, `CoreTexDetail.utx` among them by its heritage GUID.
 
-Not yet, of a client: anything it sends after `JOIN` -- its calls to the
-server run where they are called, `ServerMove` among them, so its player
-never moves on the server --, the VM's rule that a simulated proxy runs only
-simulated functions, downloads (a package missing or different from the
-server's ends the join), and the world-stats checksum (`NoChecksum` always).
+The client plays (2026-09-26): its calls to the server go as the original's
+rule sends them -- `ServerMove` and the rest --, a simulated proxy runs only
+simulated functions, actors tick by their roles (another player's pawn
+eased along its velocity, the local player's physics in its moves), the
+viewport takes the speed and update intervals the moves are paced by, and
+the frame rate is capped at the speed over 64. Checked the same way: the
+fork's player walked into a wall and slid along it, and the server's log
+ended with it at the fork's position exactly, no correction sent; the
+host's player, walking to and fro in front of it, moved smoothly on the
+fork between the server's updates.
+
+Not yet, of a client: downloads (a package missing or different from the
+server's ends the join) and the world-stats checksum (`NoChecksum` always).
 Nothing of a server. Each bunch goes on its own: the original merges one into
 the last when both are the same channel's, which only saves bits.
 

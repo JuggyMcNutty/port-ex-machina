@@ -822,3 +822,10 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   its heritage ([multiplayer](re/natives.md#multiplayer)). **Checked:** the
   fork joined the original's listen server twice and showed its world; the
   server logged both joins.
+- [**the client's calls and moves**](https://github.com/JuggyMcNutty/SurrealEngine/commit/4946f4ea289608f0c10d42aedb4ec1a981773c09) --
+  an actor's call in a net game sent to the server or held back by the
+  original's rule, actors ticked by their roles, the viewport's speed and
+  update intervals, the flush after a tick that sent, and the client's frame
+  rate capped at its speed over 64 ([multiplayer](re/natives.md#multiplayer)).
+  **Checked:** the fork's player walked on the original's server and ended
+  where the server had it; the host's player moved smoothly on the fork.
