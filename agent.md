@@ -66,8 +66,10 @@ no facts of its own beyond those; each lives in one doc, and the
   fall-off and cap at full), the Speech slider (a real `SpeechVolume`
   gained by speech alone, the instant-volume natives setting the
   sliders), Doppler (the ambient sound's alone, its actor's speed,
-  a real `DopplerSpeed`), and the smaller notes (beyond-radius sounds
-  dropped, no `M` mouth shape, `bIsSpeaking` the script's alone)
+  a real `DopplerSpeed`), the smaller notes (beyond-radius sounds
+  dropped, no `M` mouth shape, `bIsSpeaking` the script's alone), and
+  sounds behind walls (the fade to a third over half a second, BSP
+  only, speech excepted)
   ([what changed](docs/re/natives.md#sound), by-hand checks in
   [open decision 1](#open-decisions)); the distrobox reaches
   real audio now
@@ -255,7 +257,8 @@ no facts of its own beyond those; each lives in one doc, and the
      the music than before, its pitch steady on the walk toward it (only
      a moving ambient carrier bends), an NPC's bark moving no mouth
      outside a conversation and a partner's mouth closing on its own at
-     a line's end, by
+     a line's end, a generator dulling through a wall and opening back
+     up in a doorway (never a conversation line), by
      [natives.md](docs/re/natives.md#sound) (with the
      desktop's audio: [linux-x86_64's](ports/linux-x86_64/README.md#audio));
      a shot fired around a corner turning the guards, and a body found

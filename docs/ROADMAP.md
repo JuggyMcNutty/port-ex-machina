@@ -148,7 +148,8 @@ check live there.
       cap at full (2026-09-25).
 - [x] The Speech slider: `SpeechVolume` a real setting, speech gained by
       it, the instant-volume natives set the sliders (2026-09-25).
-- [ ] Sounds behind walls.
+- [x] Sounds behind walls: the fade to a third over half a second,
+      BSP only, speech excepted (2026-09-25).
 - [ ] Ambient sounds on lights.
 - [x] Doppler: the ambient sound's alone, its actor's speed, a real
       `DopplerSpeed` (2026-09-25).

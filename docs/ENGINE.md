@@ -632,3 +632,14 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   channel's teardown ([sound](re/natives.md#sound)). **Checked:** a
   75 s intro run whose conversation drives the lip sync through
   ConPlay's own flag, no AL errors.
+- [**sounds behind walls**](https://github.com/JuggyMcNutty/SurrealEngine/commit/839bd2ce9253d756ea446ab6a55f3715d2615539) --
+  each channel keeps an obstruction time: while the level's BSP stands
+  between the player's own eyes and the sound's actor (movers and
+  actors never block), it grows by the update's own 0-1 s time step to
+  0.5 s and shrinks as the line clears, the channel playing at
+  1 − 2 × that time, at least 0.33 -- a fade to a third over half a
+  second and back; speech and actorless sounds are never muffled
+  ([sound](re/natives.md#sound)). **Checked:** a temporary transition
+  log on Liberty Island -- ambients clear at true distances, LightWind
+  blocked behind terrain at a third, a boat's idle crossing both ways;
+  a 75 s run after the hook's exact-text removal is clean.

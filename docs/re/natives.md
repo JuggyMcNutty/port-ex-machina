@@ -598,12 +598,17 @@ each frame, keep one record a channel and choose which sound wins alike. They
 differed when read from both codes; a landed item carries its date and its
 by-hand check, the rest are still the fork's own:
 
-- **Sounds behind walls are not muffled.** In the original a sound fades over
-  half a second to a third of its volume while the level's BSP stands between
-  the player's eyes and its actor, speech excepted
-  ([sounds behind walls](galaxy-dll.md#sounds-behind-walls)); the fork plays
-  it as in the open. Porting it is the same line test for each playing sound
-  each frame -- up to 16 -- and a gain kept on each channel.
+- **Sounds behind walls.** Landed (2026-09-25): a sound fades over half a
+  second to a third of its volume while the level's BSP stands between the
+  player's eyes and its actor, and back as the line clears, speech and
+  actorless sounds excepted; movers and actors do not block, as the
+  original's `FastLineCheck`
+  ([sounds behind walls](galaxy-dll.md#sounds-behind-walls)). A
+  temporary transition log on Liberty Island showed ambients clear at
+  their true distances, one blocked behind terrain at a third, and a
+  boat's idle crossing both ways. To check by hand: a guard's radio or
+  a generator dulling through a wall and opening back up in a doorway,
+  never a conversation line.
 - **No reverb.** The fork has none (its EFX is to do). The original gives a
   zone with `bReverbZone` its own reverb, from its `MasterGain`, `CutoffHz`
   and six echoes ([reverb](galaxy-dll.md#reverb)): 21 zones in 16 maps, from
