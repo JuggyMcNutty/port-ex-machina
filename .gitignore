@@ -34,3 +34,4 @@
 compile_commands.json
 *.swp
 .DS_Store
+__pycache__/

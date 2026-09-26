@@ -789,3 +789,21 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   [scripted runs](DEVELOPMENT.md#scripted-runs-of-both-engines).
   **Checked:** one console class drove both engines to Liberty Island's
   start and shot it.
+- [**`SetLocation` as the original's `FarMoveActor`**](https://github.com/JuggyMcNutty/SurrealEngine/commit/df9421601397dac5808857bb152a952a809977d0) --
+  the actor's zone found again on every teleport (it stayed stale until
+  physics next moved the actor), `bJustTeleported` and `OldLocation` set,
+  what stood on it unbased, a static actor left put; `ZoneChange` run while
+  `Region` still holds the zone being left, so items splash into water; Deus
+  Ex's zone rules left to its scripts
+  ([implemented, not as the original](re/natives.md#implemented-not-as-the-original)).
+  **Checked:** proving runs on Liberty Island and Battery Park; a scripted
+  run found Battery Park's reverb zone by teleporting into it.
+- [**`--ini` with a game's ini**](https://github.com/JuggyMcNutty/SurrealEngine/commit/57c82331a6a7a8e2faed75cfd50ce6d22df5790a) --
+  the client's, audio's and render device's settings read from the game's
+  sections, not left at the engine's defaults.
+  **Checked:** a recorded run's music off as its ini says, its window at
+  the ini's size.
+- [**the sky zone turned the right way**](https://github.com/JuggyMcNutty/SurrealEngine/commit/11e582e6c005a5b7cd8eaea527f58a277fdd91e4) --
+  the sky's view turned by the inverse of the sky zone's rotation: Liberty
+  Island's city had stood 56° off the original's ([a frame](re/render-dll.md#a-frame)).
+  **Checked:** the skyline where the original's is in three captures.

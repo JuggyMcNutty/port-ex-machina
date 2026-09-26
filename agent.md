@@ -56,20 +56,25 @@ no facts of its own beyond those; each lives in one doc, and the
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
-- **Next**: the reimplementation's coded milestones are done -- M0
-  through M6's code is all in (2026-09-26, M1's save picture last;
+- **Next**: multiplayer (the owner's ask, 2026-09-26; [decided 5](#decided)).
+  The reimplementation's milestones are done -- M0 through M6 all in
+  (2026-09-26, M0's acceptance captures last;
   [`docs/ROADMAP.md`](docs/ROADMAP.md) tracks each item, and
   [natives.md](docs/re/natives.md) says what changed and what stays the
-  fork's own) -- but for M0's
-  groundwork: the acceptance captures
-  ([M0's list](docs/ROADMAP.md#m0----nothing-stops-the-game)). What
-  remains of the milestones is by hand: the checks in
-  [open decision 1](#open-decisions), the sound's heard with real
-  audio, which the distrobox reaches now
-  ([this machine](docs/DEVELOPMENT.md#this-machine)). The **[perf]**
-  items that landed with M3 and M4 are to be re-measured on the device
-  (decided 2's list carries each). Beside that, by the roadmap:
-  multiplayer, unscheduled; the Smart Pro's performance work
+  fork's own). The captures left potential work, in no order, each under its
+  feature: Liberty Island's laser tripwires drawn not at all
+  ([lasers](docs/re/natives.md#particles-and-lasers-render-iterators)),
+  coronas smaller and dimmer than the original's and one at the frame's edge
+  missing ([coronas](docs/re/natives.md#coronas)), the zone reverb ringing a
+  third as long and the pan hard where the original's is soft
+  ([sound](docs/re/natives.md#sound)), and `SetLocation`'s fitting in
+  ([implemented, not as the original](docs/re/natives.md#implemented-not-as-the-original)).
+  What remains of the milestones is by hand: the checks in
+  [open decision 1](#open-decisions), the sound's heard with real audio,
+  which the distrobox reaches now
+  ([this machine](docs/DEVELOPMENT.md#this-machine)). The **[perf]** items
+  that landed with M3 and M4 are to be re-measured on the device (decided
+  2's list carries each). Beside that: the Smart Pro's performance work
   ([decided 2](#decided)) and the next ports
   ([open decision 4](#open-decisions)), at the owner's pick.
 
@@ -257,9 +262,8 @@ no facts of its own beyond those; each lives in one doc, and the
      NPCs wandering their bit of Liberty Island and a searching NSF
      stepping around corners, by
      [natives.md](docs/re/natives.md#moving-wandering-and-tactical-movement);
-     steam from a Hell's Kitchen street grate against the original, a
-     laser tripwire's visible beam on Liberty Island, electricity arcing
-     and a weapon's laser sight, by
+     steam from a Hell's Kitchen street grate against the original,
+     electricity arcing and a weapon's laser sight, by
      [natives.md](docs/re/natives.md#particles-and-lasers-render-iterators);
      an NPC walking away keeping its shape as detail fades, by
      [natives.md](docs/re/natives.md#mesh-detail); a lamp's corona coming

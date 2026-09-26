@@ -42,6 +42,12 @@ area left.
   were read for what it reaches (a throwaway reader of the package format).
   Code compiled out with `#if 0` also leaves no stub; the audit reports it as
   partial.
+- **The captures.** Scripted runs of both engines (2026-09-26,
+  [scripted runs](../DEVELOPMENT.md#scripted-runs-of-both-engines)): Liberty
+  Island's tripwires and lamps shot from the same places in both, a tripwire
+  walked into, Jughead's deal played through, and recordings of a sound behind
+  a wall, gunshots in and out of Battery Park's reverb zone and beeps from
+  either side. Each result is under its feature.
 
 ## Stops the game
 
@@ -183,7 +189,9 @@ the game's script does the rest. The fork's differences here were closed on
   only this conversation sets. Smaller: Jughead's deal at the Brooklyn Bridge
   station (`M03MeetJugHead`), and lines of Harley Filben, a sick bum, three
   goths, Carmela and the mission 4 troopers. To check by hand: both meetings
-  play past those lines.
+  play past those lines. Jughead's deal plays alike in both engines'
+  captures (2026-09-26): "I'll think about it." goes on through the
+  comment's label to "You want it for free -- you know what to do."
 - **An actor's conversations bind as the original's** (seen: a Liberty
   Island run with a temporary hook printed the lists, 2026-09-25). A bark
   (`_Bark` in its name) is owned by the actor's `BarkBindName`, or its
@@ -432,6 +440,10 @@ Island (its trace fix is
 [implemented, not as the original](#implemented-not-as-the-original)'s);
 electricity arcing on a damaged panel; a weapon's laser sight in play.
 
+Captured (2026-09-26), from the original's own places 70 units off Liberty
+Island's four tripwires: the original draws each beam as a red dashed line,
+the fork draws none -- open. Walked into, a tripwire sounds its alarm in both.
+
 ### Coronas
 
 A light with `bCorona` and a `Skin` texture shows a glow over it on screen
@@ -447,6 +459,11 @@ screen size as before. Other games keep the fork's old take.
 To check by hand: coronas near and far and behind an NPC (already in the
 list below), and a lamp's glow coming up and going over about a third of
 a second as a corner hides and shows it.
+
+Captured (2026-09-26), from the same places near and far from four of
+Liberty Island's lamps: the fork's glows are smaller and dimmer than the
+original's, and a lamp at the frame's right edge glows in the original and
+not in the fork -- open.
 
 ### Mesh detail
 
@@ -666,7 +683,9 @@ what changed, what stays the fork's own, and its by-hand check:
   their true distances, one blocked behind terrain at a third, and a
   boat's idle crossing both ways. To check by hand: a guard's radio or
   a generator dulling through a wall and opening back up in a doorway,
-  never a conversation line.
+  never a conversation line. Measured (2026-09-26, a fan heard 400 units
+  off in the open and 422 behind Liberty Island's rock): 10.0 dB down in
+  the original, 9.9 in the fork, neither filtering.
 - **Reverb.** Landed (2026-09-25): a zone with `bReverbZone` gives every
   sound its reverb -- 21 zones in 16 maps, Battery Park to the endgame
   (the data) -- set again only when the view target's zone changes,
@@ -679,7 +698,11 @@ what changed, what stays the fork's own, and its by-hand check:
   read-if-needed reference for a closer take
   ([the binaries](README.md#the-binaries)). To check by hand: Battery
   Park's underground echoing against the open park, and the echo
-  gone on stepping back out.
+  gone on stepping back out. Measured (2026-09-26, gunshots in Battery
+  Park's `ZoneInfo5`, dry outside it in both): the original's ring about
+  2 s before falling 60 dB under their peak, the fork's 0.74 s, and their
+  tail, 0.5 to 1.5 s after the peak, is 32 dB under the shot in the
+  original and 40 in the fork -- the mapping falls short, open.
 - **Ambient sounds on lights.** Landed (2026-09-25): the fork scales such
   a sound by `LightBrightness` ÷ 255 -- a quarter or less for 235 of the
   402 actors in 46 maps that carry both -- and follows the light's pulse,
@@ -715,7 +738,16 @@ what changed, what stays the fork's own, and its by-hand check:
   volume floor, an integer artifact. Other games keep the fork's old
   loudness. To check by hand: a humming light or a generator fading
   steadily on the walk away and silent right at its radius, not gone
-  early; effects sitting louder against the music than before.
+  early; effects sitting louder against the music than before. A sound
+  straight ahead records 2.5 to 3 dB quieter in the fork than in the
+  original: the pan's, below.
+- **Pan.** Not carried: the fork leaves a sound's place to OpenAL, which
+  pans it hard, where the original turns the sound's angle into Galaxy's
+  pan, at most seven-eighths of the way to a side
+  ([each frame](galaxy-dll.md#each-frame)). Measured (2026-09-26, a beep
+  234 units off, 90° to one side): the far channel 5.1 dB under the near
+  one in the original, 42 in the fork; straight ahead, each channel 1.8 dB
+  under the side's near one in the original, 6.2 in the fork -- open.
 - **Doppler.** Landed (2026-09-25): the fork shifts only an ambient
   sound's pitch, by its actor's speed away from the view target at
   `DopplerSpeed` (a real setting, default 6,500 units a second), kept to
@@ -785,6 +817,29 @@ what changed, what stays the fork's own, and its by-hand check:
     moves with what it landed on.
   - **`Pawn.StrafeTo` 504 and `StrafeFacing` 506** take Deus Ex's speed:
     an NPC strafing in a fight runs at its full `MaxDesiredSpeed`.
+- **`Actor.SetLocation` 267 is the original's `FarMoveActor` now**
+  (2026-09-26, [teleporting an actor](engine-dll.md#teleporting-an-actor),
+  [the zone an actor is in](engine-dll.md#the-zone-an-actor-is-in)) but for
+  two things. What each was:
+  - the actor kept its old zone until physics next moved it (a teleport
+    into a reverb zone read the old one); it moved when static or not
+    `bMovable`; it kept its `OldLocation`, was not marked
+    `bJustTeleported`, and carried what stood on it;
+  - `ZoneChange` ran with `Region` already the new zone, so an item or a
+    decoration falling into water never splashed;
+  - the fork destroyed stray inventory in a `bNoInventory` zone and
+    carcasses in a `bDestructive` one, and set pain zones' `PainTime`,
+    which Deus Ex's scripts do themselves -- other games keep that.
+
+  Still the fork's own: fitting the actor in -- the original's `FindSpot`
+  moves it a little, the fork's tries whole collision sizes up, down and
+  aside (under a ceiling on Liberty Island: 7 units down in the original,
+  43 in the fork); and no encroachment check at the spot. The fork's
+  `AIDirectionReachable` walks its steps as real moves, zone events and
+  touches included, and puts the pawn back as one; the original's are tests.
+- **`Object.DynamicLoadObject`** with a group (`Package.Group.Name`): the fork
+  looks the rest up as one name and finds nothing. The game's scripts name
+  no group.
 - **`Object.Mid` 127** with a negative start: the original returns an empty
   string, the fork counts from 0.
 - **`Actor.LastRendered` 723 and `Actor.InStasis` 721:**

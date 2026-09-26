@@ -70,7 +70,8 @@ src/app.c            the launcher's sequence, shared by both front ends
 src/main.c           deusex-launcher;  src/cli_main.c: dxl-cli, the same sequence with no display
 tests/               host unit tests -- no display needed
 tools/               shots.c (dxl-shots: every screen as .bmp), probes/ (device probes),
-                     dxcap/ (the console classes that script runs of both engines),
+                     dxcap/ (the console classes that script runs of both engines, the
+                     original's screen grab, the reading of a run's recording),
                      ida/ (IDA scripts: the game's types, strings, names; Render.dll's types),
                      natives_audit.py (the original's natives against the fork's)
 ENGINE-PIN.txt       the engine fork's version: its repository, branch and commit

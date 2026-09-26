@@ -15,7 +15,9 @@
 # distrobox-host-exec); DXCAP_PREFIX (default ~/Games/umu/umu-default) and
 # DXCAP_PROTON (default "Proton-CachyOS Latest") pick the Wine prefix and the
 # Proton under ~/.local/share/Steam/compatibilitytools.d. DXCAP_AUDIO=1 gives
-# the fork real audio; it is silent otherwise.
+# the fork real audio; it is silent otherwise. DXCAP_RECORD=1 sends either
+# engine's audio to a private sink instead of the speakers and records it into
+# the run's audio.wav, with the music off (tools/dxcap/sound.py reads it).
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
@@ -24,7 +26,25 @@ CAP="$DX_ROOT/build/dxcap"
 SDK="$DX_ROOT/reference/ReleaseSDK1112f/System"
 ENGINE_BIN="$DX_ROOT/build/linux-x86_64/engine/SurrealEngine"
 
-usage() { sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
+
+# The recording: a null sink on the host that the game's stream goes to
+# (PULSE_SINK), and parecord on its monitor, detached so it outlives the
+# host session that started it.
+rec_start() {
+    local wav="$1"
+    on_host sh -c "pactl list short sinks | grep -q '[[:space:]]dxcap[[:space:]]' ||
+        pactl load-module module-null-sink sink_name=dxcap sink_properties=device.description=dxcap > '$CAP/sink.module'
+        setsid nohup parecord --device=dxcap.monitor --file-format=wav '$wav' > /dev/null 2>&1 < /dev/null &
+        echo \$! > '$CAP/rec.pid'"
+    sleep 1
+}
+
+rec_stop() {
+    on_host sh -c "[ -f '$CAP/rec.pid' ] && kill \$(cat '$CAP/rec.pid') 2>/dev/null; rm -f '$CAP/rec.pid'
+        sleep 1
+        [ -f '$CAP/sink.module' ] && pactl unload-module \$(cat '$CAP/sink.module'); rm -f '$CAP/sink.module'" || true
+}
 
 [ -d "$GAME/System" ] || die "no game install at $GAME"
 
@@ -43,9 +63,9 @@ on_host() {
 winpath() { printf 'Z:%s' "${1//\//\\}"; }
 
 # make_ini <original|fork> <console> <out>: the game's DeusEx.ini with the
-# console class, the package's path, and for the original a window of
-# 1280x720 drawn through OpenGL -- the one renderer whose SHOT reads back
-# under Proton.
+# console class, the package's path, a 1280x720 window, the music off when
+# recording, and for the original the OpenGL renderer, which draws on the
+# hidden display its frames are grabbed from.
 make_ini() {
     local engine="$1" console="$2" out="$3" path
     if [ "$engine" = original ]; then
@@ -54,7 +74,7 @@ make_ini() {
         path="$CAP/System/*.u"
     fi
     python3 - "$GAME/System/DeusEx.ini" "$out" "$engine" "$console" "$path" <<'EOF'
-import re, sys
+import os, re, sys
 src, out, engine, console, path = sys.argv[1:]
 s = open(src, encoding='latin1', newline='').read()
 nl = '\r\n' if '\r\n' in s else '\n'
@@ -67,10 +87,14 @@ put('Console', 'DXCapture.' + console)
 s, n = re.subn(r'^(Paths=\.\.\\System\\\*\.u)\r?$', lambda m: m.group(1) + nl + 'Paths=' + path, s, count=1, flags=re.M)
 if n != 1:
     sys.exit('no Paths=..\\System\\*.u in ' + src)
+if os.environ.get('DXCAP_RECORD') == '1':
+    put('MusicVolume', '0')
+# Both engines take the game's settings from it; both run in a window of
+# the same size.
+put('WindowedViewportX', '1280')
+put('WindowedViewportY', '720')
+put('StartupFullscreen', 'False')
 if engine == 'original':
-    put('WindowedViewportX', '1280')
-    put('WindowedViewportY', '720')
-    put('StartupFullscreen', 'False')
     put('GameRenderDevice', 'OpenGLDrv.OpenGLRenderDevice')
 open(out, 'w', encoding='latin1', newline='').write(s)
 EOF
@@ -124,7 +148,7 @@ export GAMEID=umu-default
 export PROTONPATH="\$HOME/.local/share/Steam/compatibilitytools.d/\${DXCAP_PROTON:-Proton-CachyOS Latest}"
 [ -n "\$DISPLAY" ] || export DISPLAY=:0
 [ -n "\$XAUTHORITY" ] || export XAUTHORITY="\$(ls /run/user/\$(id -u)/xauth_* 2>/dev/null | head -1)"
-umu-run explorer /desktop=dxcap,1280x720 DeusEx.exe DX.dx "INI=\$ini" "USERINI=\$userini" > "$CAP/umu.log" 2>&1 &
+umu-run explorer /desktop=dxcap,1344x800 DeusEx.exe DX.dx "INI=\$ini" "USERINI=\$userini" > "$CAP/umu.log" 2>&1 &
 i=0
 while [ \$i -lt 60 ] && ! pgrep -f "^DeusEx.exe" > /dev/null; do sleep 1; i=\$((i+1)); done
 i=0
@@ -164,16 +188,54 @@ collect() {
     done
 }
 
+# The original draws on a private X display (Xvfb, here; its socket in the
+# shared /tmp): nothing on the desktop, and a screen that can be read -- its
+# own SHOT reads back nothing under Proton, so the screen is grabbed instead
+# and the frames the console class marks kept (tools/dxcap/grab.py).
+XDISPLAY=:99
+XSIZE=1344x800
+
 cmd_original() {
     local console="${1:?console class}" secs="${2:-120}"
     [ -f "$CAP/System/DXCapture.u" ] || die "scripts/dxcap.sh compile first"
+    command -v Xvfb >/dev/null || die "Xvfb is needed for the original's display"
+    command -v import >/dev/null || die "ImageMagick's import is needed to grab the original's display"
     local ini="$CAP/System/Original.ini" userini="$CAP/System/OriginalUser.ini"
     local dir="$CAP/runs/original-$console-$(date +%H%M%S)"
     make_ini original "$console" "$ini"
     cp "$GAME/System/User.ini" "$userini"
+    mkdir -p "$dir"
     local before; before="$(shots_before)"
-    on_host "$CAP/run-original.sh" "$secs" "$(winpath "$ini")" "$(winpath "$userini")"
-    collect "$dir" "$before"
+
+    local xpid="" gpid=""
+    if [ ! -S "/tmp/.X11-unix/X${XDISPLAY#:}" ]; then
+        Xvfb "$XDISPLAY" -screen 0 "${XSIZE}x24" -ac -nolisten tcp > "$dir/xvfb.log" 2>&1 &
+        xpid=$!
+        sleep 2
+    fi
+    python3 "$DX_ROOT/tools/dxcap/grab.py" "$dir" "$XDISPLAY" "${XSIZE%x*}" "${XSIZE#*x}" 1280 720 2> "$dir/grab.log" &
+    gpid=$!
+
+    local env=(DISPLAY="$XDISPLAY")
+    if [ "${DXCAP_RECORD:-0}" = 1 ]; then
+        rec_start "$dir/audio.wav"
+        env+=(PULSE_SINK=dxcap)
+    fi
+    on_host env "${env[@]}" "$CAP/run-original.sh" "$secs" "$(winpath "$ini")" "$(winpath "$userini")" || true
+    [ "${DXCAP_RECORD:-0}" != 1 ] || rec_stop
+
+    kill "$gpid" 2>/dev/null || true
+    wait "$gpid" 2>/dev/null || true
+    [ -n "$xpid" ] && kill "$xpid" 2>/dev/null
+    # The game's own shots are black here; the grabbed frames stand for them.
+    local f
+    for f in $( (cd "$GAME/System" && ls Shot*.bmp 2>/dev/null) || true); do
+        printf '%s\n' "$before" | grep -qx "$f" || rm -f "$GAME/System/$f"
+    done
+    for f in "$dir"/Shot*.ppm; do
+        [ -f "$f" ] || continue
+        magick "$f" "${f%.ppm}.png" && rm -f "$f"
+    done
     cp "$GAME/System/DeusEx.log" "$dir/DeusEx.log" 2>/dev/null || true
     say "original: $dir"
 }
@@ -188,15 +250,20 @@ cmd_fork() {
     cp "$GAME/System/User.ini" "$userini"
     local before; before="$(shots_before)"
     mkdir -p "$dir"
+    [ "${DXCAP_RECORD:-0}" != 1 ] || rec_start "$dir/audio.wav"
     local rc=0
     (
         cd "$GAME"
-        if [ "${DXCAP_AUDIO:-0}" != 1 ]; then
+        if [ "${DXCAP_RECORD:-0}" = 1 ]; then
+            printf '[general]\ndrivers = pulse\n' > "$CAP/alsoft-pulse.conf"
+            export ALSOFT_CONF="$CAP/alsoft-pulse.conf" PULSE_SINK=dxcap
+        elif [ "${DXCAP_AUDIO:-0}" != 1 ]; then
             printf '[general]\ndrivers = null\n' > "$CAP/alsoft-null.conf"
             export ALSOFT_CONF="$CAP/alsoft-null.conf"
         fi
         timeout -s KILL "$secs" "$ENGINE_BIN" --no-launcher "$GAME" --ini="$ini" --userini="$userini" --url="$map" > "$dir/engine.log" 2>&1
     ) || rc=$?
+    [ "${DXCAP_RECORD:-0}" != 1 ] || rec_stop
     collect "$dir" "$before"
     printf '%s\n' "$rc" > "$dir/exit"
     say "fork: $dir (exit $rc)"

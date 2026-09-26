@@ -28,7 +28,7 @@ its area in the maps that did, the matching by-hand checks pass
 - [x] The crash-shaped strays: `GetPawnAllianceType(None)` answers Neutral,
       integer division by zero gives 0, string `>` registered as 116
       ([stops the game](re/natives.md#stops-the-game)).
-- [ ] Groundwork, runs of the original game: a reference set of its saves (a
+- [x] Groundwork, runs of the original game: a reference set of its saves (a
       quick save, numbered slots, a mid-mission save past a hub map), and
       watching what was read but never seen -- a comment-jump conversation, a
       sound behind a wall, a zone's reverb, coronas, a laser tripwire -- as
@@ -39,7 +39,10 @@ its area in the maps that did, the matching by-hand checks pass
       `bCheatsEnabled`) and the `Current` directory from a travel to
       UNATCO HQ and back, all as
       [the original's layout](re/deusex-dll.md#the-game-engine-travel-and-saving)
-      has it. Still wanted: the acceptance captures.
+      has it. The acceptance captures are scripted runs of both engines
+      (2026-09-26, [scripted runs](DEVELOPMENT.md#scripted-runs-of-both-engines));
+      each result is under its feature
+      ([how it is known](re/natives.md#how-it-is-known)).
 
 - [x] Found while proving M4's render iterators (2026-09-25), judged and
       fixed (2026-09-26): both are in the levels, so play reached them

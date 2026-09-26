@@ -72,23 +72,51 @@ the way to run silently
 engine fork alike, each driven by a console class of the DXCapture package --
 UnrealScript in `tools/dxcap`, compiled by the SDK's `UCC.exe`
 (`reference/ReleaseSDK1112f`) into `build/dxcap`. Each run gets a private ini
-made from the game's own, naming the console class; the game's inis are never
-written. The class moves the player, takes shots with the engines' own `shot`
-command and ends the run with `exit`; a run's shots and log land in
-`build/dxcap/runs/`.
+made from the game's own, naming the console class, with a 1280x720 window;
+both engines take the game's settings from it, and the game's inis are never
+written. A run's shots, log and recording land in `build/dxcap/runs/`.
 
 ```sh
 scripts/dxcap.sh setup && scripts/dxcap.sh compile   # once, and after changing tools/dxcap
 scripts/dxcap.sh prove 01_NYC_UNATCOIsland.dx        # the fork: shots at 20 s and 60 s, checked, exit at 65 s
 scripts/dxcap.sh fork <console> <map>                # the fork with any console class
 scripts/dxcap.sh original <console>                  # the original, from its menu map
+DXCAP_RECORD=1 scripts/dxcap.sh ...                  # either, its audio recorded into the run's audio.wav
 ```
+
+The console classes:
+
+- **`ProveConsole`**: the proving run.
+- **`CaptureConsole`**: M0's pictures -- Liberty Island's lasers and coronas,
+  a tripwire walked into, and in Brooklyn a conversation whose jump lands on
+  a comment's label, played through.
+- **`SoundConsole`**: M0's sounds -- a steady sound heard in the open and from
+  behind a wall, shots in a reverb zone and out of it, and beeps from the
+  right, the left and ahead. It silences the level first (ambient sounds,
+  pawns, whatever watches for the player, datalinks) and starts each part
+  with three beeps; `tools/dxcap/sound.py <run>` lays the recording against
+  the log by them and measures.
+
+The classes stand the player where the original's searches did, written into
+them: the two engines' `SetLocation`s fit the player in differently
+([engine-dll.md](re/engine-dll.md#teleporting-an-actor)), so a search would
+stand them apart.
+
+**Shots.** The fork's `shot` writes the next free `ShotNNNN.bmp`. The
+original's own `shot` gives noise (D3D) or black (the others) under Proton, so
+its run draws through `OpenGLDrv` on a hidden X display -- Xvfb on `:99`, in
+the container -- which `tools/dxcap/grab.py` reads five times a second,
+keeping each frame whose corner carries the console's mark: a magenta block,
+then the shot's number in eight black or white blocks. The original's
+brightness is a gamma ramp, which the hidden display lacks: its shots are
+darker than the fork's, and brightness is not compared.
+
+**Recording.** `DXCAP_RECORD=1` sends the engine's sound to a private null
+sink on the host (`PULSE_SINK`) and records the sink with `parecord`; the
+run's ini turns the music off.
 
 What it takes to run the original there, each found the hard way:
 
-- **Its shots read back only through OpenGL** under Proton: D3D's come back
-  as noise and the software renderer's black, so the original's run draws
-  through the stock `OpenGLDrv` -- darker than D3D, the same things drawn.
 - **It boots its menu map** whatever map its command line or ini names; a
   console class travels with `open <map>` itself.
 - **UCC needs a short base directory** (a long one crashes it while it reads
@@ -102,7 +130,8 @@ What it takes to run the original there, each found the hard way:
   the script waits for the game's own process and kills only it -- the
   prefix may hold IDA too.
 
-Both engines' windows open on this machine's desktop, as any run's do.
+The fork's window opens on this machine's desktop, as any run's does; the
+original's, on the hidden display.
 
 ## Docs
 
