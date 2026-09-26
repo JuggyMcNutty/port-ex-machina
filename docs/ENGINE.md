@@ -687,3 +687,16 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   drove a synthetic held key into an opened menu -- 3 held axes
   released on the first key event the menu took and stayed clear;
   a 75 s run after the hook's exact-text removal is clean.
+- [**showing and hiding**](https://github.com/JuggyMcNutty/SurrealEngine/commit/ff41d8afcdb11881616af37ade273beca431ec1d) --
+  `Show` and `Hide` ask the window's parent
+  (`ChildRequestedVisibilityChange`, whose script default calls
+  `SetChildVisibility` back on the child; the root sets its own), and
+  `SetChildVisibility` is whole: when the flag changes what can be
+  seen, focus and grabs move away from what is hidden,
+  `VisibilityChanged` goes down the tree, and the tree lays out again
+  -- so `DeusExHUD` re-lays itself as the InfoLink and the log come
+  and go ([the UI](re/natives.md#the-ui)). **Checked:** a temporary
+  flip log showed the game's own `DeusExHUD` handler firing as the
+  HUD's displays hide and show through real play, and the whole HUD
+  hiding as a synthetic Escape opened the menu, the round trip
+  completing; a 75 s run after the hooks' exact-text removal is clean.

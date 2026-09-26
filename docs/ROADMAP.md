@@ -171,8 +171,8 @@ item's inventory and by-hand check live there.
 
 - [x] Keys released under a menu; a taken mouse button clears only fire
       (2026-09-25).
-- [ ] Showing and hiding: `Show`/`Hide` ask the parent,
-      `SetChildVisibility` whole, the HUD laying out again.
+- [x] Showing and hiding: `Show`/`Hide` ask the parent,
+      `SetChildVisibility` whole, the HUD laying out again (2026-09-25).
 - [ ] The vision augmentation's heat sources (`GC.DrawActor`).
 - [ ] Borders tiled at one texel a pixel (`GC.DrawBorders`).
 - [ ] The key stubs: `MoveTabGroupNext`/`Prev`, `EditWindow` undo and

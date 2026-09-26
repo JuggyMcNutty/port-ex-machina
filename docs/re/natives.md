@@ -572,12 +572,17 @@ checks:
   hand: a movement key held into a menu and let go there moves nothing
   when the menu closes, and a click on the HUD mid-fight stops fire but
   not the walk.
-- **Showing and hiding.** The fork's `Show` and `Hide` set the window's flag
-  themselves. They do not ask the parent (`ChildRequestedVisibilityChange` is
-  never sent; `SetChildVisibility` is a stub), and do not move focus from a
-  window being hidden or tell its children. So the HUD does not lay itself
-  out again as the InfoLink and the log come and go
-  ([showing and hiding](extension-dll.md#showing-and-hiding)).
+- **Showing and hiding.** Landed (2026-09-25): `Show` and `Hide` ask the
+  window's parent -- its `ChildRequestedVisibilityChange` decides, the
+  script's default calling `SetChildVisibility` back on the child, the
+  root setting its own -- and `SetChildVisibility` is whole: the flag,
+  and when that changes what can be seen, focus and grabs moved away
+  from what is hidden, `VisibilityChanged` down the tree, and the tree
+  laid out again; so `DeusExHUD` lays itself out as the InfoLink and
+  the log come and go
+  ([showing and hiding](extension-dll.md#showing-and-hiding)). To check
+  by hand: an InfoLink message pushing the HUD's other parts into
+  place as it appears and goes.
 - **The vision augmentation** (`GC.DrawActor`, a stub): no heat source is
   drawn, only the tint ([actors in a window](extension-dll.md#actors-in-a-window)).
 - **Borders** (`GC.DrawBorders`, partial): the fork stretches each edge and

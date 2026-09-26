@@ -78,7 +78,9 @@ no facts of its own beyond those; each lives in one doc, and the
   M6, polish, is begun (2026-09-25,
   [its list](docs/ROADMAP.md#m6----polish)): keys released under a
   menu landed -- the UI taking a key releases everything held, a taken
-  mouse button clears only fire
+  mouse button clears only fire -- and showing and hiding landed --
+  `Show`/`Hide` ask the parent, `SetChildVisibility` whole, the HUD
+  laying itself out again as the InfoLink and the log come and go
   ([what changed](docs/re/natives.md#the-ui)). Landed 2026-09-25: render iterators -- smoke, steam and
   sparks spew, and laser tripwires, electricity and laser sights draw
   their beams
@@ -243,8 +245,10 @@ no facts of its own beyond those; each lives in one doc, and the
      it), the Load Game list sorted by date and re-sorted from its headers,
      moving through a list with the keys and a pad's d-pad, and a movement
      key held into a menu and let go there moving nothing when it
-     closes, and a click on the HUD mid-fight stopping fire but not the
-     walk, by [natives.md](docs/re/natives.md#lists) and
+     closes, a click on the HUD mid-fight stopping fire but not the
+     walk, and an InfoLink message pushing the HUD's other parts into
+     place as it appears and goes, by
+     [natives.md](docs/re/natives.md#lists) and
      [the UI](docs/re/natives.md#the-ui);
      walking up to Tech Sergeant Kaplan on Liberty Island, an NPC's
      one-time chatter holding its last line, a conversation partner killed
