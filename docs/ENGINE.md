@@ -643,3 +643,13 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   log on Liberty Island -- ambients clear at true distances, LightWind
   blocked behind terrain at a third, a boat's idle crossing both ways;
   a 75 s run after the hook's exact-text removal is clean.
+- [**ambient sounds on lights**](https://github.com/JuggyMcNutty/SurrealEngine/commit/c6205fa8cd5a76d294bdadbc2afbb61f4b27cd2c) --
+  an ambient sound on a lit actor is scaled by `LightBrightness` ÷ 255
+  and the light's momentary animation (the renderer's own shapes:
+  pulse, subtle pulse, blink, strobe, and flicker from the renderer's
+  `FlickerRandom`), capped at 1, where the original reads its
+  renderer's `GlobalLighting`; the palette light types stay steady
+  ([sound](re/natives.md#sound)). **Checked:** a temporary log on
+  Battery Park named the lit carriers and showed the security cameras'
+  hum at exactly 2 × 0.7 × (192/255) × (120/255) = 0.496 of full; a
+  75 s run after the hooks' exact-text removal is clean.

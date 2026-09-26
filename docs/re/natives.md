@@ -614,12 +614,15 @@ by-hand check, the rest are still the fork's own:
   and six echoes ([reverb](galaxy-dll.md#reverb)): 21 zones in 16 maps, from
   Battery Park to the endgame (the data). OldUnreal's `ALAudio.dll` emulates
   it with OpenAL's EFX ([the binaries](README.md#the-binaries)).
-- **Ambient sounds on lights.** 402 actors in 46 maps have both an ambient
-  sound and a light: lights, spotlights and cage lights (the data). The
-  original scales such a sound by `LightBrightness` ÷ 255 -- a quarter or
-  less for 235 of them -- and makes it follow the light's pulse or flicker
-  (42 of them) ([each frame](galaxy-dll.md#each-frame)); the fork plays each
-  steady, as if unlit.
+- **Ambient sounds on lights.** Landed (2026-09-25): the fork scales such
+  a sound by `LightBrightness` ÷ 255 -- a quarter or less for 235 of the
+  402 actors in 46 maps that carry both -- and follows the light's pulse,
+  blink, strobe or flicker with the renderer's own animation shapes,
+  capped at 1, where the original reads its renderer's `GlobalLighting`
+  ([each frame](galaxy-dll.md#each-frame)); the palette light types stay
+  steady, the fork's own. To check by hand: a security camera's hum
+  quieter than an unlit machine's of the same volume, and a flickering
+  or pulsing light's hum wavering with it.
 - **Music** ([the original's](galaxy-dll.md#music)). The fork switches at
   once, where the original fades out over 1 s, over 5 s after a fight and
   over 1/3 s into one. It never writes the order playing back into
