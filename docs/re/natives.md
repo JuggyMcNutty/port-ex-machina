@@ -597,10 +597,18 @@ checks:
   its sizes now, and `GenerateSnapshot` returns nothing on purpose until
   the renderer gets a capture point its frame overlap allows
   ([the fix](#saving-loading-and-travel)).
-- **Keys.** `MoveTabGroupNext` and `Prev` (Tab and Shift+Tab between
-  controls), `EditWindow.Undo` and `Redo` (Ctrl+Z and Ctrl+Y in an edit
-  field), and `RootWindow.LockMouse` (the pointer held while a key is being
-  bound) are stubs.
+- **Keys.** Landed (2026-09-25): `EditWindow.Undo` and `Redo` walk a real
+  change list -- typing joins, `maxUndos` caps, Ctrl+Z and Ctrl+Y call
+  them -- with two edit bugs fixed on the way (inserting over a selection
+  dropped the wrong span; backspace at 0 pushed the insertion point to
+  −1); `MoveTabGroupNext`/`Prev` move focus between the visible tab
+  groups for Tab and Shift+Tab, `GetTabGroupWindow` real; and
+  `RootWindow.LockMouse` holds the pointer and eats buttons as asked,
+  so the Customize Keys screen pins it while binding
+  ([small](extension-dll.md#small),
+  [the root window](extension-dll.md#the-root-window)). To check by
+  hand: Ctrl+Z and Ctrl+Y in a save name, Tab between a screen's
+  control groups, and the pointer pinned while binding a key.
 
 ## Sound
 

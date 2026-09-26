@@ -176,8 +176,8 @@ item's inventory and by-hand check live there.
 - [ ] The vision augmentation's heat sources (`GC.DrawActor`).
 - [x] Borders tiled at one texel a pixel (`GC.DrawBorders`)
       (2026-09-25).
-- [ ] The key stubs: `MoveTabGroupNext`/`Prev`, `EditWindow` undo and
-      redo, `RootWindow.LockMouse`.
+- [x] The key stubs: `MoveTabGroupNext`/`Prev`, `EditWindow` undo and
+      redo, `RootWindow.LockMouse` (2026-09-25).
 - [ ] What remains of [small](re/natives.md#small).
 
 ## Later -- multiplayer

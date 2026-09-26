@@ -709,3 +709,16 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   call sites need a player on the themed screens, so the look is the
   by-hand check's; a synthetic F1 probe confirmed the Persona screen
   opens modal and renders, and a 75 s run is clean.
+- [**the key stubs**](https://github.com/JuggyMcNutty/SurrealEngine/commit/f554c6eb89b3bbeaf03ca0e85986d6468390e08e) --
+  `EditWindow.Undo`/`Redo` walk a real change list (typing joins,
+  `maxUndos` caps, Ctrl+Z/Ctrl+Y call them; two edit bugs fixed on the
+  way: inserting over a selection dropped the wrong span, backspace at
+  0 pushed the insertion point to −1); `MoveTabGroupNext`/`Prev` move
+  focus between visible tab groups for Tab and Shift+Tab with
+  `GetTabGroupWindow` real; `RootWindow.LockMouse` holds the pointer
+  and eats buttons ([the UI](re/natives.md#the-ui)). **Checked:** a
+  temporary hook drove all three -- the pointer held under lock and
+  moved after; MoveTabGroupNext focused MenuMain; five typed
+  characters and two backspaces made exactly 3 changes, undo walking
+  'hel' → 'hell' → 'hello' → '' and redo back; a 75 s run after the
+  hook's exact-text removal is clean.
