@@ -623,12 +623,16 @@ by-hand check, the rest are still the fork's own:
   steady, the fork's own. To check by hand: a security camera's hum
   quieter than an unlit machine's of the same volume, and a flickering
   or pulsing light's hum wavering with it.
-- **Music** ([the original's](galaxy-dll.md#music)). The fork switches at
-  once, where the original fades out over 1 s, over 5 s after a fight and
-  over 1/3 s into one. It never writes the order playing back into
-  `SongSection`, so after a fight or a conversation the ambient music starts
-  its section again, where the original goes on where it was. Section 255,
-  silence in the original, plays the song's first section.
+- **Music.** Landed (2026-09-25): a transition fades the playing music
+  out first -- 1 s, 5 s after a fight, 1/3 s into one, at once for the
+  rest, plus twice `Latency` -- then the song starts at full volume at
+  the order `SongSection`, a different song loaded, the same one only
+  jumping; the playing order is written back each frame while no
+  transition waits, so the ambient track resumes where it was; and
+  section 255 is silence ([the original's](galaxy-dll.md#music)). To
+  check by hand: the music after a fight (already in the list below) --
+  combat music in fast, the ambient back in slow and where it left off,
+  not from the top.
 - **The Speech slider.** Landed (2026-09-25): `SpeechVolume` is a setting
   of the fork's audio device (default 255, the game's), speech -- the talk
   slot -- gains by it and the rest by the Sound slider, and the three

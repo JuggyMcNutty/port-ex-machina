@@ -69,8 +69,10 @@ no facts of its own beyond those; each lives in one doc, and the
   a real `DopplerSpeed`), the smaller notes (beyond-radius sounds
   dropped, no `M` mouth shape, `bIsSpeaking` the script's alone),
   sounds behind walls (the fade to a third over half a second, BSP
-  only, speech excepted), and ambient sounds on lights (brightness and
-  the light's animation scale the hum)
+  only, speech excepted), ambient sounds on lights (brightness and
+  the light's animation scale the hum), and the music (the fades, the
+  same song jumping not reloading, its place written back, section 255
+  silent)
   ([what changed](docs/re/natives.md#sound), by-hand checks in
   [open decision 1](#open-decisions)); the distrobox reaches
   real audio now

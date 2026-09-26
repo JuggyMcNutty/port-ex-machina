@@ -154,8 +154,8 @@ check live there.
       scale the hum (2026-09-25).
 - [x] Doppler: the ambient sound's alone, its actor's speed, a real
       `DopplerSpeed` (2026-09-25).
-- [ ] Music: the fades, its place kept in `SongSection`, section 255 as
-      silence.
+- [x] Music: the fades, its place kept in `SongSection`, section 255 as
+      silence (2026-09-25).
 - [ ] Zone reverb (EFX; the owner's copied `ALAudio.dll` as a reference,
       [the binaries](re/README.md#the-binaries)).
 - [x] The smaller notes: a sound beyond its radius dropped, the mouth

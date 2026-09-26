@@ -653,3 +653,16 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   Battery Park named the lit carriers and showed the security cameras'
   hum at exactly 2 × 0.7 × (192/255) × (120/255) = 0.496 of full; a
   75 s run after the hooks' exact-text removal is clean.
+- [**music**](https://github.com/JuggyMcNutty/SurrealEngine/commit/ed063b1bb828726479031c2e68315214a162ef4a) --
+  a transition fades the playing music out first (1 s `MTRAN_Fade`,
+  5 s `MTRAN_SlowFade`, 1/3 s `MTRAN_FastFade`, at once otherwise,
+  plus twice `Latency`), then the song starts at full volume at the
+  order `SongSection` -- an order now, not a libopenmpt subsong -- a
+  different song loaded, the same one only jumping; the playing order
+  is written back into `SongSection` each frame while no transition
+  waits, and section 255 stops the music
+  ([sound](re/natives.md#sound)). **Checked:** a temporary hook drove
+  a forced fade (1.08 s = 1 s + 2 × 40 ms Latency, exactly), a
+  same-song jump to order 4 with no reload, a 5.08 s slow fade, and
+  the write-back tracking the playing order; a 75 s run after the
+  hooks' exact-text removal is clean.
