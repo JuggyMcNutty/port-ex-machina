@@ -585,10 +585,13 @@ checks:
   place as it appears and goes.
 - **The vision augmentation** (`GC.DrawActor`, a stub): no heat source is
   drawn, only the tint ([actors in a window](extension-dll.md#actors-in-a-window)).
-- **Borders** (`GC.DrawBorders`, partial): the fork stretches each edge and
-  the centre over its length, where the original tiles them at one texel a
-  pixel ([borders](extension-dll.md#borders)). The game passes no margins,
-  which is all the fork handles.
+- **Borders.** Landed (2026-09-25): `GC.DrawBorders` tiles each edge and
+  the centre at one texel a pixel, as the original's `DrawIconPattern`
+  does, and honours the stretch flags the game never passes
+  ([borders](extension-dll.md#borders)); margins, which the game never
+  passes either, stay unimplemented. To check by hand: a selection
+  border in the inventory and a themed HUD frame crisp, their patterns
+  repeating instead of smearing over the run.
 - **Save pictures**: none, where the original's are grey 160 × 120 images
   ([save pictures](extension-dll.md#save-pictures)). `SetSnapshotSize` keeps
   its sizes now, and `GenerateSnapshot` returns nothing on purpose until

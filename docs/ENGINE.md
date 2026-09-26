@@ -700,3 +700,12 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   HUD's displays hide and show through real play, and the whole HUD
   hiding as a synthetic Escape opened the menu, the round trip
   completing; a 75 s run after the hooks' exact-text removal is clean.
+- [**borders tiled**](https://github.com/JuggyMcNutty/SurrealEngine/commit/dfc51c594b5cb9b1a1e2717888a8fcd9e82799b5) --
+  `GC.DrawBorders` tiles each edge and the centre at one texel a pixel
+  (a source rect the size of the run, the same idiom `DrawPattern`
+  uses) instead of stretching them over their length, and honours the
+  stretch flags; margins, which the game never passes, stay
+  unimplemented ([the UI](re/natives.md#the-ui)). **Checked:** the
+  call sites need a player on the themed screens, so the look is the
+  by-hand check's; a synthetic F1 probe confirmed the Persona screen
+  opens modal and renders, and a 75 s run is clean.
