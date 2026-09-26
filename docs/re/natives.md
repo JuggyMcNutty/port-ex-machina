@@ -638,9 +638,14 @@ by-hand check, the rest are still the fork's own:
   loudness. To check by hand: a humming light or a generator fading
   steadily on the walk away and silent right at its radius, not gone
   early; effects sitting louder against the music than before.
-- **Doppler.** The original shifts only an ambient sound's pitch, by its
-  actor's own speed, at `DopplerSpeed` 6,500 units a second; the fork shifts
-  every sound by the player's speed (its sources have none), at about 14,800.
+- **Doppler.** Landed (2026-09-25): the fork shifts only an ambient
+  sound's pitch, by its actor's speed away from the view target at
+  `DopplerSpeed` (a real setting, default 6,500 units a second), kept to
+  0.5–2, working it out itself with OpenAL's own Doppler off -- it used
+  to shift every sound by the player's speed at about 14,800
+  ([each frame](galaxy-dll.md#each-frame)). To check by hand: a walk
+  toward and away from a humming light leaves its pitch alone, and only
+  a moving ambient carrier (a patrolling bot's hum) bends.
 - **Smaller.** A sound beyond its radius takes a free channel in the fork,
   silent (its priority is kept at 0 or more); the original drops it. The
   fork's mouth shapes follow the original's bands but for `M`, which it gives

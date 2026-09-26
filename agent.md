@@ -62,10 +62,12 @@ no facts of its own beyond those; each lives in one doc, and the
   display driver, now read
   ([`d3ddrv-dll.md`](docs/re/d3ddrv-dll.md), 2026-09-25) -- and M5, the
   sound, is begun (2026-09-25, [its list](docs/ROADMAP.md#m5----the-sound)):
-  loudness landed -- the script's volume, the original's linear fall-off
-  and cap at full -- and the Speech slider landed, a real `SpeechVolume`
-  gained by speech alone with the instant-volume natives setting the
-  sliders ([what changed](docs/re/natives.md#sound), by-hand checks in
+  landed so far -- loudness (the script's volume, the original's linear
+  fall-off and cap at full), the Speech slider (a real `SpeechVolume`
+  gained by speech alone, the instant-volume natives setting the
+  sliders), and Doppler (the ambient sound's alone, its actor's speed,
+  a real `DopplerSpeed`)
+  ([what changed](docs/re/natives.md#sound), by-hand checks in
   [open decision 1](#open-decisions)); the distrobox reaches
   real audio now
   ([this machine](docs/DEVELOPMENT.md#this-machine)). Landed 2026-09-25: render iterators -- smoke, steam and
@@ -249,7 +251,9 @@ no facts of its own beyond those; each lives in one doc, and the
      sound behind a wall, a light's hum, the music after a fight and the
      Speech slider, and a humming light or generator fading steadily on
      the walk away and silent right at its radius, effects louder against
-     the music than before, by [natives.md](docs/re/natives.md#sound) (with the
+     the music than before, its pitch steady on the walk toward it (only
+     a moving ambient carrier bends), by
+     [natives.md](docs/re/natives.md#sound) (with the
      desktop's audio: [linux-x86_64's](ports/linux-x86_64/README.md#audio));
      a shot fired around a corner turning the guards, and a body found
      raising the alarm, by

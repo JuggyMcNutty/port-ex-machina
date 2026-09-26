@@ -150,7 +150,8 @@ check live there.
       it, the instant-volume natives set the sliders (2026-09-25).
 - [ ] Sounds behind walls.
 - [ ] Ambient sounds on lights.
-- [ ] Doppler.
+- [x] Doppler: the ambient sound's alone, its actor's speed, a real
+      `DopplerSpeed` (2026-09-25).
 - [ ] Music: the fades, its place kept in `SongSection`, section 255 as
       silence.
 - [ ] Zone reverb (EFX; the owner's copied `ALAudio.dll` as a reference,

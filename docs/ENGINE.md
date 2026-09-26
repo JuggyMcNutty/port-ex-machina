@@ -615,3 +615,11 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   lasting one frame, and `SetInstantSpeechVolume` 269 is no stub
   ([sound](re/natives.md#sound)). **Checked:** a 90 s intro run -- its
   conversation exercises the talk slot -- with no AL errors.
+- [**Doppler**](https://github.com/JuggyMcNutty/SurrealEngine/commit/ccb021c132731581422cc08ec06fa27a6b453ef5) --
+  only an ambient sound's pitch shifts, by its actor's speed away from
+  the view target at `DopplerSpeed` (a setting, default 6,500), kept to
+  0.5–2, worked out in the ambience update with AL's own
+  listener-velocity Doppler off for Deus Ex -- it used to shift every
+  sound by the player's speed at ~14,800
+  ([sound](re/natives.md#sound)). **Checked:** a 75 s Liberty Island
+  run with real audio, no AL errors.
