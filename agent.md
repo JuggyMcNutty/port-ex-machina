@@ -62,7 +62,10 @@ no facts of its own beyond those; each lives in one doc, and the
     [`galaxy-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/galaxy-dll.md),
     [`d3ddrv-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/d3ddrv-dll.md),
     [`fire-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/fire-dll.md)); their databases are typed,
-    named and backed up.
+    named and backed up. `gamefiles/System/Engine.dll.i64` no longer opens
+    (a crashed IDA worker, 2026-09-27; left as it was): its backup
+    (`reference/idb-backup/`, 2026-09-24) does, less what was named in it
+    since -- whether to restore it is the owner's call.
   - **What Surreal lacks** of them is VibeEngine's
     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md),
     from [`natives_audit.py`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/tools/natives_audit.py),
@@ -72,22 +75,32 @@ no facts of its own beyond those; each lives in one doc, and the
 - **x360**: planned; nothing about it is worked out yet.
 - **Next**: multiplayer, M7 (the owner's ask, 2026-09-26;
   [decided 5](#decided)): the fork joins a server and plays on it -- the
-  original's listen server, so far; a live server is yet to try --; as a
-  server it takes the original's join, replicates the level to it, calls
-  it, and answers LAN and GameSpy queries as the original does. Next: the
-  uplink to the master servers and a live server -- both outward-facing, the
-  owner's go-ahead first ([open decision 5](#open-decisions)) --, then
-  server travel and downloads (the rest of M7 in
+  original's listen server, and live servers since the owner's go-ahead
+  (2026-09-27): it downloads what it lacks, loads their mods and stays in
+  --; as a server it takes the original's join, replicates the level to it,
+  calls it, serves it downloads, and answers LAN and GameSpy queries and a
+  master server as the original does. Next: server travel and a dedicated
+  server (the rest of M7 in
   [`ROADMAP.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ROADMAP.md#m7----multiplayer)).
   Potential work it left, in no order: the fork's player standing lower
   than the original's server has it; the fork's ini reader taking an empty
   value (`ServerName=`) for a missing one, so a fork server's name is the
   class default; comparing the original's native replication lists with the
   script statements the fork evaluates for them (all three in
-  [multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer)); and the fork's `vec4`
+  [multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer)); the fork's `vec4`
   inequality (`engine/SurrealEngine/SurrealEngine/Math/vec.h`), which tests
   the fourth component for equality -- so the render devices' screen-flash
-  test always passes.
+  test always passes; a live mode for the harness, whose consoles every
+  server's game disconnects -- it wants the stock console -- (so far a run
+  takes the stock console and a temporary hook: VibeEngine's
+  [`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)); a package
+  a server sent staying loaded, so another server's package of that name
+  but another GUID fails the join as a version mismatch until the fork
+  restarts, where the original lets a map's packages go; and the fork's
+  saves writing spawned actors without the load flags the original's
+  linker makes exports by
+  ([mods](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#mods)) -- whether the original loads a fork
+  save whole is to check.
   The reimplementation's milestones are done -- M0 through M6 all in
   (2026-09-26, M0's acceptance captures last;
   [`ROADMAP.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ROADMAP.md) tracks each item, and
@@ -350,7 +363,7 @@ no facts of its own beyond those; each lives in one doc, and the
      Multiplayer: a game hosted from the Host screen and joined from the
      original on another machine -- its Join LAN screen listing the server
      --, by [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer) (the game's own ini
-     announces it to the master servers: open decision 5).
+     announces it nowhere: its uplinks lack `DoUplink`).
      The desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is
@@ -364,10 +377,12 @@ no facts of its own beyond those; each lives in one doc, and the
 4. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
    engine's libraries, as the Smart Pro has); Android (its README lists the
    work, starting with an in-process hand-over).
-5. **M7's outward-facing steps** (the owner's go-ahead first): joining a live
-   server, and a fork server announcing itself to the master servers. The
-   game's own `DeusEx.ini` lists three uplinks among its `ServerActors`, and
-   the fork spawns them now: a `?listen` map opened with that ini -- the Host
-   screen's game among them -- announces the server as the original's does.
-   The net tests' ini leaves them out
-   ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer)).
+5. **A fork server on the master servers' lists** (the owner's call).
+   Joining live servers the owner allowed ("feel free to connect to public
+   servers", 2026-09-27), and runs have joined empty ones since. A listing
+   is another step: neither engine announces a server unless its uplink's
+   `DoUplink` is set, which the game's own `DeusEx.ini` does not set -- so
+   the Host screen's game is never listed --, and a master then asks the
+   server's query port, which this machine's NAT keeps from the internet.
+   The fork's uplink is the original's, checked against a master on this
+   machine ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer)).
