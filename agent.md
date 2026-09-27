@@ -92,9 +92,6 @@ no facts of its own beyond those; each lives in one doc, and the
   - comparing the original's native replication lists with the script
     statements the fork evaluates for them (these three in
     [multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer));
-  - a package a server sent staying loaded, so another server's package of
-    that name but another GUID fails the join as a version mismatch until
-    the fork restarts, where the original lets a map's packages go;
   - the fork's saves writing spawned actors without the load flags the
     original's linker makes exports by
     ([mods](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#mods)) -- whether the original loads a
@@ -310,7 +307,7 @@ Each waits until the owner takes it up ([decided 8](#decided)).
      place as it appears and goes, a selection border in the
      inventory crisp with its pattern repeating rather than smearing,
      Ctrl+Z and Ctrl+Y in a save name, Tab between a screen's control
-     groups, the pointer pinned while binding a key, Look Up Stairs
+     groups, the pointer hidden and pinned while binding a key, Look Up Stairs
      tilting the view down UNATCO's stairs and easing level, (with
      positional sound on) a click at a screen's left edge sounding from
      the left, and the vision augmentation at level 1 showing a warm
