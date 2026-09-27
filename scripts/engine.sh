@@ -140,8 +140,8 @@ cmd_pin() {
     eng merge-base --is-ancestor "$head" "origin/$BRANCH" 2>/dev/null ||
         die "HEAD is not on origin/$BRANCH -- push it first, or fetch cannot reproduce this pin"
     {
-        printf '# The engine fork this repository builds: scripts/engine.sh fetch clones it,\n'
-        printf '# check verifies it, pin (after pushing a fork commit) moves it. docs/ENGINE.md.\n'
+        printf '# The engine this workspace builds: scripts/engine.sh fetch clones it, check\n'
+        printf '# verifies it, pin (after pushing a fork commit) moves it. The fork'\''s vibe/docs/ENGINE.md.\n'
         printf 'repo    %s\n' "$FORK_URL"
         printf 'branch  %s\n' "$BRANCH"
         printf 'commit  %s\n' "$head"
