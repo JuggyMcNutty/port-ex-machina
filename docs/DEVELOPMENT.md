@@ -100,26 +100,45 @@ The console classes:
   deathmatch on DXMP_Cathedral, never on the master servers' lists (the
   run's ini has no uplink), in the package's own `CapDeathMatch`: the game's
   check that a joining player's console is the stock one would disconnect
-  `JoinConsole`. Once another player is in, the host's own player
-  stands in its sight -- in front of it where there is room -- and walks to
-  and fro across its view; where each
-  player stands is logged every 2 s. It exits after 290 s: give the
-  original's run 300 s (`scripts/dxcap.sh original ServeConsole 300`).
+  `JoinConsole`. Once another player is in, the host's own player stands in
+  its sight -- in front of it where there is room -- and walks to and fro
+  across its view; where each player stands is logged every 2 s. It exits
+  after 290 s: give the original's run 300 s.
 - **`JoinConsole`**, either engine: the joining side -- from the menu map it
   opens `127.0.0.1:7790`, stands its player 5 s, walks it forward 5 s and
   stands again, logging each second where it and every other pawn stand, and
-  shots at the stops (`scripts/dxcap.sh fork JoinConsole DX.dx`, or
-  `scripts/dxcap.sh original JoinConsole` against the fork's
-  `scripts/dxcap.sh fork ServeConsole DX.dx`). It exits 25 s into the game,
-  or back in the menu -- dropped, or never in after 40 s --, since the
-  original's log comes only at its exit. Start it once the server answers,
-  some 13 s after the original starts.
+  shots at the stops. It exits 25 s into the game, or back in the menu --
+  dropped, or never in after 40 s --, since the original's log comes only
+  at its exit. The original's server answers some 13 s after it starts.
 - **`SoundConsole`**: M0's sounds -- a steady sound heard in the open and from
   behind a wall, shots in a reverb zone and out of it, and beeps from the
   right, the left and ahead. It silences the level first (ambient sounds,
   pawns, whatever watches for the player, datalinks) and starts each part
   with three beeps; `tools/dxcap/sound.py <run>` lays the recording against
   the log by them and measures.
+
+**Net tests** pair the two consoles, one engine each side, on this machine:
+start the server (`original ServeConsole 300` in the background, or `fork
+ServeConsole DX.dx`), wait until its game port is bound (`ss -uln | grep
+:7790`), then run the client (`fork JoinConsole DX.dx`, or `original
+JoinConsole`). Never start a second server before the first has exited: it
+cannot bind the port ("Net: cannot listen" in its log) and the client joins
+the old one. Each side's log then says what it saw -- `DXNET:` lines on the
+client, `DXCAP:` player positions on the server --, and a server's LAN
+beacon and GameSpy query answers are asked with
+`tools/dxcap/netquery.py`, the same questions for either engine, for a diff.
+
+**A crash** in a fork run gives no stack: the build is `Release`. A copy
+built with symbols in the scratchpad (`cmake -S engine/SurrealEngine -B
+<scratchpad>/dbg -C ports/linux-x86_64/engine.cmake
+-DCMAKE_BUILD_TYPE=RelWithDebInfo`, then `cmake --build <scratchpad>/dbg
+--target SurrealEngine`; some two and a half minutes) runs under `gdb -batch
+-ex run -ex bt --args <scratchpad>/dbg/SurrealEngine --no-launcher <repo>/gamefiles
+--ini=<repo>/build/dxcap/System/Fork.ini
+--userini=<repo>/build/dxcap/System/ForkUser.ini --url=<map>`, started in
+`gamefiles`, with the ini the harness wrote for its last fork run (so that
+run's console). The scratchpad is cleared when a session restarts, and the
+copy with it.
 
 The classes stand the player where the original's searches did, written into
 them: the two engines' `SetLocation`s fit the player in differently
@@ -206,9 +225,11 @@ Device-specific ones are in each port's README. These apply everywhere:
 - **The engine takes `--url=<map>` only** and **ignores SIGTERM**
   ([running it](ENGINE.md#running-it)). `-u <map>` silently loads the intro,
   which is how a whole round of "Liberty Island" profiling measured the intro.
-- **Never `pkill -f <pattern>`** in a command whose own text contains the
-  pattern -- it matches the shell running it (this killed the session's shell
-  twice). Use `pidof` or `pgrep -x`.
+- **Never `pkill -f` or `pgrep -f <pattern>`** in a command whose own text
+  contains the pattern -- it matches the shell running it (this killed the
+  session's shell twice, and a `pgrep -f` guard once found "a server still
+  running" in itself and started none). Use `pidof`, `pgrep -x`, or bracket
+  a letter (`pgrep -f "[S]urrealEngine --no-launcher"`).
 - **Profile the handheld on the handheld.** Its Cortex-A53 pays far more for a
   cache miss than the desktop, so the costs come in a different order
   (`CycleActors` was ~6% of the desktop's game tick and ~18% of the device's).

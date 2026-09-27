@@ -214,4 +214,9 @@ be.
       corrections among them (2026-09-26).
 - [x] The `ServerActors`: the LAN beacon and the query answerer
       (2026-09-26).
-- [ ] The uplink: a fork server on the master servers' lists.
+- [ ] The uplink: a fork server on the master servers' lists (spawned
+      already, not yet run against them: [open decision
+      5](../agent.md#open-decisions)).
+- [ ] Travel: a server's next map, its clients following it.
+- [ ] Downloads: a package a client lacks fetched from the server, and a
+      fork server serving them.

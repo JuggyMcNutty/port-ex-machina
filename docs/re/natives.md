@@ -916,15 +916,16 @@ the frame rate is capped at the speed over 64. Checked the same way: the
 fork's player walked into a wall and slid along it, and the server's log
 ended with it at the fork's position exactly, no correction sent; the
 host's player, walking to and fro in front of it, moved smoothly on the
-fork between the server's updates.
+fork between the server's updates. At rest the fork's player stands 3.75
+units lower than the original's server has it, X and Y exact -- in every
+run pair so far, not yet looked into.
 
-The fork serves too, so far to the point of a player joining (2026-09-26): a
-map opened with `?listen` listens on `[URL]`'s port before its game begins;
-the handshake's server side is the original's, with the same packages in the
-same order; `JOIN` spawns the player as the original's `SpawnPlayActor`,
-possessed by a Player object for its connection. Checked with the original as
-the client: it joined the fork's DXMP_Cathedral and the fork spawned its
-player.
+The fork serves too (2026-09-26): a map opened with `?listen` listens on
+`[URL]`'s port before its game begins; the handshake's server side is the
+original's, with the same packages in the same order; `JOIN` spawns the
+player as the original's `SpawnPlayActor`, possessed by a Player object for
+its connection. Checked with the original as the client: it joined the
+fork's DXMP_Cathedral and the fork spawned its player.
 
 The fork's server replicates (2026-09-26): each tick, before the packets go,
 each client is sent what [the original's server](network.md#replication)
@@ -968,8 +969,8 @@ run: announcing a server to the master servers is the owner's call.
 Not yet, of a client: downloads (a package missing or different from the
 server's ends the join) and the world-stats checksum (`NoChecksum` always).
 Of a server: the uplinks' first announcement (above), travel, and serving
-downloads. Each bunch goes on its own: the original merges one
-into the last when both are the same channel's, which only saves bits.
+downloads. Each bunch goes on its own: the original merges one into the
+last when both are the same channel's, which only saves bits.
 
 The scripts' sockets are the original's now (2026-09-26,
 [the script's links](ipdrv-dll.md#the-scripts-links)): `InternetLink`'s

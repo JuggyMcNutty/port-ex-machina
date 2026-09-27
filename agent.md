@@ -10,7 +10,10 @@ no facts of its own beyond those; each lives in one doc, and the
 - **The repository** is on `main`, public at
   https://github.com/JuggyMcNutty/port-ex-machina. Its history was rewritten
   before publishing (2026-09-22) to drop the game's files and a personal email
-  address.
+  address. **Unpushed** (2026-09-26): every commit since M6 began, in both
+  `main` and the fork's `deusex` (`git log origin/main..main` lists them);
+  `ENGINE-PIN.txt` names an unpushed fork commit, so the fork goes first.
+  Pushing is the owner's call.
 - **The launcher** runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2).
 - **The engine** is our own fork repository
@@ -61,15 +64,16 @@ no facts of its own beyond those; each lives in one doc, and the
   original's listen server, so far; a live server is yet to try --; as a
   server it takes the original's join, replicates the level to it, calls
   it, and answers LAN and GameSpy queries as the original does. Next: the
-  uplink to the master servers and a live server -- both outward-facing, so
-  the owner's go-ahead first --, then server travel and downloads.
-  Potential work it left, in no order: the fork's player standing 3.75
-  units lower than the original's server has it, at rest (its X and Y
-  exact); the fork's ini reader taking an empty value (`ServerName=`) for a
-  missing one, so a fork server's name is the class default; comparing the
-  original's native replication lists with the script statements the fork
-  evaluates for them (both in [multiplayer](docs/re/natives.md#multiplayer));
-  and the fork's `vec4`
+  uplink to the master servers and a live server -- both outward-facing, the
+  owner's go-ahead first ([open decision 5](#open-decisions)) --, then
+  server travel and downloads (the rest of M7 in
+  [`docs/ROADMAP.md`](docs/ROADMAP.md#m7----multiplayer)).
+  Potential work it left, in no order: the fork's player standing lower
+  than the original's server has it; the fork's ini reader taking an empty
+  value (`ServerName=`) for a missing one, so a fork server's name is the
+  class default; comparing the original's native replication lists with the
+  script statements the fork evaluates for them (all three in
+  [multiplayer](docs/re/natives.md#multiplayer)); and the fork's `vec4`
   inequality (`engine/SurrealEngine/SurrealEngine/Math/vec.h`), which tests
   the fourth component for equality -- so the render devices' screen-flash
   test always passes.
@@ -294,6 +298,10 @@ no facts of its own beyond those; each lives in one doc, and the
      a fire's glow on a face, and a flickering sconce's wall, a pulsing
      light throbbing and a triggered light going dark with their shadows
      still there, by [natives.md](docs/re/natives.md#lighting).
+     Multiplayer: a game hosted from the Host screen and joined from the
+     original on another machine -- its Join LAN screen listing the server
+     --, by [natives.md](docs/re/natives.md#multiplayer) (the game's own ini
+     announces it to the master servers: open decision 5).
      The desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
    - linux-aarch64 on any real device.
 2. **Release polish** (owner's request, deferred): the home screen is
@@ -307,3 +315,10 @@ no facts of its own beyond those; each lives in one doc, and the
 4. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
    engine's libraries, as the Smart Pro has); Android (its README lists the
    work, starting with an in-process hand-over).
+5. **M7's outward-facing steps** (the owner's go-ahead first): joining a live
+   server, and a fork server announcing itself to the master servers. The
+   game's own `DeusEx.ini` lists three uplinks among its `ServerActors`, and
+   the fork spawns them now: a `?listen` map opened with that ini -- the Host
+   screen's game among them -- announces the server as the original's does.
+   The net tests' ini leaves them out
+   ([multiplayer](docs/re/natives.md#multiplayer)).
