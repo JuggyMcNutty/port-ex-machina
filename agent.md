@@ -62,14 +62,9 @@ no facts of its own beyond those; each lives in one doc, and the
     [`galaxy-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/galaxy-dll.md),
     [`d3ddrv-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/d3ddrv-dll.md),
     [`fire-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/fire-dll.md)); their databases are typed,
-    named and backed up. `gamefiles/System/Engine.dll.i64` no longer opens:
-    an idle worker's save left out its root node, IDA's record of the input
-    file (2026-09-27; what removed it is not found). Its backup
-    (`reference/idb-backup/`, 2026-09-24) opens, and nothing was named or
-    typed since -- only the decompiler's caches and guessed prototypes are
-    newer; beside it, `Engine.dll.i64.repaired` is the database with the
-    backup's root node put back, which opens and keeps them. Which to put
-    back is the owner's call.
+    named and backed up. Engine.dll's lost its root node, IDA's record of
+    the input file, in an idle worker's save (2026-09-27; what removed it
+    is not found) and has it back from the backup, nothing else lost.
   - **What Surreal lacks** of them is VibeEngine's
     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md),
     from [`natives_audit.py`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/tools/natives_audit.py),
@@ -385,12 +380,13 @@ no facts of its own beyond those; each lives in one doc, and the
 4. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
    engine's libraries, as the Smart Pro has); Android (its README lists the
    work, starting with an in-process hand-over).
-5. **A fork server on the master servers' lists** (the owner's call).
-   Joining live servers the owner allowed ("feel free to connect to public
-   servers", 2026-09-27), and runs have joined empty ones since. A listing
-   is another step: neither engine announces a server unless its uplink's
-   `DoUplink` is set, which the game's own `DeusEx.ini` does not set -- so
-   the Host screen's game is never listed --, and a master then asks the
-   server's query port, which this machine's NAT keeps from the internet.
-   The fork's uplink is the original's, checked against a master on this
-   machine ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer)).
+5. **A fork server on the master servers' lists** (deferred by the owner to
+   future network work, 2026-09-27). Joining live servers the owner allowed
+   ("feel free to connect to public servers", 2026-09-27), and runs have
+   joined empty ones since. A listing is another step: neither engine
+   announces a server unless its uplink's `DoUplink` is set, which the
+   game's own `DeusEx.ini` does not set -- so the Host screen's game is
+   never listed --, and a master then asks the server's query port, which
+   this machine's NAT keeps from the internet. The fork's uplink is the
+   original's, checked against a master on this machine
+   ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer)).
