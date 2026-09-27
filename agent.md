@@ -89,8 +89,6 @@ no facts of its own beyond those; each lives in one doc, and the
   it left is being finished (owner, 2026-09-27: "finish all of M7"):
   - moving on a live server, not yet tried;
   - the fork's player standing lower than the original's server has it;
-  - the fork's ini reader taking an empty value (`ServerName=`) for a
-    missing one, so a fork server's name is the class default;
   - comparing the original's native replication lists with the script
     statements the fork evaluates for them;
   - the world-stats checksum a client's login carries (the fork's always
@@ -98,7 +96,7 @@ no facts of its own beyond those; each lives in one doc, and the
   - a bunch merged into the one before when both are the same channel's,
     as the original merges them;
   - a client going to its Entry level while a travel's join is pending, as
-    the original's does (these seven in
+    the original's does (all of the above in
     [multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer));
   - a package a server sent staying loaded, so another server's package of
     that name but another GUID fails the join as a version mismatch until
