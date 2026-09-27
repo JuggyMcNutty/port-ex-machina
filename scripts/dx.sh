@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # The one entry point: fetch, build, stage and ship a port.
 #
+#   scripts/dx.sh fetch                       the engine, the launcher's branches and the RE (if absent)
 #   scripts/dx.sh ports                       list the ports
 #   scripts/dx.sh deps    <port>              toolchains and sysroot into deps/
 #   scripts/dx.sh build   <port> [launcher|engine]   default: both, if the port ships the engine
@@ -8,21 +9,29 @@
 #   scripts/dx.sh deploy  <port> [args]       build, stage, send the app to the device (port-specific)
 #   scripts/dx.sh run     <port> [args]       run the staged app here (native ports)
 #   scripts/dx.sh profile <port> [args]       frame-time profile on the device (port-specific)
-#   scripts/dx.sh test                        host build + unit tests
-#   scripts/dx.sh check                       docs paths, the engine pin, ABI, port files
+#   scripts/dx.sh test    [<port>]            a port's host build + unit tests (default: linux-x86_64)
+#   scripts/dx.sh check                       every repository's docs, the pins, port files, ABI
 #
-# What each port provides is in docs/PORTING.md.
+# A port is a branch of the launcher, checked out in launcher/<port>
+# (scripts/launcher.sh); what it provides is in docs/PORTING.md.
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
+export DX_ROOT DX_DEPS      # for the ports' own scripts (fetch-sysroot.sh)
 
-usage() { sed -n '2,14p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
+RE_URL="https://github.com/JuggyMcNutty/dx-reverse-info.git"
+
+usage() { sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 
 load_port() {
     PORT="${1:-}"
     [ -n "$PORT" ] || die "which port? ($(dx_ports | tr '\n' ' '))"
-    PORT_DIR="$DX_ROOT/ports/$PORT"
-    [ -f "$PORT_DIR/port.sh" ] || die "no port '$PORT' (have: $(dx_ports | tr '\n' ' '))"
+    dx_ports | grep -qx -- "$PORT" || die "no port '$PORT' (have: $(dx_ports | tr '\n' ' '))"
+    SRC="$DX_ROOT/launcher/$PORT"
+    [ -e "$SRC/.git" ] || die "no launcher/$PORT -- scripts/launcher.sh fetch"
+    PORT_DIR="$SRC/ports/$PORT"
+    [ -f "$PORT_DIR/port.sh" ] || die "launcher/$PORT has no ports/$PORT/port.sh"
     BUILD="$DX_ROOT/build/$PORT"
+    LAUNCHER_BUILD="$SRC/build/$PORT/launcher"   # the port's preset builds in its checkout
     APP="$BUILD/app"
 
     # Defaults a port.sh may override.
@@ -38,15 +47,15 @@ load_port() {
 }
 
 has_preset() {
-    grep -q "\"name\": \"$1\"" "$DX_ROOT/CMakePresets.json"
+    grep -q "\"name\": \"$1\"" "$SRC/CMakePresets.json"
 }
 
 cmd_build() {
     local what="${1:-all}"
     case "$what" in
         all|launcher)
-            has_preset "$PORT" || die "$PORT has no build preset -- see ports/$PORT/README.md"
-            (cd "$DX_ROOT" && cmake --preset "$PORT" && cmake --build --preset "$PORT" -j"$(nproc)")
+            has_preset "$PORT" || die "$PORT has no build preset -- see its ports/$PORT/README.md"
+            (cd "$SRC" && cmake --preset "$PORT" && cmake --build --preset "$PORT" -j"$(nproc)")
             ;;
     esac
     case "$what" in
@@ -54,7 +63,7 @@ cmd_build() {
             if [ "$PORT_ENGINE" = 1 ]; then
                 "$DX_ROOT/scripts/engine.sh" build "$PORT"
             elif [ "$what" = engine ]; then
-                die "$PORT does not build the engine -- see ports/$PORT/README.md"
+                die "$PORT does not build the engine -- see its ports/$PORT/README.md"
             fi
             ;;
         launcher) ;;
@@ -67,12 +76,12 @@ cmd_build() {
 # launcher.ini belongs to whoever runs the app, so it is only created when
 # missing; the packaged one is always there as launcher.ini.default.
 cmd_stage() {
-    [ -x "$BUILD/launcher/deusex-launcher" ] || die "no launcher build -- scripts/dx.sh build $PORT"
+    [ -x "$LAUNCHER_BUILD/deusex-launcher" ] || die "no launcher build -- scripts/dx.sh build $PORT"
     mkdir -p "$APP"
-    cmake --install "$BUILD/launcher" --prefix "$APP" >/dev/null
+    cmake --install "$LAUNCHER_BUILD" --prefix "$APP" >/dev/null
 
     local pkg; pkg="$(mktemp -d)"
-    cp -a "$DX_ROOT/ports/common/packaging/." "$pkg/"
+    cp -a "$SRC/ports/common/packaging/." "$pkg/"
     [ -d "$PORT_DIR/packaging" ] && cp -a "$PORT_DIR/packaging/." "$pkg/"
     mv "$pkg/launcher.ini" "$pkg/launcher.ini.default"
     cp -a "$pkg/." "$APP/"
@@ -98,11 +107,28 @@ cmd_stage() {
     say "staged $APP"
 }
 
+# A device's branch builds for the host too: its tests, its profile's among
+# them, run there.
 cmd_test() {
-    cd "$DX_ROOT"
+    local p="${1:-linux-x86_64}"
+    local src="$DX_ROOT/launcher/$p"
+    [ -e "$src/.git" ] || die "no launcher/$p -- scripts/launcher.sh fetch"
+    cd "$src"
     cmake --preset linux-x86_64 >/dev/null
     cmake --build --preset linux-x86_64 -j"$(nproc)"
     ctest --preset linux-x86_64
+}
+
+cmd_fetch() {
+    "$DX_ROOT/scripts/engine.sh" fetch
+    "$DX_ROOT/scripts/launcher.sh" fetch
+    if [ -d "$DX_ROOT/re/.git" ]; then
+        say "RE clone present: $DX_ROOT/re"
+    else
+        git clone "$RE_URL" "$DX_ROOT/re"
+        git -C "$DX_ROOT/re" config user.name JuggyMcNutty
+        git -C "$DX_ROOT/re" config user.email 11588877+JuggyMcNutty@users.noreply.github.com
+    fi
 }
 
 cmd_check() {
@@ -117,9 +143,17 @@ cmd_check() {
         say "skipped: no engine clone (scripts/engine.sh fetch)"
     fi
 
+    say "== launcher pins"
+    if [ -d "$DX_ROOT/launcher/main/.git" ]; then
+        "$DX_ROOT/scripts/launcher.sh" check || rc=1
+    else
+        say "skipped: no launcher clone (scripts/launcher.sh fetch)"
+    fi
+
     say "== ports"
     for p in $(dx_ports); do
-        local dir="$DX_ROOT/ports/$p" f missing=""
+        local dir="$DX_ROOT/launcher/$p/ports/$p" f missing=""
+        [ -d "$DX_ROOT/launcher/$p" ] || continue
         for f in port.cmake port.sh README.md; do
             [ -f "$dir/$f" ] || missing="$missing $f"
         done
@@ -131,14 +165,15 @@ cmd_check() {
 
     say "== ABI of staged cross builds"
     for p in $(dx_ports); do
-        local max bins=()
-        max=$(sed -n 's/^[[:space:]]*set(DXL_PORT_GLIBC_MAX[[:space:]]\{1,\}\([0-9.]\{1,\}\))/\1/p' "$DX_ROOT/ports/$p/port.cmake" | head -n 1)
+        local src="$DX_ROOT/launcher/$p" max bins=()
+        [ -f "$src/ports/$p/port.cmake" ] || continue
+        max=$(sed -n 's/^[[:space:]]*set(DXL_PORT_GLIBC_MAX[[:space:]]\{1,\}\([0-9.]\{1,\}\))/\1/p' "$src/ports/$p/port.cmake" | head -n 1)
         [ -n "$max" ] || continue
         for f in deusex-launcher dxl-cli SurrealEngine; do
             [ -f "$DX_ROOT/build/$p/app/$f" ] && bins+=("$DX_ROOT/build/$p/app/$f")
         done
         [ ${#bins[@]} -gt 0 ] || continue
-        "$DX_ROOT/scripts/check-abi.sh" --max "$max" "${bins[@]}" || rc=1
+        "$src/scripts/check-abi.sh" --max "$max" "${bins[@]}" || rc=1
     done
 
     [ "$rc" = 0 ] && say "all checks passed" || say "checks FAILED"
@@ -148,7 +183,11 @@ cmd_check() {
 cmd_ports() {
     local p
     for p in $(dx_ports); do
-        ( load_port "$p"; printf '%-18s %s\n' "$p" "$PORT_DESC" )
+        if [ -e "$DX_ROOT/launcher/$p/.git" ]; then
+            ( load_port "$p"; printf '%-18s %s\n' "$p" "$PORT_DESC" )
+        else
+            printf '%-18s %s\n' "$p" "(not checked out -- scripts/launcher.sh fetch)"
+        fi
     done
 }
 
@@ -159,14 +198,15 @@ cmd_deploy() {
     cmd_build
     cmd_stage
     local eng="$DX_ROOT/engine/SurrealEngine"
-    if [ "$PORT_ENGINE" = 1 ] && [ -d "$eng/.git" ] && ! git -C "$eng" diff --quiet HEAD; then
-        say "warning: the engine has uncommitted changes (profiling hooks? scripts/engine.sh perf off) -- deploying them"
+    if [ "$PORT_ENGINE" = 1 ] && [ -d "$eng/.git" ] && ! git -C "$eng" diff --quiet HEAD -- . ':(exclude)vibe'; then
+        say "warning: the engine has uncommitted changes (profiling hooks? vibe/tools/perf/perf.sh off) -- deploying them"
     fi
     port_deploy "$@"
 }
 
 cmd="${1:-}"; [ -n "$cmd" ] || usage; shift
 case "$cmd" in
+    fetch)  cmd_fetch ;;
     ports)  cmd_ports ;;
     deps)   load_port "${1:-}"; shift || true; port_deps "$@" ;;
     build)  load_port "${1:-}"; shift || true; cmd_build "$@" ;;
@@ -176,7 +216,7 @@ case "$cmd" in
             [ -x "$APP/deusex-launcher" ] || die "nothing staged -- scripts/dx.sh stage $PORT"
             port_run "$@" ;;
     profile) load_port "${1:-}"; shift || true; port_profile "$@" ;;
-    test)   cmd_test ;;
+    test)   cmd_test "$@" ;;
     check)  cmd_check ;;
     -h|--help|help) usage ;;
     *)      die "unknown command '$cmd' (scripts/dx.sh help)" ;;

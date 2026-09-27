@@ -1,60 +1,79 @@
 # Porting
 
-How a device becomes a port. The launcher and the engine fork are shared, and
-**linux-x86_64 is the base**: the project is developed and tested there
-([`DEVELOPMENT.md`](DEVELOPMENT.md)), it is the generic device profile and
-`ports/common/packaging` with nothing laid over them, and every other port
-starts from it. A port is the small set of facts and scripts that differ for
-one device, in `ports/<id>/`. The launcher is [`LAUNCHER.md`](LAUNCHER.md); the
-ports that exist are listed in the [root README](../README.md#ports).
+How a device becomes a port. **A port is a branch of the launcher**,
+[deusex-launcher](https://github.com/JuggyMcNutty/deusex-launcher), and the
+engine, [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine), is built for
+it. **linux-x86_64 is the base**: the project is developed and tested there
+([`DEVELOPMENT.md`](DEVELOPMENT.md)), and every other port starts from it. The
+launcher the ports run is
+[`LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md);
+the ports that exist are listed in the [root README](../README.md#ports).
+
+## The branches
+
+| Branch | Holds |
+|---|---|
+| `main` | the original launcher, recreated almost 1:1: no additions, no ports |
+| `linux-x86_64` | `main`, plus the launcher as it grew for the ports (the tabbed home screen, `Settings.json`, pad layouts, the GPU probe), the generic device profile, and the base app every port ships (`ports/common/packaging`) with the desktop's port files (`ports/linux-x86_64`) |
+| `<id>`, a device | `linux-x86_64`, plus **only what differs** for one device: `ports/<id>/` and its preset |
+
+Changes flow one way, by merging: from `main` into `linux-x86_64`, and from
+`linux-x86_64` into each device's branch. A fix to the original's behaviour is
+made on `main`, one to the launcher every port runs on `linux-x86_64`, one for
+a device on its branch. A branch adds files rather than editing those it
+inherits where it can, and resolves a merge's conflicts itself.
+`scripts/launcher.sh status` says which pins lack commits of the branch below
+them.
 
 ## The layers
 
 | Layer | Where | Changes per port? |
 |---|---|---|
-| The launcher's core (the entry decision, command-line parsing, crash sentinel, config seeding, `Settings.json`, pad layouts) | `src/core/` | No. C11, no SDL, no device facts |
+| The launcher's core (the entry decision, command-line parsing, crash sentinel, config seeding) | `src/core/`, from `main`; `linux-x86_64` adds `Settings.json` and pad layouts | No. C11, no SDL, no device facts |
 | The device profile | `src/platform/target.h`; `ports/<id>/target.c` | Data only: a port may supply one |
 | The OS: handing over to the game, the GPU probe | `src/platform/launch.h`, `src/platform/posix/` | Only for a non-POSIX platform (below) |
-| The screens | `src/ui/` (SDL2) | No |
-| The engine | the fork in `engine/SurrealEngine`, pinned by `ENGINE-PIN.txt` | Built per port from `ports/<id>/engine.cmake` |
+| The screens | `src/ui/` (SDL2), from `linux-x86_64` | No |
+| The engine | VibeEngine in `engine/SurrealEngine`, pinned by `ENGINE-PIN.txt` | Built per port from its `ports/<id>/engine.cmake` |
 | The app around the binaries | `ports/common/packaging/` (the base app, what linux-x86_64 ships) + `ports/<id>/packaging/` | The port's files are laid over the base |
 
 ## What a port is
 
-A port directory holds **only what differs** from linux-x86_64:
+A port's directory, `ports/<id>/` on its branch, holds **only what differs**
+from linux-x86_64:
 
 | File | Purpose | Required |
 |---|---|---|
-| `port.cmake` | Included by the root `CMakeLists.txt` when `DXL_PORT=<id>`. Sets `DXL_PORT_SDL` (`system`: pkg-config; `sysroot`: the device's own SDL2 from `DXL_PORT_SYSROOT`), `DXL_PORT_GLIBC_MAX` (turns on the post-build `scripts/check-abi.sh`) and `DXL_PORT_LINK_OPTIONS` | yes |
-| `port.sh` | Sourced by `scripts/dx.sh`. `PORT_DESC`; `PORT_ENGINE=1` if the engine builds for this port here; hooks `port_deps` (fetch toolchains/sysroot), `port_stage` (adjust the staged app), `port_deploy` (send it to the device; over SSH, `dx_ssh_sync` in `scripts/lib/common.sh` sends only what changed, keeps the device's previous copies and verifies), `port_run` (run it here), `port_profile` (a frame-time profile on the device). Unset hooks have safe defaults | yes |
+| `port.cmake` | Included by the branch's `CMakeLists.txt` when `DXL_PORT=<id>`. Sets `DXL_PORT_SDL` (`system`: pkg-config; `sysroot`: the device's own SDL2 from `DXL_PORT_SYSROOT`), `DXL_PORT_GLIBC_MAX` (turns on the post-build `scripts/check-abi.sh`) and `DXL_PORT_LINK_OPTIONS` | yes |
+| `port.sh` | Sourced by this workspace's `scripts/dx.sh`, with `scripts/lib/common.sh` loaded. `PORT_DESC`; `PORT_ENGINE=1` if the engine builds for this port here; hooks `port_deps` (fetch toolchains/sysroot), `port_stage` (adjust the staged app), `port_deploy` (send it to the device; over SSH, `dx_ssh_sync` in `scripts/lib/common.sh` sends only what changed, keeps the device's previous copies and verifies), `port_run` (run it here), `port_profile` (a frame-time profile on the device). Unset hooks have safe defaults | yes |
 | `toolchain-c.cmake`, `toolchain-cxx.cmake` | Cross toolchains, referenced by the port's preset (C) and `engine.cmake` (C++). A toolchain file that `return()`s early when the host already is the target arch makes the same preset build natively | cross ports |
 | `engine.cmake` | A CMake initial cache (`cmake -C`) for building the engine: its toolchain and `ENABLE_*` switches, each set with `FORCE` so an edit reaches an existing build too | if it builds the engine |
 | `target.c` | The device profile, a `dxl_target`: fonts to try first, the panel size, the CPU modes the port's hooks can apply (with their help text), a note about the built-in pad, the About line, and the GPU `dxl-shots` should pretend to have. Without one the build uses `src/platform/target_default.c`, a generic desktop | optional |
 | `packaging/` | Laid over `ports/common/packaging/` when staging. `port-hooks.sh` is sourced by the shared `run-game.sh`: `PORT_LIB_PATH`, `port_env`, `port_before_game`, `port_after_game`. Also here: the port's own `launcher.ini`, `renderers.ini`, `engine-settings.json.default`, and whatever the device's frontend needs to list the app | optional |
 | `README.md` | The device as measured, the port's status, what was verified on it | yes |
 
-A port also gets a configure preset in `CMakePresets.json` (its name is the
-port id; it only adds the toolchain file for a cross port).
+A port also gets a configure preset in its branch's `CMakePresets.json` (its
+name is the port id; it only adds the toolchain file for a cross port).
 
 ## The pipeline
 
 ```sh
+scripts/dx.sh fetch                # once: the engine, the launcher's branches (launcher/<port>), the RE
 scripts/dx.sh deps   <port>        # port_deps: toolchains and sysroot into deps/
-scripts/engine.sh fetch            # once: clone the engine fork at the pin
-scripts/dx.sh build  <port>        # the launcher preset, then scripts/engine.sh build <port>
+scripts/dx.sh build  <port>        # the launcher's preset in launcher/<port>, then scripts/engine.sh build <port>
 scripts/dx.sh stage  <port>        # build/<port>/app, exactly what ships
 scripts/dx.sh deploy <port>        # build, stage, then port_deploy
 scripts/dx.sh run    <port>        # port_run
 scripts/dx.sh profile <port>       # port_profile
-scripts/dx.sh check                # the drift guards (below)
+scripts/dx.sh test   [<port>]      # the port's host build and unit tests
+scripts/dx.sh check                # the drift guards (DEVELOPMENT.md)
 ```
 
-Everything built lands in `build/<port>/`: `build/<port>/launcher` and
-`build/<port>/engine` are the two CMake trees, `build/<port>/app` is the staged
+Each port's launcher builds in its own checkout, `launcher/<port>/build/`;
+the engine goes to `build/<port>/engine`, and `build/<port>/app` is the staged
 result. Everything fetched lands in `deps/`: `deps/toolchains/<name>` is
-shared between ports, `deps/sysroots/<port>` is one device's. Both are ignored
-by git and can be deleted; `deps/` costs a download (and for a vendor sysroot,
-the device) to rebuild.
+shared between ports, `deps/sysroots/<port>` is one device's; each launcher
+checkout links it in. All of it is ignored by git and can be deleted; `deps/`
+costs a download (and for a vendor sysroot, the device) to rebuild.
 
 Staging installs the binaries, copies the engine's `SurrealEngine`,
 `libSurrealVideo.so` and `SurrealEngine.pk3`, lays `ports/common/packaging` and
@@ -72,9 +91,10 @@ only when missing.
    (`probe-sdl.c --pad`); the screen size; the fonts on the system; what the
    device's own frontend expects an app to look like; how its CPU governor is
    managed.
-2. **Start from linux-x86_64**, and keep only what differs. A device running
-   an ordinary distro is often nothing more than a new name (`linux-aarch64`
-   is linux-x86_64 built for another architecture). For a vendor-firmware
+2. **Branch from linux-x86_64** (`git -C launcher/main worktree add -b <id>
+   ../<id> linux-x86_64`), and keep only what differs. A device running an
+   ordinary distro is often nothing more than a new name (`linux-aarch64` is
+   linux-x86_64 built for another architecture). For a vendor-firmware
    handheld -- cross-built against the device's own libraries, its own frontend
    and CPU modes -- `trimui-smartpro` shows what the differences look like.
 3. **Pick a toolchain whose glibc is at or below the device's** -- one newer
@@ -98,7 +118,9 @@ only when missing.
    `launcher.ini` with the usual `GameDir`.
 8. **Add the preset**, then `scripts/dx.sh build`, `stage`, `deploy`, and write
    the port's `README.md` (below).
-9. **`scripts/dx.sh check`** and **`scripts/dx.sh test`** must pass
+9. **Commit and push the branch, then pin it** here (`scripts/launcher.sh pin
+   <id>` adds it to `LAUNCHER-PIN.txt`); `scripts/dx.sh check` and
+   `scripts/dx.sh test <id>` must pass
    ([the drift guards](DEVELOPMENT.md#drift-guards)).
 
 ## Device probes
@@ -134,11 +156,11 @@ The launcher's OS dependencies are few and named:
 | Atomic config writes | `core/ini.c`, `core/json.c` | write a temporary file, `rename` |
 
 **Android** needs a different hand-over -- the engine has to run inside the
-app's process -- and more besides: [`../ports/android/README.md`](../ports/android/README.md).
+app's process -- and more besides: [its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/android/ports/android/README.md).
 **Xbox 360** (planned) is not POSIX, so it would need its own version of
-each; nothing about it is worked out yet ([`../ports/x360/README.md`](../ports/x360/README.md)).
+each; nothing about it is worked out yet ([its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/x360/ports/x360/README.md)).
 **Windows** would need win32 versions of all five; the original binary's own
-answers to the same questions are in [`re/porting-notes.md`](re/porting-notes.md).
+answers to the same questions are in [`porting-notes.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/porting-notes.md).
 
 ## A port's README
 

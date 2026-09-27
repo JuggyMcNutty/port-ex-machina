@@ -1,32 +1,41 @@
 #!/usr/bin/env bash
-# Docs drift guard: every repository path a doc names must exist, and every
-# link to a heading must find one.
+# Docs drift guard for every repository of the workspace: each path a doc
+# names must exist, and each link to a heading must find one -- in the doc's
+# own repository, or in another's checkout here when the link goes there.
 #
 #   scripts/check-docs.sh [-v]
 #
-# Reads every *.md in the repository, takes the `inline code` spans and the link targets
-# that look like relative paths (they contain a "/"), and resolves each one
-# against, in order:
+# The docs checked: this repository's; dx-reverse-info's (re/); each branch of
+# deusex-launcher checked out in launcher/<branch>/; and VibeEngine's own (its
+# README and vibe/, not upstream's docs).
 #
-#   the doc's own directory   links like re/wizard.md
-#   the repository root       src/core/config.c, ports/trimui-smartpro/port.sh
-#   src/                      core/config.c, ui/screens.c (how LAUNCHER.md names code)
-#   engine/SurrealEngine/     SurrealEngine/GameApp.cpp (the fork, a separate clone)
-#   gamefiles/                System/DeusEx.ini (the game install)
-#   ports/*/packaging/        run-game.sh's neighbours: the app directory
-#   ports/*/                  names relative to a port (packaging/, target.c)
+# In each doc, the `inline code` spans and the link targets that look like
+# relative paths (they contain a "/") must resolve against, in order: the
+# doc's own directory; its checkout's root, src/, ports/*/packaging/ and
+# ports/*/; then the workspace's -- this repository, the engine clone
+# (engine/SurrealEngine), re/, each launcher checkout and its src/, and
+# gamefiles/ (the game install).
+#
+# A link to https://github.com/JuggyMcNutty/<repository>/(blob|tree)/<branch>/<path>
+# must name a path that exists in that repository's checkout here:
+# port-ex-machina at main is this one, dx-reverse-info at main is re/,
+# VibeEngine at deusex is engine/SurrealEngine, and deusex-launcher at
+# <branch> is launcher/<branch>/. A link to a VibeEngine commit must name one
+# the clone has.
 #
 # A link with an #anchor to a markdown file (or to a heading of the doc itself)
 # must name one of that file's headings, as GitHub makes their ids: lower case,
 # punctuation dropped, spaces as "-", a repeated heading numbered -1, -2, ...
 #
-# engine/, gamefiles/ and reference/ are not in the repository. When one is
-# missing (a fresh clone), a path that resolves nowhere is counted as unverifiable
-# rather than failed. The ALLOW list below names what exists only at run
-# time, inside an archive, or on the device.
+# engine/, launcher/, re/, gamefiles/ and reference/ are not in this
+# repository. When one is missing (a fresh clone), a path that resolves
+# nowhere, or a link into a checkout that is absent, is counted as
+# unverifiable rather than failed. The ALLOW list below names what exists only
+# at run time, inside an archive, or on the device.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 verbose=0; [ "${1:-}" = "-v" ] && verbose=1
+OWNER_URL="https://github.com/JuggyMcNutty"
 
 # Paths that are correct but have nothing to resolve against here.
 ALLOW=(
@@ -41,14 +50,39 @@ ALLOW=(
     '^LookSensitivityX/Y$'            # the same, for two Settings.json members
 )
 
-roots=("$ROOT" "$ROOT/src")
+ENGINE="$ROOT/engine/SurrealEngine"
 optional_missing=0
-for r in "$ROOT/engine/SurrealEngine" "$ROOT/gamefiles"; do
-    if [ -d "$r" ]; then roots+=("$r"); else optional_missing=1; fi
+for r in "$ENGINE" "$ROOT/gamefiles" "$ROOT/reference" "$ROOT/re" "$ROOT/launcher/main"; do
+    [ -e "$r" ] || optional_missing=1
 done
-[ -d "$ROOT/reference" ] || optional_missing=1
-for r in "$ROOT"/ports/*/packaging; do roots+=("$r"); done
-for r in "$ROOT"/ports/*; do roots+=("$r"); done
+
+# The checkouts, as "dir repository branch".
+checkouts=("$ROOT port-ex-machina main")
+[ -d "$ROOT/re/.git" ] && checkouts+=("$ROOT/re dx-reverse-info main")
+[ -d "$ENGINE/.git" ] && checkouts+=("$ENGINE VibeEngine deusex")
+for d in "$ROOT"/launcher/*/; do
+    d="${d%/}"
+    [ -e "$d/.git" ] && checkouts+=("$d deusex-launcher $(basename "$d")")
+done
+
+# The local checkout of <repository> at <branch>, if there is one.
+checkout_of() {
+    local c
+    for c in "${checkouts[@]}"; do
+        set -- $c
+        if [ "$2" = "$REPO_Q" ] && [ "$3" = "$REF_Q" ]; then printf '%s\n' "$1"; return 0; fi
+    done
+    return 1
+}
+
+# The workspace's roots, after a doc's own: names relative to a port (as
+# packaging/ or target.c) resolve in any launcher checkout's ports.
+workspace=("$ROOT" "$ENGINE" "$ROOT/re" "$ROOT/gamefiles")
+for d in "$ROOT"/launcher/*/; do
+    d="${d%/}"
+    workspace+=("$d" "$d/src")
+    for r in "$d"/ports/*/packaging "$d"/ports/*; do [ -d "$r" ] && workspace+=("$r"); done
+done
 
 # file:line:kind:token for every candidate, skipping fenced code blocks; kind
 # is C for `code`, L for a link target.
@@ -86,20 +120,14 @@ anchors_of() {
         }' "$1"
 }
 
-# Does <doc>'s link <path#anchor> name a heading? A target that is not a
-# markdown file here has no headings to check (a missing one is the path
-# check's to report).
+# Does <file> (a markdown file, or a directory's README) have heading <anchor>?
 declare -A HEADINGS=()
-anchor_found() {
-    local doc="$1" target="$2" path="${2%%#*}" anchor="${2#*#}" file
-    if [ -z "$path" ]; then
-        file="$doc"
-    else
-        file="$(dirname "$doc")/$path"
-        [ -d "$file" ] && file="$file/README.md"
-    fi
+has_heading() {
+    local file="$1" anchor="$2"
+    [[ "$file" == /* ]] || file="$PWD/$file"    # the cache spans checkouts
+    [ -d "$file" ] && file="$file/README.md"
     case "$file" in *.md) ;; *) return 0 ;; esac
-    [ -f "$file" ] || return 0
+    [ -f "$file" ] || return 0              # a missing file is the path check's to report
     [ -n "${HEADINGS[$file]+x}" ] || HEADINGS[$file]="$(anchors_of "$file")"
     grep -qxF -- "$anchor" <<<"${HEADINGS[$file]}"
 }
@@ -110,52 +138,106 @@ allowed() {
     return 1
 }
 
-cd "$ROOT"
-# Tracked docs, and new ones not yet added (anything not ignored).
-mapfile -t docs < <(git ls-files --cached --others --exclude-standard '*.md')
-[ ${#docs[@]} -gt 0 ] || { echo "no tracked docs?" >&2; exit 1; }
+checked=0 anchors=0 urls=0 failed=0 unverifiable=0 ndocs=0
+fail() { echo "$1" >&2; failed=$((failed + 1)); }
 
-checked=0 anchors=0 failed=0 unverifiable=0
-while IFS= read -r rec; do
-    doc="${rec%%:*}"; rest="${rec#*:}"; line="${rest%%:*}"; rest="${rest#*:}"
-    kind="${rest%%:*}"; tok="${rest#*:}"
-    tok="${tok%% *}"                       # `path args` -> path; [x](path "title") -> path
-    if [ "$kind" = L ] && [[ "$tok" == *'#'* ]] && ! [[ "$tok" =~ ^[a-z]+: ]]; then
+# A link into one of our repositories: 0 checked (and fine), 1 failed,
+# 2 unverifiable (no checkout of it here), 3 not ours.
+check_url() {
+    local doc="$1" line="$2" url="$3" path="${3%%#*}" anchor=""
+    [[ "$url" == *'#'* ]] && anchor="${url#*#}"
+    [[ "$path" == "$OWNER_URL"/* ]] || return 3
+    local rest="${path#"$OWNER_URL"/}" repo kind ref sub dir
+    repo="${rest%%/*}"
+    if [[ "$rest" =~ ^[^/]+/commit/([0-9a-f]+)$ ]]; then
+        [ "$repo" = VibeEngine ] && [ -d "$ENGINE/.git" ] || return 2
+        git -C "$ENGINE" cat-file -e "${BASH_REMATCH[1]}^{commit}" 2>/dev/null && return 0
+        fail "NO COMMIT $doc:$line: $url"; return 1
+    fi
+    if [[ "$rest" =~ ^[^/]+/?$ ]]; then
+        return 0                            # the repository itself
+    fi
+    [[ "$rest" =~ ^[^/]+/(blob|tree)/([^/]+)/(.+)$ ]] || { fail "BAD LINK $doc:$line: $url"; return 1; }
+    ref="${BASH_REMATCH[2]}"; sub="${BASH_REMATCH[3]}"
+    REPO_Q="$repo" REF_Q="$ref"
+    dir="$(checkout_of)" || return 2
+    if [ ! -e "$dir/$sub" ]; then
+        fail "MISSING $doc:$line: $url"; return 1
+    fi
+    if [ -n "$anchor" ]; then
         anchors=$((anchors + 1))
-        if anchor_found "$doc" "$tok"; then
-            [ "$verbose" = 1 ] && echo "ok   $doc:$line $tok"
-        else
-            echo "NO HEADING $doc:$line: $tok" >&2
-            failed=$((failed + 1))
-        fi
+        has_heading "$dir/$sub" "$anchor" || { fail "NO HEADING $doc:$line: $url"; return 1; }
     fi
-    tok="${tok%%#*}"                       # link anchors
-    # Relative paths only: must contain "/" and a letter, and nothing that
-    # makes it a URL, a command, a placeholder, a glob or an address.
-    [[ "$tok" == */* ]] || continue
-    [[ "$tok" =~ [A-Za-z] ]] || continue
-    [[ "$tok" =~ ^(/|~|-|\.\./\.\./\.\.) ]] && continue
-    [[ "$tok" =~ [][\<\>\*\$\{\}=:@\\\|\(\)\'\",\;] ]] && continue
-    [[ "$tok" =~ ^[A-Za-z0-9_.+-]+(/[A-Za-z0-9_.+-]*)+$ ]] || continue
-    allowed "$tok" && continue
-    checked=$((checked + 1))
-    ok=0
-    docdir="$(dirname "$doc")"
-    for base in "$ROOT/$docdir" "${roots[@]}"; do
-        if [ -e "$base/$tok" ]; then ok=1; break; fi
-    done
-    if [ "$ok" = 1 ]; then
-        [ "$verbose" = 1 ] && echo "ok   $doc:$line $tok"
-    elif [ "$optional_missing" = 1 ]; then
-        unverifiable=$((unverifiable + 1))
-        [ "$verbose" = 1 ] && echo "skip $doc:$line $tok (engine/ or gamefiles/ absent)"
-    else
-        echo "MISSING $doc:$line: $tok" >&2
-        failed=$((failed + 1))
-    fi
-done < <(extract "${docs[@]}")
+    return 0
+}
 
-summary="docs: $checked paths and $anchors anchors checked in ${#docs[@]} files, $failed missing"
-[ "$unverifiable" = 0 ] || summary="$summary, $unverifiable unverifiable (engine/, gamefiles/ or reference/ absent)"
+for c in "${checkouts[@]}"; do
+    set -- $c
+    co="$1" repo="$2"
+    cd "$co"
+    if [ "$repo" = VibeEngine ]; then
+        mapfile -t docs < <(git ls-files --cached --others --exclude-standard README.md 'vibe/*.md')
+    else
+        mapfile -t docs < <(git ls-files --cached --others --exclude-standard '*.md')
+    fi
+    [ ${#docs[@]} -gt 0 ] || continue
+    ndocs=$((ndocs + ${#docs[@]}))
+    roots=("$co")
+    [ -d "$co/src" ] && roots+=("$co/src")
+    for r in "$co"/ports/*/packaging "$co"/ports/*; do [ -d "$r" ] && roots+=("$r"); done
+    roots+=("${workspace[@]}")
+    where="${co#"$ROOT"/}"; [ "$co" = "$ROOT" ] && where="."
+
+    while IFS= read -r rec; do
+        doc="${rec%%:*}"; rest="${rec#*:}"; line="${rest%%:*}"; rest="${rest#*:}"
+        kind="${rest%%:*}"; tok="${rest#*:}"
+        tok="${tok%% *}"                   # `path args` -> path; [x](path "title") -> path
+        label="$where/$doc"
+        if [ "$kind" = L ] && [[ "$tok" == https://* ]]; then
+            rc=0; check_url "$label" "$line" "$tok" || rc=$?
+            case "$rc" in
+                0) urls=$((urls + 1)); [ "$verbose" = 1 ] && echo "ok   $label:$line $tok" ;;
+                2) unverifiable=$((unverifiable + 1)); [ "$verbose" = 1 ] && echo "skip $label:$line $tok" ;;
+            esac
+            continue
+        fi
+        if [ "$kind" = L ] && [[ "$tok" == *'#'* ]] && ! [[ "$tok" =~ ^[a-z]+: ]]; then
+            anchors=$((anchors + 1))
+            p="${tok%%#*}"
+            if [ -z "$p" ]; then f="$doc"; else f="$(dirname "$doc")/$p"; fi
+            if has_heading "$f" "${tok#*#}"; then
+                [ "$verbose" = 1 ] && echo "ok   $label:$line $tok"
+            else
+                fail "NO HEADING $label:$line: $tok"
+            fi
+        fi
+        tok="${tok%%#*}"                   # link anchors
+        # Relative paths only: must contain "/" and a letter, and nothing that
+        # makes it a URL, a command, a placeholder, a glob or an address.
+        [[ "$tok" == */* ]] || continue
+        [[ "$tok" =~ [A-Za-z] ]] || continue
+        [[ "$tok" =~ ^(/|~|-|\.\./\.\./\.\.) ]] && continue
+        [[ "$tok" =~ [][\<\>\*\$\{\}=:@\\\|\(\)\'\",\;] ]] && continue
+        [[ "$tok" =~ ^[A-Za-z0-9_.+-]+(/[A-Za-z0-9_.+-]*)+$ ]] || continue
+        allowed "$tok" && continue
+        checked=$((checked + 1))
+        ok=0
+        docdir="$(dirname "$doc")"
+        for base in "$co/$docdir" "${roots[@]}"; do
+            if [ -e "$base/$tok" ]; then ok=1; break; fi
+        done
+        if [ "$ok" = 1 ]; then
+            [ "$verbose" = 1 ] && echo "ok   $label:$line $tok"
+        elif [ "$optional_missing" = 1 ]; then
+            unverifiable=$((unverifiable + 1))
+            [ "$verbose" = 1 ] && echo "skip $label:$line $tok (a checkout, gamefiles/ or reference/ absent)"
+        else
+            fail "MISSING $label:$line: $tok"
+        fi
+    done < <(extract "${docs[@]}")
+done
+
+summary="docs: $checked paths, $anchors anchors and $urls links between repositories checked in $ndocs files, $failed missing"
+[ "$unverifiable" = 0 ] || summary="$summary, $unverifiable unverifiable (a checkout, gamefiles/ or reference/ absent)"
 echo "$summary"
 [ "$failed" = 0 ]

@@ -1,5 +1,7 @@
-# Shared by scripts/dx.sh, scripts/engine.sh and the ports' port.sh files.
-# Sourced, never run; expects bash with set -euo pipefail.
+# Shared by scripts/dx.sh, engine.sh and launcher.sh, by the ports' port.sh
+# files (on their launcher branches, sourced by dx.sh) and by the fork's
+# vibe/tools/host-tools.sh. Sourced, never run; expects bash with
+# set -euo pipefail.
 
 DX_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DX_DEPS="$DX_ROOT/deps"
@@ -7,13 +9,9 @@ DX_DEPS="$DX_ROOT/deps"
 say() { printf '%s\n' "$*" >&2; }
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
-# Every directory under ports/ except common/ is a port.
+# The ports are the ones LAUNCHER-PIN.txt pins: each a branch of the launcher.
 dx_ports() {
-    local d
-    for d in "$DX_ROOT"/ports/*/; do
-        d="$(basename "$d")"
-        [ "$d" = common ] || printf '%s\n' "$d"
-    done
+    awk '$1 == "port" { print $2 }' "$DX_ROOT/LAUNCHER-PIN.txt"
 }
 
 # ---- devices over SSH -------------------------------------------------------

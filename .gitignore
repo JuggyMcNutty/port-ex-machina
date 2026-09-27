@@ -5,10 +5,14 @@
 /deps/
 
 # Not ours, each for its own reason:
-#   engine/     a separate git clone of the Surreal Engine fork (scripts/engine.sh fetch)
+#   engine/     a clone of VibeEngine, the engine fork (scripts/engine.sh fetch)
+#   launcher/   deusex-launcher: its main, and a worktree per port branch (scripts/launcher.sh fetch)
+#   re/         a clone of dx-reverse-info, the original binaries' RE (scripts/dx.sh fetch)
 #   gamefiles/  your own Deus Ex install -- never commit it
 #   reference/  the 1112f SDK, the DeusExe source, IDA and ini backups
 /engine/
+/launcher/
+/re/
 /gamefiles/
 /reference/
 
