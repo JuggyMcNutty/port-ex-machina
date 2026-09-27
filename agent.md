@@ -87,10 +87,8 @@ no facts of its own beyond those; each lives in one doc, and the
   [`ROADMAP.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ROADMAP.md#m7----multiplayer)); its by-hand check
   waits with the open decisions ([open decision 1](#open-decisions)). What
   it left is being finished (owner, 2026-09-27: "finish all of M7"):
-  - moving on a live server, not yet tried;
-  - comparing the original's native replication lists with the script
-    statements the fork evaluates for them (these two in
-    [multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer));
+  - moving on a live server, not yet tried
+    ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer));
   - a live mode for the harness, whose consoles every server's game
     disconnects -- it wants the stock console -- (so far a run takes the
     stock console and a temporary hook: VibeEngine's
