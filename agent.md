@@ -88,9 +88,8 @@ no facts of its own beyond those; each lives in one doc, and the
   waits with the open decisions ([open decision 1](#open-decisions)). What
   it left is being finished (owner, 2026-09-27: "finish all of M7"):
   - moving on a live server, not yet tried;
-  - the fork's player standing lower than the original's server has it;
   - comparing the original's native replication lists with the script
-    statements the fork evaluates for them (these three in
+    statements the fork evaluates for them (these two in
     [multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer));
   - the fork's saves writing spawned actors without the load flags the
     original's linker makes exports by
@@ -114,6 +113,9 @@ no facts of its own beyond those; each lives in one doc, and the
   third as long and the pan hard where the original's is soft
   ([sound](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#sound)), `SetLocation`'s fitting in
   ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)),
+  the traces' margin -- a unit, where the original's line checks stop half
+  a unit short and its box checks a tenth of the trace (the same section;
+  walking's float over the floor is the original's since 2026-09-27) --,
   and the weapon in hand higher and smaller in a 16:9 view than the
   original's ([the fractal textures' check](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#fire-water-and-ice-textures)).
   What remains of the milestones is by hand, waiting with the open
