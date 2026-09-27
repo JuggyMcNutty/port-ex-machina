@@ -31,7 +31,8 @@ no facts of its own beyond those; each lives in one doc, and the
   (`scripts/engine.sh status`, then the fork's `vibe/tools/upgrade.sh`) is
   the owner's call. The profiling hooks are off.
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
-  app ran the engine into the intro level on the development PC, and
+  app ran the engine into the intro level on the development PC, and its
+  launcher straight into Liberty Island (`DXL_NO_HOME=1`, 2026-09-27);
   unattended runs drove saves, loads and hub travel through in play
   (2026-09-25).
 - **trimui-smartpro**: the game runs; the performance work is in progress
