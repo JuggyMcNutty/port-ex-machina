@@ -3,7 +3,8 @@
 // the server on this machine (ServeConsole's), and once in the game its
 // player stands 5 s, walks forward 5 s as with the key held, and stands
 // again; its place, and every other player's as this side has it, is logged
-// each second, and shot at the stops. Exits 25 s into the game.
+// each second, and shot at the stops. Exits 25 s into the game -- or back in
+// the menu, dropped or never in after 40 s.
 //=============================================================================
 class JoinConsole extends Console;
 
@@ -28,6 +29,14 @@ event Tick(float Delta)
 			Log("DXNET: opening 127.0.0.1:7790");
 			P.ConsoleCommand("open 127.0.0.1:7790");
 			Step = 1;
+		}
+		else if (Step >= 1 && Step < 5 && (GameTime > 0.0 || MenuTime > 40.0))
+		{
+			// Dropped back to the menu, or never in: exit, so the log is
+			// written.
+			Log("DXNET: in the menu, " $ GameTime $ " s of game; exiting");
+			P.ConsoleCommand("exit");
+			Step = 5;
 		}
 		return;
 	}

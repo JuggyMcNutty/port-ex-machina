@@ -844,3 +844,10 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   ([multiplayer](re/natives.md#multiplayer)). **Checked:** the original
   joined the fork's server, possessed its pawn, saw the map's actors and
   the host's player walking, and walked on the server.
+- [**the server calls its clients**](https://github.com/JuggyMcNutty/SurrealEngine/commit/19ec313296c91a3dd471c666f83bf742318586d0) --
+  a call on an actor a client's player owns goes to that client, the
+  actor's channel opened and the actor sent first if need be; a channel the
+  other side opens is acknowledged from its opening bunch
+  ([multiplayer](re/natives.md#multiplayer)). **Checked:** the original
+  client got the server's calls and a position correction, and ended where
+  the fork's server had it.

@@ -210,6 +210,7 @@ be.
       to try).
 - [x] The server: accepting, relevancy and priority, replication out --
       the original joining the fork (2026-09-26).
-- [ ] The server's calls to its clients: `ClientAdjustPosition`'s
-      corrections among them, and the `ServerActors`.
+- [x] The server's calls to its clients: `ClientAdjustPosition`'s
+      corrections among them (2026-09-26).
+- [ ] The `ServerActors`: the LAN beacon and the query answerer.
 - [ ] The uplink: a fork server on the master servers' lists.

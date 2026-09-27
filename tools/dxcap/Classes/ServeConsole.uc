@@ -1,12 +1,13 @@
 //=============================================================================
 // ServeConsole: a listen server for the other engine to join -- a
-// deathmatch on DXMP_Cathedral, started from the menu map as the game's Host
-// screen starts one, never on the master servers' lists (the run's ini has
-// no uplink). While serving, once another player is in, the host's own
-// player stands in its sight -- 300 units in front of it, or the nearest
-// free spot round it -- turned across its view, and walks 2 s, stands 2 s
-// and turns about, over and over, for the client to watch; where each
-// player stands is logged every 2 s. Exits after 290 s.
+// deathmatch on DXMP_Cathedral (CapDeathMatch: without the stock console
+// check), started from the menu map as the game's Host screen starts one,
+// never on the master servers' lists (the run's ini has no uplink). While
+// serving, once another player is in, the host's own player stands in its
+// sight -- 300 units in front of it, or the nearest free spot round it --
+// turned across its view, and walks 2 s, stands 2 s and turns about, over
+// and over, for the client to watch; where each player stands is logged
+// every 2 s. Exits after 290 s.
 //=============================================================================
 class ServeConsole extends Console;
 
@@ -54,7 +55,7 @@ event Tick(float Delta)
 	if (Phase == 0 && CapTime > 3.0)
 	{
 		Log("DXCAP: starting the listen server");
-		P.ConsoleCommand("start DXMP_Cathedral?game=DeusEx.DeathMatchGame?listen");
+		P.ConsoleCommand("start DXMP_Cathedral?game=DXCapture.CapDeathMatch?listen");
 		Phase = 1;
 	}
 	else if (Phase == 1 && P.Level.NetMode != NM_Standalone)

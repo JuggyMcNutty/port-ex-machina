@@ -98,7 +98,9 @@ The console classes:
   run's ini names that master server: the game's names GameSpy's, closed).
 - **`ServeConsole`**, either engine: a listen server for the other to join -- a
   deathmatch on DXMP_Cathedral, never on the master servers' lists (the
-  run's ini has no uplink). Once another player is in, the host's own player
+  run's ini has no uplink), in the package's own `CapDeathMatch`: the game's
+  check that a joining player's console is the stock one would disconnect
+  `JoinConsole`. Once another player is in, the host's own player
   stands in its sight -- in front of it where there is room -- and walks to
   and fro across its view; where each
   player stands is logged every 2 s. It exits after 290 s: give the
@@ -108,9 +110,10 @@ The console classes:
   stands again, logging each second where it and every other pawn stand, and
   shots at the stops (`scripts/dxcap.sh fork JoinConsole DX.dx`, or
   `scripts/dxcap.sh original JoinConsole` against the fork's
-  `scripts/dxcap.sh fork ServeConsole DX.dx`). Start it once the server
-  answers, some 13 s after the original starts; the original's log comes at
-  its exit.
+  `scripts/dxcap.sh fork ServeConsole DX.dx`). It exits 25 s into the game,
+  or back in the menu -- dropped, or never in after 40 s --, since the
+  original's log comes only at its exit. Start it once the server answers,
+  some 13 s after the original starts.
 - **`SoundConsole`**: M0's sounds -- a steady sound heard in the open and from
   behind a wall, shots in a reverb zone and out of it, and beeps from the
   right, the left and ahead. It silences the level first (ambient sounds,

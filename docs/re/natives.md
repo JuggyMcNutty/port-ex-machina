@@ -945,12 +945,20 @@ second one actor goes a tick, so its own `PlayerReplicationInfo` came some
 8 s in, behind the map's weapons -- the order the original's priorities give --
 and the original's `ReplicateMove` read the missing one's `Ping` meanwhile.
 
+The server calls its clients too (2026-09-26): a call on an actor a
+client's player owns goes to that client as the original's rule sends it,
+the actor sent first if the client has no channel for it. Checked the same
+way: the original client got its music, skins, augmentation displays, the
+server's time and a position correction, and ended exactly where the fork's
+server had it. The game's own check that a joining player's console is the
+stock one then ran as well -- and disconnected the scripted client, as the
+original's server would; the net tests' server game leaves it out
+([the consoles](../DEVELOPMENT.md#scripted-runs-of-both-engines)).
+
 Not yet, of a client: downloads (a package missing or different from the
 server's ends the join) and the world-stats checksum (`NoChecksum` always).
-Of a server: its calls to clients (the corrections `ClientAdjustPosition`
-sends among them, so a client's place drifts a few units from the server's),
-the `ServerActors` (the beacon, the query answerer, the uplinks), travel,
-and serving downloads. Each bunch goes on its own: the original merges one
+Of a server: the `ServerActors` (the beacon, the query answerer, the
+uplinks), travel, and serving downloads. Each bunch goes on its own: the original merges one
 into the last when both are the same channel's, which only saves bits.
 
 The scripts' sockets are the original's now (2026-09-26,
