@@ -91,8 +91,6 @@ no facts of its own beyond those; each lives in one doc, and the
   - the fork's player standing lower than the original's server has it;
   - comparing the original's native replication lists with the script
     statements the fork evaluates for them;
-  - the world-stats checksum a client's login carries (the fork's always
-    `NoChecksum`);
   - a bunch merged into the one before when both are the same channel's,
     as the original merges them;
   - a client going to its Entry level while a travel's join is pending, as
