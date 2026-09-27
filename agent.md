@@ -91,8 +91,6 @@ no facts of its own beyond those; each lives in one doc, and the
   - the fork's player standing lower than the original's server has it;
   - comparing the original's native replication lists with the script
     statements the fork evaluates for them;
-  - a bunch merged into the one before when both are the same channel's,
-    as the original merges them;
   - a client going to its Entry level while a travel's join is pending, as
     the original's does (all of the above in
     [multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer));
