@@ -108,8 +108,9 @@ no facts of its own beyond those; each lives in one doc, and the
   [`ROADMAP.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ROADMAP.md) tracks each item, and
   [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md) says what changed and what stays the
   fork's own). The captures left potential work, in no order, each under its
-  feature: Liberty Island's laser tripwires drawn not at all
-  ([lasers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#particles-and-lasers-render-iterators)),
+  feature: Liberty Island's laser tripwires drawn fainter than the original's
+  (drawn at all since the fractal textures; the original's frames on Xvfb
+  lack a fair brightness: [lasers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#particles-and-lasers-render-iterators)),
   coronas smaller and dimmer than the original's and one at the frame's edge
   missing ([coronas](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#coronas)), the zone reverb ringing a
   third as long and the pan hard where the original's is soft
