@@ -42,7 +42,7 @@ no facts of its own beyond those; each lives in one doc, and the
   often) on and 853×480 (2026-09-23), which the fight's native rows switch to
   native for the run. It has no battery (its battery
   warnings are off: [its Gotchas](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#gotchas)).
-- **The game's DLLs**: both passes are read (2026-09-24;
+- **The game's DLLs**: four passes are read (the last 2026-09-27;
   [decided 4](#decided)). [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info)
   covers each binary read, and an IDA database gets three scripts from its
   `tools/ida/` (types, strings, names).
@@ -50,7 +50,7 @@ no facts of its own beyond those; each lives in one doc, and the
     [`network.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/network.md)), **`Core.dll`**, **`Extension.dll`**,
     **`ConSys.dll`**, **`DeusExText.dll`**, **`Render.dll`** (where a
     feature's drawing lives there, its mesh detail and lighting),
-    **`IpDrv.dll`** and **`Galaxy.dll`**
+    **`IpDrv.dll`**, **`Galaxy.dll`**, **`D3DDrv.dll`** and **`Fire.dll`**
     ([`deusex-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/deusex-dll.md),
     [`engine-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md),
     [`core-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md),
@@ -59,7 +59,9 @@ no facts of its own beyond those; each lives in one doc, and the
     [`deusextext-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/deusextext-dll.md),
     [`render-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/render-dll.md),
     [`ipdrv-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/ipdrv-dll.md),
-    [`galaxy-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/galaxy-dll.md)); their databases are typed,
+    [`galaxy-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/galaxy-dll.md),
+    [`d3ddrv-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/d3ddrv-dll.md),
+    [`fire-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/fire-dll.md)); their databases are typed,
     named and backed up.
   - **What Surreal lacks** of them is VibeEngine's
     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md),
@@ -96,8 +98,10 @@ no facts of its own beyond those; each lives in one doc, and the
   coronas smaller and dimmer than the original's and one at the frame's edge
   missing ([coronas](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#coronas)), the zone reverb ringing a
   third as long and the pan hard where the original's is soft
-  ([sound](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#sound)), and `SetLocation`'s fitting in
-  ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)).
+  ([sound](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#sound)), `SetLocation`'s fitting in
+  ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)),
+  and the weapon in hand higher and smaller in a 16:9 view than the
+  original's ([the fractal textures' check](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#fire-water-and-ice-textures)).
   What remains of the milestones is by hand: the checks in
   [open decision 1](#open-decisions), the sound's heard with real audio,
   which the distrobox reaches now
@@ -213,9 +217,12 @@ no facts of its own beyond those; each lives in one doc, and the
      detail textures, each pass's blending
      ([`d3ddrv-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/d3ddrv-dll.md)); the reimplemented look is
      judged against it.
+   - **The fourth** (done, 2026-09-27): `Fire.dll` -- the fire, water and
+     ice textures, once the Dragon's Tooth's blade showed them wrong
+     ([`fire-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/fire-dll.md)); checked against its own
+     routines run in an emulator.
    - **Only if a need comes up**: `SoftDrv.dll` (a
-     software renderer, decided 3), `Fire.dll` (fire, water and ice
-     textures), `WinDrv.dll` (mouse and keyboard), and the owner's copied
+     software renderer, decided 3), `WinDrv.dll` (mouse and keyboard), and the owner's copied
      `ALAudio.dll` for what the original lacks (an EFX take on the reverb,
      HRTF; [what it is](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#the-binaries)). **Not at all**:
      `Editor.dll`, `Window.dll`, the Glide, Metal and SGL drivers,
@@ -335,7 +342,11 @@ no facts of its own beyond those; each lives in one doc, and the
      an NPC under a street lamp, one walking from light into shadow, and
      a fire's glow on a face, and a flickering sconce's wall, a pulsing
      light throbbing and a triggered light going dark with their shadows
-     still there, by [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting).
+     still there, by [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting);
+     the Dragon's Tooth in hand and on the ground, the flamethrower's
+     flame, the riot prod's arcs, the EMP grenade's blast, tear and poison
+     gas, the drunk effect, a burning NPC, a laser sight's spot and water,
+     by [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#fire-water-and-ice-textures).
      Multiplayer: a game hosted from the Host screen and joined from the
      original on another machine -- its Join LAN screen listing the server
      --, by [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer) (the game's own ini
