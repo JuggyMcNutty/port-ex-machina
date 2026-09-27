@@ -107,11 +107,6 @@ no facts of its own beyond those; each lives in one doc, and the
     original's linker makes exports by
     ([mods](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#mods)) -- whether the original loads a
     fork save whole is to check;
-  - the fork's `vec4` inequality
-    (`engine/SurrealEngine/SurrealEngine/Math/vec.h`), which tests the
-    fourth component for equality -- which the render devices' screen-flash
-    test leans on, its values' fourth components not those it compares
-    with;
   - a live mode for the harness, whose consoles every server's game
     disconnects -- it wants the stock console -- (so far a run takes the
     stock console and a temporary hook: VibeEngine's
@@ -123,11 +118,10 @@ no facts of its own beyond those; each lives in one doc, and the
   [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md) says what changed and what stays the
   fork's own). The captures left potential work, in no order, each under its
   feature: Liberty Island's laser tripwires drawn fainter than the original's
-  (drawn at all since the fractal textures; the original's frames on Xvfb
-  lack a fair brightness: [lasers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#particles-and-lasers-render-iterators)),
-  coronas' faint outer glow dimmer than the original's frames on Xvfb show
-  it -- their colour and lights now the original's
-  ([coronas](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#coronas)) --, the zone reverb ringing a
+  (drawn at all since the fractal textures), over surfaces the fork draws
+  brighter than the original's frames show them -- 3.7 to 4 times in
+  linear terms there, about 2.2 times outdoors, the frames' own gamma taken
+  out ([lasers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#particles-and-lasers-render-iterators)) --, the zone reverb ringing a
   third as long and the pan hard where the original's is soft
   ([sound](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#sound)), `SetLocation`'s fitting in
   ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)),
