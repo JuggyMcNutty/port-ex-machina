@@ -926,13 +926,32 @@ possessed by a Player object for its connection. Checked with the original as
 the client: it joined the fork's DXMP_Cathedral and the fork spawned its
 player.
 
+The fork's server replicates (2026-09-26): each tick, before the packets go,
+each client is sent what [the original's server](network.md#replication)
+would send it -- the viewer, the actors due, their priority and relevancy,
+channels opened and closed, and each actor's changed values against what
+that client last got, with the original's roles, temporaries and resends --,
+and what a client sends is taken only as the original's server takes it. A
+client's pawn on the server runs its state code and timers, moving by the
+client's moves; the animation natives pack `SimAnim` for clients; the local
+player's pawn is simulated on clients, as the original spawns it. Every
+replicated value goes through its script replication statement, where the
+original replicates eight engine classes' values by native lists instead
+(not yet compared with their statements). Checked with the original as the
+client: it was welcomed, possessed its pawn, saw the map's actors and the
+host's player walking to and fro in front of it, and walked; the fork's
+server moved its pawn by its moves. At the client's default 2,600 bytes a
+second one actor goes a tick, so its own `PlayerReplicationInfo` came some
+8 s in, behind the map's weapons -- the order the original's priorities give --
+and the original's `ReplicateMove` read the missing one's `Ping` meanwhile.
+
 Not yet, of a client: downloads (a package missing or different from the
 server's ends the join) and the world-stats checksum (`NoChecksum` always).
-Of a server: replication out -- the original's client waits in vain for its
-pawn --, its calls to clients, the `ServerActors` (the beacon, the query
-answerer, the uplinks), travel, and serving downloads. Each bunch goes on its
-own: the original merges one into the last when both are the same channel's,
-which only saves bits.
+Of a server: its calls to clients (the corrections `ClientAdjustPosition`
+sends among them, so a client's place drifts a few units from the server's),
+the `ServerActors` (the beacon, the query answerer, the uplinks), travel,
+and serving downloads. Each bunch goes on its own: the original merges one
+into the last when both are the same channel's, which only saves bits.
 
 The scripts' sockets are the original's now (2026-09-26,
 [the script's links](ipdrv-dll.md#the-scripts-links)): `InternetLink`'s

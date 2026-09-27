@@ -3,15 +3,43 @@
 // deathmatch on DXMP_Cathedral, started from the menu map as the game's Host
 // screen starts one, never on the master servers' lists (the run's ini has
 // no uplink). While serving, once another player is in, the host's own
-// player stands 300 units in front of it, turned across its view, and walks
-// 2 s, stands 2 s and turns about, over and over, for the client to watch;
-// where each player stands is logged every 2 s. Exits after 290 s.
+// player stands in its sight -- 300 units in front of it, or the nearest
+// free spot round it -- turned across its view, and walks 2 s, stands 2 s
+// and turns about, over and over, for the client to watch; where each
+// player stands is logged every 2 s. Exits after 290 s.
 //=============================================================================
 class ServeConsole extends Console;
 
 var float CapTime, LogTime, WalkTime;
 var int Phase;
 var bool bPlaced;
+
+// The first free spot in the other player's line of sight: 300 units ahead
+// of it, then nearer, then turning an eighth at a time.
+function bool PlaceBefore(PlayerPawn P, PlayerPawn Other)
+{
+	local int Turn, Dist;
+	local rotator R;
+	local vector Spot;
+
+	for (Turn = 0; Turn < 8; Turn++)
+	{
+		R = Other.Rotation;
+		R.Pitch = 0;
+		R.Yaw += Turn * 8192;
+		for (Dist = 300; Dist >= 150; Dist -= 50)
+		{
+			Spot = Other.Location + Dist * vector(R);
+			if (P.FastTrace(Spot, Other.Location) && P.SetLocation(Spot))
+			{
+				P.ViewRotation.Yaw = R.Yaw + 16384;
+				P.SetRotation(P.ViewRotation);
+				return true;
+			}
+		}
+	}
+	return false;
+}
 
 event Tick(float Delta)
 {
@@ -40,10 +68,8 @@ event Tick(float Delta)
 		{
 			foreach P.AllActors(class'PlayerPawn', Other)
 			{
-				if (Other != P && P.SetLocation(Other.Location + 300 * vector(Other.Rotation)))
+				if (Other != P && PlaceBefore(P, Other))
 				{
-					P.ViewRotation.Yaw = Other.Rotation.Yaw + 16384;
-					P.SetRotation(P.ViewRotation);
 					Log("DXCAP: host placed at " $ P.Location $ " before " $ Other.Location);
 					bPlaced = true;
 					WalkTime = 0.0;

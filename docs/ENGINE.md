@@ -835,3 +835,12 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   `SpawnPlayActor`; a URL's last option no longer dropped
   ([multiplayer](re/natives.md#multiplayer)). **Checked:** the original
   joined the fork's server and got its player spawned.
+- [**the server replicates**](https://github.com/JuggyMcNutty/SurrealEngine/commit/09e7b0d8091f6643d68ce4531fd9165e530febbd) --
+  each client sent what the original's server sends it: the viewer, the
+  actors due, priority, relevancy, channels, and each actor's changed values
+  against what that client last got; a client's sends taken as the
+  original's server takes them; a client's pawn ticked as the original's
+  server ticks it; `SimAnim` packed by the animation natives
+  ([multiplayer](re/natives.md#multiplayer)). **Checked:** the original
+  joined the fork's server, possessed its pawn, saw the map's actors and
+  the host's player walking, and walked on the server.

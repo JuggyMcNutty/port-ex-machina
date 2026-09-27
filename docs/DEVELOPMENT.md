@@ -99,7 +99,8 @@ The console classes:
 - **`ServeConsole`**, either engine: a listen server for the other to join -- a
   deathmatch on DXMP_Cathedral, never on the master servers' lists (the
   run's ini has no uplink). Once another player is in, the host's own player
-  stands in front of it and walks to and fro across its view; where each
+  stands in its sight -- in front of it where there is room -- and walks to
+  and fro across its view; where each
   player stands is logged every 2 s. It exits after 290 s: give the
   original's run 300 s (`scripts/dxcap.sh original ServeConsole 300`).
 - **`JoinConsole`**, either engine: the joining side -- from the menu map it

@@ -208,6 +208,8 @@ be.
 - [x] Remote functions and the player's moves: playing on a live server
       (2026-09-26; on the original's listen server, the live servers still
       to try).
-- [ ] The server: accepting, relevancy and priority, replication out --
-      the original joining the fork.
+- [x] The server: accepting, relevancy and priority, replication out --
+      the original joining the fork (2026-09-26).
+- [ ] The server's calls to its clients: `ClientAdjustPosition`'s
+      corrections among them, and the `ServerActors`.
 - [ ] The uplink: a fork server on the master servers' lists.

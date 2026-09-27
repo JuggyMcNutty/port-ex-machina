@@ -59,8 +59,13 @@ no facts of its own beyond those; each lives in one doc, and the
 - **Next**: multiplayer, M7 (the owner's ask, 2026-09-26;
   [decided 5](#decided)): the fork joins a server and plays on it -- the
   original's listen server, so far; a live server is yet to try --; as a
-  server it takes the original's join and spawns its player, and replicating
-  to it is next.
+  server it takes the original's join and replicates the level to it, and
+  its calls to clients (the position corrections among them) are next.
+  Potential work it left, in no order: comparing the original's native
+  replication lists with the script statements the fork evaluates for them
+  ([multiplayer](docs/re/natives.md#multiplayer)), and the fork's `vec4`
+  inequality (`engine/SurrealEngine/SurrealEngine/Math/vec.h`), which tests the fourth component for equality
+  -- so the render devices' screen-flash test always passes.
   The reimplementation's milestones are done -- M0 through M6 all in
   (2026-09-26, M0's acceptance captures last;
   [`docs/ROADMAP.md`](docs/ROADMAP.md) tracks each item, and
