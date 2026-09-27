@@ -73,8 +73,8 @@ no facts of its own beyond those; each lives in one doc, and the
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/android/ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
-- **Next** ([decided 8](#decided)): the rest of M7, then the engine's
-  stability and features; the ports and the open decisions wait.
+- **Next** ([decided 8](#decided)): the engine's stability and features, M7
+  finished (2026-09-27); the ports and the open decisions wait.
   **M7, multiplayer** (the owner's ask, 2026-09-26;
   [decided 5](#decided)): the fork joins a server and plays on it -- the
   original's listen server, and live servers since the owner's go-ahead
@@ -86,13 +86,10 @@ no facts of its own beyond those; each lives in one doc, and the
   items are all in (2026-09-27,
   [`ROADMAP.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ROADMAP.md#m7----multiplayer)); its by-hand check
   waits with the open decisions ([open decision 1](#open-decisions)). What
-  it left is being finished (owner, 2026-09-27: "finish all of M7"):
-  - moving on a live server, not yet tried
-    ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer));
-  - a live mode for the harness, whose consoles every server's game
-    disconnects -- it wants the stock console -- (so far a run takes the
-    stock console and a temporary hook: VibeEngine's
-    [`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
+  it left is finished too (owner, 2026-09-27: "finish all of M7"; the last
+  of it the same day: a walk on a live server, by the harness's live mode --
+  VibeEngine's
+  [`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
 
   The reimplementation's milestones are done -- M0 through M6 all in
   (2026-09-26, M0's acceptance captures last;
