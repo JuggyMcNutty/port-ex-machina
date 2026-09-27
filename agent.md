@@ -10,19 +10,21 @@ no facts of its own beyond those; each lives in one doc, and the
 - **The repository** is on `main`, public at
   https://github.com/JuggyMcNutty/port-ex-machina. Its history was rewritten
   before publishing (2026-09-22) to drop the game's files and a personal email
-  address. **Unpushed** (2026-09-26): every commit since M6 began, in both
-  `main` and the fork's `deusex` (`git log origin/main..main` lists them);
-  `ENGINE-PIN.txt` names an unpushed fork commit, so the fork goes first.
-  Pushing is the owner's call.
+  address. Both it and the fork are pushed (2026-09-26, the owner's go-ahead
+  each time).
 - **The launcher** runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2).
 - **The engine** is our own fork repository
   (https://github.com/JuggyMcNutty/SurrealEngine, branch `deusex`), pinned by
-  `ENGINE-PIN.txt`; the patch stack was retired into it (2026-09-24). It holds
-  upstream's latest when last merged (2026-09-24); whether and when to merge
-  newer upstream commits (`scripts/engine.sh status`, then `upgrade`) is the
-  owner's call. The profiling hooks are off, and the desktop build is at the
-  pin (2026-09-26).
+  `ENGINE-PIN.txt`; the patch stack was retired into it (2026-09-24). The
+  owner renamed it on GitHub to https://github.com/JuggyMcNutty/VibeEngine
+  (2026-09-26); the old address redirects, and the clone's remote,
+  `ENGINE-PIN.txt`'s `repo` line and the docs' links still name the old one
+  until the owner has the remote repointed (then all three change
+  together). It holds upstream's latest when last merged (2026-09-24);
+  whether and when to merge newer upstream commits (`scripts/engine.sh
+  status`, then `upgrade`) is the owner's call. The profiling hooks are off,
+  and the desktop build is at the pin (2026-09-26).
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
   app ran the engine into the intro level on the development PC, and
   unattended runs drove saves, loads and hub travel through in play
