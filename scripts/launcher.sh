@@ -2,8 +2,9 @@
 # The launcher: deusex-launcher, our own repository. Its main branch recreates
 # the original launcher; every other branch is a port. LAUNCHER-PIN.txt names
 # the repository and, per port, the commit this workspace builds. The clone is
-# launcher/main, with a worktree per port in launcher/<port> (on the branch of
-# that name), each with the workspace's deps/ and gamefiles/ linked in.
+# deusex-launcher/main, beside this repository, with a worktree per port in
+# deusex-launcher/<port> (on the branch of that name), each with deps/ and
+# gamefiles/ linked in.
 #
 #   scripts/launcher.sh fetch                 clone it, and check out main and each pinned port (if absent)
 #   scripts/launcher.sh check                 each port's worktree is at its pin, on its branch
@@ -14,20 +15,21 @@
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
-LAUNCHER_DIR="$DX_ROOT/launcher"
-PIN_FILE="$DX_ROOT/LAUNCHER-PIN.txt"
+LAUNCHER_DIR="$DX_LAUNCHER"
+PIN_FILE="$DX_WORKSPACE/LAUNCHER-PIN.txt"
 MAIN="$LAUNCHER_DIR/main"
 
 [ -f "$PIN_FILE" ] || die "no LAUNCHER-PIN.txt at the workspace root"
 repo_url() { awk '$1 == "repo" { print $2 }' "$PIN_FILE"; }
 pinned() { awk -v k="$1" '$1 == "port" && $2 == k { print $3 }' "$PIN_FILE"; }
 
-usage() { sed -n '2,13p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,14p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 need_clone() { [ -d "$MAIN/.git" ] || die "no launcher clone -- scripts/launcher.sh fetch"; }
 
 # A port's toolchain files find deps/ beside its sources, and test_gamefiles
-# finds gamefiles/ there: both are the workspace's. Each checkout's build/ is
-# its own (a device's host build and the desktop's would otherwise share one).
+# finds gamefiles/ there: both are the ones beside the repositories, two levels
+# up. Each checkout's build/ is its own (a device's host build and the
+# desktop's would otherwise share one).
 link_workspace() {
     ln -sfn ../../deps "$1/deps"
     ln -sfn ../../gamefiles "$1/gamefiles"
@@ -50,7 +52,7 @@ cmd_fetch() {
             git -C "$MAIN" fetch --quiet origin
             git -C "$MAIN" worktree add -q -B "$p" "$wt" "$(pinned "$p")"
             git -C "$wt" branch -q --set-upstream-to "origin/$p"
-            say "launcher/$p ready ($(git -C "$wt" rev-parse --short HEAD))"
+            say "deusex-launcher/$p ready ($(git -C "$wt" rev-parse --short HEAD))"
         fi
         link_workspace "$wt"
     done
@@ -62,15 +64,15 @@ cmd_check() {
     for p in $(dx_ports); do
         wt="$LAUNCHER_DIR/$p"
         if [ ! -e "$wt/.git" ]; then
-            echo "FAIL launcher/$p is missing -- scripts/launcher.sh fetch" >&2
+            echo "FAIL deusex-launcher/$p is missing -- scripts/launcher.sh fetch" >&2
             rc=1; continue
         fi
         want="$(pinned "$p")"
         head="$(git -C "$wt" rev-parse HEAD)"
         if [ "$head" = "$want" ]; then
-            echo "OK   launcher/$p is at its pin: $(git -C "$wt" log -1 --format='%h %s')"
+            echo "OK   deusex-launcher/$p is at its pin: $(git -C "$wt" log -1 --format='%h %s')"
         else
-            echo "FAIL launcher/$p is not at its pin" >&2
+            echo "FAIL deusex-launcher/$p is not at its pin" >&2
             echo "     pinned ${want:0:7}, HEAD $(git -C "$wt" log -1 --format='%h %s')" >&2
             if git -C "$wt" merge-base --is-ancestor "$want" "$head" 2>/dev/null; then
                 echo "     HEAD is $(git -C "$wt" rev-list --count "$want..$head") commits past the pin -- scripts/launcher.sh pin $p records it" >&2
@@ -78,11 +80,11 @@ cmd_check() {
             rc=1
         fi
         if [ "$(git -C "$wt" rev-parse --abbrev-ref HEAD)" != "$p" ]; then
-            echo "FAIL launcher/$p is not on its branch" >&2
+            echo "FAIL deusex-launcher/$p is not on its branch" >&2
             rc=1
         fi
         dirty=$(git -C "$wt" status --porcelain --untracked-files=no)
-        [ -z "$dirty" ] || say "note: uncommitted changes in launcher/$p:"$'\n'"$dirty"
+        [ -z "$dirty" ] || say "note: uncommitted changes in deusex-launcher/$p:"$'\n'"$dirty"
     done
     return "$rc"
 }
@@ -113,15 +115,15 @@ cmd_pin() {
         return
     fi
     local wt="$LAUNCHER_DIR/$p"
-    [ -e "$wt/.git" ] || die "no launcher/$p -- scripts/launcher.sh fetch"
-    [ "$(git -C "$wt" rev-parse --abbrev-ref HEAD)" = "$p" ] || die "launcher/$p is not on its branch"
+    [ -e "$wt/.git" ] || die "no deusex-launcher/$p -- scripts/launcher.sh fetch"
+    [ "$(git -C "$wt" rev-parse --abbrev-ref HEAD)" = "$p" ] || die "deusex-launcher/$p is not on its branch"
     [ -z "$(git -C "$wt" status --porcelain --untracked-files=no)" ] ||
-        die "uncommitted changes in launcher/$p -- commit them first"
+        die "uncommitted changes in deusex-launcher/$p -- commit them first"
     local head tmp
     head="$(git -C "$wt" rev-parse HEAD)"
     git -C "$wt" fetch --quiet origin
     git -C "$wt" merge-base --is-ancestor "$head" "origin/$p" 2>/dev/null ||
-        die "launcher/$p's HEAD is not on origin/$p -- push it first, or fetch cannot reproduce this pin"
+        die "deusex-launcher/$p's HEAD is not on origin/$p -- push it first, or fetch cannot reproduce this pin"
     tmp="$(mktemp)"
     awk -v k="$p" -v c="$head" '
         $1 == "port" && $2 == k { printf "port    %-16s %s\n", k, c; done = 1; next }

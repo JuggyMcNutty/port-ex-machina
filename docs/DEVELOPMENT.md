@@ -17,42 +17,50 @@ compiler.
 
 ## The repositories
 
-This one is the workspace; the other three are checked out inside it, each
-ignored by it (as are `build/`, `deps/`, `gamefiles/` and `reference/`):
+Each is a folder of its own in one parent folder, none inside another, beside
+what none of them owns: `gamefiles/`, `reference/`, `deps/` and `build/`
+([the README's layout](../README.md#layout)). This one is the workspace: its
+scripts find the others as its siblings (`DX_ROOT` in `scripts/lib/common.sh`
+is the parent), and `dx.sh fetch` clones them there.
 
-| Checkout | Repository | Kept at |
+| Folder | Repository | Kept at |
 |---|---|---|
-| `launcher/main`, and `launcher/<port>` for each port | [deusex-launcher](https://github.com/JuggyMcNutty/deusex-launcher): `main` the original recreated, a branch per port | `LAUNCHER-PIN.txt`: each port's commit; `scripts/launcher.sh` fetches, checks and pins them |
-| `engine/SurrealEngine` | [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine), branch `deusex` | `ENGINE-PIN.txt`: one commit; `scripts/engine.sh` fetches, checks and pins it |
-| `re/` | [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) | not pinned: docs and IDA scripts |
+| `port-ex-machina/` | this one, the workspace | -- |
+| `deusex-launcher/main`, and `deusex-launcher/<port>` for each port | [deusex-launcher](https://github.com/JuggyMcNutty/deusex-launcher): `main` the original recreated, a branch per port | `LAUNCHER-PIN.txt`: each port's commit; `scripts/launcher.sh` fetches, checks and pins them |
+| `VibeEngine/` | [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine), branch `deusex` | `ENGINE-PIN.txt`: one commit; `scripts/engine.sh` fetches, checks and pins it |
+| `dx-reverse-info/` | [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) | not pinned: docs and IDA scripts |
 
-`launcher/main` is the clone; each port is a worktree of it, on the branch of
-its name, with the workspace's `deps/` and `gamefiles/` linked in. Its launcher
-builds inside it (`launcher/<port>/build/`); the engine and the staged app go
-to the workspace's `build/<port>/`. A change to the launcher or the engine is
+`deusex-launcher/main` is the clone; each port is a worktree of it, on the
+branch of its name, with `deps/` and `gamefiles/` linked in. Its launcher
+builds inside it (`deusex-launcher/<port>/build/`); the engine and the staged
+app go to `build/<port>/`. A change to the launcher or the engine is
 committed in its repository, pushed, then pinned here (`launcher.sh pin
 <port>`, `engine.sh pin`), and the pin committed with whatever depends on it.
 
 ## Cold start
 
-Nothing depends on state from a previous session:
+Nothing depends on state from a previous session. In this repository, cloned
+into a folder of its own ([the README's quick start](../README.md#quick-start)):
 
 ```sh
-scripts/dx.sh fetch            # the engine, the launcher's branches and the RE
+scripts/dx.sh fetch            # the engine, the launcher's branches and the RE, beside it
 scripts/dx.sh deps <port>      # toolchains and sysroots (the Smart Pro's needs the device awake)
 scripts/dx.sh build <port>     # then stage and run -- or deploy, which builds and stages first
 scripts/dx.sh test [<port>]    # unit tests: linux-x86_64's, or a device branch's host build
 scripts/dx.sh check            # the drift guards
 ```
 
-For engine work, `engine/SurrealEngine/vibe/tools/host-tools.sh` unpacks `perf`
-and the Vulkan validation layer.
+For engine work, `VibeEngine/vibe/tools/host-tools.sh` unpacks `perf` and the
+Vulkan validation layer.
 
 ## This machine
 
 Claude runs in an Arch Linux distrobox on a Fedora Atomic host: `/home` here is
 `/var/home` there, and paths configured in one differ from the other (the old
-CMake caches, the engine's embedded source paths). The container has
+CMake caches, the engine's embedded source paths). Claude Code starts in the
+parent folder (`~/Documents/projects/deusex`), which reaches every repository;
+its `ida` MCP server is registered for that folder
+([dx-reverse-info's README](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)). The container has
 `libpipewire`/`libpulse` (installed 2026-09-25, for M5's audio work), so the
 engine reaches the desktop's audio -- a test run is audible on the owner's
 speakers as well as visible on their screen. The null OpenAL driver remains

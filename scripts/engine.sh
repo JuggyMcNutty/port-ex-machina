@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# The engine: engine/SurrealEngine, a clone of VibeEngine, our fork of
-# dpjudas/SurrealEngine. ENGINE-PIN.txt (repo, branch, commit) names the one
-# commit this workspace builds.
+# The engine: VibeEngine, our fork of dpjudas/SurrealEngine, cloned beside
+# this repository in VibeEngine/. ENGINE-PIN.txt (repo, branch, commit) names
+# the one commit this workspace builds.
 #
 #   scripts/engine.sh fetch                   clone the fork at the pin (if absent)
 #   scripts/engine.sh build <port>            build/<port>/engine from the port's engine.cmake
@@ -14,8 +14,8 @@
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
-ENGINE_DIR="${ENGINE_DIR:-$DX_ROOT/engine/SurrealEngine}"
-PIN_FILE="$DX_ROOT/ENGINE-PIN.txt"
+ENGINE_DIR="${ENGINE_DIR:-$DX_ENGINE}"
+PIN_FILE="$DX_WORKSPACE/ENGINE-PIN.txt"
 UPSTREAM="https://github.com/dpjudas/SurrealEngine.git"
 
 [ -f "$PIN_FILE" ] || die "no ENGINE-PIN.txt at the repository root"
@@ -60,10 +60,10 @@ cmd_build() {
     local port="${1:-}"
     [ -n "$port" ] || die "which port?"
     # The port's files are on its launcher branch (scripts/launcher.sh fetch).
-    local src="$DX_ROOT/launcher/$port"
+    local src="$DX_LAUNCHER/$port"
     local pdir="$src/ports/$port"
     local cfg="$pdir/engine.cmake"
-    [ -f "$pdir/port.sh" ] || die "no port '$port' in launcher/$port -- scripts/launcher.sh fetch"
+    [ -f "$pdir/port.sh" ] || die "no port '$port' in deusex-launcher/$port -- scripts/launcher.sh fetch"
     # port.sh decides whether the engine builds for this port on this machine.
     local ships; ships=$(PORT_ENGINE=0; . "$pdir/port.sh"; echo "$PORT_ENGINE")
     [ "$ships" = 1 ] && [ -f "$cfg" ] || die "port $port does not build the engine here -- see its ports/$port/README.md"
@@ -86,7 +86,7 @@ cmd_check() {
     local want head rc=0
     want="$(pinned commit)"
     eng cat-file -e "$want^{commit}" 2>/dev/null ||
-        die "the pinned commit $want is not in the clone -- git -C engine/SurrealEngine fetch origin"
+        die "the pinned commit $want is not in the clone -- git -C $ENGINE_DIR fetch origin"
     head="$(eng rev-parse HEAD)"
     if [ "$head" = "$want" ]; then
         echo "OK   the clone is at the pin: $(eng log -1 --format='%h %s')"
@@ -157,8 +157,8 @@ case "$cmd" in
     check)  cmd_check ;;
     status) cmd_status ;;
     pin)    cmd_pin ;;
-    upgrade) die "moved: engine/SurrealEngine/vibe/tools/upgrade.sh" ;;
-    perf)   die "moved: engine/SurrealEngine/vibe/tools/perf/perf.sh" ;;
+    upgrade) die "moved: VibeEngine/vibe/tools/upgrade.sh" ;;
+    perf)   die "moved: VibeEngine/vibe/tools/perf/perf.sh" ;;
     export) die "retired: the fork is its own repository -- commit there, push, then scripts/engine.sh pin" ;;
     -h|--help|help) usage ;;
     *)      die "unknown command '$cmd' (scripts/engine.sh help)" ;;

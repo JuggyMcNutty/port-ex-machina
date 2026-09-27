@@ -38,7 +38,13 @@ things stand.
 
 ## Quick start
 
+Each repository gets a folder of its own in one parent folder, so clone this
+one into an empty folder; `fetch` puts the others beside it
+([layout](#layout)).
+
 ```sh
+mkdir deusex && cd deusex                  # the parent folder: any name
+git clone https://github.com/JuggyMcNutty/port-ex-machina.git && cd port-ex-machina
 scripts/dx.sh fetch                        # once: the engine, the launcher's port branches, the RE
 scripts/dx.sh test                         # unit tests (the base port's build)
 scripts/engine.sh status                   # how far upstream is past the fork
@@ -54,7 +60,8 @@ scripts/dx.sh check                        # drift guards: every repository's do
 ```
 
 Put the game files where the port's `launcher.ini` says (`GameDir`); a
-`linux-x86_64` app staged in this workspace points at `gamefiles/`.
+`linux-x86_64` app staged here points at the `gamefiles/` beside the
+repositories.
 
 ## Documentation
 
@@ -71,23 +78,32 @@ Put the game files where the port's `launcher.ini` says (`GameDir`); a
 
 ## Layout
 
-```
-agent.md             where things stand (session handoff)
-ENGINE-PIN.txt       the engine's version: VibeEngine's repository, branch and commit
-LAUNCHER-PIN.txt     the launcher's: deusex-launcher's repository, and each port's commit
-docs/                DEVELOPMENT, PORTING
-scripts/             dx.sh (the entry point), engine.sh, launcher.sh, check-docs.sh,
-                     lib/common.sh (shared with the ports' own scripts)
-tools/probes/        device probes (docs/PORTING.md)
+Every repository is a folder of its own in one parent folder, none inside
+another, beside what none of them owns. The parent is not versioned itself.
 
-build/               (ignored) build/<port>/{engine,app}
-deps/                (ignored) fetched toolchains and sysroots
-engine/              (ignored) VibeEngine, a clone (scripts/engine.sh)
-launcher/            (ignored) deusex-launcher: main, and a worktree per port (scripts/launcher.sh)
-re/                  (ignored) dx-reverse-info, a clone (scripts/dx.sh fetch)
-gamefiles/           (ignored) your Deus Ex install, for running on this machine and for test_gamefiles
-reference/           (ignored) the 1112f SDK, the DeusExe launcher source, IDA and ini backups
 ```
+deusex/                  the parent folder (any name)
+  port-ex-machina/       this repository:
+    agent.md               where things stand (session handoff)
+    ENGINE-PIN.txt         the engine's version: VibeEngine's repository, branch and commit
+    LAUNCHER-PIN.txt       the launcher's: deusex-launcher's repository, and each port's commit
+    docs/                  DEVELOPMENT, PORTING
+    scripts/               dx.sh (the entry point), engine.sh, launcher.sh, check-docs.sh,
+                           lib/common.sh (shared with the ports' and the engine's own scripts)
+    tools/probes/          device probes (docs/PORTING.md)
+  VibeEngine/            the engine, a clone (scripts/engine.sh)
+  deusex-launcher/       the launcher: main/, and a worktree per port (scripts/launcher.sh)
+  dx-reverse-info/       the RE, a clone (scripts/dx.sh fetch)
+  gamefiles/             your Deus Ex install: for running on this machine, test_gamefiles
+                         and the IDA databases
+  reference/             the 1112f SDK, the DeusExe launcher source, IDA and ini backups,
+                         the original's saves
+  deps/                  fetched toolchains and sysroots
+  build/                 build/<port>/{engine,app}, and the engine tools' own
+```
+
+A path in these docs that is not a repository's own is the parent folder's:
+`VibeEngine/vibe/tools`, `gamefiles/System`.
 
 ## License
 

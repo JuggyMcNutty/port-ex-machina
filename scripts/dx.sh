@@ -12,11 +12,12 @@
 #   scripts/dx.sh test    [<port>]            a port's host build + unit tests (default: linux-x86_64)
 #   scripts/dx.sh check                       every repository's docs, the pins, port files, ABI
 #
-# A port is a branch of the launcher, checked out in launcher/<port>
-# (scripts/launcher.sh); what it provides is in docs/PORTING.md.
+# A port is a branch of the launcher, checked out beside this repository in
+# deusex-launcher/<port> (scripts/launcher.sh); what it provides is in
+# docs/PORTING.md.
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
-export DX_ROOT DX_DEPS      # for the ports' own scripts (fetch-sysroot.sh)
+export DX_ROOT DX_WORKSPACE DX_DEPS   # for the ports' own scripts (fetch-sysroot.sh)
 
 RE_URL="https://github.com/JuggyMcNutty/dx-reverse-info.git"
 
@@ -26,10 +27,10 @@ load_port() {
     PORT="${1:-}"
     [ -n "$PORT" ] || die "which port? ($(dx_ports | tr '\n' ' '))"
     dx_ports | grep -qx -- "$PORT" || die "no port '$PORT' (have: $(dx_ports | tr '\n' ' '))"
-    SRC="$DX_ROOT/launcher/$PORT"
-    [ -e "$SRC/.git" ] || die "no launcher/$PORT -- scripts/launcher.sh fetch"
+    SRC="$DX_LAUNCHER/$PORT"
+    [ -e "$SRC/.git" ] || die "no deusex-launcher/$PORT -- scripts/launcher.sh fetch"
     PORT_DIR="$SRC/ports/$PORT"
-    [ -f "$PORT_DIR/port.sh" ] || die "launcher/$PORT has no ports/$PORT/port.sh"
+    [ -f "$PORT_DIR/port.sh" ] || die "deusex-launcher/$PORT has no ports/$PORT/port.sh"
     BUILD="$DX_ROOT/build/$PORT"
     LAUNCHER_BUILD="$SRC/build/$PORT/launcher"   # the port's preset builds in its checkout
     APP="$BUILD/app"
@@ -61,7 +62,7 @@ cmd_build() {
     case "$what" in
         all|engine)
             if [ "$PORT_ENGINE" = 1 ]; then
-                "$DX_ROOT/scripts/engine.sh" build "$PORT"
+                "$DX_WORKSPACE/scripts/engine.sh" build "$PORT"
             elif [ "$what" = engine ]; then
                 die "$PORT does not build the engine -- see its ports/$PORT/README.md"
             fi
@@ -111,8 +112,8 @@ cmd_stage() {
 # them, run there.
 cmd_test() {
     local p="${1:-linux-x86_64}"
-    local src="$DX_ROOT/launcher/$p"
-    [ -e "$src/.git" ] || die "no launcher/$p -- scripts/launcher.sh fetch"
+    local src="$DX_LAUNCHER/$p"
+    [ -e "$src/.git" ] || die "no deusex-launcher/$p -- scripts/launcher.sh fetch"
     cd "$src"
     cmake --preset linux-x86_64 >/dev/null
     cmake --build --preset linux-x86_64 -j"$(nproc)"
@@ -120,40 +121,40 @@ cmd_test() {
 }
 
 cmd_fetch() {
-    "$DX_ROOT/scripts/engine.sh" fetch
-    "$DX_ROOT/scripts/launcher.sh" fetch
-    if [ -d "$DX_ROOT/re/.git" ]; then
-        say "RE clone present: $DX_ROOT/re"
+    "$DX_WORKSPACE/scripts/engine.sh" fetch
+    "$DX_WORKSPACE/scripts/launcher.sh" fetch
+    if [ -d "$DX_RE/.git" ]; then
+        say "RE clone present: $DX_RE"
     else
-        git clone "$RE_URL" "$DX_ROOT/re"
-        git -C "$DX_ROOT/re" config user.name JuggyMcNutty
-        git -C "$DX_ROOT/re" config user.email 11588877+JuggyMcNutty@users.noreply.github.com
+        git clone "$RE_URL" "$DX_RE"
+        git -C "$DX_RE" config user.name JuggyMcNutty
+        git -C "$DX_RE" config user.email 11588877+JuggyMcNutty@users.noreply.github.com
     fi
 }
 
 cmd_check() {
     local rc=0 p
     say "== docs"
-    "$DX_ROOT/scripts/check-docs.sh" || rc=1
+    "$DX_WORKSPACE/scripts/check-docs.sh" || rc=1
 
     say "== engine pin"
-    if [ -d "$DX_ROOT/engine/SurrealEngine/.git" ]; then
-        "$DX_ROOT/scripts/engine.sh" check || rc=1
+    if [ -d "$DX_ENGINE/.git" ]; then
+        "$DX_WORKSPACE/scripts/engine.sh" check || rc=1
     else
         say "skipped: no engine clone (scripts/engine.sh fetch)"
     fi
 
     say "== launcher pins"
-    if [ -d "$DX_ROOT/launcher/main/.git" ]; then
-        "$DX_ROOT/scripts/launcher.sh" check || rc=1
+    if [ -d "$DX_LAUNCHER/main/.git" ]; then
+        "$DX_WORKSPACE/scripts/launcher.sh" check || rc=1
     else
         say "skipped: no launcher clone (scripts/launcher.sh fetch)"
     fi
 
     say "== ports"
     for p in $(dx_ports); do
-        local dir="$DX_ROOT/launcher/$p/ports/$p" f missing=""
-        [ -d "$DX_ROOT/launcher/$p" ] || continue
+        local dir="$DX_LAUNCHER/$p/ports/$p" f missing=""
+        [ -d "$DX_LAUNCHER/$p" ] || continue
         for f in port.cmake port.sh README.md; do
             [ -f "$dir/$f" ] || missing="$missing $f"
         done
@@ -165,7 +166,7 @@ cmd_check() {
 
     say "== ABI of staged cross builds"
     for p in $(dx_ports); do
-        local src="$DX_ROOT/launcher/$p" max bins=()
+        local src="$DX_LAUNCHER/$p" max bins=()
         [ -f "$src/ports/$p/port.cmake" ] || continue
         max=$(sed -n 's/^[[:space:]]*set(DXL_PORT_GLIBC_MAX[[:space:]]\{1,\}\([0-9.]\{1,\}\))/\1/p' "$src/ports/$p/port.cmake" | head -n 1)
         [ -n "$max" ] || continue
@@ -183,7 +184,7 @@ cmd_check() {
 cmd_ports() {
     local p
     for p in $(dx_ports); do
-        if [ -e "$DX_ROOT/launcher/$p/.git" ]; then
+        if [ -e "$DX_LAUNCHER/$p/.git" ]; then
             ( load_port "$p"; printf '%-18s %s\n' "$p" "$PORT_DESC" )
         else
             printf '%-18s %s\n' "$p" "(not checked out -- scripts/launcher.sh fetch)"
@@ -197,7 +198,7 @@ cmd_ports() {
 cmd_deploy() {
     cmd_build
     cmd_stage
-    local eng="$DX_ROOT/engine/SurrealEngine"
+    local eng="$DX_ENGINE"
     if [ "$PORT_ENGINE" = 1 ] && [ -d "$eng/.git" ] && ! git -C "$eng" diff --quiet HEAD -- . ':(exclude)vibe'; then
         say "warning: the engine has uncommitted changes (profiling hooks? vibe/tools/perf/perf.sh off) -- deploying them"
     fi

@@ -15,7 +15,8 @@ no facts of its own beyond those; each lives in one doc, and the
   [deusex-launcher](https://github.com/JuggyMcNutty/deusex-launcher); the
   engine, [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine); the RE,
   [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info). Each is
-  pushed with the owner's go-ahead.
+  a folder of its own beside the others ([the layout](README.md#layout)), and
+  each is pushed with the owner's go-ahead.
 - **The launcher** the ports run -- `linux-x86_64`'s branch, and the devices'
   from it -- runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2). `main`, the original recreated
@@ -26,10 +27,9 @@ no facts of its own beyond those; each lives in one doc, and the
   renamed from SurrealEngine by the owner, 2026-09-26, the old address
   redirecting), pinned by `ENGINE-PIN.txt`; the patch stack was retired into
   it (2026-09-24), and its docs and tools are its own `vibe/` (2026-09-27). It
-  holds upstream's latest when last merged (2026-09-24); upstream is 44
-  commits past it (2026-09-27), and whether and when to merge them
-  (`scripts/engine.sh status`, then the fork's `vibe/tools/upgrade.sh`) is
-  the owner's call. The profiling hooks are off.
+  holds upstream's latest when last merged (2026-09-24); upstream has moved
+  on since (`scripts/engine.sh status` says how far), and whether and when to
+  merge it (the fork's `vibe/tools/upgrade.sh`) is the owner's call. The profiling hooks are off.
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
   app ran the engine into the intro level on the development PC, and its
   launcher straight into Liberty Island (`DXL_NO_HOME=1`, 2026-09-27);
@@ -140,7 +140,7 @@ no facts of its own beyond those; each lives in one doc, and the
   applies at the fork's head -- its three-way merge conflicts in
   `LightSystem_Light.cpp`, `RenderScene.cpp` and `RenderSubsystem.cpp`, so it
   wants re-basing (`perf.sh on`, resolve, `save`) before the next device
-  profile; and upstream's 43 new commits (above).
+  profile; and upstream's new commits (above).
 
 ## Decided
 
@@ -267,8 +267,10 @@ no facts of its own beyond those; each lives in one doc, and the
    as it grew, and the devices' branches start from it
    ([`PORTING.md`](docs/PORTING.md)). The engine and everything about it --
    its docs, roadmap, what it lacks, its tools -- is VibeEngine's, in its
-   own `vibe/`. This repository is the workspace that builds the ports
-   ([the repositories](docs/DEVELOPMENT.md#the-repositories)).
+   own `vibe/`. This repository is the workspace that builds the ports. Each
+   of the four is a folder of its own in one parent folder, none inside
+   another (owner, 2026-09-27;
+   [the repositories](docs/DEVELOPMENT.md#the-repositories)).
 8. **The engine first** (owner, 2026-09-27). The porting work waits until
    the engine is more stable and has more of the game's features: the
    Smart Pro's performance (decided 2) with its device re-measures and the

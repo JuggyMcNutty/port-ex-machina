@@ -1,9 +1,15 @@
-# Shared by scripts/dx.sh, engine.sh and launcher.sh, by the ports' port.sh
-# files (on their launcher branches, sourced by dx.sh) and by the fork's
-# vibe/tools/host-tools.sh. Sourced, never run; expects bash with
+# Shared by scripts/dx.sh, engine.sh, launcher.sh and check-docs.sh, by the
+# ports' port.sh files (on their launcher branches, sourced by dx.sh) and by
+# the fork's vibe/tools/host-tools.sh. Sourced, never run; expects bash with
 # set -euo pipefail.
 
-DX_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+# The layout (docs/DEVELOPMENT.md#the-repositories): each repository in its
+# own folder of one parent, DX_ROOT, beside what none of them owns.
+DX_WORKSPACE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"   # this repository
+DX_ROOT="$(dirname "$DX_WORKSPACE")"
+DX_ENGINE="$DX_ROOT/VibeEngine"
+DX_LAUNCHER="$DX_ROOT/deusex-launcher"     # main/, and a worktree per port
+DX_RE="$DX_ROOT/dx-reverse-info"
 DX_DEPS="$DX_ROOT/deps"
 
 say() { printf '%s\n' "$*" >&2; }
@@ -11,7 +17,7 @@ die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
 # The ports are the ones LAUNCHER-PIN.txt pins: each a branch of the launcher.
 dx_ports() {
-    awk '$1 == "port" { print $2 }' "$DX_ROOT/LAUNCHER-PIN.txt"
+    awk '$1 == "port" { print $2 }' "$DX_WORKSPACE/LAUNCHER-PIN.txt"
 }
 
 # ---- devices over SSH -------------------------------------------------------

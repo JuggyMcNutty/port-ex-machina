@@ -5,35 +5,39 @@
 #
 #   scripts/check-docs.sh [-v]
 #
-# The docs checked: this repository's; dx-reverse-info's (re/); each branch of
-# deusex-launcher checked out in launcher/<branch>/; and VibeEngine's own (its
-# README and vibe/, not upstream's docs).
+# The checkouts are the ones beside this repository
+# (docs/DEVELOPMENT.md#the-repositories). The docs checked: this
+# repository's; dx-reverse-info's; each branch of deusex-launcher checked out
+# in deusex-launcher/<branch>/; and VibeEngine's own (its README and vibe/,
+# not upstream's docs).
 #
 # In each doc, the `inline code` spans and the link targets that look like
 # relative paths (they contain a "/") must resolve against, in order: the
 # doc's own directory; its checkout's root, src/, ports/*/packaging/ and
-# ports/*/; then the workspace's -- this repository, the engine clone
-# (engine/SurrealEngine), re/, each launcher checkout and its src/, and
+# ports/*/; then the workspace's -- the folder the repositories share (so
+# VibeEngine/..., gamefiles/... and reference/... resolve), this repository,
+# the engine clone, dx-reverse-info, each launcher checkout and its src/, and
 # gamefiles/ (the game install).
 #
 # A link to https://github.com/JuggyMcNutty/<repository>/(blob|tree)/<branch>/<path>
 # must name a path that exists in that repository's checkout here:
-# port-ex-machina at main is this one, dx-reverse-info at main is re/,
-# VibeEngine at deusex is engine/SurrealEngine, and deusex-launcher at
-# <branch> is launcher/<branch>/. A link to a VibeEngine commit must name one
-# the clone has.
+# port-ex-machina at main is this one, dx-reverse-info at main and VibeEngine
+# at deusex are their clones, and deusex-launcher at <branch> is
+# deusex-launcher/<branch>/. A link to a VibeEngine commit must name one the
+# clone has.
 #
 # A link with an #anchor to a markdown file (or to a heading of the doc itself)
 # must name one of that file's headings, as GitHub makes their ids: lower case,
 # punctuation dropped, spaces as "-", a repeated heading numbered -1, -2, ...
 #
-# engine/, launcher/, re/, gamefiles/ and reference/ are not in this
-# repository. When one is missing (a fresh clone), a path that resolves
-# nowhere, or a link into a checkout that is absent, is counted as
-# unverifiable rather than failed. The ALLOW list below names what exists only
-# at run time, inside an archive, or on the device.
+# The other checkouts, gamefiles/ and reference/ are not in this repository.
+# When one is missing (a fresh clone), a path that resolves nowhere, or a link
+# into a checkout that is absent, is counted as unverifiable rather than
+# failed. The ALLOW list below names what exists only at run time, inside an
+# archive, or on the device.
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+. "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
+ROOT="$DX_WORKSPACE"
 verbose=0; [ "${1:-}" = "-v" ] && verbose=1
 OWNER_URL="https://github.com/JuggyMcNutty"
 
@@ -50,17 +54,17 @@ ALLOW=(
     '^LookSensitivityX/Y$'            # the same, for two Settings.json members
 )
 
-ENGINE="$ROOT/engine/SurrealEngine"
+ENGINE="$DX_ENGINE"
 optional_missing=0
-for r in "$ENGINE" "$ROOT/gamefiles" "$ROOT/reference" "$ROOT/re" "$ROOT/launcher/main"; do
+for r in "$ENGINE" "$DX_ROOT/gamefiles" "$DX_ROOT/reference" "$DX_RE" "$DX_LAUNCHER/main"; do
     [ -e "$r" ] || optional_missing=1
 done
 
 # The checkouts, as "dir repository branch".
 checkouts=("$ROOT port-ex-machina main")
-[ -d "$ROOT/re/.git" ] && checkouts+=("$ROOT/re dx-reverse-info main")
+[ -d "$DX_RE/.git" ] && checkouts+=("$DX_RE dx-reverse-info main")
 [ -d "$ENGINE/.git" ] && checkouts+=("$ENGINE VibeEngine deusex")
-for d in "$ROOT"/launcher/*/; do
+for d in "$DX_LAUNCHER"/*/; do
     d="${d%/}"
     [ -e "$d/.git" ] && checkouts+=("$d deusex-launcher $(basename "$d")")
 done
@@ -77,8 +81,8 @@ checkout_of() {
 
 # The workspace's roots, after a doc's own: names relative to a port (as
 # packaging/ or target.c) resolve in any launcher checkout's ports.
-workspace=("$ROOT" "$ENGINE" "$ROOT/re" "$ROOT/gamefiles")
-for d in "$ROOT"/launcher/*/; do
+workspace=("$DX_ROOT" "$ROOT" "$ENGINE" "$DX_RE" "$DX_ROOT/gamefiles")
+for d in "$DX_LAUNCHER"/*/; do
     d="${d%/}"
     workspace+=("$d" "$d/src")
     for r in "$d"/ports/*/packaging "$d"/ports/*; do [ -d "$r" ] && workspace+=("$r"); done
@@ -186,7 +190,7 @@ for c in "${checkouts[@]}"; do
     [ -d "$co/src" ] && roots+=("$co/src")
     for r in "$co"/ports/*/packaging "$co"/ports/*; do [ -d "$r" ] && roots+=("$r"); done
     roots+=("${workspace[@]}")
-    where="${co#"$ROOT"/}"; [ "$co" = "$ROOT" ] && where="."
+    where="${co#"$DX_ROOT"/}"
 
     while IFS= read -r rec; do
         doc="${rec%%:*}"; rest="${rec#*:}"; line="${rest%%:*}"; rest="${rest#*:}"

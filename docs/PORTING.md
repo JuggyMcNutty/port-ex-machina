@@ -33,7 +33,7 @@ them.
 | The device profile | `src/platform/target.h`; `ports/<id>/target.c` | Data only: a port may supply one |
 | The OS: handing over to the game, the GPU probe | `src/platform/launch.h`, `src/platform/posix/` | Only for a non-POSIX platform (below) |
 | The screens | `src/ui/` (SDL2), from `linux-x86_64` | No |
-| The engine | VibeEngine in `engine/SurrealEngine`, pinned by `ENGINE-PIN.txt` | Built per port from its `ports/<id>/engine.cmake` |
+| The engine | VibeEngine, its clone beside the workspace in `VibeEngine/`, pinned by `ENGINE-PIN.txt` | Built per port from its `ports/<id>/engine.cmake` |
 | The app around the binaries | `ports/common/packaging/` (the base app, what linux-x86_64 ships) + `ports/<id>/packaging/` | The port's files are laid over the base |
 
 ## What a port is
@@ -57,9 +57,9 @@ name is the port id; it only adds the toolchain file for a cross port).
 ## The pipeline
 
 ```sh
-scripts/dx.sh fetch                # once: the engine, the launcher's branches (launcher/<port>), the RE
+scripts/dx.sh fetch                # once: the engine, the launcher's branches (deusex-launcher/<port>), the RE
 scripts/dx.sh deps   <port>        # port_deps: toolchains and sysroot into deps/
-scripts/dx.sh build  <port>        # the launcher's preset in launcher/<port>, then scripts/engine.sh build <port>
+scripts/dx.sh build  <port>        # the launcher's preset in deusex-launcher/<port>, then scripts/engine.sh build <port>
 scripts/dx.sh stage  <port>        # build/<port>/app, exactly what ships
 scripts/dx.sh deploy <port>        # build, stage, then port_deploy
 scripts/dx.sh run    <port>        # port_run
@@ -68,12 +68,13 @@ scripts/dx.sh test   [<port>]      # the port's host build and unit tests
 scripts/dx.sh check                # the drift guards (DEVELOPMENT.md)
 ```
 
-Each port's launcher builds in its own checkout, `launcher/<port>/build/`;
+Each port's launcher builds in its own checkout, `deusex-launcher/<port>/build/`;
 the engine goes to `build/<port>/engine`, and `build/<port>/app` is the staged
-result. Everything fetched lands in `deps/`: `deps/toolchains/<name>` is
-shared between ports, `deps/sysroots/<port>` is one device's; each launcher
-checkout links it in. All of it is ignored by git and can be deleted; `deps/`
-costs a download (and for a vendor sysroot, the device) to rebuild.
+result, both beside the repositories. Everything fetched lands in `deps/`,
+there too: `deps/toolchains/<name>` is shared between ports,
+`deps/sysroots/<port>` is one device's; each launcher checkout links it in.
+None of it is versioned and all of it can be deleted; `deps/` costs a download
+(and for a vendor sysroot, the device) to rebuild.
 
 Staging installs the binaries, copies the engine's `SurrealEngine`,
 `libSurrealVideo.so` and `SurrealEngine.pk3`, lays `ports/common/packaging` and
@@ -91,10 +92,10 @@ only when missing.
    (`probe-sdl.c --pad`); the screen size; the fonts on the system; what the
    device's own frontend expects an app to look like; how its CPU governor is
    managed.
-2. **Branch from linux-x86_64** (`git -C launcher/main worktree add -b <id>
-   ../<id> linux-x86_64`), and keep only what differs. A device running an
-   ordinary distro is often nothing more than a new name (`linux-aarch64` is
-   linux-x86_64 built for another architecture). For a vendor-firmware
+2. **Branch from linux-x86_64** (`git -C deusex-launcher/main worktree add -b
+   <id> ../<id> linux-x86_64`), and keep only what differs. A device running
+   an ordinary distro is often nothing more than a new name (`linux-aarch64`
+   is linux-x86_64 built for another architecture). For a vendor-firmware
    handheld -- cross-built against the device's own libraries, its own frontend
    and CPU modes -- `trimui-smartpro` shows what the differences look like.
 3. **Pick a toolchain whose glibc is at or below the device's** -- one newer
