@@ -955,10 +955,20 @@ stock one then ran as well -- and disconnected the scripted client, as the
 original's server would; the net tests' server game leaves it out
 ([the consoles](../DEVELOPMENT.md#scripted-runs-of-both-engines)).
 
+A listening fork spawns the `ServerActors` its ini lists (2026-09-26), as
+the original's listen does, and reports Deus Ex's engine version and the
+machine's name as the original does. Checked on this machine against the
+original: the LAN beacon's and the query answerer's replies were the
+original's word for word, but for the host name -- the original's empty,
+from the ini's `ServerName=`, the fork's the class default ("Another UT Demo
+Server"): the fork's ini reader takes an empty value for a missing one. The
+uplinks, which the game's own ini lists for three master servers, were not
+run: announcing a server to the master servers is the owner's call.
+
 Not yet, of a client: downloads (a package missing or different from the
 server's ends the join) and the world-stats checksum (`NoChecksum` always).
-Of a server: the `ServerActors` (the beacon, the query answerer, the
-uplinks), travel, and serving downloads. Each bunch goes on its own: the original merges one
+Of a server: the uplinks' first announcement (above), travel, and serving
+downloads. Each bunch goes on its own: the original merges one
 into the last when both are the same channel's, which only saves bits.
 
 The scripts' sockets are the original's now (2026-09-26,

@@ -851,3 +851,9 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   ([multiplayer](re/natives.md#multiplayer)). **Checked:** the original
   client got the server's calls and a position correction, and ended where
   the fork's server had it.
+- [**the server's `ServerActors`**](https://github.com/JuggyMcNutty/SurrealEngine/commit/77c37156542ba19f34ef2435837d0ab563a82271) --
+  a listening server spawns the game engine's `ServerActors` with their
+  settings; a URL's port defaults to `[URL]`'s; Deus Ex's engine and net
+  versions are 1100; the computer name is the machine's
+  ([multiplayer](re/natives.md#multiplayer)). **Checked:** the LAN beacon
+  and the query answerer replied as the original's, but for the host name.

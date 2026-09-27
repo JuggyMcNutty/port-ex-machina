@@ -212,5 +212,6 @@ be.
       the original joining the fork (2026-09-26).
 - [x] The server's calls to its clients: `ClientAdjustPosition`'s
       corrections among them (2026-09-26).
-- [ ] The `ServerActors`: the LAN beacon and the query answerer.
+- [x] The `ServerActors`: the LAN beacon and the query answerer
+      (2026-09-26).
 - [ ] The uplink: a fork server on the master servers' lists.

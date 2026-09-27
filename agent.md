@@ -59,13 +59,17 @@ no facts of its own beyond those; each lives in one doc, and the
 - **Next**: multiplayer, M7 (the owner's ask, 2026-09-26;
   [decided 5](#decided)): the fork joins a server and plays on it -- the
   original's listen server, so far; a live server is yet to try --; as a
-  server it takes the original's join, replicates the level to it and
-  calls it; the `ServerActors` are next.
+  server it takes the original's join, replicates the level to it, calls
+  it, and answers LAN and GameSpy queries as the original does. Next: the
+  uplink to the master servers and a live server -- both outward-facing, so
+  the owner's go-ahead first --, then server travel and downloads.
   Potential work it left, in no order: the fork's player standing 3.75
   units lower than the original's server has it, at rest (its X and Y
-  exact); comparing the original's native replication lists with the
-  script statements the fork evaluates for them
-  ([multiplayer](docs/re/natives.md#multiplayer)); and the fork's `vec4`
+  exact); the fork's ini reader taking an empty value (`ServerName=`) for a
+  missing one, so a fork server's name is the class default; comparing the
+  original's native replication lists with the script statements the fork
+  evaluates for them (both in [multiplayer](docs/re/natives.md#multiplayer));
+  and the fork's `vec4`
   inequality (`engine/SurrealEngine/SurrealEngine/Math/vec.h`), which tests
   the fourth component for equality -- so the render devices' screen-flash
   test always passes.
