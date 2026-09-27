@@ -35,8 +35,9 @@ no facts of its own beyond those; each lives in one doc, and the
   launcher straight into Liberty Island (`DXL_NO_HOME=1`, 2026-09-27);
   unattended runs drove saves, loads and hub travel through in play
   (2026-09-25).
-- **trimui-smartpro**: the game runs; the performance work is in progress
-  ([its Performance](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#performance)). The device
+- **trimui-smartpro**: the game runs; the performance work is on hold with
+  the ports ([decided 8](#decided);
+  [its Performance](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#performance)). The device
   has every patch up to 0034 in a build with the profiling hooks, Overclock;
   its owner's settings are Distant AI (characters out of sight think less
   often) on and 853×480 (2026-09-23), which the fight's native rows switch to
@@ -72,7 +73,9 @@ no facts of its own beyond those; each lives in one doc, and the
 - **linux-aarch64**: the launcher cross-builds; never run on a device.
 - **android**: planned; [its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/android/ports/android/README.md) is the plan.
 - **x360**: planned; nothing about it is worked out yet.
-- **Next**: multiplayer, M7 (the owner's ask, 2026-09-26;
+- **Next** ([decided 8](#decided)): the rest of M7, then the engine's
+  stability and features; the ports and the open decisions wait.
+  **M7, multiplayer** (the owner's ask, 2026-09-26;
   [decided 5](#decided)): the fork joins a server and plays on it -- the
   original's listen server, and live servers since the owner's go-ahead
   (2026-09-27): it downloads what it lacks, loads their mods and stays in
@@ -81,27 +84,39 @@ no facts of its own beyond those; each lives in one doc, and the
   master server as the original does, travels with its clients following
   (as they follow the original's), and runs dedicated (`--server`). M7's
   items are all in (2026-09-27,
-  [`ROADMAP.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ROADMAP.md#m7----multiplayer)); what remains is
-  its by-hand check ([open decision 1](#open-decisions)).
-  Potential work it left, in no order: the fork's player standing lower
-  than the original's server has it; the fork's ini reader taking an empty
-  value (`ServerName=`) for a missing one, so a fork server's name is the
-  class default; comparing the original's native replication lists with the
-  script statements the fork evaluates for them (all three in
-  [multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer)); the fork's `vec4`
-  inequality (`engine/SurrealEngine/SurrealEngine/Math/vec.h`), which tests
-  the fourth component for equality -- so the render devices' screen-flash
-  test always passes; a live mode for the harness, whose consoles every
-  server's game disconnects -- it wants the stock console -- (so far a run
-  takes the stock console and a temporary hook: VibeEngine's
-  [`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)); a package
-  a server sent staying loaded, so another server's package of that name
-  but another GUID fails the join as a version mismatch until the fork
-  restarts, where the original lets a map's packages go; and the fork's
-  saves writing spawned actors without the load flags the original's
-  linker makes exports by
-  ([mods](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#mods)) -- whether the original loads a fork
-  save whole is to check.
+  [`ROADMAP.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ROADMAP.md#m7----multiplayer)); its by-hand check
+  waits with the open decisions ([open decision 1](#open-decisions)). What
+  it left is being finished (owner, 2026-09-27: "finish all of M7"):
+  - moving on a live server, not yet tried;
+  - the fork's player standing lower than the original's server has it;
+  - the fork's ini reader taking an empty value (`ServerName=`) for a
+    missing one, so a fork server's name is the class default;
+  - comparing the original's native replication lists with the script
+    statements the fork evaluates for them;
+  - the world-stats checksum a client's login carries (the fork's always
+    `NoChecksum`);
+  - a bunch merged into the one before when both are the same channel's,
+    as the original merges them;
+  - a client going to its Entry level while a travel's join is pending, as
+    the original's does (these seven in
+    [multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer));
+  - a package a server sent staying loaded, so another server's package of
+    that name but another GUID fails the join as a version mismatch until
+    the fork restarts, where the original lets a map's packages go;
+  - the fork's saves writing spawned actors without the load flags the
+    original's linker makes exports by
+    ([mods](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#mods)) -- whether the original loads a
+    fork save whole is to check;
+  - the fork's `vec4` inequality
+    (`engine/SurrealEngine/SurrealEngine/Math/vec.h`), which tests the
+    fourth component for equality -- which the render devices' screen-flash
+    test leans on, its values' fourth components not those it compares
+    with;
+  - a live mode for the harness, whose consoles every server's game
+    disconnects -- it wants the stock console -- (so far a run takes the
+    stock console and a temporary hook: VibeEngine's
+    [`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
+
   The reimplementation's milestones are done -- M0 through M6 all in
   (2026-09-26, M0's acceptance captures last;
   [`ROADMAP.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ROADMAP.md) tracks each item, and
@@ -118,14 +133,15 @@ no facts of its own beyond those; each lives in one doc, and the
   ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)),
   and the weapon in hand higher and smaller in a 16:9 view than the
   original's ([the fractal textures' check](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#fire-water-and-ice-textures)).
-  What remains of the milestones is by hand: the checks in
-  [open decision 1](#open-decisions), the sound's heard with real audio,
-  which the distrobox reaches now
-  ([this machine](docs/DEVELOPMENT.md#this-machine)). The **[perf]** items
-  that landed with M3 and M4 are to be re-measured on the device (decided
-  2's list carries each). Beside that: the Smart Pro's performance work
-  ([decided 2](#decided)) and the next ports
-  ([open decision 4](#open-decisions)), at the owner's pick.
+  What remains of the milestones is by hand, waiting with the open
+  decisions: the checks in [open decision 1](#open-decisions), the sound's
+  heard with real audio, which the distrobox reaches now
+  ([this machine](docs/DEVELOPMENT.md#this-machine)). Waiting with the ports
+  ([decided 8](#decided)): the **[perf]** items that landed with M3 and M4,
+  to be re-measured on the device (decided 2's list carries each), the
+  Smart Pro's performance work ([decided 2](#decided)) and the next ports
+  ([open decision 4](#open-decisions)).
+
   **The launcher's `main`** ([decided 7](#decided)): the rest of the
   recreation, from dx-reverse-info's
   [`launch-flow.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/launch-flow.md)
@@ -268,8 +284,17 @@ no facts of its own beyond those; each lives in one doc, and the
    its docs, roadmap, what it lacks, its tools -- is VibeEngine's, in its
    own `vibe/`. This repository is the workspace that builds the ports
    ([the repositories](docs/DEVELOPMENT.md#the-repositories)).
+8. **The engine first** (owner, 2026-09-27). The porting work waits until
+   the engine is more stable and has more of the game's features: the
+   Smart Pro's performance (decided 2) with its device re-measures and the
+   profiling hooks' re-basing, and the next ports (open decision 4). The
+   open decisions wait until the owner takes them up -- likely in a large
+   play-testing session -- unless one stops the work, when the owner is
+   asked. M7 is finished first, with everything it left.
 
 ## Open decisions
+
+Each waits until the owner takes it up ([decided 8](#decided)).
 
 1. **Verify by hand** (owner):
    - On the Smart Pro: that enemies notice the player and fight (patch
