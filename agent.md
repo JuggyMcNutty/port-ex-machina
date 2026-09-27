@@ -155,7 +155,8 @@ no facts of its own beyond those; each lives in one doc, and the
 4. **Reverse-engineering the game's DLLs** (owner, 2026-09-24), documented
    in [`docs/re/`](docs/re/README.md) as behaviour in our own words, never
    decompiled code. Desktop engine runs as needed to see what fires in play.
-   IDA serves one database at a time, which the owner opens.
+   IDA runs headless in the distrobox, any database opened by name
+   ([how](docs/re/README.md#working-on-the-binaries)).
    - **The first pass** (done): DeusEx, Engine, Core, Extension, ConSys,
      DeusExText, and Render.dll where a feature's drawing lives there.
    - **The second** (done): Render.dll's
