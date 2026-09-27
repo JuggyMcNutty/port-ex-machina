@@ -8,7 +8,7 @@
 
 **The launcher** A reverse engineered modern launcher for the deus ex engine.
 
-**The engine** is [our fork](https://github.com/JuggyMcNutty/SurrealEngine) of
+**The engine** is [our fork](https://github.com/JuggyMcNutty/VibeEngine) of
 [Surreal Engine](https://github.com/dpjudas/SurrealEngine), an open-source UE1
 re-implementation, carrying the changes our platforms and Deus Ex need.
 

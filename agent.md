@@ -15,13 +15,10 @@ no facts of its own beyond those; each lives in one doc, and the
 - **The launcher** runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2).
 - **The engine** is our own fork repository
-  (https://github.com/JuggyMcNutty/SurrealEngine, branch `deusex`), pinned by
-  `ENGINE-PIN.txt`; the patch stack was retired into it (2026-09-24). The
-  owner renamed it on GitHub to https://github.com/JuggyMcNutty/VibeEngine
-  (2026-09-26); the old address redirects, and the clone's remote,
-  `ENGINE-PIN.txt`'s `repo` line and the docs' links still name the old one
-  until the owner has the remote repointed (then all three change
-  together). It holds upstream's latest when last merged (2026-09-24);
+  (https://github.com/JuggyMcNutty/VibeEngine, branch `deusex`; renamed from
+  SurrealEngine by the owner, 2026-09-26, the old address redirecting),
+  pinned by `ENGINE-PIN.txt`; the patch stack was retired into it
+  (2026-09-24). It holds upstream's latest when last merged (2026-09-24);
   whether and when to merge newer upstream commits (`scripts/engine.sh
   status`, then `upgrade`) is the owner's call. The profiling hooks are off,
   and the desktop build is at the pin (2026-09-26).

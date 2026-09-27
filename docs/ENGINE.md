@@ -5,7 +5,7 @@ open-source reimplementation of Unreal Engine 1 that recognises this build of
 Deus Ex directly: `DeusEx.exe` SHA1 `2a933e26aa9cfb33b37f78afe21434caa031f14a`
 is its `DEUS_EX_1112fm` database entry.
 
-We use it as a vendored dependency: [our own fork](https://github.com/JuggyMcNutty/SurrealEngine)
+We use it as a vendored dependency: [our own fork](https://github.com/JuggyMcNutty/VibeEngine)
 of upstream, carrying what our ports need -- starting from our launcher,
 embedded GPUs, pads, the speed a handheld needs, and what Deus Ex needs from
 it to play as it should. `ENGINE-PIN.txt` names the one fork commit this
@@ -180,14 +180,14 @@ to work, where the message does not already say.
 
 ### Running on our devices
 
-- [**0001**](https://github.com/JuggyMcNutty/SurrealEngine/commit/22a5e87cc51aa83be550abe1c17e0b4203f18c79)
+- [**0001**](https://github.com/JuggyMcNutty/VibeEngine/commit/22a5e87cc51aa83be550abe1c17e0b4203f18c79)
   `headless-and-embedded-support` -- the engine started by our launcher with no
   desktop: no launcher window, errors and the log on stderr, a non-zero exit
   after a caught exception (the launcher's crash sentinel reads it); and a
   cross build for an embedded aarch64 device: SDL2 only, no X11/Wayland/desktop
   GL, SDL from pkg-config, a host-built `zipdir`, fonts without GSettings or
   fontconfig (`SURREALWIDGETS_FONT`).
-- [**0002**](https://github.com/JuggyMcNutty/SurrealEngine/commit/a40bec64d33574529da21d63c1b57b3b3ebfe85e)
+- [**0002**](https://github.com/JuggyMcNutty/VibeEngine/commit/a40bec64d33574529da21d63c1b57b3b3ebfe85e)
   `nonbindless-fallback-and-format-support` -- Vulkan on GPUs without desktop
   texture support: a per-batch descriptor set path when
   `VK_EXT_descriptor_indexing` is missing (`SURREAL_VK_NO_BINDLESS=1` forces
@@ -195,7 +195,7 @@ to work, where the message does not already say.
   (BC1–5, RGB8, RGBA32F). **Smart Pro:** the GE8300 has neither; the intro went
   from speckle to clean. A desktop GPU keeps the bindless path. The format
   table came from `tools/probes/probe-texture-formats.c`.
-- [**0003**](https://github.com/JuggyMcNutty/SurrealEngine/commit/af99616f537480cc63f9f781865e2e76634abe44)
+- [**0003**](https://github.com/JuggyMcNutty/VibeEngine/commit/af99616f537480cc63f9f781865e2e76634abe44)
   `gamepad-and-deusex-fixes` -- the pad as polled state, turned into UE1
   joystick keys and axes so `User.ini` bindings decide what it does, with
   menu-mode controls and a `Gamepad` block in `Settings.json` ([the launcher's
@@ -205,71 +205,71 @@ to work, where the message does not already say.
 
 ### Settings the launcher exposes
 
-- [**0008**](https://github.com/JuggyMcNutty/SurrealEngine/commit/ce78355fb3cc47b2ac27dd18b3751c2c564dd5ce)
+- [**0008**](https://github.com/JuggyMcNutty/VibeEngine/commit/ce78355fb3cc47b2ac27dd18b3751c2c564dd5ce)
   `ai-level-of-detail` -- with `Settings.json` `Performance.AiLevelOfDetail`
   (the Video tab's Distant AI), a pawn out of sight and not within 1500 units
   runs its script thinking every third frame. **Smart Pro:** game tick ~124 →
   ~104 ms; ~38 pawns a frame skip their thinking. **Checked:** the scene
   renders normally (framebuffer capture); whether distant NPCs still behave is
   not yet judged by hand.
-- [**0009**](https://github.com/JuggyMcNutty/SurrealEngine/commit/a1a2926f93fbd6be6288f4dd87191ca36ae9f0f9) `render-scale` --
+- [**0009**](https://github.com/JuggyMcNutty/VibeEngine/commit/a1a2926f93fbd6be6288f4dd87191ca36ae9f0f9) `render-scale` --
   `Performance.RenderScale` (the Video tab's Resolution): the scene drawn
   smaller than the window and scaled up; Vulkan only. **Checked:** Liberty
   Island at 960×540 and 853×480 fills the panel, the HUD larger (framebuffer
   captures); synchronization validation clean on the desktop at scale 0.667.
-- [**0022**](https://github.com/JuggyMcNutty/SurrealEngine/commit/a41d14b1180e2e04957d1b19d7a5406b88800b6c) `ai-lod-far-tier` --
+- [**0022**](https://github.com/JuggyMcNutty/VibeEngine/commit/a41d14b1180e2e04957d1b19d7a5406b88800b6c) `ai-lod-far-tier` --
   with Distant AI, a pawn also beyond 4000 units thinks every sixth frame.
   **Smart Pro:** game tick ~65 → ~63 ms; ~48 pawns a frame fall in the tier, ~8
   of them thinking, ~9 fewer thinking each frame.
 
 ### Rendering
 
-- [**0004**](https://github.com/JuggyMcNutty/SurrealEngine/commit/e56866259cfd555d44669701e65643e2d0c69b2a)
+- [**0004**](https://github.com/JuggyMcNutty/VibeEngine/commit/e56866259cfd555d44669701e65643e2d0c69b2a)
   `vulkan-frame-overlap` -- the game tick runs while the GPU draws the previous
   frame; swapchain rebuilds wait for the device. **Smart Pro:** GPU wait ~76 →
   ~0.2 ms, the tick ~20 ms longer (CPU and GPU share the SoC's memory).
   **Checked:** Liberty Island mid-fight renders correctly (framebuffer
   capture).
-- [**0005**](https://github.com/JuggyMcNutty/SurrealEngine/commit/03afa604679b0e8e89ea5100bb58c1484d677f41)
+- [**0005**](https://github.com/JuggyMcNutty/VibeEngine/commit/03afa604679b0e8e89ea5100bb58c1484d677f41)
   `lightmap-lit-spans` -- lightmaps lit only where a light reaches. **Smart
   Pro:** lightmaps ~98 → ~11 ms. **Checked:** the dock pixel-identical before
   and after (framebuffer captures).
-- [**0010**](https://github.com/JuggyMcNutty/SurrealEngine/commit/d635be4bda5c027b5e0b34ee3c13aa64ebc28217)
+- [**0010**](https://github.com/JuggyMcNutty/VibeEngine/commit/d635be4bda5c027b5e0b34ee3c13aa64ebc28217)
   `clipper-sized-to-image` -- the visibility clipper's occlusion grid has one
   row per image row (it was a fixed 2048×1080). **Smart Pro:** frame ~222 →
   ~213 ms native, ~208 → ~191 ms at 853×480. **Checked:** the dock
   pixel-identical at both; ~830 surfaces pass visibility where ~740 did, all
   hidden by the depth test.
-- [**0011**](https://github.com/JuggyMcNutty/SurrealEngine/commit/7599d2b600015df7f2eec1e683cd94b6f55c2e5b)
+- [**0011**](https://github.com/JuggyMcNutty/VibeEngine/commit/7599d2b600015df7f2eec1e683cd94b6f55c2e5b)
   `cull-one-sided-back-faces` -- one-sided surfaces seen from behind skipped
   before the visibility test. **Smart Pro:** surface tests ~4,800 → ~2,400 a
   frame and ~22 → ~12 ms; lightmaps ~10 → ~4 ms and their uploads ~11 → ~4 ms
   (most of the burning barrel's lightmaps were back faces). **Checked:**
   captures of Liberty Island and UNATCO HQ's interior differ only in the stats
   overlay's surface count.
-- [**0018**](https://github.com/JuggyMcNutty/SurrealEngine/commit/efc2a80026cbc0768503c0c365e15db0d9df2c4b)
+- [**0018**](https://github.com/JuggyMcNutty/VibeEngine/commit/efc2a80026cbc0768503c0c365e15db0d9df2c4b)
   `mesh-vertices-once` -- each mesh vertex animated, lit and fogged once a
   draw, not once per face using it. **Smart Pro:** actor meshes ~28 → ~14 ms,
   render CPU ~92 → ~80 ms.
-- [**0019**](https://github.com/JuggyMcNutty/SurrealEngine/commit/abe6d2735c4e4a2a61479e7fc7964b36b61f8e82)
+- [**0019**](https://github.com/JuggyMcNutty/VibeEngine/commit/abe6d2735c4e4a2a61479e7fc7964b36b61f8e82)
   `mesh-face-batches` -- a run of mesh faces with one texture drawn in one
   device call. **Smart Pro:** actor meshes ~14 → ~12 ms. **Checked:** a capture
   of the dock matches one from before patch 0012 except where time moves things
   (the sky, the NPCs, the stats); the statue and props identical to the pixel.
-- [**0020**](https://github.com/JuggyMcNutty/SurrealEngine/commit/96f1b6b4b1d7b59cdfca4c878a93a243116cf98c)
+- [**0020**](https://github.com/JuggyMcNutty/VibeEngine/commit/96f1b6b4b1d7b59cdfca4c878a93a243116cf98c)
   `clipper-arm-clip-test` -- the clipper's non-SSE (ARM) build skips clipping
   for triangles inside the view, as the SSE build did (an upstream bug).
   **Smart Pro:** visibility ~25 → ~20 ms (with the per-part timers), surface
   tests ~11.8 → ~7.4 ms. **Checked:** a capture of the dock differs only in the
   sky's clouds and the NPCs.
-- [**0021**](https://github.com/JuggyMcNutty/SurrealEngine/commit/377cf462b1452f880723cce4305087172bfe7463)
+- [**0021**](https://github.com/JuggyMcNutty/VibeEngine/commit/377cf462b1452f880723cce4305087172bfe7463)
   `surface-points-on-demand` -- a surface's points gathered only when a test
   needs them. **Smart Pro:** visibility ~20.5 → ~19.6 ms.
-- [**0023**](https://github.com/JuggyMcNutty/SurrealEngine/commit/56e86e57548c00aa5ccb597a52aed093ceaa9172) `light-tree-kept` --
+- [**0023**](https://github.com/JuggyMcNutty/VibeEngine/commit/56e86e57548c00aa5ccb597a52aed093ceaa9172) `light-tree-kept` --
   the light tree, and each surface's lights from it, kept while no light
   changes. **Smart Pro:** the BSP surfaces' section ~11 → ~8 ms. **Checked:** a
   capture at 853×480 shows the dock's lightmaps as before.
-- [**0024**](https://github.com/JuggyMcNutty/SurrealEngine/commit/03e4d0cb9696bbad5b26cdc0489dcc028152c29b)
+- [**0024**](https://github.com/JuggyMcNutty/VibeEngine/commit/03e4d0cb9696bbad5b26cdc0489dcc028152c29b)
   `lightmap-neon-conversion` -- the lightmaps' float-to-byte conversion for the
   GPU in NEON on ARM. **Smart Pro:** texture uploads ~3.9 → ~2.1 ms.
 
@@ -278,29 +278,29 @@ to work, where the message does not already say.
 With 0013, these took the Smart Pro's script time from ~125 ms a frame to
 ~30 by 0017; with the collision patches (0025–0027) it was ~25 before 0028.
 
-- [**0006**](https://github.com/JuggyMcNutty/SurrealEngine/commit/af2ed868bfe107485ad905a2c183405f01139391)
+- [**0006**](https://github.com/JuggyMcNutty/VibeEngine/commit/af2ed868bfe107485ad905a2c183405f01139391)
   `vm-call-path-without-casts` -- parameters from `Properties`, and a per-class
   virtual-function cache: no `dynamic_cast` on the call path. **Smart Pro:**
   script ~125 → ~84 ms.
-- [**0007**](https://github.com/JuggyMcNutty/SurrealEngine/commit/9cc49e284b2e5f3d9f9a12fbd0449117afbc9d79)
+- [**0007**](https://github.com/JuggyMcNutty/VibeEngine/commit/9cc49e284b2e5f3d9f9a12fbd0449117afbc9d79)
   `vm-call-overheads` -- native frames without locals, event names looked up
   once, plain-data locals zero-filled. **Smart Pro:** script ~84 → ~77 ms.
-- [**0012**](https://github.com/JuggyMcNutty/SurrealEngine/commit/f4ea318b0b71718e83c19b0e0efd208379bfc91c)
+- [**0012**](https://github.com/JuggyMcNutty/VibeEngine/commit/f4ea318b0b71718e83c19b0e0efd208379bfc91c)
   `vm-evaluator-per-statement` -- one expression evaluator per statement,
   nested values returned directly. **Smart Pro:** script ~60 → ~55 ms.
-- [**0014**](https://github.com/JuggyMcNutty/SurrealEngine/commit/829adcbd7e1d6e109ae2cd81f67f4e46a84f5c95)
+- [**0014**](https://github.com/JuggyMcNutty/VibeEngine/commit/829adcbd7e1d6e109ae2cd81f67f4e46a84f5c95)
   `vm-calls-without-allocation` -- script calls without heap allocations or
   walks over every local. **Smart Pro:** script ~39 → ~35 ms.
-- [**0015**](https://github.com/JuggyMcNutty/SurrealEngine/commit/6ba1983af99b9fd70a1e6133a70332578a13431c)
+- [**0015**](https://github.com/JuggyMcNutty/VibeEngine/commit/6ba1983af99b9fd70a1e6133a70332578a13431c)
   `vm-fast-operators` -- the 25 commonest operators evaluated in place. **Smart
   Pro:** script ~35 → ~31 ms.
-- [**0016**](https://github.com/JuggyMcNutty/SurrealEngine/commit/e28aa410d11e3a07848d602d814171d0b99c470f)
+- [**0016**](https://github.com/JuggyMcNutty/VibeEngine/commit/e28aa410d11e3a07848d602d814171d0b99c470f)
   `vm-event-lookup-cache` -- events found through the virtual-call cache.
   **Smart Pro:** within the noise (tick ~71.2 → ~70.7 ms).
-- [**0017**](https://github.com/JuggyMcNutty/SurrealEngine/commit/51d45aa37c96a9bc5656d4ce5d89992e94fa8d13)
+- [**0017**](https://github.com/JuggyMcNutty/VibeEngine/commit/51d45aa37c96a9bc5656d4ce5d89992e94fa8d13)
   `vm-leaf-expressions` -- the commonest leaf expressions made without the
   visitor. **Smart Pro:** tick ~70.7 → ~69.3 ms.
-- [**0028**](https://github.com/JuggyMcNutty/SurrealEngine/commit/40e219ac8bc05a349950766408daea74c77c57bb)
+- [**0028**](https://github.com/JuggyMcNutty/VibeEngine/commit/40e219ac8bc05a349950766408daea74c77c57bb)
   `vm-typed-evaluation` -- conditions, `&&` and `||`, the fast operators and
   assignments to plain variables evaluated as plain values, each node
   classified once, instead of through an 88-byte `ExpressionValue`; a typed
@@ -308,7 +308,7 @@ With 0013, these took the Smart Pro's script time from ~125 ms a frame to
   → ~22.7 ms, tick ~54 → ~51 ms; at 853×480 the frame ~108.5 → ~106 ms.
   **Checked:** also a hash of every actor's state, frame by frame, with the
   frame time and random seeds fixed (the message has both checks).
-- [**0029**](https://github.com/JuggyMcNutty/SurrealEngine/commit/7e93fe7b86f0e449454db03d9d8eb02b55d6dcfd)
+- [**0029**](https://github.com/JuggyMcNutty/VibeEngine/commit/7e93fe7b86f0e449454db03d9d8eb02b55d6dcfd)
   `vm-statements-in-place` -- conditions, jumps, assignments to plain
   variables, calls, `return;` and a foreach's next pass run by `Frame::Run`
   in place, without an `ExpressionEvalResult` each; a jump keeps its target's
@@ -318,29 +318,29 @@ With 0013, these took the Smart Pro's script time from ~125 ms a frame to
 
 ### Game tick
 
-- [**0013**](https://github.com/JuggyMcNutty/SurrealEngine/commit/9720823c814691ca1455cbef65d13c629fac2a60)
+- [**0013**](https://github.com/JuggyMcNutty/VibeEngine/commit/9720823c814691ca1455cbef65d13c629fac2a60)
   `actor-iterators-by-class` -- the actor iterators find a class's actors from
   an index, not a scan of the level (`CycleActors` alone had been ~16 ms of the
   tick). **Smart Pro:** script ~56 → ~39 ms.
-- [**0025**](https://github.com/JuggyMcNutty/SurrealEngine/commit/f984a7800675f85cc5e7eb134de36b03ffa8aef8)
+- [**0025**](https://github.com/JuggyMcNutty/VibeEngine/commit/f984a7800675f85cc5e7eb134de36b03ffa8aef8)
   `ray-trace-segment-split` -- a ray trace hands each BSP child only its own
   part of the segment. **Smart Pro:** tick ~61.5 → ~58 ms.
-- [**0026**](https://github.com/JuggyMcNutty/SurrealEngine/commit/0f9ce6cccd7dbc52bf0c71a57ae9490573e08d18) `sight-line-cells`
+- [**0026**](https://github.com/JuggyMcNutty/VibeEngine/commit/0f9ce6cccd7dbc52bf0c71a57ae9490573e08d18) `sight-line-cells`
   -- sight lines test the actors of only the collision cells they cross; hull
   planes on the stack. **Smart Pro:** tick ~58 → ~56 ms.
-- [**0027**](https://github.com/JuggyMcNutty/SurrealEngine/commit/469d9c8a26d8e910b14576bfca4fb650862681d3)
+- [**0027**](https://github.com/JuggyMcNutty/VibeEngine/commit/469d9c8a26d8e910b14576bfca4fb650862681d3)
   `step-down-one-trace` -- a walking pawn's step to the ground made with the
   trace its dry run made. **Smart Pro:** tick ~56 → ~53 ms.
-- [**0030**](https://github.com/JuggyMcNutty/SurrealEngine/commit/2d315e3602663f73f802a25a58c282ae545dafec)
+- [**0030**](https://github.com/JuggyMcNutty/VibeEngine/commit/2d315e3602663f73f802a25a58c282ae545dafec)
   `ray-plane-tests-first` -- a ray tests a polygon's plane before reading its
   vertex count and surface, which lie on other cache lines. **Smart Pro:** the
   sight rays' polygon tests (`NodeRayIntersect`) ~3.3 → ~1.9 ms.
-- [**0031**](https://github.com/JuggyMcNutty/SurrealEngine/commit/0098ca8c5f69c1d2c8ff397a75d1915afc20872b)
+- [**0031**](https://github.com/JuggyMcNutty/VibeEngine/commit/0098ca8c5f69c1d2c8ff397a75d1915afc20872b)
   `collision-cell-table` -- each collision cell's actors found in an
   open-addressed table and kept in an array, not a `std::unordered_map` of
   `std::list`s. **Smart Pro:** the traces' walk of the cells
   (`TraceTester::Trace`) ~1.4 → ~0.5 ms, and ~0.3 in the new `FindCell`.
-- [**0032**](https://github.com/JuggyMcNutty/SurrealEngine/commit/e9a806d56f88f63efded8ec14f8487afbc863b0a)
+- [**0032**](https://github.com/JuggyMcNutty/VibeEngine/commit/e9a806d56f88f63efded8ec14f8487afbc863b0a)
   `collision-move-overheads` -- a move asks once per actor whether it is a
   player or a projectile, and traces sort and sift their hits without heap
   allocations. **Smart Pro:** `dynamic_cast` in the tick ~2.9 → ~1.5 ms;
@@ -356,11 +356,11 @@ messages say how).
 
 What Surreal Engine lacked for Deus Ex to play as it should.
 
-- [**0033**](https://github.com/JuggyMcNutty/SurrealEngine/commit/bec6e261edcd00d9225cb95ef7e4a8e0b7298261)
+- [**0033**](https://github.com/JuggyMcNutty/VibeEngine/commit/bec6e261edcd00d9225cb95ef7e4a8e0b7298261)
   `vm-omitted-optional-arguments` -- a script call that leaves out an optional
   struct or array argument no longer crashes copying it (upstream's bug): the
   first NPC to attack hit it, in `ScriptedPawn.ComputeBestFiringPosition`.
-- [**0034**](https://github.com/JuggyMcNutty/SurrealEngine/commit/b5d08853dbf4e24894d56942c07a5a743438e824) `deusex-ai-sight`
+- [**0034**](https://github.com/JuggyMcNutty/VibeEngine/commit/b5d08853dbf4e24894d56942c07a5a743438e824) `deusex-ai-sight`
   -- NPCs see: `IsValidEnemy`, `AICanSee` and `AIVisibility` as the original
   DLLs have them; upstream had the first wrong and the others as stubs, so no
   NPC ever noticed the player, or anyone. **Smart Pro:** the sight checks take
@@ -368,7 +368,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   the player moved in front of it, made the player its enemy ~3.5 s later
   (the build-up the script gives a faint sighting at night), and it and two
   more shot at the player; NPCs of hostile alliances check each other.
-- [**what stopped the game**](https://github.com/JuggyMcNutty/SurrealEngine/commit/db0df9a1205ef9f55c9abf83d61c7da26efdbac0) --
+- [**what stopped the game**](https://github.com/JuggyMcNutty/VibeEngine/commit/db0df9a1205ef9f55c9abf83d61c7da26efdbac0) --
   the roadmap's M0 ([`ROADMAP.md`](ROADMAP.md)): `ReachablePathnodes` makes
   an (empty) iterator instead of stopping the VM in Battery Park's opening
   fight; the save's `DeusExSaveInfo` lives in package DeusEx, so a save no
@@ -377,14 +377,14 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   string `>` is native 116, not the typo 1186. **Checked:** an 80 s Battery
   Park run and quick saves in two maps run out their clocks; the commit's
   message has the rest.
-- [**saves, the original's way**](https://github.com/JuggyMcNutty/SurrealEngine/commit/4dfc7a6dd5b1571d7fbab03fac6fd4e5a899d78b) --
+- [**saves, the original's way**](https://github.com/JuggyMcNutty/VibeEngine/commit/4dfc7a6dd5b1571d7fbab03fac6fd4e5a899d78b) --
   the first slice of the roadmap's M1: slots numbered highest-plus-one, the
   quick save in QuickSave, Current copied into the slot with the level saved
   on top, the SaveInfo filled and named as the original's
   (`MyDeusExSaveInfo`), the save listing and kept infos, and DELETEGAME.
   **Checked:** against the original's reference saves; the commit's message
   has the runs.
-- [**loading**](https://github.com/JuggyMcNutty/SurrealEngine/commit/0058015cccdadd262b56eb819bbd00f7213426a3) --
+- [**loading**](https://github.com/JuggyMcNutty/VibeEngine/commit/0058015cccdadd262b56eb819bbd00f7213426a3) --
   `?loadgame=N` as the original's `Browse`: the slot's SaveInfo names the
   map, Current takes the slot's copy, the map loads from Current, the saved
   pawn is possessed; -1 the quick save. Behind it, the save info in a
@@ -392,25 +392,25 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   either wrong, a written SaveInfo.dxs cannot be read back. **Checked:** a
   slot and the quick save round-trip in play; the original's saves stop at
   their saved event manager (ported with the AI event system, later).
-- [**travel keeps the mission**](https://github.com/JuggyMcNutty/SurrealEngine/commit/1a654c7e481bcf5ab223d702df14d85c4f76a11f) --
+- [**travel keeps the mission**](https://github.com/JuggyMcNutty/VibeEngine/commit/1a654c7e481bcf5ab223d702df14d85c4f76a11f) --
   within a mission the departing level is pruned and saved into Current,
   and a map saved there is revisited as the player left it, its pawn found
   again by the game's own login; a new mission, a new game or ?restart
   empties Current. **Checked:** a travel out and back revisits from
   Current, and the slot save after it has the reference hub save's shape.
-- [**history in the level**](https://github.com/JuggyMcNutty/SurrealEngine/commit/33c1e3f896010ca4138d912becc71be732063f82) --
+- [**history in the level**](https://github.com/JuggyMcNutty/VibeEngine/commit/33c1e3f896010ca4138d912becc71be732063f82) --
   the player's history, log and notes are made in the level, as the
   original's, so a save keeps them.
-- [**flags as the original's**](https://github.com/JuggyMcNutty/SurrealEngine/commit/cd973b15a6dbf9042173c2a1039dd55b6dbc3d98) --
+- [**flags as the original's**](https://github.com/JuggyMcNutty/VibeEngine/commit/cd973b15a6dbf9042173c2a1039dd55b6dbc3d98) --
   chains past 64 by a CRC of the name, stamped expirations, expiry to a
   criteria, -1 for a missing flag, and typed flags found again. Its cleanup
   of a test hook cut real main-loop code, restored by
-  [the commit after](https://github.com/JuggyMcNutty/SurrealEngine/commit/4f6ed66a469ac232245e3fa1493d44c24b4dc0c0).
+  [the commit after](https://github.com/JuggyMcNutty/VibeEngine/commit/4f6ed66a469ac232245e3fa1493d44c24b4dc0c0).
   **Checked:** an in-engine self-test for the flags; a 60 s run for the loop.
-- [**list fields read back**](https://github.com/JuggyMcNutty/SurrealEngine/commit/fb7b29d64cbca6e48a81032b99197200e430b7e9) --
+- [**list fields read back**](https://github.com/JuggyMcNutty/VibeEngine/commit/fb7b29d64cbca6e48a81032b99197200e430b7e9) --
   GetField's column test was inverted, so every screen keeping what a row
   stands for in a hidden column read nothing.
-- [**flags kept and carried**](https://github.com/JuggyMcNutty/SurrealEngine/commit/c8bf4374ac27a97ea80d04487ad9406ee930d52f) --
+- [**flags kept and carried**](https://github.com/JuggyMcNutty/VibeEngine/commit/c8bf4374ac27a97ea80d04487ad9406ee930d52f) --
   the flag base and its flags live in the level package, so a save keeps
   them, and they cross a travel in the pawn's travel graph: the travel
   serialization walks every element of a fixed-array object property (the
@@ -419,7 +419,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   the prune deletes the departing level's flags as the original's does.
   GameDirectory objects are made per call again. **Checked:** 21 flags
   set across the buckets survive a travel and a save's load-back.
-- [**conversations as the original's**](https://github.com/JuggyMcNutty/SurrealEngine/commit/39e9df99bee7938823ec3ee9ddf5a21468d1d0e6) --
+- [**conversations as the original's**](https://github.com/JuggyMcNutty/VibeEngine/commit/39e9df99bee7938823ec3ee9ddf5a21468d1d0e6) --
   the roadmap's M2 conversations item: comment events kept, an actor's
   conversations bound by the original's bark rule from the list the level's
   `ConversationPackage` names, the bound-actor slots filled so a destroyed
@@ -429,7 +429,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   scene plays its lines at their own lengths; a temporary hook printed
   Liberty Island's bound lists, the named troopers owning their own
   conversations plus the `_Bark`s; 90 s and 75 s runs clean.
-- [**the text parser as the original's**](https://github.com/JuggyMcNutty/SurrealEngine/commit/752ff87d222426b2aa305eac563b74344bc88ca5) --
+- [**the text parser as the original's**](https://github.com/JuggyMcNutty/VibeEngine/commit/752ff87d222426b2aa305eac563b74344bc88ca5) --
   the roadmap's M2 parser item: the original's tokens (CR and LF as spaces,
   nothing trimmed, the first `<P>` swallowed), its 30-name tag table matched
   by start, its fields split at commas, its hiding to an end tag, the
@@ -439,7 +439,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   emails list with their fields, bulletins open, comments hide, header
   spaces and blank lines keep, `PLAYERFIRSTNAME` gives the first name; a
   70 s run after the hook's removal is clean.
-- [**the list window as the original's**](https://github.com/JuggyMcNutty/SurrealEngine/commit/48c0987a562d64820081012a2602ff3e61425d85) --
+- [**the list window as the original's**](https://github.com/JuggyMcNutty/VibeEngine/commit/48c0987a562d64820081012a2602ff3e61425d85) --
   the roadmap's M2 lists item: rows activate on a double click or Enter
   (`ListRowActivated`, which key rebinding hangs on), `MoveRow` takes the
   keys and a pad's d-pad through a list, the original's sorting and column
@@ -449,7 +449,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   a temporary in-engine self-test drove sorting (name, number, reverse),
   the number reader (hex, octal, hours and minutes), the format, the moves
   and a delete's focus; a 70 s run after its removal is clean.
-- [**render time and stasis**](https://github.com/JuggyMcNutty/SurrealEngine/commit/c7b3e00624c314757db5655caf8f35f9549d40c7) --
+- [**render time and stasis**](https://github.com/JuggyMcNutty/VibeEngine/commit/c7b3e00624c314757db5655caf8f35f9549d40c7) --
   the roadmap's first M3 item: the renderer stamps when each actor, zone
   and decal was last drawn, `LastRendered()` answers the time since, and
   the tick of an actor in stasis -- the original's full test, not "stasis
@@ -459,7 +459,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   counted Liberty Island each 8 s -- unseen trees and lamps entered stasis
   as they aged past 5 s while the drawn-recently count fell; a 70 s run
   after its removal is clean.
-- [**the AI event system**](https://github.com/JuggyMcNutty/SurrealEngine/commit/248538769f65b8e3393d102bdf6136ebe369ed22) --
+- [**the AI event system**](https://github.com/JuggyMcNutty/VibeEngine/commit/248538769f65b8e3393d102bdf6136ebe369ed22) --
   the roadmap's M3 hearing item: the original's `UEventManager`, one per
   level, saved with it -- senders' 16-frame rings and current levels,
   receivers in one ring walked under the original's turn and 2 ms rules,
@@ -475,7 +475,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   carried 10 event types and 325 listeners through a load; the reference
   Liberty Island save of the original game loads and plays; a 75 s run
   after the hooks' removal is clean.
-- [**ScriptedPawn's native tick**](https://github.com/JuggyMcNutty/SurrealEngine/commit/4bd245b6e24503319ae5da17eee8c84ddc1e67cd) --
+- [**ScriptedPawn's native tick**](https://github.com/JuggyMcNutty/VibeEngine/commit/4bd245b6e24503319ae5da17eee8c84ddc1e67cd) --
   the roadmap's M3 tick item: disappearing, the pivot's easing, agitation
   and fear (the script's own unused `UpdateAgitation` and `UpdateFear`),
   the sixteen AI timers, cloaking, the advanced-tactics manoeuvre's end,
@@ -485,7 +485,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   read the timers counting, the distress rising, the pivot tweening under
   the script's own values and the bleeding correctly gated off beyond
   1,200 units; 90 s and 65 s runs show no script error.
-- [**moving**](https://github.com/JuggyMcNutty/SurrealEngine/commit/9df38d9520c7daed9d78fc28bdf59eef6934d9c8) --
+- [**moving**](https://github.com/JuggyMcNutty/VibeEngine/commit/9df38d9520c7daed9d78fc28bdf59eef6934d9c8) --
   the roadmap's M3 moving item plus the traces item's
   `RandomBiasedRotation`: `AIDirectionReachable` walks, swims or flies the
   pawn itself along a direction and puts it back; `AIPickRandomDestination`
@@ -497,7 +497,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   units along a pawn's facing, 13 pathnodes nearest first, the flood
   reaching 876 of 1,198 navpoints; a 70 s run after their removal is
   clean, no moving native left unimplemented in it.
-- [**traces, moves, probes and conversions**](https://github.com/JuggyMcNutty/SurrealEngine/commit/6f9b5e80cde903b4341d5656ffefc188515b39c1) --
+- [**traces, moves, probes and conversions**](https://github.com/JuggyMcNutty/VibeEngine/commit/6f9b5e80cde903b4341d5656ffefc188515b39c1) --
   the roadmap's last M3 item: one probe mask per object set at every
   `GotoState` and saved as the original's `FStateFrame` keeps it (a save
   from before this commit restores its pawns' probes wrongly -- dev saves
@@ -510,7 +510,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   all-on -- round-trips a quick save exactly; the intro's scene plays 238
   lip-sync lines through the new mask; 60-70 s runs on both maps after the
   hook's removal are clean.
-- [**render iterators**](https://github.com/JuggyMcNutty/SurrealEngine/commit/14d981b3be8b2053efd55888eb8e689f05ec6f13) --
+- [**render iterators**](https://github.com/JuggyMcNutty/VibeEngine/commit/14d981b3be8b2053efd55888eb8e689f05ec6f13) --
   the roadmap's first M4 item: an actor with a `RenderIteratorClass` is
   drawn as the items its iterator lists and gets no sprite of its own --
   the interface made and dropped as the original's renderer does, the
@@ -527,7 +527,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   electricity emitters list every segment when in view; frozen generators
   list nothing until their proxy is seen; 75 s runs on both maps after the
   hooks' removal are clean.
-- [**mesh detail**](https://github.com/JuggyMcNutty/SurrealEngine/commit/e8f93e31385fadb0a7f10ab96622121e16e30fd7) --
+- [**mesh detail**](https://github.com/JuggyMcNutty/VibeEngine/commit/e8f93e31385fadb0a7f10ab96622121e16e30fd7) --
   the roadmap's M4 mesh-detail item: the original's vertex budget worked
   out each draw -- falling as one over the actor's depth in the view,
   sooner for a complex mesh -- where the fork drew every LOD mesh whole at
@@ -541,7 +541,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   the window; a forced-coarse run drew pawns at the floor without
   breaking the scene; 75 s runs on both maps after the hooks' exact-text
   removal are clean.
-- [**coronas**](https://github.com/JuggyMcNutty/SurrealEngine/commit/c475705704feb8deef5b4e2c23f88e49a0736938) --
+- [**coronas**](https://github.com/JuggyMcNutty/VibeEngine/commit/c475705704feb8deef5b4e2c23f88e49a0736938) --
   the roadmap's M4 coronas item: the lights shining into the viewer's own
   leaf of the BSP at any distance, seen past the world, movers, pawns and
   other actors but the viewer's own pawn, fading in and out over about a
@@ -554,7 +554,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   0 to 1 in the first third of a second, and a frame dump shows the
   lamp's glow drawn at its head; a 75 s run after the hooks' exact-text
   removal is clean.
-- [**blend animations**](https://github.com/JuggyMcNutty/SurrealEngine/commit/8ff8289da6ad7f54229fe91638af16f9ce5454f4) --
+- [**blend animations**](https://github.com/JuggyMcNutty/VibeEngine/commit/8ff8289da6ad7f54229fe91638af16f9ce5454f4) --
   the roadmap's M4 blend-animations item: the four slots over the main
   animation (head turns, lip sync, blinking) tick as the original's --
   only while the main animation plays or tweens, up to three times their
@@ -567,7 +567,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   mouth through its shapes with tweens caught mid-flight; the audit
   counts `PlayBlendAnim` implemented; 75 s runs on the intro and Liberty
   Island after the hook's exact-text removal are clean.
-- [**mesh lighting**](https://github.com/JuggyMcNutty/SurrealEngine/commit/cdf259354a7e925f8761155f7a26d8a1e9cd710d) --
+- [**mesh lighting**](https://github.com/JuggyMcNutty/VibeEngine/commit/cdf259354a7e925f8761155f7a26d8a1e9cd710d) --
   the meshes half of the roadmap's M4 lighting item: an actor's lights
   picked once a draw from its leaf's permeating list, the moving lights
   near it and last frame's -- the strongest first, statics until 8, none
@@ -583,7 +583,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   and the suit under its key light, nothing blown out; 75 s runs on the
   intro and Liberty Island after the hooks' exact-text removal are
   clean.
-- [**light maps**](https://github.com/JuggyMcNutty/SurrealEngine/commit/1cba281581db6c206eccb912f4e242ab444429b7) --
+- [**light maps**](https://github.com/JuggyMcNutty/VibeEngine/commit/1cba281581db6c206eccb912f4e242ab444429b7) --
   the light-maps half of the M4 lighting item: a surface's still lights
   are its kept static map and only its animating lights are added over
   the loaded colors each frame, through their own shadow bits, where an
@@ -599,7 +599,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   animated add alone, shadows held, the wall's brightness alternating
   with the flicker across frame dumps; 75 s runs on both maps after the
   hooks' exact-text removal are clean.
-- [**loudness**](https://github.com/JuggyMcNutty/SurrealEngine/commit/f8d46930a679474967358626ccfefa1f3b1e0a6c) --
+- [**loudness**](https://github.com/JuggyMcNutty/VibeEngine/commit/f8d46930a679474967358626ccfefa1f3b1e0a6c) --
   M5's first item: Deus Ex plays the script's volume -- no rescale
   toward 1, no halving -- with fall-off linear from the sound to its
   radius and silent there, and the product capped at full, the Sound
@@ -609,7 +609,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   loudness. **Checked:** a 90 s Liberty Island run with real audio (the
   distrobox reaches PipeWire since 2026-09-25): the device initializes,
   ambient sounds play, no AL errors.
-- [**the Speech slider**](https://github.com/JuggyMcNutty/SurrealEngine/commit/7fb656a02a0fbc958c6931b8e9dad2a9caf7e594) --
+- [**the Speech slider**](https://github.com/JuggyMcNutty/VibeEngine/commit/7fb656a02a0fbc958c6931b8e9dad2a9caf7e594) --
   `SpeechVolume` is a setting of the fork's audio device, served over
   the property interface the game's menu binds; speech (the talk slot)
   gains by it, the rest by the Sound slider; the three instant-volume
@@ -617,7 +617,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   lasting one frame, and `SetInstantSpeechVolume` 269 is no stub
   ([sound](re/natives.md#sound)). **Checked:** a 90 s intro run -- its
   conversation exercises the talk slot -- with no AL errors.
-- [**Doppler**](https://github.com/JuggyMcNutty/SurrealEngine/commit/ccb021c132731581422cc08ec06fa27a6b453ef5) --
+- [**Doppler**](https://github.com/JuggyMcNutty/VibeEngine/commit/ccb021c132731581422cc08ec06fa27a6b453ef5) --
   only an ambient sound's pitch shifts, by its actor's speed away from
   the view target at `DopplerSpeed` (a setting, default 6,500), kept to
   0.5–2, worked out in the ambience update with AL's own
@@ -625,7 +625,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   sound by the player's speed at ~14,800
   ([sound](re/natives.md#sound)). **Checked:** a 75 s Liberty Island
   run with real audio, no AL errors.
-- [**the smaller sound notes**](https://github.com/JuggyMcNutty/SurrealEngine/commit/ebf27d6d2301ad350609e6c792df191d89683cf3) --
+- [**the smaller sound notes**](https://github.com/JuggyMcNutty/VibeEngine/commit/ebf27d6d2301ad350609e6c792df191d89683cf3) --
   a sound beyond its radius is dropped as the original drops it (its
   priority goes negative, never beating an empty channel); the mouth
   shapes lose the fork's own `M` band, `E` reaching to 250 Hz; and
@@ -634,7 +634,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   channel's teardown ([sound](re/natives.md#sound)). **Checked:** a
   75 s intro run whose conversation drives the lip sync through
   ConPlay's own flag, no AL errors.
-- [**sounds behind walls**](https://github.com/JuggyMcNutty/SurrealEngine/commit/839bd2ce9253d756ea446ab6a55f3715d2615539) --
+- [**sounds behind walls**](https://github.com/JuggyMcNutty/VibeEngine/commit/839bd2ce9253d756ea446ab6a55f3715d2615539) --
   each channel keeps an obstruction time: while the level's BSP stands
   between the player's own eyes and the sound's actor (movers and
   actors never block), it grows by the update's own 0-1 s time step to
@@ -645,7 +645,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   log on Liberty Island -- ambients clear at true distances, LightWind
   blocked behind terrain at a third, a boat's idle crossing both ways;
   a 75 s run after the hook's exact-text removal is clean.
-- [**ambient sounds on lights**](https://github.com/JuggyMcNutty/SurrealEngine/commit/c6205fa8cd5a76d294bdadbc2afbb61f4b27cd2c) --
+- [**ambient sounds on lights**](https://github.com/JuggyMcNutty/VibeEngine/commit/c6205fa8cd5a76d294bdadbc2afbb61f4b27cd2c) --
   an ambient sound on a lit actor is scaled by `LightBrightness` ÷ 255
   and the light's momentary animation (the renderer's own shapes:
   pulse, subtle pulse, blink, strobe, and flicker from the renderer's
@@ -655,7 +655,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   Battery Park named the lit carriers and showed the security cameras'
   hum at exactly 2 × 0.7 × (192/255) × (120/255) = 0.496 of full; a
   75 s run after the hooks' exact-text removal is clean.
-- [**music**](https://github.com/JuggyMcNutty/SurrealEngine/commit/ed063b1bb828726479031c2e68315214a162ef4a) --
+- [**music**](https://github.com/JuggyMcNutty/VibeEngine/commit/ed063b1bb828726479031c2e68315214a162ef4a) --
   a transition fades the playing music out first (1 s `MTRAN_Fade`,
   5 s `MTRAN_SlowFade`, 1/3 s `MTRAN_FastFade`, at once otherwise,
   plus twice `Latency`), then the song starts at full volume at the
@@ -668,7 +668,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   same-song jump to order 4 with no reload, a 5.08 s slow fade, and
   the write-back tracking the playing order; a 75 s run after the
   hooks' exact-text removal is clean.
-- [**zone reverb**](https://github.com/JuggyMcNutty/SurrealEngine/commit/ec7c4cd937d2c5cccfe52faf7c236be9b6181632) --
+- [**zone reverb**](https://github.com/JuggyMcNutty/VibeEngine/commit/ec7c4cd937d2c5cccfe52faf7c236be9b6181632) --
   a zone with `bReverbZone` gives every sound its reverb through
   OpenAL's EFX (one auxiliary slot each source sends to, a NULL effect
   while no zone asks), set again only when the view target's zone
@@ -680,7 +680,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   reverb zone: the watch fired once and the derivation came out exact
   (gain 0.392 = 100/255, gainhf 0.768, first tap 40 ms), no AL errors;
   a 75 s run after the hooks' exact-text removal is clean.
-- [**keys released under a menu**](https://github.com/JuggyMcNutty/SurrealEngine/commit/6a14fdb01e6fb4f9e5cb9cab2f14e994fe6d3cea) --
+- [**keys released under a menu**](https://github.com/JuggyMcNutty/VibeEngine/commit/6a14fdb01e6fb4f9e5cb9cab2f14e994fe6d3cea) --
   when the UI takes a key, every key the input holds down is released
   (the tracked buttons false, the axes zero), and a taken mouse button
   clears only `bFire`/`bAltFire`, both as the original's; a movement
@@ -689,7 +689,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   drove a synthetic held key into an opened menu -- 3 held axes
   released on the first key event the menu took and stayed clear;
   a 75 s run after the hook's exact-text removal is clean.
-- [**showing and hiding**](https://github.com/JuggyMcNutty/SurrealEngine/commit/ff41d8afcdb11881616af37ade273beca431ec1d) --
+- [**showing and hiding**](https://github.com/JuggyMcNutty/VibeEngine/commit/ff41d8afcdb11881616af37ade273beca431ec1d) --
   `Show` and `Hide` ask the window's parent
   (`ChildRequestedVisibilityChange`, whose script default calls
   `SetChildVisibility` back on the child; the root sets its own), and
@@ -702,7 +702,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   HUD's displays hide and show through real play, and the whole HUD
   hiding as a synthetic Escape opened the menu, the round trip
   completing; a 75 s run after the hooks' exact-text removal is clean.
-- [**borders tiled**](https://github.com/JuggyMcNutty/SurrealEngine/commit/dfc51c594b5cb9b1a1e2717888a8fcd9e82799b5) --
+- [**borders tiled**](https://github.com/JuggyMcNutty/VibeEngine/commit/dfc51c594b5cb9b1a1e2717888a8fcd9e82799b5) --
   `GC.DrawBorders` tiles each edge and the centre at one texel a pixel
   (a source rect the size of the run, the same idiom `DrawPattern`
   uses) instead of stretching them over their length, and honours the
@@ -711,7 +711,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   call sites need a player on the themed screens, so the look is the
   by-hand check's; a synthetic F1 probe confirmed the Persona screen
   opens modal and renders, and a 75 s run is clean.
-- [**the key stubs**](https://github.com/JuggyMcNutty/SurrealEngine/commit/f554c6eb89b3bbeaf03ca0e85986d6468390e08e) --
+- [**the key stubs**](https://github.com/JuggyMcNutty/VibeEngine/commit/f554c6eb89b3bbeaf03ca0e85986d6468390e08e) --
   `EditWindow.Undo`/`Redo` walk a real change list (typing joins,
   `maxUndos` caps, Ctrl+Z/Ctrl+Y call them; two edit bugs fixed on the
   way: inserting over a selection dropped the wrong span, backspace at
@@ -724,7 +724,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   characters and two backspaces made exactly 3 changes, undo walking
   'hel' → 'hell' → 'hello' → '' and redo back; a 75 s run after the
   hook's exact-text removal is clean.
-- [**the small leftovers**](https://github.com/JuggyMcNutty/SurrealEngine/commit/a24bcc10396c5aae63567bd6ee350a6e68f496f0) --
+- [**the small leftovers**](https://github.com/JuggyMcNutty/VibeEngine/commit/a24bcc10396c5aae63567bd6ee350a6e68f496f0) --
   `FindStairRotation` eases the view down (−5,000) or up (5,400) a
   flight of stairs from a floor probe ahead at eye height (the probe
   distances and easing rate the fork's reading);
@@ -739,7 +739,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   line are gone from a 75 s run, leaving only DumpLocation's known
   not-needed stub; the stairs tilt and the positional sound need
   their options switched on by hand.
-- [**GC.DrawActor**](https://github.com/JuggyMcNutty/SurrealEngine/commit/ca39cb532a9a21d246b8bb2c3a88be44b765eddc) --
+- [**GC.DrawActor**](https://github.com/JuggyMcNutty/VibeEngine/commit/ca39cb532a9a21d246b8bb2c3a88be44b765eddc) --
   the vision augmentation's heat sources: the actor draws through the
   renderer into the scene being drawn with the GC's style, the glow
   and unlit given, the draw scale multiplied and a given skin
@@ -751,7 +751,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   temporary hook drew a live visible pawn through the path for 120
   canvas frames at glow 2 unlit, the fields reading back their own
   values between frames; a 75 s run after removal is clean.
-- [**the save picture, the menus' background and the save screens' lists**](https://github.com/JuggyMcNutty/SurrealEngine/commit/7ea6d871602fc6b8440693fca85dfadc905459da) --
+- [**the save picture, the menus' background and the save screens' lists**](https://github.com/JuggyMcNutty/VibeEngine/commit/7ea6d871602fc6b8440693fca85dfadc905459da) --
   the roadmap's last M1 item: the original's grey snapshot of the frame
   last drawn, read back between frames, which a save takes when asked
   into a texture beside its save info; the UI background's Snapshot and
@@ -768,7 +768,7 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   game's reference save and showing that save's own picture, and the main
   menu over the snapshot and over black; a 70 s run after the hook's
   exact-text removal is clean.
-- [**M0's two findings**](https://github.com/JuggyMcNutty/SurrealEngine/commit/69daeb00a50cc6b06914a6077ad2171603141226) --
+- [**M0's two findings**](https://github.com/JuggyMcNutty/VibeEngine/commit/69daeb00a50cc6b06914a6077ad2171603141226) --
   a mover with no brush collides as its cylinder and a model with no BSP
   nodes is hit by nothing (`09_NYC_ShipBelow` crashed in a trace), and the
   swimming gravity floors the mass at 1 (`14_OceanLab_Lab`'s massless
@@ -777,19 +777,19 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   temporary hooks named the mover, the NaN actors and the failing audio
   call; 70 s runs of both maps after their removal are clean, OceanLab's
   with real audio.
-- [**the root window starts with the world drawn**](https://github.com/JuggyMcNutty/SurrealEngine/commit/48fd9b9055ca99734622e99be7537ccfa14c6fcc) --
+- [**the root window starts with the world drawn**](https://github.com/JuggyMcNutty/VibeEngine/commit/48fd9b9055ca99734622e99be7537ccfa14c6fcc) --
   the save picture commit had the renderer skip the world while the root's
   rendering is off, and the fork made its root with it off where the
   original's init turns it on: a freshly loaded map drew only the HUD until
   a menu opened. Its runs drove the menus first and never showed it.
   **Checked:** `scripts/dxcap.sh prove` on Liberty Island -- both shots
   drawn.
-- [**`--ini`, `--userini` and `shot`**](https://github.com/JuggyMcNutty/SurrealEngine/commit/eae19f339465de4383f356eb86760df08ac53bc4) --
+- [**`--ini`, `--userini` and `shot`**](https://github.com/JuggyMcNutty/VibeEngine/commit/eae19f339465de4383f356eb86760df08ac53bc4) --
   the original's `INI=` and `USERINI=`, and its `SHOT` command, for
   [scripted runs](DEVELOPMENT.md#scripted-runs-of-both-engines).
   **Checked:** one console class drove both engines to Liberty Island's
   start and shot it.
-- [**`SetLocation` as the original's `FarMoveActor`**](https://github.com/JuggyMcNutty/SurrealEngine/commit/df9421601397dac5808857bb152a952a809977d0) --
+- [**`SetLocation` as the original's `FarMoveActor`**](https://github.com/JuggyMcNutty/VibeEngine/commit/df9421601397dac5808857bb152a952a809977d0) --
   the actor's zone found again on every teleport (it stayed stale until
   physics next moved the actor), `bJustTeleported` and `OldLocation` set,
   what stood on it unbased, a static actor left put; `ZoneChange` run while
@@ -798,23 +798,23 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   ([implemented, not as the original](re/natives.md#implemented-not-as-the-original)).
   **Checked:** proving runs on Liberty Island and Battery Park; a scripted
   run found Battery Park's reverb zone by teleporting into it.
-- [**`--ini` with a game's ini**](https://github.com/JuggyMcNutty/SurrealEngine/commit/57c82331a6a7a8e2faed75cfd50ce6d22df5790a) --
+- [**`--ini` with a game's ini**](https://github.com/JuggyMcNutty/VibeEngine/commit/57c82331a6a7a8e2faed75cfd50ce6d22df5790a) --
   the client's, audio's and render device's settings read from the game's
   sections, not left at the engine's defaults.
   **Checked:** a recorded run's music off as its ini says, its window at
   the ini's size.
-- [**the script's sockets**](https://github.com/JuggyMcNutty/SurrealEngine/commit/c47b8b29df56560c4397ad0014fdaa952b9a65c0) --
+- [**the script's sockets**](https://github.com/JuggyMcNutty/VibeEngine/commit/c47b8b29df56560c4397ad0014fdaa952b9a65c0) --
   `InternetLink`, `TcpLink` and `UdpLink` as `IpDrv.dll`'s: the original
   constructor's link and receive modes, host-order addresses, GameSpy's
   `Validate`, one read a tick raised by link mode, the TCP states
   ([multiplayer](re/natives.md#multiplayer)). **Checked:** both engines
   asked 333networks' master server and pinged its servers alike; the Join
   Internet screen lists the live servers.
-- [**the sky zone turned the right way**](https://github.com/JuggyMcNutty/SurrealEngine/commit/11e582e6c005a5b7cd8eaea527f58a277fdd91e4) --
+- [**the sky zone turned the right way**](https://github.com/JuggyMcNutty/VibeEngine/commit/11e582e6c005a5b7cd8eaea527f58a277fdd91e4) --
   the sky's view turned by the inverse of the sky zone's rotation: Liberty
   Island's city had stood 56° off the original's ([a frame](re/render-dll.md#a-frame)).
   **Checked:** the skyline where the original's is in three captures.
-- [**joining a server**](https://github.com/JuggyMcNutty/SurrealEngine/commit/deb094e39e644ad40981361e597338add798ba5a) --
+- [**joining a server**](https://github.com/JuggyMcNutty/VibeEngine/commit/deb094e39e644ad40981361e597338add798ba5a) --
   a client's side of the original's protocol: a server's address
   in a URL, the UDP connection and channels, the handshake, the map loaded as
   a client's, the package map, actor channels receiving the server's actors,
@@ -822,20 +822,20 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   its heritage ([multiplayer](re/natives.md#multiplayer)). **Checked:** the
   fork joined the original's listen server twice and showed its world; the
   server logged both joins.
-- [**the client's calls and moves**](https://github.com/JuggyMcNutty/SurrealEngine/commit/4946f4ea289608f0c10d42aedb4ec1a981773c09) --
+- [**the client's calls and moves**](https://github.com/JuggyMcNutty/VibeEngine/commit/4946f4ea289608f0c10d42aedb4ec1a981773c09) --
   an actor's call in a net game sent to the server or held back by the
   original's rule, actors ticked by their roles, the viewport's speed and
   update intervals, the flush after a tick that sent, and the client's frame
   rate capped at its speed over 64 ([multiplayer](re/natives.md#multiplayer)).
   **Checked:** the fork's player walked on the original's server and ended
   where the server had it; the host's player moved smoothly on the fork.
-- [**the fork listens**](https://github.com/JuggyMcNutty/SurrealEngine/commit/cbc8a8ead8d5fc7768c83780e0567c765fb750f3) --
+- [**the fork listens**](https://github.com/JuggyMcNutty/VibeEngine/commit/cbc8a8ead8d5fc7768c83780e0567c765fb750f3) --
   a `?listen` map's net driver, the handshake's server side, the packages in
   the original's order, and a joining player spawned as the original's
   `SpawnPlayActor`; a URL's last option no longer dropped
   ([multiplayer](re/natives.md#multiplayer)). **Checked:** the original
   joined the fork's server and got its player spawned.
-- [**the server replicates**](https://github.com/JuggyMcNutty/SurrealEngine/commit/09e7b0d8091f6643d68ce4531fd9165e530febbd) --
+- [**the server replicates**](https://github.com/JuggyMcNutty/VibeEngine/commit/09e7b0d8091f6643d68ce4531fd9165e530febbd) --
   each client sent what the original's server sends it: the viewer, the
   actors due, priority, relevancy, channels, and each actor's changed values
   against what that client last got; a client's sends taken as the
@@ -844,14 +844,14 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   ([multiplayer](re/natives.md#multiplayer)). **Checked:** the original
   joined the fork's server, possessed its pawn, saw the map's actors and
   the host's player walking, and walked on the server.
-- [**the server calls its clients**](https://github.com/JuggyMcNutty/SurrealEngine/commit/19ec313296c91a3dd471c666f83bf742318586d0) --
+- [**the server calls its clients**](https://github.com/JuggyMcNutty/VibeEngine/commit/19ec313296c91a3dd471c666f83bf742318586d0) --
   a call on an actor a client's player owns goes to that client, the
   actor's channel opened and the actor sent first if need be; a channel the
   other side opens is acknowledged from its opening bunch
   ([multiplayer](re/natives.md#multiplayer)). **Checked:** the original
   client got the server's calls and a position correction, and ended where
   the fork's server had it.
-- [**the server's `ServerActors`**](https://github.com/JuggyMcNutty/SurrealEngine/commit/77c37156542ba19f34ef2435837d0ab563a82271) --
+- [**the server's `ServerActors`**](https://github.com/JuggyMcNutty/VibeEngine/commit/77c37156542ba19f34ef2435837d0ab563a82271) --
   a listening server spawns the game engine's `ServerActors` with their
   settings; a URL's port defaults to `[URL]`'s; Deus Ex's engine and net
   versions are 1100; the computer name is the machine's

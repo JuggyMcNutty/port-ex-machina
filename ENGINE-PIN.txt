@@ -1,5 +1,5 @@
 # The engine fork this repository builds: scripts/engine.sh fetch clones it,
 # check verifies it, pin (after pushing a fork commit) moves it. docs/ENGINE.md.
-repo    https://github.com/JuggyMcNutty/SurrealEngine.git
+repo    https://github.com/JuggyMcNutty/VibeEngine.git
 branch  deusex
 commit  c6ab4235e9d9ffb8361770e4d9c0b315e475b5c7
