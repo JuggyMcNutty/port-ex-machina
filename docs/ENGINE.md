@@ -22,17 +22,11 @@ After a fork commit is pushed, `pin` moves the file, and its move is committed
 here with whatever depends on it. That file is the engine's version; no engine
 source is kept here.
 
-**Not upstream's.** We do not send changes upstream: the engine ships a
-`NO-AI Code Rule.md` --
-
-> If you are primarily using LLM tools such as Claude to make code changes to
-> this codebase then please do not PR it to us. Keep it in a fork. Thank you.
-
--- and the fork's commits were written with Claude. A change worth upstreaming would
-need rewriting by a person from the problem statement, not adapting from a
-diff. Nor do we follow upstream: its new commits reach the fork only when
-someone chooses to [upgrade](#upgrading-surreal-engine) (owner, 2026-09-23). Using and building the engine is
-permitted by its own licence, which grants use "for any purpose".
+**Not upstream's.** The fork sends nothing upstream (owner, 2026-09-26), and
+does not follow upstream: its new commits reach the fork only when someone
+chooses to [upgrade](#upgrading-surreal-engine) (owner, 2026-09-23). Using and
+building the engine is permitted by its own licence, which grants use "for any
+purpose".
 
 ## Commands
 
@@ -53,8 +47,7 @@ scripts/engine.sh perf on|off|save          # the profiling hooks (below)
 
 Commit the change in the fork, push it, then `scripts/engine.sh pin`, and
 commit the moved `ENGINE-PIN.txt` here with the docs the change affects. Each
-fork commit's message says what it changes, why, and how it was checked, and
-opens with the fork-only note (never PR upstream, above);
+fork commit's message says what it changes, why, and how it was checked;
 [what the fork changes](#what-the-fork-changes) below adds what it did on the
 Smart Pro. The fork's history is published and never rewritten. Its first 34
 commits began as this repository's patch stack, engine-patches (retired
