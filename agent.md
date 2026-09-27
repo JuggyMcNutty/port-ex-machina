@@ -91,10 +91,6 @@ no facts of its own beyond those; each lives in one doc, and the
   - comparing the original's native replication lists with the script
     statements the fork evaluates for them (these two in
     [multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer));
-  - the fork's saves writing spawned actors without the load flags the
-    original's linker makes exports by
-    ([mods](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#mods)) -- whether the original loads a
-    fork save whole is to check;
   - a live mode for the harness, whose consoles every server's game
     disconnects -- it wants the stock console -- (so far a run takes the
     stock console and a temporary hook: VibeEngine's
@@ -118,6 +114,15 @@ no facts of its own beyond those; each lives in one doc, and the
   walking's float over the floor is the original's since 2026-09-27) --,
   and the weapon in hand higher and smaller in a 16:9 view than the
   original's ([the fractal textures' check](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#fire-water-and-ice-textures)).
+  Saves made alike by both engines (`SaveConsole`, Liberty Island 8 s in,
+  2026-09-27) left more, in no order: the fork's out-of-world UNATCO troops
+  (UNATCOTroop3 to 9, `bInWorld` false and hidden in both) are in their
+  orders' `Patrolling` and listening for events, where the original's are
+  in `Idle` and not; UNATCOTroop6, ordered to sit, wanders where the
+  original's sits; an NSF terrorist has taken on a security bot where the
+  original's still patrol; and the event manager calls its listeners during
+  its pass, not after it
+  ([hearing](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#hearing-the-ai-event-system)).
   What remains of the milestones is by hand, waiting with the open
   decisions: the checks in [open decision 1](#open-decisions), the sound's
   heard with real audio, which the distrobox reaches now
