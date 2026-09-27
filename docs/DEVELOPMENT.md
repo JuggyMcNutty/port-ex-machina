@@ -44,7 +44,9 @@ CMake caches, the engine's embedded source paths). The container has
 engine reaches the desktop's audio -- a test run is audible on the owner's
 speakers as well as visible on their screen. The null OpenAL driver remains
 the way to run silently
-([linux-x86_64's README](../ports/linux-x86_64/README.md#audio)).
+([linux-x86_64's README](../ports/linux-x86_64/README.md#audio)). Its pacman
+has multilib (enabled 2026-09-26) and the 32-bit libraries the original needs
+under Proton's wine: X11, Mesa, PulseAudio, FreeType, GLib and theirs.
 
 ## Commits
 
@@ -68,8 +70,8 @@ the way to run silently
 
 ## Scripted runs of both engines
 
-`scripts/dxcap.sh` runs the original game (under Proton, on the host) and the
-engine fork alike, each driven by a console class of the DXCapture package --
+`scripts/dxcap.sh` runs the original game (under Proton's wine, in this
+container) and the engine fork alike, each driven by a console class of the DXCapture package --
 UnrealScript in `tools/dxcap`, compiled by the SDK's `UCC.exe`
 (`reference/ReleaseSDK1112f`) into `build/dxcap`. Each run gets a private ini
 made from the game's own, naming the console class, with a 1280x720 window;
@@ -94,18 +96,20 @@ The console classes:
   logged, 333networks' master server asked for Deus Ex's servers and five
   of them pinged, then the game's own Join Internet screen opened (the
   run's ini names that master server: the game's names GameSpy's, closed).
-- **`ServeConsole`**: a listen server for the other engine to join -- a
+- **`ServeConsole`**, either engine: a listen server for the other to join -- a
   deathmatch on DXMP_Cathedral, never on the master servers' lists (the
   run's ini has no uplink). Once another player is in, the host's own player
   stands in front of it and walks to and fro across its view; where each
   player stands is logged every 2 s. It exits after 290 s: give the
   original's run 300 s (`scripts/dxcap.sh original ServeConsole 300`).
-- **`JoinConsole`**: the joining side -- from the menu map it opens
-  `127.0.0.1:7790`, stands its player 5 s, walks it forward 5 s and stands
-  again, logging each second where it and every other pawn stand, and shots
-  at the stops (`scripts/dxcap.sh fork JoinConsole DX.dx`). Start it once
-  the server answers, some 13 s after the original starts here; the
-  server's log comes at its exit.
+- **`JoinConsole`**, either engine: the joining side -- from the menu map it
+  opens `127.0.0.1:7790`, stands its player 5 s, walks it forward 5 s and
+  stands again, logging each second where it and every other pawn stand, and
+  shots at the stops (`scripts/dxcap.sh fork JoinConsole DX.dx`, or
+  `scripts/dxcap.sh original JoinConsole` against the fork's
+  `scripts/dxcap.sh fork ServeConsole DX.dx`). Start it once the server
+  answers, some 13 s after the original starts; the original's log comes at
+  its exit.
 - **`SoundConsole`**: M0's sounds -- a steady sound heard in the open and from
   behind a wall, shots in a reverb zone and out of it, and beeps from the
   right, the left and ahead. It silences the level first (ambient sounds,
@@ -128,8 +132,8 @@ brightness is a gamma ramp, which the hidden display lacks: its shots are
 darker than the fork's, and brightness is not compared.
 
 **Recording.** `DXCAP_RECORD=1` sends the engine's sound to a private null
-sink on the host (`PULSE_SINK`) and records the sink with `parecord`; the
-run's ini turns the music off.
+sink on the desktop's sound server (`PULSE_SINK`) and records the sink with
+`parecord`; the run's ini turns the music off.
 
 What it takes to run the original there, each found the hard way:
 
@@ -140,11 +144,19 @@ What it takes to run the original there, each found the hard way:
 - **A stale `Running.ini` opens the recovery wizard**, which waits for a
   click: the script removes it first. Every run of the original overwrites
   `System/DeusEx.log`, as any launch of it does.
-- **It needs the X session's authority**: without it Wine found no usable
-  display and the game never ran its console.
-- **A killed run keeps running**: Proton's container outlives `umu-run`, so
-  the script waits for the game's own process and kills only it -- the
-  prefix may hold IDA too.
+- **It runs in this container, never on the host**: the Proton build's own
+  `wine` with the prefix, as IDA's headless server runs
+  ([`tools/ida/idalib-mcp.sh`](../tools/ida/idalib-mcp.sh)); the two share
+  a wineserver, which nothing stops. The 32-bit game needs the container's
+  32-bit libraries ([this machine](#this-machine)).
+- **No Wine desktop**: `explorer /desktop` fails to set its display up on
+  Xvfb and exits without starting the game, so the game runs straight on the
+  hidden display, where the grabber finds its frames by their mark.
+- **Only its own process is stopped** at the end: the prefix may hold IDA
+  too.
+- **Runs of both engines at once** (the net tests) lose the fork's shots:
+  the original's run deletes every shot that appears in the game's folder
+  while it runs, its own being black.
 
 The fork's window opens on this machine's desktop, as any run's does; the
 original's, on the hidden display.

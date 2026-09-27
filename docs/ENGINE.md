@@ -829,3 +829,9 @@ What Surreal Engine lacked for Deus Ex to play as it should.
   rate capped at its speed over 64 ([multiplayer](re/natives.md#multiplayer)).
   **Checked:** the fork's player walked on the original's server and ended
   where the server had it; the host's player moved smoothly on the fork.
+- [**the fork listens**](https://github.com/JuggyMcNutty/SurrealEngine/commit/cbc8a8ead8d5fc7768c83780e0567c765fb750f3) --
+  a `?listen` map's net driver, the handshake's server side, the packages in
+  the original's order, and a joining player spawned as the original's
+  `SpawnPlayActor`; a URL's last option no longer dropped
+  ([multiplayer](re/natives.md#multiplayer)). **Checked:** the original
+  joined the fork's server and got its player spawned.

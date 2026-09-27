@@ -12,8 +12,8 @@
 #   scripts/dxcap.sh prove <map>                   the fork's proving run: shots at 20 s and 60 s, exit at 65 s
 #
 # A run's shots and log land in build/dxcap/runs/<engine>-<console>-<time>/.
-# The original runs on the host through umu-run (from a container, through
-# distrobox-host-exec); DXCAP_PREFIX (default ~/Games/umu/umu-default) and
+# The original runs in this container, never on the host, under the Proton
+# build's own wine; DXCAP_PREFIX (default ~/Games/umu/umu-default) and
 # DXCAP_PROTON (default "Proton-CachyOS Latest") pick the Wine prefix and the
 # Proton under ~/.local/share/Steam/compatibilitytools.d. DXCAP_AUDIO=1 gives
 # the fork real audio; it is silent otherwise. DXCAP_RECORD=1 sends either
@@ -29,35 +29,36 @@ ENGINE_BIN="$DX_ROOT/build/linux-x86_64/engine/SurrealEngine"
 
 usage() { sed -n '2,21p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 
-# The recording: a null sink on the host that the game's stream goes to
-# (PULSE_SINK), and parecord on its monitor, detached so it outlives the
-# host session that started it.
+# The recording: a null sink that the game's stream goes to (PULSE_SINK),
+# and parecord on its monitor, detached so it outlives the call.
 rec_start() {
     local wav="$1"
-    on_host sh -c "pactl list short sinks | grep -q '[[:space:]]dxcap[[:space:]]' ||
-        pactl load-module module-null-sink sink_name=dxcap sink_properties=device.description=dxcap > '$CAP/sink.module'
-        setsid nohup parecord --device=dxcap.monitor --file-format=wav '$wav' > /dev/null 2>&1 < /dev/null &
-        echo \$! > '$CAP/rec.pid'"
+    pactl list short sinks | grep -q '[[:space:]]dxcap[[:space:]]' ||
+        pactl load-module module-null-sink sink_name=dxcap sink_properties=device.description=dxcap > "$CAP/sink.module"
+    setsid nohup parecord --device=dxcap.monitor --file-format=wav "$wav" > /dev/null 2>&1 < /dev/null &
+    echo $! > "$CAP/rec.pid"
     sleep 1
 }
 
 rec_stop() {
-    on_host sh -c "[ -f '$CAP/rec.pid' ] && kill \$(cat '$CAP/rec.pid') 2>/dev/null; rm -f '$CAP/rec.pid'
-        sleep 1
-        [ -f '$CAP/sink.module' ] && pactl unload-module \$(cat '$CAP/sink.module'); rm -f '$CAP/sink.module'" || true
+    [ -f "$CAP/rec.pid" ] && kill "$(cat "$CAP/rec.pid")" 2>/dev/null
+    rm -f "$CAP/rec.pid"
+    sleep 1
+    if [ -f "$CAP/sink.module" ]; then
+        pactl unload-module "$(cat "$CAP/sink.module")" || true
+        rm -f "$CAP/sink.module"
+    fi
 }
 
 [ -d "$GAME/System" ] || die "no game install at $GAME"
 
-# Runs a command on the host, where Proton is.
-on_host() {
-    if command -v umu-run >/dev/null; then
-        "$@"
-    elif command -v distrobox-host-exec >/dev/null; then
-        distrobox-host-exec "$@"
-    else
-        die "neither umu-run nor distrobox-host-exec is here"
-    fi
+# The prefix's Windows programs -- the original and the SDK's UCC -- run
+# here with the Proton build's own wine, as tools/ida/idalib-mcp.sh runs IDA
+# (a wineserver it has running is shared, never stopped).
+WINE="$HOME/.local/share/Steam/compatibilitytools.d/${DXCAP_PROTON:-Proton-CachyOS Latest}/files/bin/wine"
+wine_run() {
+    env WINEPREFIX="${DXCAP_PREFIX:-$HOME/Games/umu/umu-default}" WINEDEBUG=-all \
+        WINEDLLOVERRIDES="winemenubuilder.exe=d" "$WINE" "$@"
 }
 
 # Wine's view of an absolute path: Z: is the root.
@@ -140,43 +141,13 @@ EOF
     cp "$CAP/System/UCC.ini" "$CAP/System/DeusEx.ini"
     cp "$GAME/System/User.ini" "$CAP/System/User.ini"
 
-    # The original's run, on the host: started in a Wine desktop -- its
-    # command line's first word is taken for the start URL, so the menu map
-    # goes first -- waited for
-    # until it exits (each console class ends its run with EXIT) or the time
-    # runs out; then only its own process is killed -- the prefix may hold
-    # IDA as well.
-    cat > "$CAP/run-original.sh" <<EOF
-#!/bin/sh
-secs="\$1"; ini="\$2"; userini="\$3"
-cd "$GAME/System" || exit 1
-rm -f Running.ini
-export WINEPREFIX="\${DXCAP_PREFIX:-\$HOME/Games/umu/umu-default}"
-export GAMEID=umu-default
-export PROTONPATH="\$HOME/.local/share/Steam/compatibilitytools.d/\${DXCAP_PROTON:-Proton-CachyOS Latest}"
-[ -n "\$DISPLAY" ] || export DISPLAY=:0
-[ -n "\$XAUTHORITY" ] || export XAUTHORITY="\$(ls /run/user/\$(id -u)/xauth_* 2>/dev/null | head -1)"
-umu-run explorer /desktop=dxcap,1344x800 DeusEx.exe DX.dx "INI=\$ini" "USERINI=\$userini" > "$CAP/umu.log" 2>&1 &
-i=0
-while [ \$i -lt 60 ] && ! pgrep -f "^DeusEx.exe" > /dev/null; do sleep 1; i=\$((i+1)); done
-i=0
-while [ \$i -lt "\$secs" ] && pgrep -f "^DeusEx.exe" > /dev/null; do sleep 1; i=\$((i+1)); done
-if pgrep -f "^DeusEx.exe" > /dev/null; then
-    kill \$(pgrep -f "^DeusEx.exe")
-    echo "killed after \$secs s"
-else
-    echo "exited after \$i s"
-fi
-sleep 3
-EOF
-    chmod +x "$CAP/run-original.sh"
     say "build/dxcap is ready -- scripts/dxcap.sh compile next"
 }
 
 cmd_compile() {
-    [ -x "$CAP/run-original.sh" ] || die "scripts/dxcap.sh setup first"
+    [ -f "$CAP/System/UCC.exe" ] || die "scripts/dxcap.sh setup first"
     rm -f "$CAP/System/DXCapture.u"
-    on_host sh -c "cd '$CAP/System' && WINEPREFIX=\"\${DXCAP_PREFIX:-\$HOME/Games/umu/umu-default}\" GAMEID=umu-default PROTONPATH=\"\$HOME/.local/share/Steam/compatibilitytools.d/\${DXCAP_PROTON:-Proton-CachyOS Latest}\" umu-run UCC.exe make > '$CAP/ucc.out' 2>&1" || true
+    (cd "$CAP/System" && wine_run UCC.exe make > "$CAP/ucc.out" 2>&1) || true
     grep -E "Error|error\(s\)" "$CAP/System/UCC.log" >&2 || true
     [ -f "$CAP/System/DXCapture.u" ] || die "UCC made no DXCapture.u -- build/dxcap/System/UCC.log"
     say "compiled: build/dxcap/System/DXCapture.u"
@@ -224,12 +195,30 @@ cmd_original() {
     python3 "$DX_ROOT/tools/dxcap/grab.py" "$dir" "$XDISPLAY" "${XSIZE%x*}" "${XSIZE#*x}" 1280 720 2> "$dir/grab.log" &
     gpid=$!
 
-    local env=(DISPLAY="$XDISPLAY")
-    if [ "${DXCAP_RECORD:-0}" = 1 ]; then
-        rec_start "$dir/audio.wav"
-        env+=(PULSE_SINK=dxcap)
-    fi
-    on_host env "${env[@]}" "$CAP/run-original.sh" "$secs" "$(winpath "$ini")" "$(winpath "$userini")" || true
+    [ "${DXCAP_RECORD:-0}" != 1 ] || rec_start "$dir/audio.wav"
+    # Started straight on the hidden display -- a Wine desktop fails to set
+    # its display up on Xvfb here --, its command line's first word taken for
+    # the start URL, so the menu map goes first; waited for until it exits
+    # (each console class ends its run with EXIT) or the time runs out; then
+    # only its own process is stopped.
+    (
+        export DISPLAY="$XDISPLAY"
+        [ "${DXCAP_RECORD:-0}" != 1 ] || export PULSE_SINK=dxcap
+        cd "$GAME/System"
+        rm -f Running.ini
+        wine_run DeusEx.exe DX.dx "INI=$(winpath "$ini")" "USERINI=$(winpath "$userini")" > "$dir/wine.log" 2>&1 &
+        i=0
+        while [ $i -lt 60 ] && ! pgrep -f "^DeusEx.exe" > /dev/null; do sleep 1; i=$((i+1)); done
+        i=0
+        while [ $i -lt "$secs" ] && pgrep -f "^DeusEx.exe" > /dev/null; do sleep 1; i=$((i+1)); done
+        if pgrep -f "^DeusEx.exe" > /dev/null; then
+            kill $(pgrep -f "^DeusEx.exe")
+            echo "killed after $secs s"
+        else
+            echo "exited after $i s"
+        fi
+        sleep 3
+    ) || true
     [ "${DXCAP_RECORD:-0}" != 1 ] || rec_stop
 
     kill "$gpid" 2>/dev/null || true

@@ -918,10 +918,21 @@ ended with it at the fork's position exactly, no correction sent; the
 host's player, walking to and fro in front of it, moved smoothly on the
 fork between the server's updates.
 
+The fork serves too, so far to the point of a player joining (2026-09-26): a
+map opened with `?listen` listens on `[URL]`'s port before its game begins;
+the handshake's server side is the original's, with the same packages in the
+same order; `JOIN` spawns the player as the original's `SpawnPlayActor`,
+possessed by a Player object for its connection. Checked with the original as
+the client: it joined the fork's DXMP_Cathedral and the fork spawned its
+player.
+
 Not yet, of a client: downloads (a package missing or different from the
 server's ends the join) and the world-stats checksum (`NoChecksum` always).
-Nothing of a server. Each bunch goes on its own: the original merges one into
-the last when both are the same channel's, which only saves bits.
+Of a server: replication out -- the original's client waits in vain for its
+pawn --, its calls to clients, the `ServerActors` (the beacon, the query
+answerer, the uplinks), travel, and serving downloads. Each bunch goes on its
+own: the original merges one into the last when both are the same channel's,
+which only saves bits.
 
 The scripts' sockets are the original's now (2026-09-26,
 [the script's links](ipdrv-dll.md#the-scripts-links)): `InternetLink`'s

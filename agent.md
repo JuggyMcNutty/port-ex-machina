@@ -58,8 +58,9 @@ no facts of its own beyond those; each lives in one doc, and the
 - **x360**: planned; nothing about it is worked out yet.
 - **Next**: multiplayer, M7 (the owner's ask, 2026-09-26;
   [decided 5](#decided)): the fork joins a server and plays on it -- the
-  original's listen server, so far; a live server is yet to try --; the
-  server side next.
+  original's listen server, so far; a live server is yet to try --; as a
+  server it takes the original's join and spawns its player, and replicating
+  to it is next.
   The reimplementation's milestones are done -- M0 through M6 all in
   (2026-09-26, M0's acceptance captures last;
   [`docs/ROADMAP.md`](docs/ROADMAP.md) tracks each item, and
