@@ -62,10 +62,14 @@ no facts of its own beyond those; each lives in one doc, and the
     [`galaxy-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/galaxy-dll.md),
     [`d3ddrv-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/d3ddrv-dll.md),
     [`fire-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/fire-dll.md)); their databases are typed,
-    named and backed up. `gamefiles/System/Engine.dll.i64` no longer opens
-    (a crashed IDA worker, 2026-09-27; left as it was): its backup
-    (`reference/idb-backup/`, 2026-09-24) does, less what was named in it
-    since -- whether to restore it is the owner's call.
+    named and backed up. `gamefiles/System/Engine.dll.i64` no longer opens:
+    an idle worker's save left out its root node, IDA's record of the input
+    file (2026-09-27; what removed it is not found). Its backup
+    (`reference/idb-backup/`, 2026-09-24) opens, and nothing was named or
+    typed since -- only the decompiler's caches and guessed prototypes are
+    newer; beside it, `Engine.dll.i64.repaired` is the database with the
+    backup's root node put back, which opens and keeps them. Which to put
+    back is the owner's call.
   - **What Surreal lacks** of them is VibeEngine's
     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md),
     from [`natives_audit.py`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/tools/natives_audit.py),
