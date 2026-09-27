@@ -79,8 +79,9 @@ no facts of its own beyond those; each lives in one doc, and the
   (2026-09-27): it downloads what it lacks, loads their mods and stays in
   --; as a server it takes the original's join, replicates the level to it,
   calls it, serves it downloads, and answers LAN and GameSpy queries and a
-  master server as the original does. Next: server travel and a dedicated
-  server (the rest of M7 in
+  master server as the original does, and travels with its clients
+  following, as they follow the original's. Next: a dedicated server (the
+  rest of M7 in
   [`ROADMAP.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ROADMAP.md#m7----multiplayer)).
   Potential work it left, in no order: the fork's player standing lower
   than the original's server has it; the fork's ini reader taking an empty
