@@ -26,7 +26,7 @@ no facts of its own beyond those; each lives in one doc, and the
   renamed from SurrealEngine by the owner, 2026-09-26, the old address
   redirecting), pinned by `ENGINE-PIN.txt`; the patch stack was retired into
   it (2026-09-24), and its docs and tools are its own `vibe/` (2026-09-27). It
-  holds upstream's latest when last merged (2026-09-24); upstream is 43
+  holds upstream's latest when last merged (2026-09-24); upstream is 44
   commits past it (2026-09-27), and whether and when to merge them
   (`scripts/engine.sh status`, then the fork's `vibe/tools/upgrade.sh`) is
   the owner's call. The profiling hooks are off.
