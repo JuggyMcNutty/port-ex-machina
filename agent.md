@@ -111,8 +111,9 @@ no facts of its own beyond those; each lives in one doc, and the
   feature: Liberty Island's laser tripwires drawn fainter than the original's
   (drawn at all since the fractal textures; the original's frames on Xvfb
   lack a fair brightness: [lasers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#particles-and-lasers-render-iterators)),
-  coronas smaller and dimmer than the original's and one at the frame's edge
-  missing ([coronas](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#coronas)), the zone reverb ringing a
+  coronas' faint outer glow dimmer than the original's frames on Xvfb show
+  it -- their colour and lights now the original's
+  ([coronas](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#coronas)) --, the zone reverb ringing a
   third as long and the pan hard where the original's is soft
   ([sound](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#sound)), `SetLocation`'s fitting in
   ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)),
