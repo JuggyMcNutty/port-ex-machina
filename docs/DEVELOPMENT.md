@@ -59,7 +59,10 @@ speakers as well as visible on their screen. The null OpenAL driver remains
 the way to run silently
 ([linux-x86_64's README](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md#audio)). Its pacman
 has multilib (enabled 2026-09-26) and the 32-bit libraries the original needs
-under Proton's wine: X11, Mesa, PulseAudio, FreeType, GLib and theirs.
+under Proton's wine: X11, Mesa, PulseAudio, FreeType, GLib and theirs. Its
+user Python has `unicorn` (pip, 2026-09-27), the CPU emulator
+[`Fire.dll`'s check](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/fire-dll.md#how-it-was-checked) ran the DLL's
+routines in.
 
 ## Commits
 
