@@ -90,9 +90,7 @@ no facts of its own beyond those; each lives in one doc, and the
   - moving on a live server, not yet tried;
   - the fork's player standing lower than the original's server has it;
   - comparing the original's native replication lists with the script
-    statements the fork evaluates for them;
-  - a client going to its Entry level while a travel's join is pending, as
-    the original's does (all of the above in
+    statements the fork evaluates for them (these three in
     [multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer));
   - a package a server sent staying loaded, so another server's package of
     that name but another GUID fails the join as a version mismatch until
