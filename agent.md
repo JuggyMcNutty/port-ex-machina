@@ -21,9 +21,9 @@ no facts of its own beyond those; each lives in one doc, and the
   repositories, the engine and every port branch pinned at what was
   pushed. `main`'s windows' icons (2026-09-28, Next) are not merged into
   the port branches -- whether they go there too is the owner's call.
-  Since then, committed and not pushed: the engine's Galaxy mixer and the
-  RE's reading of it (2026-09-28, Next); the engine's pin waits for the
-  push.
+  Since then, committed and not pushed: the engine's Galaxy mixer and its
+  drawn test's render box, and the RE's reading of both (2026-09-28,
+  Next); the engine's pin waits for the push.
 - **The launcher** the ports run -- `linux-x86_64`'s branch, and the devices'
   from it -- runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2). `main`, the original recreated
@@ -135,10 +135,12 @@ no facts of its own beyond those; each lives in one doc, and the
   `Galaxy.dll` mixes them, each within 0.2 dB or 0.05 s of the original's
   recording ([sound](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#sound)).
   Saves made alike by both engines (`SaveConsole`, Liberty Island 8 s in,
-  2026-09-27) left more, in no order: at the level's start 10 NPCs count
-  as drawn where the original has 3, far off over the seawall -- one span
-  buffer where the original keeps one per zone, and a more generous mesh
-  box ([out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)); Terrorist15 backs
+  2026-09-27) left more, in no order: at the level's start 9 NPCs count
+  as drawn where the original has 3, far off over the seawall -- the
+  proxies' rectangles the original's since 2026-09-28 and per-zone span
+  buffers no help (tried), what is left 1 to 9 pixels of theirs showing at
+  the edges, a pixel's difference between the engines' rasterizing
+  ([out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)); Terrorist15 backs
   off for some seconds early on where the original's patrols
   ([starting up](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#starting-up)). Its out-of-world
   troops patrolling, its sitters wandering, a terrorist fighting a
