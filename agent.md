@@ -99,11 +99,13 @@ no facts of its own beyond those; each lives in one doc, and the
   [`ROADMAP.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ROADMAP.md) tracks each item, and
   [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md) says what changed and what stays the
   fork's own). The captures left potential work, in no order, each under its
-  feature: Liberty Island's laser tripwires drawn fainter than the original's
-  (drawn at all since the fractal textures;
-  [lasers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#particles-and-lasers-render-iterators)), over
-  surfaces the fork draws brighter than the original's frames show them,
-  `D3DDrv`'s and `OpenGLDrv`'s alike (the same place), the zone reverb ringing a
+  feature: Liberty Island's laser tripwires a little stronger than the
+  original's, more of the beam red (drawn at all since the fractal textures;
+  [lasers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#particles-and-lasers-render-iterators)), meshes
+  lit in the fork's colours -- √`LightBrightness`, and half the original's
+  ambient light --, where the light maps take the original's since
+  2026-09-28, and the unread shapes of the cloud cast and of the effects
+  still the fork's ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)), the zone reverb ringing a
   third as long and the pan hard where the original's is soft
   ([sound](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#sound)), `SetLocation`'s fitting in
   ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)),
