@@ -43,7 +43,7 @@ no facts of its own beyond those; each lives in one doc, and the
   often) on and 853×480 (2026-09-23), which the fight's native rows switch to
   native for the run. It has no battery (its battery
   warnings are off: [its Gotchas](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#gotchas)).
-- **The game's DLLs**: four passes are read (the last 2026-09-27;
+- **The game's DLLs**: five passes are read (the last 2026-09-27;
   [decided 4](#decided)). [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info)
   covers each binary read, and an IDA database gets three scripts from its
   `tools/ida/` (types, strings, names).
@@ -51,7 +51,8 @@ no facts of its own beyond those; each lives in one doc, and the
     [`network.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/network.md)), **`Core.dll`**, **`Extension.dll`**,
     **`ConSys.dll`**, **`DeusExText.dll`**, **`Render.dll`** (where a
     feature's drawing lives there, its mesh detail and lighting),
-    **`IpDrv.dll`**, **`Galaxy.dll`**, **`D3DDrv.dll`** and **`Fire.dll`**
+    **`IpDrv.dll`**, **`Galaxy.dll`**, **`D3DDrv.dll`**, **`Fire.dll`** and
+    **`WinDrv.dll`** (its command-line flags)
     ([`deusex-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/deusex-dll.md),
     [`engine-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md),
     [`core-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md),
@@ -62,7 +63,8 @@ no facts of its own beyond those; each lives in one doc, and the
     [`ipdrv-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/ipdrv-dll.md),
     [`galaxy-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/galaxy-dll.md),
     [`d3ddrv-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/d3ddrv-dll.md),
-    [`fire-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/fire-dll.md)); their databases are typed,
+    [`fire-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/fire-dll.md),
+    [`windrv-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/windrv-dll.md)); their databases are typed,
     named and backed up. Engine.dll's lost its root node, IDA's record of
     the input file, in an idle worker's save (2026-09-27; what removed it
     is not found) and has it back from the backup, nothing else lost.
@@ -135,7 +137,15 @@ no facts of its own beyond those; each lives in one doc, and the
   migration, `Running.ini` after the wizard, the CD check's prompt, the
   hand-over's `run-game.sh`), the splash, and the wizard's six pages with
   captions from the game's `Startup.int` -- safe mode's eight boxes wired
-  correctly -- each merged up into the port branches as it lands. Potential
+  correctly -- each merged up into the port branches as it lands. The owner
+  set its shape (2026-09-27): the pages laid out from `Window.dll`'s
+  templates and compared with the original's captured under wine; the
+  launcher resident for the game's life, as the original's process is; the
+  engine's side too, in VibeEngine -- the original's command line, the
+  safe-mode flags it can honour, `-EXEC=`, and a channel that hands the
+  running game a forwarded URL; and the launcher, named `DeusEx`, installed
+  in the game's `System/` with its `run-game.sh`. The RE it needed is read
+  ([decided 4](#decided)'s fifth pass). Potential
   work the split turned up, in no order: the profiling hooks' patch no longer
   applies at the fork's head -- its three-way merge conflicts in
   `LightSystem_Light.cpp`, `RenderScene.cpp` and `RenderSubsystem.cpp`, so it
@@ -238,11 +248,21 @@ no facts of its own beyond those; each lives in one doc, and the
      ice textures, once the Dragon's Tooth's blade showed them wrong
      ([`fire-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/fire-dll.md)); checked against its own
      routines run in an emulator.
+   - **The fifth** (done, 2026-09-27, for the launcher's `main`): what the
+     recreation still needed of `DeusEx.exe`, with the SDK's source of its
+     pages checked against it
+     ([`wizard.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/wizard.md),
+     [`launch-flow.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/launch-flow.md));
+     `Window.dll`'s dialog templates, as data (owner, 2026-09-27;
+     [page layouts](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/wizard.md#page-layouts));
+     and where the engine reads each flag safe mode emits -- `Engine.dll`,
+     `Galaxy.dll`, `Core.dll` and `WinDrv.dll`
+     ([`cli-flags.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/cli-flags.md#flags-the-launcher-emits-safe-mode)).
    - **Only if a need comes up**: `SoftDrv.dll` (a
-     software renderer, decided 3), `WinDrv.dll` (mouse and keyboard), and the owner's copied
+     software renderer, decided 3), `WinDrv.dll` beyond its flags (mouse and keyboard), and the owner's copied
      `ALAudio.dll` for what the original lacks (an EFX take on the reverb,
      HRTF; [what it is](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#the-binaries)). **Not at all**:
-     `Editor.dll`, `Window.dll`, the Glide, Metal and SGL drivers,
+     `Editor.dll`, `Window.dll`'s code, the Glide, Metal and SGL drivers,
      `Setup.exe`, the GOG DLL and `RGalaxy.dll` (Galaxy.dll renamed, with one
      change).
 5. **Multiplayer** (owner, 2026-09-24): Deus Ex's PvP servers are still up on
