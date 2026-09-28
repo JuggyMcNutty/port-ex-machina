@@ -22,9 +22,13 @@ no facts of its own beyond those; each lives in one doc, and the
   pushed. `main`'s windows' icons (2026-09-28, Next) are not merged into
   the port branches -- whether they go there too is the owner's call.
   Since then, committed and not pushed: the engine's Galaxy mixer, its
-  drawn test's render box and its fitting in and encroaching, and the
-  RE's reading of each (2026-09-28, Next); the engine's pin waits for the
-  push.
+  drawn test's render box, its fitting in and encroaching, where its
+  traces stop, its visible-actor iterators, `LineOfSightTo`, `CanSee` and
+  `PlayerCanSeeMe`, the player's input read before its physics, and the
+  latent moves with the path's touched node; the harness's
+  `VisibleConsole` and `SightConsole` and `StandConsole`'s held-key walk;
+  the RE's reading of each; and this file (2026-09-28, Next). The engine's
+  pin waits for the push.
 - **The launcher** the ports run -- `linux-x86_64`'s branch, and the devices'
   from it -- runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2). `main`, the original recreated
@@ -150,15 +154,20 @@ no facts of its own beyond those; each lives in one doc, and the
   proxies' rectangles the original's since 2026-09-28 and per-zone span
   buffers no help (tried), what is left 1 to 9 pixels of theirs showing at
   the edges, a pixel's difference between the engines' rasterizing
-  ([out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)); Terrorist15 backs
-  off for some seconds early on where the original's patrols
-  ([starting up](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#starting-up)). Its out-of-world
+  ([out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)). Its out-of-world
   troops patrolling, its sitters wandering, a terrorist fighting a
   security bot, the event manager's listeners called during its pass,
   `TraceTexture`'s other texture for a wall and traces from inside a pawn
   hitting the pawn are the original's since 2026-09-27 and 28 (the same
   sections; [hearing](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#hearing-the-ai-event-system),
-  [implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)).
+  [implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)),
+  and so is Terrorist15's patrol: it backed off early on because the
+  fork's `MoveToward` stopped short of each node and its route sent it
+  back to the node it stood on; the latent moves are the original's since
+  2026-09-28, NPCs walking around what they bump at last
+  ([moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement)). The rest of the fork's
+  path search is still its own (the original's `findPathToward` in
+  [moving](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#moving)).
   What remains of the milestones is by hand, waiting with the open
   decisions: the checks in [open decision 1](#open-decisions), the sound's
   heard with real audio, which the distrobox reaches now
@@ -436,7 +445,12 @@ Each waits until the owner takes it up ([decided 8](#decided)).
      desktop's audio: [linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md#audio));
      a shot fired around a corner turning the guards, and a body found
      raising the alarm, by
-     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#hearing-the-ai-event-system); one of
+     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#hearing-the-ai-event-system);
+     an NPC walking around a crate or another NPC in its way rather than
+     backing off, by
+     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement);
+     a robot exploding at its death sparing what stands behind a wall, by
+     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original); one of
      the original game's reference saves played on for a while
      ([`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#saving-loading-and-travel)); a
      cloaked commando, a burning NPC going out and a rat disappearing
