@@ -17,15 +17,10 @@ no facts of its own beyond those; each lives in one doc, and the
   [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info). Each is
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
-- **Unpushed** (2026-09-28): the work of 2026-09-27 and 28 in all four
-  repositories waits for the owner's go-ahead to push. The engine's clone
-  is past `ENGINE-PIN.txt` and every port branch past its pin in
-  `LAUNCHER-PIN.txt` (`scripts/engine.sh check`, `scripts/launcher.sh
-  check`), so the ports build what is pinned until `engine.sh pin` and
-  `launcher.sh pin` follow the push. The port branches hold `main`'s
-  comments on the hand-over (2026-09-27), merged; `main`'s windows' icons
-  (2026-09-28, Next) are not merged into them -- whether they go there too
-  is the owner's call.
+- **Pushed and pinned** (2026-09-28, the owner's go-ahead): all four
+  repositories, the engine and every port branch pinned at what was
+  pushed. `main`'s windows' icons (2026-09-28, Next) are not merged into
+  the port branches -- whether they go there too is the owner's call.
 - **The launcher** the ports run -- `linux-x86_64`'s branch, and the devices'
   from it -- runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2). `main`, the original recreated
@@ -168,8 +163,8 @@ no facts of its own beyond those; each lives in one doc, and the
   URL); `DeusEx` installed in the game's `System/` by
   `scripts/recreation.sh`, which also runs it end to end on a private
   display (`check`, 35 checks). Merged into the port branches; pushed, and
-  the ports and the engine pinned at it (2026-09-27; what came after is
-  unpushed, State). Potential work it turned up, in no order:
+  the ports and the engine pinned at it (2026-09-27; its icons since are
+  `main`'s alone, State). Potential work it turned up, in no order:
   installed beside `DeusEx.exe`, `DeusEx` stops the original game there
   under Wine or Proton at its start, taken for the `DeusEx` package
   ([a package's file](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#packages-and-linkers); the harness runs the
