@@ -113,14 +113,15 @@ no facts of its own beyond those; each lives in one doc, and the
   and the weapon in hand higher and smaller in a 16:9 view than the
   original's ([the fractal textures' check](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#fire-water-and-ice-textures)).
   Saves made alike by both engines (`SaveConsole`, Liberty Island 8 s in,
-  2026-09-27) left more, in no order: the fork's out-of-world UNATCO troops
-  (UNATCOTroop3 to 9, `bInWorld` false and hidden in both) are in their
-  orders' `Patrolling` and listening for events, where the original's are
-  in `Idle` and not; UNATCOTroop6, ordered to sit, wanders where the
-  original's sits; an NSF terrorist has taken on a security bot where the
-  original's still patrol; and the event manager calls its listeners during
-  its pass, not after it
-  ([hearing](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#hearing-the-ai-event-system)).
+  2026-09-27) left more, in no order: an NSF terrorist takes on a security
+  bot where the original's still patrol -- the fork counts an NPC far off
+  behind terrain as drawn, so it checks the pawns around it
+  ([out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)) --; and the event
+  manager calls its listeners during its pass, not after it
+  ([hearing](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#hearing-the-ai-event-system)). Its
+  out-of-world troops patrolling and its sitters wandering are the
+  original's since 2026-09-27
+  ([starting up](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#starting-up)).
   What remains of the milestones is by hand, waiting with the open
   decisions: the checks in [open decision 1](#open-decisions), the sound's
   heard with real audio, which the distrobox reaches now
@@ -145,7 +146,11 @@ no facts of its own beyond those; each lives in one doc, and the
   the ports and the engine pinned at it. Potential work it turned up, in no
   order:
   the windows show no icon of the game's (the original's is `DeusEx.exe`'s
-  icon group 128); the error box's icon is drawn, not wine's picture; the
+  icon group 128); the error box's icon is drawn, not wine's picture;
+  installed beside `DeusEx.exe`, `DeusEx` stops the original game there
+  under Wine or Proton at its start, taken for the `DeusEx` package
+  ([a package's file](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#packages-and-linkers); the harness runs the
+  original from a view without it); the
   profiling hooks' patch no longer applies at the fork's head -- its
   three-way merge conflicts in `LightSystem_Light.cpp`, `RenderScene.cpp`
   and `RenderSubsystem.cpp`, so it wants re-basing (`perf.sh on`, resolve,
