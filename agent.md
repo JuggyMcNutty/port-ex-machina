@@ -120,14 +120,19 @@ no facts of its own beyond those; each lives in one doc, and the
   [lasers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#particles-and-lasers-render-iterators)), Liberty
   Island's pier floor about 6% darker than `D3DDrv`'s in the frames' terms
   where a corridor's is within 2% -- half of it the shaders' `darkClamp`
-  ([brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)) --, and the unread shapes of the cloud cast
+  ([brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)) --, the unread shapes of the cloud cast
   and of the effects still the fork's -- the light maps and meshes are the
   original's since 2026-09-28
-  ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --, and the traces' margin -- a unit, where
-  the original's line checks stop half a unit short and its box checks a
-  tenth of the trace
-  ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original);
-  walking's float over the floor is the original's since 2026-09-27).
+  ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --,
+  `StandConsole`'s walks going under half as far in the fork
+  ([small](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#small)), and dropped
+  decorations resting 0.1 over the floor where the original's rest over 2
+  ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)). Where a trace
+  stops -- a unit short in the fork, where the original's line checks stop
+  half a unit short and its box checks a tenth of the trace -- is the
+  original's since 2026-09-28, walking's float over the floor taking the
+  original's measure
+  ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)).
   `SetLocation`'s fitting in and a spawn's are the original's since
   2026-09-28, with the encroachment check at the spot (the same section). The weapon in hand higher and smaller than the original's
   was the whole view at 90 degrees, not Deus Ex's 75: as the original's
