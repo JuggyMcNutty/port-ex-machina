@@ -123,9 +123,7 @@ no facts of its own beyond those; each lives in one doc, and the
   ([brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)) --, the unread shapes of the cloud cast
   and of the effects still the fork's -- the light maps and meshes are the
   original's since 2026-09-28
-  ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --,
-  `StandConsole`'s walks going under half as far in the fork
-  ([small](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#small)), and dropped
+  ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --, and dropped
   decorations resting 0.1 over the floor where the original's rest over 2
   ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)). Where a trace
   stops -- a unit short in the fork, where the original's line checks stop
@@ -140,7 +138,8 @@ no facts of its own beyond those; each lives in one doc, and the
   `PlayerCanSeeMe`, events that wait for the player to see them firing at
   last (the same section). The weapon in hand higher and smaller than the original's
   was the whole view at 90 degrees, not Deus Ex's 75: as the original's
-  since 2026-09-28 ([small](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#small)). The zone reverb
+  since 2026-09-28, and the player's input moves it the tick it is read,
+  where the fork's lagged a tick ([small](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#small)). The zone reverb
   ringing a third as long and the pan hard where the original's is soft
   are the original's since 2026-09-28, Deus Ex's sounds mixed as
   `Galaxy.dll` mixes them, each within 0.2 dB or 0.05 s of the original's
