@@ -103,7 +103,8 @@ no facts of its own beyond those; each lives in one doc, and the
   original's, more of the beam red (drawn at all since the fractal textures;
   [lasers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#particles-and-lasers-render-iterators)), Liberty
   Island's pier floor about 6% darker than `D3DDrv`'s in the frames' terms
-  where a corridor's is within 2%, and the unread shapes of the cloud cast
+  where a corridor's is within 2% -- half of it the shaders' `darkClamp`
+  ([brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)) --, and the unread shapes of the cloud cast
   and of the effects still the fork's -- the light maps and meshes are the
   original's since 2026-09-28
   ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --, the zone reverb ringing a
