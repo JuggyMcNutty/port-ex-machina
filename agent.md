@@ -52,8 +52,8 @@ no facts of its own beyond those; each lives in one doc, and the
   [its Performance](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#performance)). The device
   has every patch up to 0034 in a build with the profiling hooks, Overclock;
   its owner's settings are Distant AI (characters out of sight think less
-  often) on and 853×480 (2026-09-23), which the fight's native rows switch to
-  native for the run. It has no battery (its battery
+  often) on and 853×480 (2026-09-23), which the level start's native rows
+  switch to native for the run. It has no battery (its battery
   warnings are off: [its Gotchas](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#gotchas)).
 - **The game's DLLs**: seven passes are read (the last 2026-09-28;
   [decided 4](#decided)). [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info)
@@ -218,7 +218,7 @@ no facts of its own beyond those; each lives in one doc, and the
    the base**: the project is developed there and every port starts from it
    ([`docs/PORTING.md`](docs/PORTING.md)).
 2. **Smart Pro performance** (owner, 2026-09-22): the target is **~20 FPS in
-   Liberty Island's opening fight** (~50 ms a frame), and every trade-off made
+   Liberty Island's level start** (~50 ms a frame), and every trade-off made
    for it is accepted. It needs the script VM several times faster, so the deep
    VM work is in scope. Where it stands and where a frame goes:
    [the Smart Pro's Performance](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#performance);
