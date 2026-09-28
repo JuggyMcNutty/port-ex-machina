@@ -17,18 +17,17 @@ no facts of its own beyond those; each lives in one doc, and the
   [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info). Each is
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
-- **Pushed and pinned** (2026-09-28, the owner's go-ahead): all four
-  repositories, the engine and every port branch pinned at what was
-  pushed. `main`'s windows' icons (2026-09-28, Next) are not merged into
-  the port branches -- whether they go there too is the owner's call.
-  Since then, committed and not pushed: the engine's Galaxy mixer, its
+- **Pushed and pinned** (2026-09-28, the owner's go-ahead, twice that
+  day): all four repositories, the engine and every port branch pinned at
+  what was pushed. The second push took the engine's Galaxy mixer, its
   drawn test's render box, its fitting in and encroaching, where its
   traces stop, its visible-actor iterators, `LineOfSightTo`, `CanSee` and
-  `PlayerCanSeeMe`, the player's input read before its physics, and the
-  latent moves with the path's touched node; the harness's
-  `VisibleConsole` and `SightConsole` and `StandConsole`'s held-key walk;
-  the RE's reading of each; and this file (2026-09-28, Next). The engine's
-  pin waits for the push.
+  `PlayerCanSeeMe`, the player's input read before its physics and the
+  latent moves with the path's touched node, the harness's
+  `VisibleConsole` and `SightConsole`, and the RE's reading of each; the
+  launcher had nothing new. `main`'s windows' icons (2026-09-28, Next) are
+  not merged into the port branches -- whether they go there too is the
+  owner's call.
 - **The launcher** the ports run -- `linux-x86_64`'s branch, and the devices'
   from it -- runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2). `main`, the original recreated
