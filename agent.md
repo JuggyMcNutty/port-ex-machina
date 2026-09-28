@@ -20,9 +20,10 @@ no facts of its own beyond those; each lives in one doc, and the
 - **The launcher** the ports run -- `linux-x86_64`'s branch, and the devices'
   from it -- runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2). `main`, the original recreated
-  almost 1:1, has its core in: the ini handling, the three command-line
-  parsers, the `FirstRun` gates and the entry tree, the crash sentinel, the
-  single-instance handoff, the CD check and the hand-over (Next has the rest).
+  almost 1:1, is whole: the `DeusEx` program -- the original's launch
+  sequence, wizard, splash and message boxes -- starts VibeEngine through its
+  `run-game.sh` and stays with it; `scripts/recreation.sh` builds, installs,
+  checks and runs it (Next has what it turned up).
 - **The engine** is our own fork repository (VibeEngine, branch `deusex`;
   renamed from SurrealEngine by the owner, 2026-09-26, the old address
   redirecting), pinned by `ENGINE-PIN.txt`; the patch stack was retired into
@@ -312,6 +313,11 @@ Each waits until the owner takes it up ([decided 8](#decided)).
      Play/Quit; CPU mode chosen from the Video tab; stick speeds -- look
      (`Speed=3.75`/`2.25`) and pointer speed are calibrated by reasoning, not by
      feel.
+   - On a desktop, the recreation (`scripts/recreation.sh run`): its wizard,
+     splash and message boxes under the desktop's own window manager, and a
+     second launch with a map bringing the game's window to the front --
+     what `recreation.sh check`'s private display, which has no window
+     manager, cannot show.
    - On a desktop: `scripts/dx.sh run linux-x86_64`, the home screen driven
      into a game, a pad in game; the Save and Load Game screens listing the
      saves with description and date, saving into a new slot, loading one
