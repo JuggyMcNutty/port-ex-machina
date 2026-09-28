@@ -102,9 +102,8 @@ no facts of its own beyond those; each lives in one doc, and the
   feature: Liberty Island's laser tripwires drawn fainter than the original's
   (drawn at all since the fractal textures;
   [lasers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#particles-and-lasers-render-iterators)), over
-  surfaces the fork draws brighter than the game's own renderer, `D3DDrv`,
-  does -- the lit ones about twice, the night sky most, the light maps'
-  scale open ([brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)) --, the zone reverb ringing a
+  surfaces the fork draws brighter than the original's frames show them,
+  `D3DDrv`'s and `OpenGLDrv`'s alike (the same place), the zone reverb ringing a
   third as long and the pan hard where the original's is soft
   ([sound](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#sound)), `SetLocation`'s fitting in
   ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)),
