@@ -153,8 +153,6 @@ no facts of its own beyond those; each lives in one doc, and the
   display (`check`, 35 checks). Merged into the port branches; pushed, and
   the ports and the engine pinned at it. Potential work it turned up, in no
   order:
-  the error box's icon is drawn, not wine's picture (the wizard shows the
-  game's icon since 2026-09-28, read out of the install's `DeusEx.exe`);
   installed beside `DeusEx.exe`, `DeusEx` stops the original game there
   under Wine or Proton at its start, taken for the `DeusEx` package
   ([a package's file](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#packages-and-linkers); the harness runs the
@@ -163,7 +161,9 @@ no facts of its own beyond those; each lives in one doc, and the
   three-way merge conflicts in `LightSystem_Light.cpp`, `RenderScene.cpp`
   and `RenderSubsystem.cpp`, so it wants re-basing (`perf.sh on`, resolve,
   `save`) before the next device profile; and upstream's new commits
-  (above).
+  (above). Its windows' icons are done since 2026-09-28: the wizard shows
+  the game's, read out of the install's `DeusEx.exe`, and the error box
+  wine's own, to the pixel.
 
 ## Decided
 
