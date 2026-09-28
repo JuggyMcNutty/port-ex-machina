@@ -140,10 +140,9 @@ no facts of its own beyond those; each lives in one doc, and the
   mode's flags, `EXEC=`, the line that hands the running game a forwarded
   URL); `DeusEx` installed in the game's `System/` by
   `scripts/recreation.sh`, which also runs it end to end on a private
-  display (`check`, 34 checks). Merged into the port branches. Not yet
-  pushed: main, the five port branches, dx-reverse-info, VibeEngine
-  (`453b3af`, `63d6559`) and this repository -- then `launcher.sh pin` for
-  each port and `engine.sh pin`. Potential work it turned up, in no order:
+  display (`check`, 34 checks). Merged into the port branches; pushed, and
+  the ports and the engine pinned at it. Potential work it turned up, in no
+  order:
   the windows show no icon of the game's (the original's is `DeusEx.exe`'s
   icon group 128); the error box's icon is drawn, not wine's picture; the
   profiling hooks' patch no longer applies at the fork's head -- its
