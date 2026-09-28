@@ -134,7 +134,11 @@ no facts of its own beyond those; each lives in one doc, and the
   original's measure
   ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)).
   `SetLocation`'s fitting in and a spawn's are the original's since
-  2026-09-28, with the encroachment check at the spot (the same section). The weapon in hand higher and smaller than the original's
+  2026-09-28, with the encroachment check at the spot (the same section),
+  and so are the visible-actor iterators -- an exploding robot no longer
+  hurting through walls -- and `LineOfSightTo`, `CanSee` and
+  `PlayerCanSeeMe`, events that wait for the player to see them firing at
+  last (the same section). The weapon in hand higher and smaller than the original's
   was the whole view at 90 degrees, not Deus Ex's 75: as the original's
   since 2026-09-28 ([small](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#small)). The zone reverb
   ringing a third as long and the pan hard where the original's is soft
