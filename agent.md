@@ -174,7 +174,7 @@ no facts of its own beyond those; each lives in one doc, and the
   ([decided 8](#decided)): the **[perf]** items that landed with M3 and M4,
   to be re-measured on the device (decided 2's list carries each), the
   Smart Pro's performance work ([decided 2](#decided)) and the next ports
-  ([open decision 4](#open-decisions)).
+  ([open decision 3](#open-decisions)).
 
   **The launcher's `main`** ([decided 7](#decided)) is whole (2026-09-27):
   the original `DeusEx.exe` recreated from dx-reverse-info's
@@ -275,7 +275,7 @@ no facts of its own beyond those; each lives in one doc, and the
      measured there (**[perf]** re-measure).
 
    At native resolution the game tick does not move the frame until the GPU's
-   time comes down (open decision 3); at 853×480 it does.
+   time comes down (decided 9); at 853×480 it does.
 3. **Renderers on aarch64** (owner, 2026-09-22): the goal is Vulkan, OpenGL ES
    and software rendering all selectable; Vulkan is the only one the engine
    has. A GLES renderer is to be made at some point (owner, 2026-09-24), not
@@ -364,10 +364,23 @@ no facts of its own beyond those; each lives in one doc, and the
 8. **The engine first** (owner, 2026-09-27). The porting work waits until
    the engine is more stable and has more of the game's features: the
    Smart Pro's performance (decided 2) with its device re-measures and the
-   profiling hooks' re-basing, and the next ports (open decision 4). The
+   profiling hooks' re-basing, and the next ports (open decision 3). The
    open decisions wait until the owner takes them up -- likely in a large
    play-testing session -- unless one stops the work, when the owner is
    asked. M7 is finished first, with everything it left.
+9. **The Smart Pro's default resolution** (owner, 2026-09-28): 853×480 --
+   `Performance.RenderScale` 0.6666667 in the port's packaged
+   `engine-settings.json.default`, committed on the launcher's
+   `trimui-smartpro` and unpushed (the pin moves with it). There the frame
+   is the CPU's work, so [decided 2](#decided)'s speed-ups buy frames
+   directly and the ~20 FPS target needs no GPU renderer work; at the
+   panel's 1280×720 the GPU's ~68 ms holds the frame until the GLES
+   renderer (decided 3) brings it down
+   ([where a frame goes](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#where-a-frame-goes)).
+   The device already ran 853×480 as its owner's setting (2026-09-23); the
+   Video tab still offers 960×540 and the panel's 1280×720 per session. A
+   640×360 option was weighed and left out: 480 lines is the least Deus
+   Ex's menus fit in (its own resolution menu refuses under 640×480).
 
 ## Open decisions
 
@@ -486,14 +499,10 @@ Each waits until the owner takes it up ([decided 8](#decided)).
    deliberately verbose for development; a final build needs a declutter pass,
    and Surreal Engine's always-on Deus Ex stats overlay (FPS/actors/surfaces,
    `RenderCanvas.cpp` `DrawTimedemoStats`) hidden behind an option.
-3. **The Smart Pro's Resolution default**: at native resolution, 20 FPS also
-   needs the GPU's time per frame well below what it is now
-   ([where a frame goes](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#where-a-frame-goes)),
-   which a lower default Resolution would give -- for the owner to weigh.
-4. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
+3. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
    engine's libraries, as the Smart Pro has); Android (its README lists the
    work, starting with an in-process hand-over).
-5. **A fork server on the master servers' lists** (deferred by the owner to
+4. **A fork server on the master servers' lists** (deferred by the owner to
    future network work, 2026-09-27). Joining live servers the owner allowed
    ("feel free to connect to public servers", 2026-09-27), and runs have
    joined empty ones since. A listing is another step: neither engine
