@@ -107,11 +107,12 @@ no facts of its own beyond those; each lives in one doc, and the
   third as long and the pan hard where the original's is soft
   ([sound](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#sound)), `SetLocation`'s fitting in
   ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)),
-  the traces' margin -- a unit, where the original's line checks stop half
-  a unit short and its box checks a tenth of the trace (the same section;
-  walking's float over the floor is the original's since 2026-09-27) --,
-  and the weapon in hand higher and smaller in a 16:9 view than the
-  original's ([the fractal textures' check](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#fire-water-and-ice-textures)).
+  and the traces' margin -- a unit, where the original's line checks stop
+  half a unit short and its box checks a tenth of the trace (the same
+  section; walking's float over the floor is the original's since
+  2026-09-27). The weapon in hand higher and smaller than the original's
+  was the whole view at 90 degrees, not Deus Ex's 75: as the original's
+  since 2026-09-28 ([small](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#small)).
   Saves made alike by both engines (`SaveConsole`, Liberty Island 8 s in,
   2026-09-27) left more, in no order: at the level's start 10 NPCs count
   as drawn where the original has 3, far off over the seawall -- one span
