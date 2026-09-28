@@ -19,10 +19,13 @@ no facts of its own beyond those; each lives in one doc, and the
   each is pushed with the owner's go-ahead.
 - **Unpushed** (2026-09-28): the work of 2026-09-27 and 28 in all four
   repositories waits for the owner's go-ahead to push. The engine's clone
-  is past `ENGINE-PIN.txt` (`scripts/engine.sh check` says how far), so the
-  ports build the pinned engine until `engine.sh pin` follows the push;
-  the launcher's `main` has the windows' icons (Next), not yet merged into
-  the port branches -- whether they go there too is the owner's call.
+  is past `ENGINE-PIN.txt` and every port branch past its pin in
+  `LAUNCHER-PIN.txt` (`scripts/engine.sh check`, `scripts/launcher.sh
+  check`), so the ports build what is pinned until `engine.sh pin` and
+  `launcher.sh pin` follow the push. The port branches hold `main`'s
+  comments on the hand-over (2026-09-27), merged; `main`'s windows' icons
+  (2026-09-28, Next) are not merged into them -- whether they go there too
+  is the owner's call.
 - **The launcher** the ports run -- `linux-x86_64`'s branch, and the devices'
   from it -- runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2). `main`, the original recreated
