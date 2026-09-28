@@ -103,7 +103,7 @@ deusex/                  the parent folder (any name)
   gamefiles/             your Deus Ex install: for running on this machine, test_gamefiles
                          and the IDA databases
   reference/             the 1112f SDK, the DeusExe launcher source, IDA and ini backups,
-                         the original's saves
+                         the original's saves and its wizard's captures
   deps/                  fetched toolchains and sysroots
   build/                 build/<port>/{engine,app}, and the engine tools' own
 ```

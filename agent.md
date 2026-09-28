@@ -5,7 +5,7 @@ no facts of its own beyond those; each lives in one doc, and the
 [README's table](README.md#documentation) says which. Before working, read
 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
-## State (2026-09-27)
+## State (2026-09-28)
 
 - **The repositories**, four since the split (2026-09-27,
   [decided 7](#decided)): this one, the workspace, on `main`, public at
@@ -17,6 +17,12 @@ no facts of its own beyond those; each lives in one doc, and the
   [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info). Each is
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
+- **Unpushed** (2026-09-28): the work of 2026-09-27 and 28 in all four
+  repositories waits for the owner's go-ahead to push. The engine's clone
+  is past `ENGINE-PIN.txt` (`scripts/engine.sh check` says how far), so the
+  ports build the pinned engine until `engine.sh pin` follows the push;
+  the launcher's `main` has the windows' icons (Next), not yet merged into
+  the port branches -- whether they go there too is the owner's call.
 - **The launcher** the ports run -- `linux-x86_64`'s branch, and the devices'
   from it -- runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2). `main`, the original recreated
@@ -44,7 +50,7 @@ no facts of its own beyond those; each lives in one doc, and the
   often) on and 853×480 (2026-09-23), which the fight's native rows switch to
   native for the run. It has no battery (its battery
   warnings are off: [its Gotchas](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#gotchas)).
-- **The game's DLLs**: five passes are read (the last 2026-09-27;
+- **The game's DLLs**: six passes are read (the last 2026-09-28;
   [decided 4](#decided)). [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info)
   covers each binary read, and an IDA database gets three scripts from its
   `tools/ida/` (types, strings, names).
@@ -69,6 +75,10 @@ no facts of its own beyond those; each lives in one doc, and the
     named and backed up. Engine.dll's lost its root node, IDA's record of
     the input file, in an idle worker's save (2026-09-27; what removed it
     is not found) and has it back from the backup, nothing else lost.
+    Render's and Engine's took the light maps' names and comments on
+    2026-09-28 and are backed up again; D3DDrv's, re-saved by an idle
+    worker that day with nothing changed, is newer than its backup. Each
+    opens whole, and no working files are left beside them.
   - **What Surreal lacks** of them is VibeEngine's
     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md),
     from [`natives_audit.py`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/tools/natives_audit.py),
@@ -98,7 +108,10 @@ no facts of its own beyond those; each lives in one doc, and the
   (2026-09-26, M0's acceptance captures last;
   [`ROADMAP.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ROADMAP.md) tracks each item, and
   [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md) says what changed and what stays the
-  fork's own). The captures left potential work, in no order, each under its
+  fork's own). The look is compared against the original's own renderer,
+  `D3DDrv`, since 2026-09-28 (`DXCAP_RENDERER=D3D`; its frames are
+  `OpenGLDrv`'s, and a run the game moves to `SoftDrv` stops:
+  [scripted runs](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)). The captures left potential work, in no order, each under its
   feature: Liberty Island's laser tripwires a little stronger than the
   original's, more of the beam red (drawn at all since the fractal textures;
   [lasers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#particles-and-lasers-render-iterators)), Liberty
@@ -144,23 +157,25 @@ no facts of its own beyond those; each lives in one doc, and the
   [`launch-flow.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/launch-flow.md)
   and [`wizard.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/wizard.md)
   in the shape the owner set that day -- the pages laid out from
-  `Window.dll`'s templates, 13 of the 15 screens captured from the original
-  under wine matching to the pixel; the launcher resident for the game's
+  `Window.dll`'s templates, 14 of the 15 screens captured from the original
+  under wine matching to the pixel (the splash's picture the other); the
+  launcher resident for the game's
   run; the engine's side in VibeEngine (the original's command line, safe
   mode's flags, `EXEC=`, the line that hands the running game a forwarded
   URL); `DeusEx` installed in the game's `System/` by
   `scripts/recreation.sh`, which also runs it end to end on a private
   display (`check`, 35 checks). Merged into the port branches; pushed, and
-  the ports and the engine pinned at it. Potential work it turned up, in no
-  order:
+  the ports and the engine pinned at it (2026-09-27; what came after is
+  unpushed, State). Potential work it turned up, in no order:
   installed beside `DeusEx.exe`, `DeusEx` stops the original game there
   under Wine or Proton at its start, taken for the `DeusEx` package
   ([a package's file](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#packages-and-linkers); the harness runs the
   original from a view without it); the
   profiling hooks' patch no longer applies at the fork's head -- its
-  three-way merge conflicts in `LightSystem_Light.cpp`, `RenderScene.cpp`
-  and `RenderSubsystem.cpp`, so it wants re-basing (`perf.sh on`, resolve,
-  `save`) before the next device profile; and upstream's new commits
+  three-way merge conflicts in `Engine.cpp`, `LightSystem_Light.cpp`,
+  `RenderScene.cpp`, `RenderSubsystem.cpp` and `VisibleFrame.cpp` (tried
+  in a scratch worktree, 2026-09-28), so it wants re-basing (`perf.sh on`,
+  resolve, `save`) before the next device profile; and upstream's new commits
   (above). Its windows' icons are done since 2026-09-28: the wizard shows
   the game's, read out of the install's `DeusEx.exe`, and the error box
   wine's own, to the pixel.
@@ -212,17 +227,19 @@ no facts of its own beyond those; each lives in one doc, and the
    - **Actor meshes** (0018–0019 so far): the per-vertex work itself. A
      distant mesh is drawn with fewer vertices now (landed with M4's mesh
      detail, 2026-09-25; **[perf]** re-measure on the device:
-     [mesh detail](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#mesh-detail)). The original also
-     lights a vertex with the strongest lights only, checking their
-     shadows every 16 frames ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)):
-     still to port.
+     [mesh detail](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#mesh-detail)). A vertex is lit by
+     the strongest lights only, their shadows checked every 16 frames, as
+     the original's (landed with M4, 2026-09-25;
+     [lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)); **[perf]** re-measure on
+     the device.
    - **Visibility** (0020–0021 so far): still the largest render item.
    - **Lightmap uploads**: the original's rebuild shape landed with M4
      (2026-09-25) -- a map rebuilt only for its animated and moving
      lights over its kept static part, `NoDynamicLights` stopping that
      altogether, movers only when moved; **[perf]** re-measure on the
      device. Left: re-uploading only the rows a light changed, byte maps
-     (the fork's floats convert on the CPU), and each surface's lightmap
+     (the fork's floats convert on the CPU; Deus Ex's hold the original's
+     byte values since 2026-09-28, as floats), and each surface's lightmap
      lookup ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)).
    - **What is out of sight**: landed with M3 (2026-09-25) -- the fork
      keeps render time and stasis now, so actors in stasis do not tick and
@@ -274,6 +291,13 @@ no facts of its own beyond those; each lives in one doc, and the
      and where the engine reads each flag safe mode emits -- `Engine.dll`,
      `Galaxy.dll`, `Core.dll` and `WinDrv.dll`
      ([`cli-flags.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/cli-flags.md#flags-the-launcher-emits-safe-mode)).
+   - **The sixth** (done, 2026-09-28): the light maps to the byte --
+     `Render.dll`'s texel (shadows, shapes, the light's table, the merge),
+     `GlobalLighting`'s types and `Engine.dll`'s `FGetHSV`
+     ([light maps](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/render-dll.md#light-maps)) -- and `D3DDrv.dll`'s
+     light-map upload and passes again, which corrected the third pass: in
+     the one-pass path a byte is worth 1/128, not 1/64
+     ([the light maps' brightness](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/d3ddrv-dll.md#the-light-maps-brightness)).
    - **Only if a need comes up**: `SoftDrv.dll` (a
      software renderer, decided 3), `WinDrv.dll` beyond its flags (mouse and keyboard), and the owner's copied
      `ALAudio.dll` for what the original lacks (an EFX take on the reverb,
@@ -408,10 +432,10 @@ Each waits until the owner takes it up ([decided 8](#decided)).
      conversation partner's mouth moving with the speech, an NPC's head
      turning to follow the player and easing back, and blinking, by
      [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#head-turns-and-lip-sync-blend-animations);
-     an NPC under a street lamp, one walking from light into shadow, and
-     a fire's glow on a face, and a flickering sconce's wall, a pulsing
-     light throbbing and a triggered light going dark with their shadows
-     still there, by [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting);
+     an NPC walking from light into shadow, a fire's glow on a face, a
+     flickering sconce's wall, a pulsing light throbbing and a triggered
+     light going dark with their shadows still there, by
+     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting);
      the Dragon's Tooth in hand and on the ground, the flamethrower's
      flame, the riot prod's arcs, the EMP grenade's blast, tear and poison
      gas, the drunk effect, a burning NPC, a laser sight's spot and water,
