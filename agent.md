@@ -113,19 +113,18 @@ no facts of its own beyond those; each lives in one doc, and the
   and the weapon in hand higher and smaller in a 16:9 view than the
   original's ([the fractal textures' check](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#fire-water-and-ice-textures)).
   Saves made alike by both engines (`SaveConsole`, Liberty Island 8 s in,
-  2026-09-27) left more, in no order: the event manager calls its
-  listeners during its pass, not after it
-  ([hearing](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#hearing-the-ai-event-system)); at the level's
-  start 10 NPCs count as drawn where the original has 3, far off over the
-  seawall -- one span buffer where the original keeps one per zone, and a
-  more generous mesh box
-  ([out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)); Terrorist15 backs off
-  for a few seconds early on where the original's patrols
+  2026-09-27) left more, in no order: at the level's start 10 NPCs count
+  as drawn where the original has 3, far off over the seawall -- one span
+  buffer where the original keeps one per zone, and a more generous mesh
+  box ([out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)); Terrorist15 backs
+  off for some seconds early on where the original's patrols
   ([starting up](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#starting-up)); and `TraceTexture`
   names another texture for the same wall hit (`un_seawall_aS`, the
   original `un_starwall_a`). Its out-of-world troops patrolling, its
-  sitters wandering and a terrorist fighting a security bot are the
-  original's since 2026-09-27 (the same two sections).
+  sitters wandering, a terrorist fighting a security bot and the event
+  manager's listeners called during its pass are the original's since
+  2026-09-27 and 28 (the same sections;
+  [hearing](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#hearing-the-ai-event-system)).
   What remains of the milestones is by hand, waiting with the open
   decisions: the checks in [open decision 1](#open-decisions), the sound's
   heard with real audio, which the distrobox reaches now
