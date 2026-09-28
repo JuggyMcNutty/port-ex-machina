@@ -21,9 +21,10 @@ no facts of its own beyond those; each lives in one doc, and the
   repositories, the engine and every port branch pinned at what was
   pushed. `main`'s windows' icons (2026-09-28, Next) are not merged into
   the port branches -- whether they go there too is the owner's call.
-  Since then, committed and not pushed: the engine's Galaxy mixer and its
-  drawn test's render box, and the RE's reading of both (2026-09-28,
-  Next); the engine's pin waits for the push.
+  Since then, committed and not pushed: the engine's Galaxy mixer, its
+  drawn test's render box and its fitting in and encroaching, and the
+  RE's reading of each (2026-09-28, Next); the engine's pin waits for the
+  push.
 - **The launcher** the ports run -- `linux-x86_64`'s branch, and the devices'
   from it -- runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2). `main`, the original recreated
@@ -77,9 +78,9 @@ no facts of its own beyond those; each lives in one doc, and the
     the input file, in an idle worker's save (2026-09-27; what removed it
     is not found) and has it back from the backup, nothing else lost.
     Render's and Engine's took the light maps' names and comments on
-    2026-09-28, Galaxy's the mixer's and the reverb's, and are backed up
-    again; D3DDrv's, re-saved by an idle worker that day with nothing
-    changed, is newer than its backup. Each opens whole, and no working
+    2026-09-28, Galaxy's the mixer's and the reverb's and Render's the
+    drawn test's, and are backed up again; D3DDrv's, re-saved by an idle
+    worker that day with nothing changed, is newer than its backup. Each opens whole, and no working
     files are left beside them.
   - **What Surreal lacks** of them is VibeEngine's
     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md),
@@ -122,12 +123,13 @@ no facts of its own beyond those; each lives in one doc, and the
   ([brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)) --, and the unread shapes of the cloud cast
   and of the effects still the fork's -- the light maps and meshes are the
   original's since 2026-09-28
-  ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --, `SetLocation`'s fitting in
-  ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)),
-  and the traces' margin -- a unit, where the original's line checks stop
-  half a unit short and its box checks a tenth of the trace (the same
-  section; walking's float over the floor is the original's since
-  2026-09-27). The weapon in hand higher and smaller than the original's
+  ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --, and the traces' margin -- a unit, where
+  the original's line checks stop half a unit short and its box checks a
+  tenth of the trace
+  ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original);
+  walking's float over the floor is the original's since 2026-09-27).
+  `SetLocation`'s fitting in and a spawn's are the original's since
+  2026-09-28, with the encroachment check at the spot (the same section). The weapon in hand higher and smaller than the original's
   was the whole view at 90 degrees, not Deus Ex's 75: as the original's
   since 2026-09-28 ([small](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#small)). The zone reverb
   ringing a third as long and the pan hard where the original's is soft
