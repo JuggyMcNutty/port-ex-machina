@@ -119,13 +119,13 @@ no facts of its own beyond those; each lives in one doc, and the
   buffer where the original keeps one per zone, and a more generous mesh
   box ([out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)); Terrorist15 backs
   off for some seconds early on where the original's patrols
-  ([starting up](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#starting-up)); and `TraceTexture`
-  names another texture for the same wall hit (`un_seawall_aS`, the
-  original `un_starwall_a`). Its out-of-world troops patrolling, its
-  sitters wandering, a terrorist fighting a security bot and the event
-  manager's listeners called during its pass are the original's since
-  2026-09-27 and 28 (the same sections;
-  [hearing](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#hearing-the-ai-event-system)).
+  ([starting up](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#starting-up)). Its out-of-world
+  troops patrolling, its sitters wandering, a terrorist fighting a
+  security bot, the event manager's listeners called during its pass,
+  `TraceTexture`'s other texture for a wall and traces from inside a pawn
+  hitting the pawn are the original's since 2026-09-27 and 28 (the same
+  sections; [hearing](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#hearing-the-ai-event-system),
+  [implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)).
   What remains of the milestones is by hand, waiting with the open
   decisions: the checks in [open decision 1](#open-decisions), the sound's
   heard with real audio, which the distrobox reaches now
