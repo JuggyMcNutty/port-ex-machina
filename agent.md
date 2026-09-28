@@ -150,11 +150,11 @@ no facts of its own beyond those; each lives in one doc, and the
   mode's flags, `EXEC=`, the line that hands the running game a forwarded
   URL); `DeusEx` installed in the game's `System/` by
   `scripts/recreation.sh`, which also runs it end to end on a private
-  display (`check`, 34 checks). Merged into the port branches; pushed, and
+  display (`check`, 35 checks). Merged into the port branches; pushed, and
   the ports and the engine pinned at it. Potential work it turned up, in no
   order:
-  the windows show no icon of the game's (the original's is `DeusEx.exe`'s
-  icon group 128); the error box's icon is drawn, not wine's picture;
+  the error box's icon is drawn, not wine's picture (the wizard shows the
+  game's icon since 2026-09-28, read out of the install's `DeusEx.exe`);
   installed beside `DeusEx.exe`, `DeusEx` stops the original game there
   under Wine or Proton at its start, taken for the `DeusEx` package
   ([a package's file](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#packages-and-linkers); the harness runs the
