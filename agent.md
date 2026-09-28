@@ -113,15 +113,19 @@ no facts of its own beyond those; each lives in one doc, and the
   and the weapon in hand higher and smaller in a 16:9 view than the
   original's ([the fractal textures' check](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#fire-water-and-ice-textures)).
   Saves made alike by both engines (`SaveConsole`, Liberty Island 8 s in,
-  2026-09-27) left more, in no order: an NSF terrorist takes on a security
-  bot where the original's still patrol -- the fork counts an NPC far off
-  behind terrain as drawn, so it checks the pawns around it
-  ([out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)) --; and the event
-  manager calls its listeners during its pass, not after it
-  ([hearing](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#hearing-the-ai-event-system)). Its
-  out-of-world troops patrolling and its sitters wandering are the
-  original's since 2026-09-27
-  ([starting up](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#starting-up)).
+  2026-09-27) left more, in no order: the event manager calls its
+  listeners during its pass, not after it
+  ([hearing](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#hearing-the-ai-event-system)); at the level's
+  start 10 NPCs count as drawn where the original has 3, far off over the
+  seawall -- one span buffer where the original keeps one per zone, and a
+  more generous mesh box
+  ([out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)); Terrorist15 backs off
+  for a few seconds early on where the original's patrols
+  ([starting up](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#starting-up)); and `TraceTexture`
+  names another texture for the same wall hit (`un_seawall_aS`, the
+  original `un_starwall_a`). Its out-of-world troops patrolling, its
+  sitters wandering and a terrorist fighting a security bot are the
+  original's since 2026-09-27 (the same two sections).
   What remains of the milestones is by hand, waiting with the open
   decisions: the checks in [open decision 1](#open-decisions), the sound's
   heard with real audio, which the distrobox reaches now
@@ -219,8 +223,11 @@ no facts of its own beyond those; each lives in one doc, and the
    - **What is out of sight**: landed with M3 (2026-09-25) -- the fork
      keeps render time and stasis now, so actors in stasis do not tick and
      the scripts spare what was not drawn lately, an NPC's shadow among it
-     ([out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)). What it buys the
-     device is to be measured there (**[perf]** re-measure).
+     ([out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)); since 2026-09-27 only
+     what shows past the world in front of it counts as drawn, as the
+     original, by occlusion proxies filtered down the BSP on the render
+     CPU. What both buy the device, and what the proxies cost it, is to be
+     measured there (**[perf]** re-measure).
 
    At native resolution the game tick does not move the frame until the GPU's
    time comes down (open decision 3); at 853×480 it does.
