@@ -57,6 +57,11 @@ scripts/dx.sh deploy <port>                # device ports: builds and stages fir
 scripts/dx.sh profile <port>               # device ports: a frame-time profile (the engine's profiling hooks on)
 
 scripts/dx.sh check                        # drift guards: every repository's docs, the pins, ports, ABI
+
+scripts/recreation.sh build                # the original launcher recreated (the launcher's main), and the engine
+scripts/recreation.sh install [<GameDir>]  # into the game's System/, beside DeusEx.exe
+scripts/recreation.sh check [<GameDir>]    # run end to end on a copy, on a private display
+scripts/recreation.sh run [<args>]         # System/DeusEx, as a player starts it
 ```
 
 Put the game files where the port's `launcher.ini` says (`GameDir`); a
@@ -88,8 +93,9 @@ deusex/                  the parent folder (any name)
     ENGINE-PIN.txt         the engine's version: VibeEngine's repository, branch and commit
     LAUNCHER-PIN.txt       the launcher's: deusex-launcher's repository, and each port's commit
     docs/                  DEVELOPMENT, PORTING
-    scripts/               dx.sh (the entry point), engine.sh, launcher.sh, check-docs.sh,
-                           lib/common.sh (shared with the ports' and the engine's own scripts)
+    scripts/               dx.sh (the entry point), engine.sh, launcher.sh, recreation.sh,
+                           check-docs.sh, lib/common.sh (shared with the ports' and the
+                           engine's own scripts)
     tools/probes/          device probes (docs/PORTING.md)
   VibeEngine/            the engine, a clone (scripts/engine.sh)
   deusex-launcher/       the launcher: main/, and a worktree per port (scripts/launcher.sh)

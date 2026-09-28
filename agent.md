@@ -129,28 +129,28 @@ no facts of its own beyond those; each lives in one doc, and the
   Smart Pro's performance work ([decided 2](#decided)) and the next ports
   ([open decision 4](#open-decisions)).
 
-  **The launcher's `main`** ([decided 7](#decided)): the rest of the
-  recreation, from dx-reverse-info's
+  **The launcher's `main`** ([decided 7](#decided)) is whole (2026-09-27):
+  the original `DeusEx.exe` recreated from dx-reverse-info's
   [`launch-flow.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/launch-flow.md)
-  and [`wizard.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/wizard.md):
-  the launch sequence (single-instance forwarding, `-make`, the save
-  migration, `Running.ini` after the wizard, the CD check's prompt, the
-  hand-over's `run-game.sh`), the splash, and the wizard's six pages with
-  captions from the game's `Startup.int` -- safe mode's eight boxes wired
-  correctly -- each merged up into the port branches as it lands. The owner
-  set its shape (2026-09-27): the pages laid out from `Window.dll`'s
-  templates and compared with the original's captured under wine; the
-  launcher resident for the game's life, as the original's process is; the
-  engine's side too, in VibeEngine -- the original's command line, the
-  safe-mode flags it can honour, `-EXEC=`, and a channel that hands the
-  running game a forwarded URL; and the launcher, named `DeusEx`, installed
-  in the game's `System/` with its `run-game.sh`. The RE it needed is read
-  ([decided 4](#decided)'s fifth pass). Potential
-  work the split turned up, in no order: the profiling hooks' patch no longer
-  applies at the fork's head -- its three-way merge conflicts in
-  `LightSystem_Light.cpp`, `RenderScene.cpp` and `RenderSubsystem.cpp`, so it
-  wants re-basing (`perf.sh on`, resolve, `save`) before the next device
-  profile; and upstream's new commits (above).
+  and [`wizard.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/wizard.md)
+  in the shape the owner set that day -- the pages laid out from
+  `Window.dll`'s templates, 13 of the 15 screens captured from the original
+  under wine matching to the pixel; the launcher resident for the game's
+  run; the engine's side in VibeEngine (the original's command line, safe
+  mode's flags, `EXEC=`, the line that hands the running game a forwarded
+  URL); `DeusEx` installed in the game's `System/` by
+  `scripts/recreation.sh`, which also runs it end to end on a private
+  display (`check`, 34 checks). Merged into the port branches. Not yet
+  pushed: main, the five port branches, dx-reverse-info, VibeEngine
+  (`453b3af`, `63d6559`) and this repository -- then `launcher.sh pin` for
+  each port and `engine.sh pin`. Potential work it turned up, in no order:
+  the windows show no icon of the game's (the original's is `DeusEx.exe`'s
+  icon group 128); the error box's icon is drawn, not wine's picture; the
+  profiling hooks' patch no longer applies at the fork's head -- its
+  three-way merge conflicts in `LightSystem_Light.cpp`, `RenderScene.cpp`
+  and `RenderSubsystem.cpp`, so it wants re-basing (`perf.sh on`, resolve,
+  `save`) before the next device profile; and upstream's new commits
+  (above).
 
 ## Decided
 

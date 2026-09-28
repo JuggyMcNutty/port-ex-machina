@@ -53,6 +53,19 @@ scripts/dx.sh check            # the drift guards
 For engine work, `VibeEngine/vibe/tools/host-tools.sh` unpacks `perf` and the
 Vulkan validation layer.
 
+### The recreation
+
+The launcher's `main` -- the original `DeusEx.exe` recreated, not a port --
+is built, installed and run by `scripts/recreation.sh`, with the engine
+linux-x86_64 builds: `build` puts main in `build/main/launcher` and builds the
+engine; `install [<GameDir>]` puts `DeusEx`, its `run-game.sh` and the
+engine's three files in the game's `System/`, beside `DeusEx.exe`
+(`gamefiles/` by default); `check` runs main's `tools/livecheck.py` on a copy
+of that install, on a private X display, so nothing shows on the desktop and
+the install is not written; `run` starts it; `uninstall` takes the five files
+out again. Main is not pinned: it is the clone, and the ports take it by
+merging ([the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher#branches)).
+
 ## This machine
 
 Claude runs in an Arch Linux distrobox on a Fedora Atomic host: `/home` here is
