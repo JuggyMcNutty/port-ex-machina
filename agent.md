@@ -21,6 +21,9 @@ no facts of its own beyond those; each lives in one doc, and the
   repositories, the engine and every port branch pinned at what was
   pushed. `main`'s windows' icons (2026-09-28, Next) are not merged into
   the port branches -- whether they go there too is the owner's call.
+  Since then, committed and not pushed: the engine's Galaxy mixer and the
+  RE's reading of it (2026-09-28, Next); the engine's pin waits for the
+  push.
 - **The launcher** the ports run -- `linux-x86_64`'s branch, and the devices'
   from it -- runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2). `main`, the original recreated
@@ -48,7 +51,7 @@ no facts of its own beyond those; each lives in one doc, and the
   often) on and 853×480 (2026-09-23), which the fight's native rows switch to
   native for the run. It has no battery (its battery
   warnings are off: [its Gotchas](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#gotchas)).
-- **The game's DLLs**: six passes are read (the last 2026-09-28;
+- **The game's DLLs**: seven passes are read (the last 2026-09-28;
   [decided 4](#decided)). [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info)
   covers each binary read, and an IDA database gets three scripts from its
   `tools/ida/` (types, strings, names).
@@ -74,9 +77,10 @@ no facts of its own beyond those; each lives in one doc, and the
     the input file, in an idle worker's save (2026-09-27; what removed it
     is not found) and has it back from the backup, nothing else lost.
     Render's and Engine's took the light maps' names and comments on
-    2026-09-28 and are backed up again; D3DDrv's, re-saved by an idle
-    worker that day with nothing changed, is newer than its backup. Each
-    opens whole, and no working files are left beside them.
+    2026-09-28, Galaxy's the mixer's and the reverb's, and are backed up
+    again; D3DDrv's, re-saved by an idle worker that day with nothing
+    changed, is newer than its backup. Each opens whole, and no working
+    files are left beside them.
   - **What Surreal lacks** of them is VibeEngine's
     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md),
     from [`natives_audit.py`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/tools/natives_audit.py),
@@ -118,16 +122,18 @@ no facts of its own beyond those; each lives in one doc, and the
   ([brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)) --, and the unread shapes of the cloud cast
   and of the effects still the fork's -- the light maps and meshes are the
   original's since 2026-09-28
-  ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --, the zone reverb ringing a
-  third as long and the pan hard where the original's is soft
-  ([sound](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#sound)), `SetLocation`'s fitting in
+  ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --, `SetLocation`'s fitting in
   ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)),
   and the traces' margin -- a unit, where the original's line checks stop
   half a unit short and its box checks a tenth of the trace (the same
   section; walking's float over the floor is the original's since
   2026-09-27). The weapon in hand higher and smaller than the original's
   was the whole view at 90 degrees, not Deus Ex's 75: as the original's
-  since 2026-09-28 ([small](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#small)).
+  since 2026-09-28 ([small](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#small)). The zone reverb
+  ringing a third as long and the pan hard where the original's is soft
+  are the original's since 2026-09-28, Deus Ex's sounds mixed as
+  `Galaxy.dll` mixes them, each within 0.2 dB or 0.05 s of the original's
+  recording ([sound](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#sound)).
   Saves made alike by both engines (`SaveConsole`, Liberty Island 8 s in,
   2026-09-27) left more, in no order: at the level's start 10 NPCs count
   as drawn where the original has 3, far off over the seawall -- one span
@@ -296,6 +302,12 @@ no facts of its own beyond those; each lives in one doc, and the
      light-map upload and passes again, which corrected the third pass: in
      the one-pass path a byte is worth 1/128, not 1/64
      ([the light maps' brightness](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/d3ddrv-dll.md#the-light-maps-brightness)).
+   - **The seventh** (done, 2026-09-28): `Galaxy.dll`'s mixer and reverb
+     to the sample -- the pan's formula and law, the sliders squared, the
+     SSE routine's linear resampling, the loops, and the reverb's three
+     allpass stages, checked by running them over the original's own
+     recording ([the mixer](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/galaxy-dll.md#the-mixer),
+     [reverb](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/galaxy-dll.md#reverb)).
    - **Only if a need comes up**: `SoftDrv.dll` (a
      software renderer, decided 3), `WinDrv.dll` beyond its flags (mouse and keyboard), and the owner's copied
      `ALAudio.dll` for what the original lacks (an EFX take on the reverb,
@@ -404,9 +416,10 @@ Each waits until the owner takes it up ([decided 8](#decided)).
      up in a doorway (never a conversation line), a security camera's
      hum quieter than an unlit machine's and a flickering light's hum
      wavering with it, combat music in fast and the ambient back where
-     it left off (not from the top), and Battery Park's underground
+     it left off (not from the top), Battery Park's underground
      echoing against the open park with the echo gone on stepping back
-     out, by
+     out, and (with headphones) a sound off to one side heard in both
+     ears, the far one softer, by
      [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#sound) (with the
      desktop's audio: [linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md#audio));
      a shot fired around a corner turning the guards, and a body found
