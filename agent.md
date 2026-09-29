@@ -5,7 +5,7 @@ no facts of its own beyond those; each lives in one doc, and the
 [README's table](README.md#documentation) says which. Before working, read
 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
-## State (2026-09-28)
+## State (2026-09-29)
 
 - **The repositories**, four since the split (2026-09-27,
   [decided 7](#decided)): this one, the workspace, on `main`, public at
@@ -17,11 +17,16 @@ no facts of its own beyond those; each lives in one doc, and the
   [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info). Each is
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
-- **Pushed and pinned** (2026-09-28, the owner's go-ahead, twice that
-  day): all four repositories, the engine and every port branch pinned at
-  what was pushed. The second push took the engine's Galaxy mixer, its
-  drawn test's render box, its fitting in and encroaching, where its
-  traces stop, its visible-actor iterators, `LineOfSightTo`, `CanSee` and
+- **Pushed and pinned** (2026-09-29, the owner's go-ahead): the three
+  repositories with work -- port-ex-machina (decided 9, the level start's
+  renaming, the [perf] re-measurements), VibeEngine (the profiling hooks'
+  re-based patch, the level start's renaming, the re-measured [perf] items)
+  and the launcher's trimui-smartpro (the 853×480 default, the level
+  start's renaming, the M3–M7 numbers) -- the engine and every port branch
+  pinned at what was pushed. The previous push (2026-09-28, twice that
+  day) took the engine's Galaxy mixer, its drawn test's render box, its
+  fitting in and encroaching, where its traces stop, its visible-actor
+  iterators, `LineOfSightTo`, `CanSee` and
   `PlayerCanSeeMe`, the player's input read before its physics and the
   latent moves with the path's touched node, the harness's
   `VisibleConsole` and `SightConsole`, and the RE's reading of each; the
@@ -41,7 +46,10 @@ no facts of its own beyond those; each lives in one doc, and the
   it (2026-09-24), and its docs and tools are its own `vibe/` (2026-09-27). It
   holds upstream's latest when last merged (2026-09-24); upstream has moved
   on since (`scripts/engine.sh status` says how far), and whether and when to
-  merge it (the fork's `vibe/tools/upgrade.sh`) is the owner's call. The profiling hooks are off.
+  merge it (the fork's `vibe/tools/upgrade.sh`) is the owner's call. The
+  profiling hooks are on: re-based onto the fork's head 2026-09-29
+  (`perf.sh save`) and applied for the device's profile, which the
+  device's build carries.
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
   app ran the engine into the intro level on the development PC, and its
   launcher straight into Liberty Island (`DXL_NO_HOME=1`, 2026-09-27);
@@ -197,13 +205,11 @@ no facts of its own beyond those; each lives in one doc, and the
   installed beside `DeusEx.exe`, `DeusEx` stops the original game there
   under Wine or Proton at its start, taken for the `DeusEx` package
   ([a package's file](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#packages-and-linkers); the harness runs the
-  original from a view without it); the
-  profiling hooks' patch no longer applies at the fork's head -- its
-  three-way merge conflicts in `Engine.cpp`, `LightSystem_Light.cpp`,
-  `RenderScene.cpp`, `RenderSubsystem.cpp` and `VisibleFrame.cpp` (tried
-  in a scratch worktree, 2026-09-28), so it wants re-basing (`perf.sh on`,
-  resolve, `save`) before the next device profile; and upstream's new commits
-  (above). Its windows' icons are done since 2026-09-28: the wizard shows
+  original from a view without it); the profiling hooks' patch was
+  re-based onto the fork's head (2026-09-29, `perf.sh on`, resolve,
+  `save`) and took the device's profiles (the Performance section's
+  M3–M7 row); and upstream's new commits (above). Its windows' icons are
+  done since 2026-09-28: the wizard shows
   the game's, read out of the install's `DeusEx.exe`, and the error box
   wine's own, to the pixel.
 
