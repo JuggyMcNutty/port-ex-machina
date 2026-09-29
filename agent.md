@@ -50,10 +50,11 @@ no facts of its own beyond those; each lives in one doc, and the
 - **trimui-smartpro**: the game runs; the performance work is on hold with
   the ports ([decided 8](#decided);
   [its Performance](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#performance)). The device
-  has every patch up to 0034 in a build with the profiling hooks, Overclock;
-  its owner's settings are Distant AI (characters out of sight think less
-  often) on and 853×480 (2026-09-23), which the level start's native rows
-  switch to native for the run. It has no battery (its battery
+  has the fork's head (M3–M7) in a build with the profiling hooks, Overclock
+  (2026-09-29), and the level start now runs at 8.2 FPS at native and 11.5 at
+  853×480 (7.7 and 10.4 at 0034). Its owner's settings are Distant AI
+  (characters out of sight think less often) on and 853×480 (2026-09-23),
+  which the level start's native rows switch to native for the run. It has no battery (its battery
   warnings are off: [its Gotchas](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#gotchas)).
 - **The game's DLLs**: seven passes are read (the last 2026-09-28;
   [decided 4](#decided)). [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info)
@@ -171,10 +172,12 @@ no facts of its own beyond those; each lives in one doc, and the
   decisions: the checks in [open decision 1](#open-decisions), the sound's
   heard with real audio, which the distrobox reaches now
   ([this machine](docs/DEVELOPMENT.md#this-machine)). Waiting with the ports
-  ([decided 8](#decided)): the **[perf]** items that landed with M3 and M4,
-  to be re-measured on the device (decided 2's list carries each), the
-  Smart Pro's performance work ([decided 2](#decided)) and the next ports
-  ([open decision 3](#open-decisions)).
+  ([decided 8](#decided)): the Smart Pro's performance work ([decided
+  2](#decided)) and the next ports ([open decision 3](#open-decisions)); the
+  **[perf]** items that landed with M3 and M4 were re-measured on the device
+  2026-09-29 (decided 2's list carries each, and [where a frame
+  goes](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#where-a-frame-goes)
+  the breakdown).
 
   **The launcher's `main`** ([decided 7](#decided)) is whole (2026-09-27):
   the original `DeusEx.exe` recreated from dx-reverse-info's
@@ -229,50 +232,62 @@ no facts of its own beyond those; each lives in one doc, and the
    in [where a frame goes](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#where-a-frame-goes).
    Re-measure after each change, and profile on the device (`SAMPLE=1`): the
    desktop's proportions are not the device's.
-   - **Collision traces** (in progress: patches 0025–0027, 0030–0032).
-   - **The script interpreter** (patches 0012–0017, 0028–0029). What is left of
-     its own time is mostly the Cortex-A53 waiting on memory for each
-     expression node: only a denser, compiled form of each function's code
-     would change that -- a rewrite of the evaluator's core. Even with no cost
-     of its own, script time would only fall by a little over half: the
-     natives the scripts call are the rest. Smaller: calls without an
-     `ExpressionValue` per argument. How the original does both -- its
-     bytecode run in place, each argument evaluated straight into the
-     callee's frame: [the script interpreter](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#the-script-interpreter).
+   - **Collision traces** (patches 0025–0027, 0030–0032). Re-measured
+     2026-09-29: the traces' own time is ~2 ms of the tick
+     (`TraceAABBModel::Trace` ~1.8), where ~8 a frame went through the traces
+     in all.
+   - **The script interpreter** (patches 0012–0017, 0028–0029). Re-measured
+     2026-09-29: ~15 ms under the VM (~12 by the frame-time hooks' own
+     count), ~6 of it the interpreter's own, over ~2,000 VM calls a frame
+     (was ~10,000). What is left of its own time is mostly the Cortex-A53
+     waiting on memory for each expression node: only a denser, compiled form
+     of each function's code would change that -- a rewrite of the
+     evaluator's core. Even with no cost of its own, the VM's time would only
+     fall by a little less than half: the natives the scripts call are the
+     rest. Smaller: calls without an `ExpressionValue` per argument. How the
+     original does both -- its bytecode run in place, each argument evaluated
+     straight into the callee's frame: [the script interpreter](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#the-script-interpreter).
    - **Per-actor work** around the scripts. `IsEventEnabled` answers from
      one mask on the object now, and checks no call to any other function,
      as the original's (landed with M3's probe-mask work, 2026-09-25;
-     [events and probes](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#events-and-probes)); its share
-     of the tick is to be re-measured on the device. The rest of the
-     per-actor work remains.
+     [events and probes](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#events-and-probes));
+     re-measured 2026-09-29, its own time is ~0.1 of the tick (was ~1.4), and
+     the work around the scripts is ~9 ms of it. The rest of the per-actor
+     work remains.
    - **The audio update's scan** of every actor for an ambient sound. The
      original does the same scan every frame
      ([each frame](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/galaxy-dll.md#each-frame)): nothing of it to port.
    - **Actor meshes** (0018–0019 so far): the per-vertex work itself. A
      distant mesh is drawn with fewer vertices now (landed with M4's mesh
-     detail, 2026-09-25; **[perf]** re-measure on the device:
-     [mesh detail](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#mesh-detail)). A vertex is lit by
-     the strongest lights only, their shadows checked every 16 frames, as
-     the original's (landed with M4, 2026-09-25;
-     [lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)); **[perf]** re-measure on
-     the device.
-   - **Visibility** (0020–0021 so far): still the largest render item.
+     detail, 2026-09-25;
+     [mesh detail](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#mesh-detail)) --
+     re-measured 2026-09-29, the meshes are ~7.5 ms of the render for ~40 in
+     view (was ~11). A vertex is lit by the strongest lights only, their shadows checked
+     every 16 frames, as the original's (landed with M4, 2026-09-25;
+     [lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting));
+     re-measured 2026-09-29, the lightmaps are ~3.7 ms and the vertex
+     lighting ~1.1.
+   - **Visibility** (0020–0021 so far): still the largest render item (~20 ms
+     of it, re-measured 2026-09-29).
    - **Lightmap uploads**: the original's rebuild shape landed with M4
      (2026-09-25) -- a map rebuilt only for its animated and moving
      lights over its kept static part, `NoDynamicLights` stopping that
-     altogether, movers only when moved; **[perf]** re-measure on the
-     device. Left: re-uploading only the rows a light changed, byte maps
-     (the fork's floats convert on the CPU; Deus Ex's hold the original's
-     byte values since 2026-09-28, as floats), and each surface's lightmap
-     lookup ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)).
+     altogether, movers only when moved. Left: re-uploading only the rows a
+     light changed, byte maps (the fork's floats convert on the CPU; Deus
+     Ex's hold the original's byte values since 2026-09-28, as floats), and
+     each surface's lightmap lookup
+     ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --
+     re-measured 2026-09-29: lightmaps ~3.7 ms (6 rebuilt a frame, the
+     BarrelFire's), uploads ~2.
    - **What is out of sight**: landed with M3 (2026-09-25) -- the fork
      keeps render time and stasis now, so actors in stasis do not tick and
      the scripts spare what was not drawn lately, an NPC's shadow among it
      ([out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)); since 2026-09-27 only
      what shows past the world in front of it counts as drawn, as the
      original, by occlusion proxies filtered down the BSP on the render
-     CPU. What both buy the device, and what the proxies cost it, is to be
-     measured there (**[perf]** re-measure).
+     CPU. Measured 2026-09-29: the frame went from ~96 to ~87 ms at 853×480;
+     at native the render grew ~3 with the proxies' walk, and its GPU wait
+     from ~24 to ~30.
 
    At native resolution the game tick does not move the frame until the GPU's
    time comes down (decided 9); at 853×480 it does.
@@ -374,7 +389,7 @@ no facts of its own beyond those; each lives in one doc, and the
    `trimui-smartpro` and unpushed (the pin moves with it). There the frame
    is the CPU's work, so [decided 2](#decided)'s speed-ups buy frames
    directly and the ~20 FPS target needs no GPU renderer work; at the
-   panel's 1280×720 the GPU's ~68 ms holds the frame until the GLES
+   panel's 1280×720 the GPU's ~63 ms holds the frame until the GLES
    renderer (decided 3) brings it down
    ([where a frame goes](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#where-a-frame-goes)).
    The device already ran 853×480 as its owner's setting (2026-09-23); the
