@@ -3,7 +3,7 @@
 # port branch) moves one. docs/PORTING.md.
 repo    https://github.com/JuggyMcNutty/deusex-launcher.git
 port    linux-x86_64     d4a103c5d70f68f2064a7b7f39d02cedd3d484f4
-port    trimui-smartpro  ffe9e7a247cb683e52c257a559b3a16437ba1b69
+port    trimui-smartpro  9ff51a98ee1d934595f624bf744eac36db0f2c48
 port    linux-aarch64    239d82ab0be9794f99de558102742e4a2ab414d7
 port    android          d97c3fce4a0f5c8330fbaa5a38174a1ec189e59a
 port    x360             795ad5908d3ea8f04c5e8b7bfe9831c518a1c95d
