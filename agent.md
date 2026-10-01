@@ -5,7 +5,7 @@ no facts of its own beyond those; each lives in one doc, and the
 [README's table](README.md#documentation) says which. Before working, read
 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
-## State (2026-09-29)
+## State (2026-10-01)
 
 - **The repositories**, four since the split (2026-09-27,
   [decided 7](#decided)): this one, the workspace, on `main`, public at
@@ -17,22 +17,23 @@ no facts of its own beyond those; each lives in one doc, and the
   [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info). Each is
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
-- **Pushed and pinned** (2026-09-29, the owner's go-ahead): the three
-  repositories with work -- port-ex-machina (decided 9, the level start's
-  renaming, the [perf] re-measurements), VibeEngine (the profiling hooks'
-  re-based patch, the level start's renaming, the re-measured [perf] items)
-  and the launcher's trimui-smartpro (the 853×480 default, the level
-  start's renaming, the M3–M7 numbers) -- the engine and every port branch
-  pinned at what was pushed. The previous push (2026-09-28, twice that
-  day) took the engine's Galaxy mixer, its drawn test's render box, its
-  fitting in and encroaching, where its traces stop, its visible-actor
-  iterators, `LineOfSightTo`, `CanSee` and
-  `PlayerCanSeeMe`, the player's input read before its physics and the
-  latent moves with the path's touched node, the harness's
-  `VisibleConsole` and `SightConsole`, and the RE's reading of each; the
-  launcher had nothing new. `main`'s windows' icons (2026-09-28, Next) are
-  not merged into the port branches -- whether they go there too is the
-  owner's call.
+- **Pushed and pinned** (2026-10-01, the owner's go-ahead): the engine
+  (VibeEngine: the GLES renderer -- the GL device on desktop GL and OpenGL ES
+  3.2 from one code path, `Type=GLES`, with the CPU staging streams, the RGBA8
+  scene buffers when Hdr is off, the render scale, the CPU decoders for what
+  the GE8300 cannot sample or filter, the ReadPixels implementation and its
+  orientation, the GE8300's sampler set and fullscreen -- the workspace's
+  `plans/gles-renderer.md` is the milestone record) and the launcher's
+  trimui-smartpro (`renderers.ini`'s `[GLES]` row selectable, the GLES numbers
+  in the README's table) -- the engine and every port branch pinned at what
+  was pushed. The previous push (2026-09-29, the owner's go-ahead) took the
+  three repositories with work -- port-ex-machina (decided 9, the level
+  start's renaming, the [perf] re-measurements), VibeEngine (the profiling
+  hooks' re-based patch, the level start's renaming, the re-measured [perf]
+  items) and the launcher's trimui-smartpro (the 853×480 default, the level
+  start's renaming, the M3–M7 numbers). `main`'s windows' icons (2026-09-28,
+  Next) are not merged into the port branches -- whether they go there too is
+  the owner's call.
 - **The launcher** the ports run -- `linux-x86_64`'s branch, and the devices'
   from it -- runs on linux-x86_64 and the Smart Pro. It is deliberately
   verbose for development (open decision 2). `main`, the original recreated
@@ -46,10 +47,13 @@ no facts of its own beyond those; each lives in one doc, and the
   it (2026-09-24), and its docs and tools are its own `vibe/` (2026-09-27). It
   holds upstream's latest when last merged (2026-09-24); upstream has moved
   on since (`scripts/engine.sh status` says how far), and whether and when to
-  merge it (the fork's `vibe/tools/upgrade.sh`) is the owner's call. The
-  profiling hooks are on: re-based onto the fork's head 2026-09-29
-  (`perf.sh save`) and applied for the device's profile, which the
-  device's build carries.
+  merge it (the fork's `vibe/tools/upgrade.sh`) is the owner's call. Its GL
+  device now runs on desktop GL and OpenGL ES 3.2 from one code path -- the
+  GLES renderer (2026-10-01, [What the fork changes](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering),
+  the workspace's `plans/gles-renderer.md` the milestone record) -- pinned at
+  2107f5f. The profiling hooks are re-based onto that head and applied only
+  for a device profile (`perf.sh on/off`; the device's current build is clean
+  of them).
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
   app ran the engine into the intro level on the development PC, and its
   launcher straight into Liberty Island (`DXL_NO_HOME=1`, 2026-09-27);
@@ -58,9 +62,14 @@ no facts of its own beyond those; each lives in one doc, and the
 - **trimui-smartpro**: the game runs; the performance work is on hold with
   the ports ([decided 8](#decided);
   [its Performance](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#performance)). The device
-  has the fork's head (M3–M7) in a build with the profiling hooks, Overclock
-  (2026-09-29), and the level start now runs at 8.2 FPS at native and 11.5 at
-  853×480 (7.7 and 10.4 at 0034). Its owner's settings are Distant AI
+  has the fork's GLES renderer (2026-10-01) in a clean build: the launcher's
+  Video tab lists OpenGL ES as selectable, and the level start under
+  `Type=GLES` runs at 8.5–8.8 FPS native and 10.0 at 853×480 -- the Vulkan
+  device's same-build numbers are 11.4 and ~11.5 (the gap is the GL driver's
+  per-draw-call cost; the numbers and their story are in [the port
+  README](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#where-a-frame-goes)).
+  The Vulkan renderer's numbers stand (M3–M7: 8.2 FPS native, 11.5 at
+  853×480). Its owner's settings are Distant AI
   (characters out of sight think less often) on and 853×480 (2026-09-23),
   which the level start's native rows switch to native for the run. It has no battery (its battery
   warnings are off: [its Gotchas](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#gotchas)).
@@ -298,11 +307,14 @@ no facts of its own beyond those; each lives in one doc, and the
    At native resolution the game tick does not move the frame until the GPU's
    time comes down (decided 9); at 853×480 it does.
 3. **Renderers on aarch64** (owner, 2026-09-22): the goal is Vulkan, OpenGL ES
-   and software rendering all selectable; Vulkan is the only one the engine
-   has. A GLES renderer is to be made at some point (owner, 2026-09-24), not
-   yet scheduled: it means porting Surreal's desktop OpenGL 3.2 renderer (the
-   Smart Pro's `renderers.ini` then needs only `EngineType=GLES`). Surreal has
-   no software renderer at all.
+   and software rendering all selectable. **Vulkan and OpenGL ES are both real
+   now** (2026-10-01): the GLES renderer is the fork's GL device on an ES 3.2
+   context, selectable in the Smart Pro's Video tab (`renderers.ini`
+   `EngineType=GLES`), measured at 10 fps at 853×480 against the Vulkan's
+   ~11.5 (the milestone record is the workspace's `plans/gles-renderer.md`);
+   what remains
+   to the ~20 FPS target is the GL driver's per-draw-call cost. Surreal has no
+   software renderer at all.
 4. **Reverse-engineering the game's DLLs** (owner, 2026-09-24), documented
    in [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) as
    behaviour in our own words, never decompiled code. Desktop engine runs as needed to see what fires in play.
