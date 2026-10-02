@@ -38,8 +38,8 @@ no facts of its own beyond those; each lives in one doc, and the
   `Object.CriticalDelete` frees an object at once, and the fork has no object
   lifecycle at all -- nothing in the engine ever deletes a `UObject`, so there is
   no collector to be early for, and a bare `delete` would leave the package's
-  object table pointing at freed memory. The engine carries seven commits, not
-  pushed (the owner's go-ahead waits); the pins move with the push.
+  object table pointing at freed memory. All seven commits are pushed and
+  the pins moved with them.
 - **The game-fidelity pass** (2026-10-01, from the owner's play report;
   the record is [plans/game-fidelity.md](plans/game-fidelity.md)): five
   play-reported differences taken up, all five now fixed (the fifth by the
@@ -71,8 +71,17 @@ no facts of its own beyond those; each lives in one doc, and the
   [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info). Each is
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
-- **Pushed and pinned** (2026-10-01, the owner's go-ahead): the engine
-  (VibeEngine: the GLES renderer -- the GL device on desktop GL and OpenGL ES
+- **Pushed and pinned** (2026-10-02, the owner's go-ahead): the engine at
+  `cfda48d` -- the game-fidelity pass's five commits (the skip, the belt
+  text, the focus movement, the direct-walk pre-check, the mission sweep)
+  and this session's two (the path search; a pawn's held item,
+  `PlaySound`'s radius, `Mid`'s negative start) -- with the RE's own commit
+  in [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info)
+  (the path search, its end points and its move flags) and this file
+  pushed with them; the pin moved with the push, and the engine and every
+  port branch are pinned at it. Before that (2026-10-01, the owner's
+  go-ahead): the engine's
+  GLES renderer -- the GL device on desktop GL and OpenGL ES
   3.2 from one code path, `Type=GLES`, with the CPU staging streams, the RGBA8
   scene buffers when Hdr is off, the render scale, the CPU decoders for what
   the GE8300 cannot sample or filter, the ReadPixels implementation and its
@@ -105,7 +114,7 @@ no facts of its own beyond those; each lives in one doc, and the
   device now runs on desktop GL and OpenGL ES 3.2 from one code path -- the
   GLES renderer (2026-10-01, [What the fork changes](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering),
   the workspace's `plans/gles-renderer.md` the milestone record) -- pinned at
-  2107f5f. The profiling hooks are re-based onto that head and applied only
+  cfda48d. The profiling hooks are re-based onto that head and applied only
   for a device profile (`perf.sh on/off`; the device's current build is clean
   of them).
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
