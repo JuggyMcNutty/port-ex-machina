@@ -30,6 +30,10 @@ no facts of its own beyond those; each lives in one doc, and the
   not the level's navigation list; every search clears the nodes first,
   end points included; and the end points come from the nodes around the
   pawn, not the goal -- and the next bullet is the port from the binary.
+  **DrawBorders' layout is the original's** (engine at `f804c77`, from
+  `XGC::DrawBorders`): each piece fills its band between the margin lines,
+  its inner side on the line; the game's frames, one size a side, draw as
+  before (`BorderConsole`, `ColorsConsole`, new).
 - **The path search is the original's** (2026-10-02, redone in the review),
   the game-fidelity pass's last diagnosed item: `FindPathToward` and
   `FindPathTo` as Deus Ex's Engine.dll has them end to end -- the lists
@@ -94,7 +98,7 @@ no facts of its own beyond those; each lives in one doc, and the
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
 - **Pushed and pinned** (2026-10-02, the owner's go-ahead): the engine at
-  `9f45b2b` since the review's path search, `ac0c28e` its first push (its fixes above, with
+  `f804c77` since the review's DrawBorders layout, `9f45b2b` its path search, `ac0c28e` its first push (its fixes above, with
   dx-reverse-info's correction of a pawn's attachments and the previous
   session's unpushed `acc4cf1`, LevelInfo's clock); before that at
   `cfda48d` -- the game-fidelity pass's five commits (the skip, the belt
@@ -139,7 +143,7 @@ no facts of its own beyond those; each lives in one doc, and the
   device now runs on desktop GL and OpenGL ES 3.2 from one code path -- the
   GLES renderer (2026-10-01, [What the fork changes](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering),
   the workspace's `plans/gles-renderer.md` the milestone record) -- pinned at
-  `9f45b2b`. The profiling hooks are re-based onto that head and applied only
+  `f804c77`. The profiling hooks are re-based onto that head and applied only
   for a device profile (`perf.sh on/off`; the device's current build is clean
   of them).
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
