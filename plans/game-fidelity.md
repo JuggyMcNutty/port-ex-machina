@@ -345,15 +345,23 @@ end.
       `UPawn::FindPathToward` — proven with MoveConsole:
       SecurityBot1's route now matches the original's exactly
       (PatrolPoint14→1→2→3→13, no detours, 10714 moved vs 10821).
-      **Recorded as follow-up**: the `breadthPathFrom` port itself — the
-      route-choice divergences remain (UNATCOTroop1 stuck on the
-      406 route, Terrorist10/31/34 taking different-but-moving routes;
-      the fork's Dijkstra-by-distance picks different routes than the
-      original's penalized best-first). The RE is captured here and in
-      the addresses above; the port is the next session's work, with
-      MoveConsole as its proof. Runs: `fork-MoveConsole-192456` (fixed)
-      vs `original-MoveConsole-191311`, `fork-MoveConsole-191106`
-      (pre-fix).
+      **Follow-up, taken up 2026-10-02**: the `breadthPathFrom` port
+      itself, in `UPawn::FindPathToEndPoint` with `ClearPaths` resetting
+      what the search keeps in the nodes — the RE is written up in
+      `dx-reverse-info/engine-dll.md#the-search`, which corrects two
+      readings above: the walk is **the level's navigation list in
+      order**, not a priority queue (the sorted open list is kept and
+      never popped from), and a node's cost adds an end point's
+      `bestPathWeight`. UNATCOTroop1, frozen from 8 s on, now walks its
+      whole patrol; Terrorist35 now stalls at 34 s where it did not —
+      what decides that is the end-point set, still the fork's
+      (`MarkReachableNavEndPoints`) where the original's is
+      `APawn::definePathsFor`, and the reach spec's `reachFlags`, still
+      unchecked (`APawn::calcMoveFlags`). Both are read and scoped in the
+      RE; `MoveConsole` is their proof. Runs:
+      `fork-MoveConsole-225552` (the search) vs
+      `original-MoveConsole-191311`, `fork-MoveConsole-192456`
+      (the pre-check), `fork-MoveConsole-191106` (pre-fix).
 - [x] 11. **Mission sweep** — done 2026-10-01: `MissionConsole`
       (vibe/tools/dxcap) checks each map's DeusExLevelInfo, its
       MissionScript actor and the state machine's initialization from the

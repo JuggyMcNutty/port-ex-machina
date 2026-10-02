@@ -5,12 +5,45 @@ no facts of its own beyond those; each lives in one doc, and the
 [README's table](README.md#documentation) says which. Before working, read
 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
-## State (2026-10-01)
+## State (2026-10-02)
 
+- **The path search is the original's** (2026-10-02), the game-fidelity pass's
+  last diagnosed item: `UPawn::FindPathToEndPoint` is now
+  `APawn::breadthPathFrom` (`Engine.dll 0x103dcd60`) -- a node costs what the
+  reach spec's distance plus the node's own penalty plus what was spent to reach
+  the node expanded so far (and an end point's `bestPathWeight`), kept in an
+  open list sorted by that cost out of the nodes' own `nextOrdered`/
+  `prevOrdered`, the route in `previousPath`, with `ClearPaths` resetting
+  `visitedWeight` to 10,000,000 as `APawn::clearPaths` does and the caps the
+  original's (1,000 nodes, logged; none of Deus Ex's eleven `FindPathToward`
+  calls passes a cap). `MoveConsole` against the original's own run:
+  UNATCOTroop1, frozen against geometry from 8 s on (no movement for the rest
+  of the run), now walks its whole patrol as the original's does and reaches
+  patrol points it never reached; 50 of Liberty Island's 52 pawns' distance
+  moved is the original's, as before. **One pawn stalls where it did not**
+  (Terrorist35, at 34 s), and what decides that is still the fork's: the end
+  points the search stops at (`MarkReachableNavEndPoints`, the nearest eight
+  within 1,000 units) where the original's is `APawn::definePathsFor`, a traced
+  flood of the goal-side node's reach specs, and the reach spec's own
+  `reachFlags`, unchecked because the fork has no `calcMoveFlags`. Both are
+  read and written up ([`engine-dll.md`'s the search](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#the-search));
+  NATIVES records them as the work left.
+- **Three small originals** (2026-10-02), each RE-backed and built: a pawn's
+  mesh with no triangle to hold a weapon at draws its `SelectedItem` where the
+  item is (`Render.dll`, a pawn's attachments) -- the fork drew nothing, so an
+  NPC holding something that is not a weapon had nothing in its hands; a script
+  sound with no radius is heard 800 units out, the original's figure, where the
+  fork passed 1,500 through and computed its priority on it; `Object.Mid` with a
+  negative start gives an empty string. A fourth found **not landable**:
+  `Object.CriticalDelete` frees an object at once, and the fork has no object
+  lifecycle at all -- nothing in the engine ever deletes a `UObject`, so there is
+  no collector to be early for, and a bare `delete` would leave the package's
+  object table pointing at freed memory. The engine carries seven commits, not
+  pushed (the owner's go-ahead waits); the pins move with the push.
 - **The game-fidelity pass** (2026-10-01, from the owner's play report;
   the record is [plans/game-fidelity.md](plans/game-fidelity.md)): five
-  play-reported differences taken up, four fixed and proven by new dxcap
-  consoles, the fifth diagnosed with its fix scoped. **Fixed:** skipped
+  play-reported differences taken up, all five now fixed (the fifth by the
+  search above). **Fixed:** skipped
   conversation speech now stops (the device's StopSound matched the caller
   as well as the ID; the original stops by ID alone -- SkipConsole and
   skip.py prove it from the recordings); the object belt's text now draws
@@ -22,16 +55,12 @@ no facts of its own beyond those; each lives in one doc, and the
   ChoiceConsole proves the cycle and the blue); and findPathToward walks
   straight to a directly reachable target (bots detoured through path
   nodes to patrol points in plain sight -- MoveConsole proves the routes
-  match). **Diagnosed, fix scoped:** the path search itself stays the
-  fork's own -- the original's breadthPathFrom is a best-first walk with
-  per-node penalties where the fork's is a Dijkstra, so routes still
-  differ and one trooper presses against a wall on such a route (the RE
-  is in the plan; MoveConsole is its proof). **Compared clean:** the
+  match). **The fifth (the path search) is fixed too**, 2026-10-02, by the
+  first bullet of this State. **Compared clean:** the
   death path matches the original's throughout (the robots' freeze in
   Dying forever is the original's own behaviour), and the mission sweep
   (MissionConsole) is clean on all 83 maps, the two odd ones being the
-  original's own behaviour too. The engine carries five commits, not
-  pushed (the owner's go-ahead waits); the pins move with the push.
+  original's own behaviour too.
 - **The repositories**, four since the split (2026-09-27,
   [decided 7](#decided)): this one, the workspace, on `main`, public at
   https://github.com/JuggyMcNutty/port-ex-machina (its history was rewritten
@@ -61,7 +90,7 @@ no facts of its own beyond those; each lives in one doc, and the
   the owner's call.
 - **The launcher** the ports run -- `linux-x86_64`'s branch, and the devices'
   from it -- runs on linux-x86_64 and the Smart Pro. It is deliberately
-  verbose for development (open decision 2). `main`, the original recreated
+  verbose for development. `main`, the original recreated
   almost 1:1, is whole: the `DeusEx` program -- the original's launch
   sequence, wizard, splash and message boxes -- starts VibeEngine through its
   `run-game.sh` and stays with it; `scripts/recreation.sh` builds, installs,
@@ -207,15 +236,16 @@ no facts of its own beyond those; each lives in one doc, and the
   fork's `MoveToward` stopped short of each node and its route sent it
   back to the node it stood on; the latent moves are the original's since
   2026-09-28, NPCs walking around what they bump at last
-  ([moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement)). The rest of the fork's
-  path search is still its own (the original's `findPathToward` in
-  [moving](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#moving)).
+  ([moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement)). The path
+  search is the original's since 2026-10-02 (the first bullet of State; its end
+  points and the reach spec's reach flags are the work left, the original's in
+  [the search](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#the-search)).
   What remains of the milestones is by hand, waiting with the open
   decisions: the checks in [open decision 1](#open-decisions), the sound's
   heard with real audio, which the distrobox reaches now
   ([this machine](docs/DEVELOPMENT.md#this-machine)). Waiting with the ports
   ([decided 8](#decided)): the Smart Pro's performance work ([decided
-  2](#decided)) and the next ports ([open decision 3](#open-decisions)); the
+  2](#decided)) and the next ports ([open decision 2](#open-decisions)); the
   **[perf]** items that landed with M3 and M4 were re-measured on the device
   2026-09-29 (decided 2's list carries each, and [where a frame
   goes](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#where-a-frame-goes)
@@ -422,7 +452,7 @@ no facts of its own beyond those; each lives in one doc, and the
 8. **The engine first** (owner, 2026-09-27). The porting work waits until
    the engine is more stable and has more of the game's features: the
    Smart Pro's performance (decided 2) with its device re-measures and the
-   profiling hooks' re-basing, and the next ports (open decision 3). The
+   profiling hooks' re-basing, and the next ports (open decision 2). The
    open decisions wait until the owner takes them up -- likely in a large
    play-testing session -- unless one stops the work, when the owner is
    asked. M7 is finished first, with everything it left.
@@ -553,14 +583,10 @@ Each waits until the owner takes it up ([decided 8](#decided)).
      announces it nowhere: its uplinks lack `DoUplink`).
      The desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
    - linux-aarch64 on any real device.
-2. **Release polish** (owner's request, deferred): the home screen is
-   deliberately verbose for development; a final build needs a declutter pass,
-   and Surreal Engine's always-on Deus Ex stats overlay (FPS/actors/surfaces,
-   `RenderCanvas.cpp` `DrawTimedemoStats`) hidden behind an option.
-3. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
+2. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
    engine's libraries, as the Smart Pro has); Android (its README lists the
    work, starting with an in-process hand-over).
-4. **A fork server on the master servers' lists** (deferred by the owner to
+3. **A fork server on the master servers' lists** (deferred by the owner to
    future network work, 2026-09-27). Joining live servers the owner allowed
    ("feel free to connect to public servers", 2026-09-27), and runs have
    joined empty ones since. A listing is another step: neither engine
