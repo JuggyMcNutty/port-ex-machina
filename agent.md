@@ -116,7 +116,7 @@ no facts of its own beyond those; each lives in one doc, and the
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
 - **Pushed and pinned** (2026-10-02, the owner's go-ahead): the engine at
-  `eb7a50e` since the review's held-off moves, `6829f0e` its reachability tests, `f804c77` its DrawBorders layout, `9f45b2b` its path search, `ac0c28e` its first push (its fixes above, with
+  `bf12e65` since the review's dropped `darkClamp`, `eb7a50e` its held-off moves, `6829f0e` its reachability tests, `f804c77` its DrawBorders layout, `9f45b2b` its path search, `ac0c28e` its first push (its fixes above, with
   dx-reverse-info's correction of a pawn's attachments and the previous
   session's unpushed `acc4cf1`, LevelInfo's clock); before that at
   `cfda48d` -- the game-fidelity pass's five commits (the skip, the belt
@@ -249,9 +249,12 @@ no facts of its own beyond those; each lives in one doc, and the
   feature: Liberty Island's laser tripwires a little stronger than the
   original's, more of the beam red (drawn at all since the fractal textures;
   [lasers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#particles-and-lasers-render-iterators)), Liberty
-  Island's pier floor about 6% darker than `D3DDrv`'s in the frames' terms
-  where a corridor's is within 2% -- half of it the shaders' `darkClamp`
-  ([brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)) --, the unread shapes of the cloud cast
+  Island's pier floor 1.7 to 3% darker than `D3DDrv`'s in the frames' terms
+  (6% until 2026-10-02, when Deus Ex's shaders lost upstream's `darkClamp`:
+  `D3DDrv` draws a texture's colours as they are on any display of 24 bits
+  or more; [brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)), the island's trees about
+  1.9 times the original's in linear terms where the grass under them
+  matches (`CoronaConsole`, seen 2026-10-02, unread), the unread shapes of the cloud cast
   and of the effects still the fork's -- the light maps and meshes are the
   original's since 2026-09-28
   ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --; dropped
