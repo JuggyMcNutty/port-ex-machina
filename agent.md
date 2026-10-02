@@ -33,7 +33,16 @@ no facts of its own beyond those; each lives in one doc, and the
   **DrawBorders' layout is the original's** (engine at `f804c77`, from
   `XGC::DrawBorders`): each piece fills its band between the margin lines,
   its inner side on the line; the game's frames, one size a side, draw as
-  before (`BorderConsole`, `ColorsConsole`, new).
+  before (`BorderConsole`, `ColorsConsole`, new). **The reachability tests
+  are the original's** (engine at `6829f0e`): `pointReachable`,
+  `actorReachable` and their walks with the original's own moves, and
+  `AIDirectionReachable` stepping with them -- with the path search, 51 of
+  Liberty Island's 52 pawns move within tolerance of the original's and none
+  stalls where it does not (`ReachConsole`, new, 142 of 144 answers alike).
+  **Narrowed, not fixed**: where a falling decoration rests, and the 2 units a
+  walk's steps end below the original's, are one difference -- the box check
+  meets the floor where the original's stops on a hull face above it
+  (`RestConsole`, new; the hull clipping, `0x103f42f0`, is the work left).
 - **The path search is the original's** (2026-10-02, redone in the review),
   the game-fidelity pass's last diagnosed item: `FindPathToward` and
   `FindPathTo` as Deus Ex's Engine.dll has them end to end -- the lists
@@ -49,10 +58,9 @@ no facts of its own beyond those; each lives in one doc, and the
   distance moved within tolerance, where the first port gave 43 and the
   fork's own search 50; UNATCOTroop1 walks its whole patrol, and
   Terrorist35, which the first port stalled, walks as the original's.
-  **One pawn stalls where the original's does not** (Terrorist34, at
-  18 s): the search stops at the original's end point, and the fork's own
-  `pointReachable` then lets a farther node take its place. The
-  reachability tests are still the fork's, and are the work left.
+  Terrorist34, which the redone search still stalled on the fork's own
+  `pointReachable`, walks as the original's since the reachability tests
+  are the original's too (the review): 51 of 52.
 - **Three small originals** (2026-10-02), each RE-backed and built: a pawn
   holding no weapon draws its `SelectedItem` (`Render.dll`, a pawn's
   attachments) -- redone in the review above, the first port having drawn it
@@ -98,7 +106,7 @@ no facts of its own beyond those; each lives in one doc, and the
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
 - **Pushed and pinned** (2026-10-02, the owner's go-ahead): the engine at
-  `f804c77` since the review's DrawBorders layout, `9f45b2b` its path search, `ac0c28e` its first push (its fixes above, with
+  `6829f0e` since the review's reachability tests, `f804c77` its DrawBorders layout, `9f45b2b` its path search, `ac0c28e` its first push (its fixes above, with
   dx-reverse-info's correction of a pawn's attachments and the previous
   session's unpushed `acc4cf1`, LevelInfo's clock); before that at
   `cfda48d` -- the game-fidelity pass's five commits (the skip, the belt
@@ -143,7 +151,7 @@ no facts of its own beyond those; each lives in one doc, and the
   device now runs on desktop GL and OpenGL ES 3.2 from one code path -- the
   GLES renderer (2026-10-01, [What the fork changes](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering),
   the workspace's `plans/gles-renderer.md` the milestone record) -- pinned at
-  `f804c77`. The profiling hooks are re-based onto that head and applied only
+  `6829f0e`. The profiling hooks are re-based onto that head and applied only
   for a device profile (`perf.sh on/off`; the device's current build is clean
   of them).
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
@@ -275,8 +283,8 @@ no facts of its own beyond those; each lives in one doc, and the
   back to the node it stood on; the latent moves are the original's since
   2026-09-28, NPCs walking around what they bump at last
   ([moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement)). The path
-  search is the original's since 2026-10-02 (State; the reachability tests
-  it asks are the work left).
+  search and the reachability tests are the original's since 2026-10-02
+  (State; where a box meets the floor is the work left).
   What remains of the milestones is by hand, waiting with the open
   decisions: the checks in [open decision 1](#open-decisions), the sound's
   heard with real audio, which the distrobox reaches now
