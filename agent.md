@@ -62,7 +62,10 @@ no facts of its own beyond those; each lives in one doc, and the
   laser tripwires' beams, which drew their tube's back faces through the
   front ones, are within 0.5% of `D3DDrv`'s red (65-70% over), with the
   iterator's own placement of the segments, and Liberty Island's trees,
-  1.9 times the original's, match it (`LaserConsole`, `CoronaConsole`).
+  1.9 times the original's, match it (`LaserConsole`, `CoronaConsole`);
+  the cloud cast is the plain shape in the original as in the fork, and the
+  wavers draw from the original's random tables, the watery shimmer's
+  gliding.
 - **The path search is the original's** (2026-10-02, redone in the review),
   the game-fidelity pass's last diagnosed item: `FindPathToward` and
   `FindPathTo` as Deus Ex's Engine.dll has them end to end -- the lists
@@ -126,7 +129,7 @@ no facts of its own beyond those; each lives in one doc, and the
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
 - **Pushed and pinned** (2026-10-02, the owner's go-ahead): the engine at
-  `8f94d46` since the review's culled mesh faces, `bf12e65` its dropped `darkClamp`, `eb7a50e` its held-off moves, `6829f0e` its reachability tests, `f804c77` its DrawBorders layout, `9f45b2b` its path search, `ac0c28e` its first push (its fixes above, with
+  `9861c61` since the review's random tables, `8f94d46` its culled mesh faces, `bf12e65` its dropped `darkClamp`, `eb7a50e` its held-off moves, `6829f0e` its reachability tests, `f804c77` its DrawBorders layout, `9f45b2b` its path search, `ac0c28e` its first push (its fixes above, with
   dx-reverse-info's correction of a pawn's attachments and the previous
   session's unpushed `acc4cf1`, LevelInfo's clock); before that at
   `cfda48d` -- the game-fidelity pass's five commits (the skip, the belt
@@ -260,9 +263,11 @@ no facts of its own beyond those; each lives in one doc, and the
   the frames' terms (6% until 2026-10-02, when Deus Ex's shaders lost
   upstream's `darkClamp`: `D3DDrv` draws a texture's colours as they are on
   any display of 24 bits or more;
-  [brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)), the unread shapes of the cloud cast
-  and of the effects still the fork's -- the light maps and meshes are the
-  original's since 2026-09-28
+  [brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)), and the unread shapes of the
+  effects still the fork's (the cloud cast is the plain shape in the
+  original too, and the wavers' and shimmer's random tables the original's
+  since 2026-10-02) -- the light maps and meshes are the original's since
+  2026-09-28
   ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --; dropped
   decorations rest where the original's do since 2026-10-02 (State). Where a trace
   stops -- a unit short in the fork, where the original's line checks stop
