@@ -4,8 +4,11 @@ Status: **done** — five play-reported differences taken up 2026-10-01:
 four fixed and proven (speech skip, belt text, choice focus, direct-walk
 pathing), the fifth's search ported 2026-10-02; the death path and the
 mission scripts compared clean. All pushed and pinned (2026-10-02, the
-owner's go-ahead). The search's port is being redone: the RE reading in
-step 10 misreads the binary (agent.md's State, the review).
+owner's go-ahead). The search was redone in the review from the binary,
+the first port's RE reading having misread it, and with the original's
+reachability tests 51 of Liberty Island's 52 pawns move within tolerance
+of the original's, none stalling where it does not (step 10; agent.md's
+State).
 
 ## Context
 
@@ -360,9 +363,12 @@ end.
       (`dx-reverse-info/engine-dll.md#the-search`, rewritten): 48 of 52
       pawns' distance moved within tolerance by `move.py`, UNATCOTroop1
       walking its whole patrol, Terrorist35 no longer stalling; Terrorist34
-      stalls where the original's does not, the fork's own
+      stalled where the original's does not, the fork's own
       `pointReachable` letting a farther node replace the original's end
-      point -- the reachability tests are what is left. Runs:
+      point, until the reachability tests were ported the same day
+      (VibeEngine `6829f0e`): 51 of 52, no stall the original lacks
+      (`fork-MoveConsole-161924`, held since: `fork-MoveConsole-164537`).
+      Runs:
       `fork-MoveConsole-154921` (the redone search),
       `fork-MoveConsole-225552` (the first port) vs
       `original-MoveConsole-191311`, `fork-MoveConsole-192456`

@@ -10,62 +10,54 @@ no facts of its own beyond those; each lives in one doc, and the
 - **The review of the last session** (2026-10-02, the owner's ask: the open
   to-dos, the recent commits checked for inaccuracies and bugs, then the
   to-dos taken up; the owner's scope: the bugs, the path search, and four
-  engine to-dos -- where a falling actor rests, `AIDirectionReachable`'s
-  walk, DrawBorders' edges, the look items -- each pushed and pinned on its
-  proof). Fixed so far, each proven in both engines, pushed, and the engine
-  pinned at `ac0c28e`: **DrawBorders drew no edges** -- the margins' commit
-  (`dfdc499`) gave every edge of a frame with a top-left corner a negative
-  length, an inventory item's selection frame four dots (`BorderConsole`,
-  new); **a held item** is drawn in the hand at the weapon triangle, as
-  Render.dll's `DrawActorSprite` draws it -- the previous port (`cfda48d`)
-  followed the RE note's "where the item is", a misreading (corrected in
-  dx-reverse-info), and drew a multitool the size of a building over Liberty
-  Island (`HeldConsole`, new); **sound IDs** are each object's own number,
-  not its address's low 24 bits, which two actors could share once
-  `StopSound` matched the ID alone; **`Mid`** clamps its end as unsigned too
-  (`MidConsole`, new, alike in both engines); the 800-unit radius is Deus
-  Ex's alone. **The path search, redone** (engine pinned at `9f45b2b`):
-  the RE writeup the previous port followed misread the binary three ways --
-  the search walks its own sorted open list (`nextOrdered`, `0x103dd092`),
-  not the level's navigation list; every search clears the nodes first,
-  end points included; and the end points come from the nodes around the
-  pawn, not the goal -- and the next bullet is the port from the binary.
-  **DrawBorders' layout is the original's** (engine at `f804c77`, from
-  `XGC::DrawBorders`): each piece fills its band between the margin lines,
-  its inner side on the line; the game's frames, one size a side, draw as
-  before (`BorderConsole`, `ColorsConsole`, new). **The reachability tests
-  are the original's** (engine at `6829f0e`): `pointReachable`,
-  `actorReachable` and their walks with the original's own moves, and
-  `AIDirectionReachable` stepping with them -- with the path search, 51 of
-  Liberty Island's 52 pawns move within tolerance of the original's and none
-  stalls where it does not (`ReachConsole`, new). **Where a falling actor
-  rests is the original's** (engine at `eb7a50e`): every move the original
-  makes is `ULevel::MoveActor`'s, which stops 2 units short of what it hits,
-  where the fork's went up to the hit -- the one difference behind both the
-  falling rest and the 2 units a walk's steps ended low, not the box check,
-  whose script traces agree (`RestConsole`, new). Deus Ex's falls and the
-  reach tests' moves hold off now, and landing is `processLanded`'s:
-  `setPhysics` given the hit actor (the `LevelInfo` for the world), through
-  its `SupportActor` -- based on the level as the original's, the scripts'
-  stomps and bounces with it. The crate and box rest within 0.04 of the
-  original's (−304 before), a carcass at 471.30 on the level as the
-  original's (`DeathConsole`), and 134 of `ReachConsole`'s 144 answers are to
-  the unit (124 before; the other ten two patrolling bots asked from other
-  spots), Gunther's walk passing a burning barrel as the original's does:
-  Deus Ex's test moves pass decorations as they pass pawns. **The look
-  items** (engine at `bf12e65`, the culling at `8f94d46`): Deus Ex's shaders
-  take no `darkClamp` off a texture's colours -- `D3DDrv` uses 32-bit
-  textures on any display of 24 bits or more (`Use32BitTextures` is no
-  option of its), the pier half as far off `D3DDrv`'s as it was, the
-  corridor within 0.9% --; and a mesh's faces turned away from the eye are
-  culled as the original's `DrawLodMesh` culls them, unless two-sided: the
-  laser tripwires' beams, which drew their tube's back faces through the
-  front ones, are within 0.5% of `D3DDrv`'s red (65-70% over), with the
-  iterator's own placement of the segments, and Liberty Island's trees,
-  1.9 times the original's, match it (`LaserConsole`, `CoronaConsole`);
-  the cloud cast is the plain shape in the original as in the fork, and the
-  wavers draw from the original's random tables, the watery shimmer's
-  gliding.
+  engine to-dos). Done, each proven in both engines, pushed, and the engine
+  pinned with it (last at `9861c61`; Pushed and pinned has each commit):
+  - **The bugs found**: DrawBorders drew no edges -- the margins' commit
+    (`dfdc499`) gave every edge a negative length (`BorderConsole`, new) --
+    and its layout is `XGC::DrawBorders`' now (`ColorsConsole`, new); a held
+    item is drawn at the weapon triangle as Render.dll draws it, where the
+    previous port's misreading drew a multitool the size of a building
+    (`HeldConsole`, new); sound IDs are each object's own number, not its
+    address's low 24 bits; `Mid` clamps its end as unsigned (`MidConsole`,
+    new); the 800-unit sound radius is Deus Ex's alone.
+  - **The path search, redone** from the binary -- the RE writeup the first
+    port followed misread it three ways (the next bullet) -- and **the
+    reachability tests** the original's: `pointReachable`, `actorReachable`,
+    their walks and `AIDirectionReachable`'s steps (`ReachConsole`, new).
+    51 of Liberty Island's 52 pawns move within tolerance of the original's,
+    none stalling where it does not, and 134 of `ReachConsole`'s 144
+    answers match to the unit (the other ten: two patrolling bots, asked
+    from other spots).
+  - **Where a falling actor rests**: every move the original makes is
+    `ULevel::MoveActor`'s, which stops 2 units short of what it hits; the
+    fork's went up to the hit -- the one difference behind both the falling
+    rest and a walk's steps ending low (`RestConsole`, new). Deus Ex's falls
+    and the reach tests' moves hold off now, landing goes through
+    `setPhysics` with the hit actor (the floor's `SupportActor`), and Deus
+    Ex's test moves pass decorations as they pass pawns: crates rest within
+    0.04 of the original's, a carcass where the original's does, both based
+    on the level.
+  - **The look items**, against `D3DDrv`: no `darkClamp` -- `D3DDrv` draws
+    32-bit textures on any display of 24 bits or more (`Use32BitTextures`
+    is no option of its) -- the pier from 6% under to 1.7-3%, the corridor
+    within 0.9%; a mesh's faces turned away culled unless two-sided, as
+    Render.dll culls them -- the laser tripwires' beams within 0.5% of the
+    original's red (65-70% over), with the iterator's own segment
+    placement, and Liberty Island's trees, 1.9 times the original's,
+    matching it (`LaserConsole`, `CoronaConsole`); the unlit level and the
+    wavers' and shimmer's random tables the original's; the cloud cast is
+    the plain shape in both.
+  - **The docs** that carried the misreadings are corrected:
+    dx-reverse-info, VibeEngine's NATIVES.md, the fidelity plan.
+
+  **Left open from it**, each in its doc: the pier's last 1.7-3% (unread);
+  `processLanded`'s nudge of a decoration off a ledge it overhangs and a
+  carcass's bounce off a slope, not ported; the other light effects' shapes
+  (the waves and the rest) the fork's, unread; Terrorist10 moving farther
+  than the original's (1010 units to 652, as before the review); the Vulkan
+  device's scene shader built but not run (the harness runs GL); by hand,
+  jumping onto an NPC's head (its stomp and bounce come through
+  `SupportActor` now).
 - **The path search is the original's** (2026-10-02, redone in the review),
   the game-fidelity pass's last diagnosed item: `FindPathToward` and
   `FindPathTo` as Deus Ex's Engine.dll has them end to end -- the lists
@@ -128,18 +120,23 @@ no facts of its own beyond those; each lives in one doc, and the
   [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info). Each is
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
-- **Pushed and pinned** (2026-10-02, the owner's go-ahead): the engine at
-  `9861c61` since the review's random tables, `8f94d46` its culled mesh faces, `bf12e65` its dropped `darkClamp`, `eb7a50e` its held-off moves, `6829f0e` its reachability tests, `f804c77` its DrawBorders layout, `9f45b2b` its path search, `ac0c28e` its first push (its fixes above, with
-  dx-reverse-info's correction of a pawn's attachments and the previous
-  session's unpushed `acc4cf1`, LevelInfo's clock); before that at
-  `cfda48d` -- the game-fidelity pass's five commits (the skip, the belt
-  text, the focus movement, the direct-walk pre-check, the mission sweep)
-  and this session's two (the path search; a pawn's held item,
-  `PlaySound`'s radius, `Mid`'s negative start) -- with the RE's own commit
-  in [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info)
-  (the path search, its end points and its move flags) and this file
-  pushed with them; the pin moved with the push, and the engine and every
-  port branch are pinned at it. Before that (2026-10-01, the owner's
+- **Pushed and pinned** (2026-10-02, the owner's go-ahead): everything in
+  the four repositories; the engine pinned at `9861c61`, the review's last.
+  The review's engine commits, newest first, each pushed with its
+  dx-reverse-info commit and this file: `9861c61` the random tables and the
+  cloud cast, `8f94d46` mesh faces culled and the laser iterator, `bf12e65`
+  no `darkClamp`, `eb7a50e` moves held off and landing, `6829f0e` the
+  reachability tests, `f804c77` DrawBorders' layout, `9f45b2b` the path
+  search redone, `ac0c28e` the bugs (with dx-reverse-info's correction of a
+  pawn's attachments and the previous session's unpushed `acc4cf1`,
+  LevelInfo's clock). Before the review, `cfda48d`: the game-fidelity
+  pass's five commits (the skip, the belt text, the focus movement, the
+  direct-walk pre-check, the mission sweep) and that session's two (the
+  first path-search port; a pawn's held item, `PlaySound`'s radius, `Mid`'s
+  negative start), with the RE's own commit in
+  [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info). The
+  workspace pins the engine and every port branch (`ENGINE-PIN.txt`,
+  `LAUNCHER-PIN.txt`); no port branch changed in the review. Before that (2026-10-01, the owner's
   go-ahead): the engine's
   GLES renderer -- the GL device on desktop GL and OpenGL ES
   3.2 from one code path, `Type=GLES`, with the CPU staging streams, the RGBA8
@@ -173,8 +170,9 @@ no facts of its own beyond those; each lives in one doc, and the
   merge it (the fork's `vibe/tools/upgrade.sh`) is the owner's call. Its GL
   device now runs on desktop GL and OpenGL ES 3.2 from one code path -- the
   GLES renderer (2026-10-01, [What the fork changes](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering),
-  the workspace's `plans/gles-renderer.md` the milestone record) -- pinned at
-  `6829f0e`. The profiling hooks are re-based onto that head and applied only
+  the workspace's `plans/gles-renderer.md` the milestone record); pinned at
+  `9861c61` since the review. The profiling hooks were re-based onto the
+  head of 2026-09-29 and are applied only
   for a device profile (`perf.sh on/off`; the device's current build is clean
   of them).
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
@@ -223,9 +221,12 @@ no facts of its own beyond those; each lives in one doc, and the
     is not found) and has it back from the backup, nothing else lost.
     Render's and Engine's took the light maps' names and comments on
     2026-09-28, Galaxy's the mixer's and the reverb's and Render's the
-    drawn test's, and are backed up again; D3DDrv's, re-saved by an idle
-    worker that day with nothing changed, is newer than its backup. Each opens whole, and no working
-    files are left beside them.
+    drawn test's, and are backed up again. Engine's was saved again early on
+    2026-10-02 (by whom unrecorded; its backup is of 2026-09-28), and it and
+    D3DDrv's were re-saved by idle workers later that day after read-only
+    sessions (decompiler caches): both are newer than their backups.
+    Render's and DeusEx's are as backed up. Each opens whole, and no
+    working files are left beside them.
   - **What Surreal lacks** of them is VibeEngine's
     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md),
     from [`natives_audit.py`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/tools/natives_audit.py),
@@ -258,56 +259,32 @@ no facts of its own beyond those; each lives in one doc, and the
   fork's own). The look is compared against the original's own renderer,
   `D3DDrv`, since 2026-09-28 (`DXCAP_RENDERER=D3D`; its frames are
   `OpenGLDrv`'s, and a run the game moves to `SoftDrv` stops:
-  [scripted runs](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)). The captures left potential work, in no order, each under its
+  [scripted runs](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
+  **Potential work the comparisons left**, in no order, each under its
   feature: Liberty Island's pier floor 1.7 to 3% darker than `D3DDrv`'s in
-  the frames' terms (6% until 2026-10-02, when Deus Ex's shaders lost
-  upstream's `darkClamp`: `D3DDrv` draws a texture's colours as they are on
-  any display of 24 bits or more;
-  [brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)), and the unread shapes of the
-  effects still the fork's (the cloud cast is the plain shape in the
-  original too, and the wavers' and shimmer's random tables the original's
-  since 2026-10-02) -- the light maps and meshes are the original's since
-  2026-09-28
-  ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --; dropped
-  decorations rest where the original's do since 2026-10-02 (State). Where a trace
-  stops -- a unit short in the fork, where the original's line checks stop
-  half a unit short and its box checks a tenth of the trace -- is the
-  original's since 2026-09-28, walking's float over the floor taking the
-  original's measure
-  ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)).
-  `SetLocation`'s fitting in and a spawn's are the original's since
-  2026-09-28, with the encroachment check at the spot (the same section),
-  and so are the visible-actor iterators -- an exploding robot no longer
-  hurting through walls -- and `LineOfSightTo`, `CanSee` and
-  `PlayerCanSeeMe`, events that wait for the player to see them firing at
-  last (the same section). The weapon in hand higher and smaller than the original's
-  was the whole view at 90 degrees, not Deus Ex's 75: as the original's
-  since 2026-09-28, and the player's input moves it the tick it is read,
-  where the fork's lagged a tick ([small](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#small)). The zone reverb
-  ringing a third as long and the pan hard where the original's is soft
-  are the original's since 2026-09-28, Deus Ex's sounds mixed as
-  `Galaxy.dll` mixes them, each within 0.2 dB or 0.05 s of the original's
-  recording ([sound](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#sound)).
-  Saves made alike by both engines (`SaveConsole`, Liberty Island 8 s in,
-  2026-09-27) left more, in no order: at the level's start 9 NPCs count
-  as drawn where the original has 3, far off over the seawall -- the
-  proxies' rectangles the original's since 2026-09-28 and per-zone span
-  buffers no help (tried), what is left 1 to 9 pixels of theirs showing at
-  the edges, a pixel's difference between the engines' rasterizing
-  ([out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)). Its out-of-world
-  troops patrolling, its sitters wandering, a terrorist fighting a
-  security bot, the event manager's listeners called during its pass,
-  `TraceTexture`'s other texture for a wall and traces from inside a pawn
-  hitting the pawn are the original's since 2026-09-27 and 28 (the same
-  sections; [hearing](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#hearing-the-ai-event-system),
-  [implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)),
-  and so is Terrorist15's patrol: it backed off early on because the
-  fork's `MoveToward` stopped short of each node and its route sent it
-  back to the node it stood on; the latent moves are the original's since
-  2026-09-28, NPCs walking around what they bump at last
-  ([moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement)). The path
-  search, the reachability tests and where a falling actor rests are the
-  original's since 2026-10-02 (State).
+  the frames' terms ([brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)); the shapes of
+  the light effects whose original is unread, still the fork's
+  ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)); at the level's start 9 NPCs counted
+  as drawn where the original has 3, far off over the seawall, 1 to 9
+  pixels of theirs showing at the edges -- a pixel's difference between the
+  engines' rasterizing, the proxies' rectangles the original's and per-zone
+  span buffers no help (tried; `SaveConsole`,
+  [out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)); and the review's open items
+  (State). **Matched since**, each in its section: the light maps and
+  meshes (2026-09-28, [lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)); where a trace
+  stops, walking's float over the floor, `SetLocation`'s and a spawn's
+  fitting in with the encroachment check, the visible-actor iterators, and
+  `LineOfSightTo`, `CanSee` and `PlayerCanSeeMe`
+  ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original));
+  the weapon in hand's field of view and lag ([small](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#small));
+  the zone reverb and the pan ([sound](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#sound)); the saved
+  level's out-of-world troops, sitters, a terrorist fighting a security bot,
+  the event manager's listeners, `TraceTexture`, traces from inside a pawn,
+  and Terrorist15's patrol (2026-09-27 and 28;
+  [hearing](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#hearing-the-ai-event-system),
+  [moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement)); the path
+  search, the reachability tests, where a falling actor rests and the look
+  items (2026-10-02, State).
   What remains of the milestones is by hand, waiting with the open
   decisions: the checks in [open decision 1](#open-decisions), the sound's
   heard with real audio, which the distrobox reaches now
@@ -650,6 +627,11 @@ Each waits until the owner takes it up ([decided 8](#decided)).
      --, by [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer) (the game's own ini
      announces it nowhere: its uplinks lack `DoUplink`).
      The desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
+   - On a desktop, the review's (2026-10-02): jumping onto an NPC's head --
+     bounced off and the NPC stomped, through its `SupportActor` --, a crate
+     dropped on the floor resting just over it, and the laser tripwires,
+     Liberty Island's trees and the Dragon's Tooth's glow beside the
+     original's, by [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting).
    - linux-aarch64 on any real device.
 2. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
    engine's libraries, as the Smart Pro has); Android (its README lists the
