@@ -7,6 +7,31 @@ no facts of its own beyond those; each lives in one doc, and the
 
 ## State (2026-10-01)
 
+- **The game-fidelity pass** (2026-10-01, from the owner's play report;
+  the record is [plans/game-fidelity.md](plans/game-fidelity.md)): five
+  play-reported differences taken up, four fixed and proven by new dxcap
+  consoles, the fifth diagnosed with its fix scoped. **Fixed:** skipped
+  conversation speech now stops (the device's StopSound matched the caller
+  as well as the ID; the original stops by ID alone -- SkipConsole and
+  skip.py prove it from the recordings); the object belt's text now draws
+  (centred/right-aligned text with wrap off aligned within the wrap width,
+  100,000 px wide, so the belt's descriptions, counts and slot numbers
+  drew off-screen -- BeltConsole proves it); keyboard focus now moves
+  between windows (MoveFocus was a stub and buttons were not selectable:
+  a conversation's choices had no selector and never answered Up/Down --
+  ChoiceConsole proves the cycle and the blue); and findPathToward walks
+  straight to a directly reachable target (bots detoured through path
+  nodes to patrol points in plain sight -- MoveConsole proves the routes
+  match). **Diagnosed, fix scoped:** the path search itself stays the
+  fork's own -- the original's breadthPathFrom is a best-first walk with
+  per-node penalties where the fork's is a Dijkstra, so routes still
+  differ and one trooper presses against a wall on such a route (the RE
+  is in the plan; MoveConsole is its proof). **Compared clean:** the
+  death path matches the original's throughout (the robots' freeze in
+  Dying forever is the original's own behaviour), and the mission sweep
+  (MissionConsole) is clean on all 83 maps, the two odd ones being the
+  original's own behaviour too. The engine carries five commits, not
+  pushed (the owner's go-ahead waits); the pins move with the push.
 - **The repositories**, four since the split (2026-09-27,
   [decided 7](#decided)): this one, the workspace, on `main`, public at
   https://github.com/JuggyMcNutty/port-ex-machina (its history was rewritten
