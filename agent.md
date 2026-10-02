@@ -24,36 +24,31 @@ no facts of its own beyond those; each lives in one doc, and the
   not its address's low 24 bits, which two actors could share once
   `StopSound` matched the ID alone; **`Mid`** clamps its end as unsigned too
   (`MidConsole`, new, alike in both engines); the 800-unit radius is Deus
-  Ex's alone. **Under way: the path search, redone.** The RE writeup it was
-  ported from ([`engine-dll.md`'s the search](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#the-search))
-  misreads the binary three ways: the search walks its own sorted open list
-  (`nextOrdered`, `0x103dd092`), not the level's navigation list; every
-  search clears the nodes first, end points included (inline in
-  `0x103da210`, `bClearPaths` on in all of Deus Ex's calls); and
-  `definePathsFor` marks from the node list gathered around the **pawn**,
-  not the goal. The next bullet states the previous session's reading, and
-  is to be rewritten with the redone search.
-- **The path search is the original's** (2026-10-02), the game-fidelity pass's
-  last diagnosed item: `UPawn::FindPathToEndPoint` is now
-  `APawn::breadthPathFrom` (`Engine.dll 0x103dcd60`) -- a node costs what the
-  reach spec's distance plus the node's own penalty plus what was spent to reach
-  the node expanded so far (and an end point's `bestPathWeight`), kept in an
-  open list sorted by that cost out of the nodes' own `nextOrdered`/
-  `prevOrdered`, the route in `previousPath`, with `ClearPaths` resetting
-  `visitedWeight` to 10,000,000 as `APawn::clearPaths` does and the caps the
-  original's (1,000 nodes, logged; none of Deus Ex's eleven `FindPathToward`
-  calls passes a cap). `MoveConsole` against the original's own run:
-  UNATCOTroop1, frozen against geometry from 8 s on (no movement for the rest
-  of the run), now walks its whole patrol as the original's does and reaches
-  patrol points it never reached; 50 of Liberty Island's 52 pawns' distance
-  moved is the original's, as before. **One pawn stalls where it did not**
-  (Terrorist35, at 34 s), and what decides that is still the fork's: the end
-  points the search stops at (`MarkReachableNavEndPoints`, the first eight
-  reachable within 1,000 units, in the level's order) where the original's is `APawn::definePathsFor`, a traced
-  flood of the goal-side node's reach specs, and the reach spec's own
-  `reachFlags`, unchecked because the fork has no `calcMoveFlags`. Both are
-  read and written up ([`engine-dll.md`'s the search](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#the-search));
-  NATIVES records them as the work left.
+  Ex's alone. **The path search, redone** (engine pinned at `9f45b2b`):
+  the RE writeup the previous port followed misread the binary three ways --
+  the search walks its own sorted open list (`nextOrdered`, `0x103dd092`),
+  not the level's navigation list; every search clears the nodes first,
+  end points included; and the end points come from the nodes around the
+  pawn, not the goal -- and the next bullet is the port from the binary.
+- **The path search is the original's** (2026-10-02, redone in the review),
+  the game-fidelity pass's last diagnosed item: `FindPathToward` and
+  `FindPathTo` as Deus Ex's Engine.dll has them end to end -- the lists
+  around the pawn and the goal, the anchor and the end points
+  (`definePathsFor`), the search best first over its own open list
+  (`breadthPathFrom`), the reach flags, the step after it, the second way,
+  `HandleSpecial`, a falling goal's landing, and no `RouteCache`, which the
+  original never fills (VibeEngine's
+  [moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement);
+  [the search](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#the-search),
+  rewritten from the binary). `MoveConsole` against the original's own run,
+  laid side by side by the new `move.py`: 48 of Liberty Island's 52 pawns'
+  distance moved within tolerance, where the first port gave 43 and the
+  fork's own search 50; UNATCOTroop1 walks its whole patrol, and
+  Terrorist35, which the first port stalled, walks as the original's.
+  **One pawn stalls where the original's does not** (Terrorist34, at
+  18 s): the search stops at the original's end point, and the fork's own
+  `pointReachable` then lets a farther node take its place. The
+  reachability tests are still the fork's, and are the work left.
 - **Three small originals** (2026-10-02), each RE-backed and built: a pawn
   holding no weapon draws its `SelectedItem` (`Render.dll`, a pawn's
   attachments) -- redone in the review above, the first port having drawn it
@@ -99,7 +94,7 @@ no facts of its own beyond those; each lives in one doc, and the
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
 - **Pushed and pinned** (2026-10-02, the owner's go-ahead): the engine at
-  `ac0c28e` since the review's first push (its fixes above, with
+  `9f45b2b` since the review's path search, `ac0c28e` its first push (its fixes above, with
   dx-reverse-info's correction of a pawn's attachments and the previous
   session's unpushed `acc4cf1`, LevelInfo's clock); before that at
   `cfda48d` -- the game-fidelity pass's five commits (the skip, the belt
@@ -144,7 +139,7 @@ no facts of its own beyond those; each lives in one doc, and the
   device now runs on desktop GL and OpenGL ES 3.2 from one code path -- the
   GLES renderer (2026-10-01, [What the fork changes](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering),
   the workspace's `plans/gles-renderer.md` the milestone record) -- pinned at
-  `ac0c28e`. The profiling hooks are re-based onto that head and applied only
+  `9f45b2b`. The profiling hooks are re-based onto that head and applied only
   for a device profile (`perf.sh on/off`; the device's current build is clean
   of them).
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
@@ -276,9 +271,8 @@ no facts of its own beyond those; each lives in one doc, and the
   back to the node it stood on; the latent moves are the original's since
   2026-09-28, NPCs walking around what they bump at last
   ([moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement)). The path
-  search is the original's since 2026-10-02 (the first bullet of State; its end
-  points and the reach spec's reach flags are the work left, the original's in
-  [the search](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#the-search)).
+  search is the original's since 2026-10-02 (State; the reachability tests
+  it asks are the work left).
   What remains of the milestones is by hand, waiting with the open
   decisions: the checks in [open decision 1](#open-decisions), the sound's
   heard with real audio, which the distrobox reaches now
