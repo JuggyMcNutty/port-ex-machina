@@ -2,9 +2,10 @@
 
 Status: **done** — five play-reported differences taken up 2026-10-01:
 four fixed and proven (speech skip, belt text, choice focus, direct-walk
-pathing), the fifth diagnosed with its fix scoped (the path search port);
-the death path and the mission scripts compared clean. The engine's five
-commits await the owner's go-ahead to push; the pin moves with the push.
+pathing), the fifth's search ported 2026-10-02; the death path and the
+mission scripts compared clean. All pushed and pinned (2026-10-02, the
+owner's go-ahead). The search's port is being redone: the RE reading in
+step 10 misreads the binary (agent.md's State, the review).
 
 ## Context
 
@@ -381,9 +382,9 @@ end.
       breadthPathFrom follow-up and the death comparison);
       DEVELOPMENT.md the six new consoles (Skip, Belt, Death, Choice,
       Move, Mission) and `DXCAP_MISSION_MAP`; five commits in VibeEngine
-      (one per fix + the harness/docs), as JuggyMcNutty, **not pushed —
-      the owner's go-ahead waits, so `ENGINE-PIN.txt` stays at 2107f5f
-      until the push**; agent.md's State carries the session.
+      (one per fix + the harness/docs), as JuggyMcNutty, pushed with the
+      owner's go-ahead on 2026-10-02 and the pin moved with them;
+      agent.md's State carries the session.
 
 ## Verification
 

@@ -7,6 +7,32 @@ no facts of its own beyond those; each lives in one doc, and the
 
 ## State (2026-10-02)
 
+- **The review of the last session** (2026-10-02, the owner's ask: the open
+  to-dos, the recent commits checked for inaccuracies and bugs, then the
+  to-dos taken up; the owner's scope: the bugs, the path search, and four
+  engine to-dos -- where a falling actor rests, `AIDirectionReachable`'s
+  walk, DrawBorders' edges, the look items -- each pushed and pinned on its
+  proof). Fixed so far, each proven in both engines, pushed, and the engine
+  pinned at `ac0c28e`: **DrawBorders drew no edges** -- the margins' commit
+  (`dfdc499`) gave every edge of a frame with a top-left corner a negative
+  length, an inventory item's selection frame four dots (`BorderConsole`,
+  new); **a held item** is drawn in the hand at the weapon triangle, as
+  Render.dll's `DrawActorSprite` draws it -- the previous port (`cfda48d`)
+  followed the RE note's "where the item is", a misreading (corrected in
+  dx-reverse-info), and drew a multitool the size of a building over Liberty
+  Island (`HeldConsole`, new); **sound IDs** are each object's own number,
+  not its address's low 24 bits, which two actors could share once
+  `StopSound` matched the ID alone; **`Mid`** clamps its end as unsigned too
+  (`MidConsole`, new, alike in both engines); the 800-unit radius is Deus
+  Ex's alone. **Under way: the path search, redone.** The RE writeup it was
+  ported from ([`engine-dll.md`'s the search](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#the-search))
+  misreads the binary three ways: the search walks its own sorted open list
+  (`nextOrdered`, `0x103dd092`), not the level's navigation list; every
+  search clears the nodes first, end points included (inline in
+  `0x103da210`, `bClearPaths` on in all of Deus Ex's calls); and
+  `definePathsFor` marks from the node list gathered around the **pawn**,
+  not the goal. The next bullet states the previous session's reading, and
+  is to be rewritten with the redone search.
 - **The path search is the original's** (2026-10-02), the game-fidelity pass's
   last diagnosed item: `UPawn::FindPathToEndPoint` is now
   `APawn::breadthPathFrom` (`Engine.dll 0x103dcd60`) -- a node costs what the
@@ -22,22 +48,23 @@ no facts of its own beyond those; each lives in one doc, and the
   patrol points it never reached; 50 of Liberty Island's 52 pawns' distance
   moved is the original's, as before. **One pawn stalls where it did not**
   (Terrorist35, at 34 s), and what decides that is still the fork's: the end
-  points the search stops at (`MarkReachableNavEndPoints`, the nearest eight
-  within 1,000 units) where the original's is `APawn::definePathsFor`, a traced
+  points the search stops at (`MarkReachableNavEndPoints`, the first eight
+  reachable within 1,000 units, in the level's order) where the original's is `APawn::definePathsFor`, a traced
   flood of the goal-side node's reach specs, and the reach spec's own
   `reachFlags`, unchecked because the fork has no `calcMoveFlags`. Both are
   read and written up ([`engine-dll.md`'s the search](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#the-search));
   NATIVES records them as the work left.
-- **Three small originals** (2026-10-02), each RE-backed and built: a pawn's
-  mesh with no triangle to hold a weapon at draws its `SelectedItem` where the
-  item is (`Render.dll`, a pawn's attachments) -- the fork drew nothing, so an
-  NPC holding something that is not a weapon had nothing in its hands; a script
+- **Three small originals** (2026-10-02), each RE-backed and built: a pawn
+  holding no weapon draws its `SelectedItem` (`Render.dll`, a pawn's
+  attachments) -- redone in the review above, the first port having drawn it
+  "where the item is", a misreading; a script
   sound with no radius is heard 800 units out, the original's figure, where the
   fork passed 1,500 through and computed its priority on it; `Object.Mid` with a
   negative start gives an empty string. A fourth found **not landable**:
   `Object.CriticalDelete` frees an object at once, and the fork has no object
-  lifecycle at all -- nothing in the engine ever deletes a `UObject`, so there is
-  no collector to be early for, and a bare `delete` would leave the package's
+  lifecycle at all -- nothing in the engine ever deletes a `UObject` (its
+  collector is never run, the one call commented out), so there is no
+  collector to be early for, and a bare `delete` would leave the package's
   object table pointing at freed memory. All seven commits are pushed and
   the pins moved with them.
 - **The game-fidelity pass** (2026-10-01, from the owner's play report;
@@ -72,6 +99,9 @@ no facts of its own beyond those; each lives in one doc, and the
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
 - **Pushed and pinned** (2026-10-02, the owner's go-ahead): the engine at
+  `ac0c28e` since the review's first push (its fixes above, with
+  dx-reverse-info's correction of a pawn's attachments and the previous
+  session's unpushed `acc4cf1`, LevelInfo's clock); before that at
   `cfda48d` -- the game-fidelity pass's five commits (the skip, the belt
   text, the focus movement, the direct-walk pre-check, the mission sweep)
   and this session's two (the path search; a pawn's held item,
@@ -114,7 +144,7 @@ no facts of its own beyond those; each lives in one doc, and the
   device now runs on desktop GL and OpenGL ES 3.2 from one code path -- the
   GLES renderer (2026-10-01, [What the fork changes](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering),
   the workspace's `plans/gles-renderer.md` the milestone record) -- pinned at
-  cfda48d. The profiling hooks are re-based onto that head and applied only
+  `ac0c28e`. The profiling hooks are re-based onto that head and applied only
   for a device profile (`perf.sh on/off`; the device's current build is clean
   of them).
 - **linux-x86_64**, the base: launcher and engine build natively; the staged
@@ -468,7 +498,7 @@ no facts of its own beyond those; each lives in one doc, and the
 9. **The Smart Pro's default resolution** (owner, 2026-09-28): 853×480 --
    `Performance.RenderScale` 0.6666667 in the port's packaged
    `engine-settings.json.default`, committed on the launcher's
-   `trimui-smartpro` and unpushed (the pin moves with it). There the frame
+   `trimui-smartpro` and pushed with it (2026-09-29). There the frame
    is the CPU's work, so [decided 2](#decided)'s speed-ups buy frames
    directly and the ~20 FPS target needs no GPU renderer work; at the
    panel's 1280×720 the GPU's ~63 ms holds the frame until the GLES
