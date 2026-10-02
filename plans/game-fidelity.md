@@ -346,21 +346,20 @@ end.
       `UPawn::FindPathToward` — proven with MoveConsole:
       SecurityBot1's route now matches the original's exactly
       (PatrolPoint14→1→2→3→13, no detours, 10714 moved vs 10821).
-      **Follow-up, taken up 2026-10-02**: the `breadthPathFrom` port
-      itself, in `UPawn::FindPathToEndPoint` with `ClearPaths` resetting
-      what the search keeps in the nodes — the RE is written up in
-      `dx-reverse-info/engine-dll.md#the-search`, which corrects two
-      readings above: the walk is **the level's navigation list in
-      order**, not a priority queue (the sorted open list is kept and
-      never popped from), and a node's cost adds an end point's
-      `bestPathWeight`. UNATCOTroop1, frozen from 8 s on, now walks its
-      whole patrol; Terrorist35 now stalls at 34 s where it did not —
-      what decides that is the end-point set, still the fork's
-      (`MarkReachableNavEndPoints`) where the original's is
-      `APawn::definePathsFor`, and the reach spec's `reachFlags`, still
-      unchecked (`APawn::calcMoveFlags`). Both are read and scoped in the
-      RE; `MoveConsole` is their proof. Runs:
-      `fork-MoveConsole-225552` (the search) vs
+      **Follow-up, taken up 2026-10-02**: the search itself. A first port
+      followed an RE writeup that misread the binary -- the walk taken for
+      the level's navigation list, not the search's own sorted open list,
+      and the end points left the fork's own -- and its verdict on
+      `definePathsFor` was measured with that walk. Redone in the review
+      the same day from the binary read in full
+      (`dx-reverse-info/engine-dll.md#the-search`, rewritten): 48 of 52
+      pawns' distance moved within tolerance by `move.py`, UNATCOTroop1
+      walking its whole patrol, Terrorist35 no longer stalling; Terrorist34
+      stalls where the original's does not, the fork's own
+      `pointReachable` letting a farther node replace the original's end
+      point -- the reachability tests are what is left. Runs:
+      `fork-MoveConsole-154921` (the redone search),
+      `fork-MoveConsole-225552` (the first port) vs
       `original-MoveConsole-191311`, `fork-MoveConsole-192456`
       (the pre-check), `fork-MoveConsole-191106` (pre-fix).
 - [x] 11. **Mission sweep** — done 2026-10-01: `MissionConsole`
