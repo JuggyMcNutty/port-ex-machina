@@ -52,7 +52,17 @@ no facts of its own beyond those; each lives in one doc, and the
   original's (`DeathConsole`), and 134 of `ReachConsole`'s 144 answers are to
   the unit (124 before; the other ten two patrolling bots asked from other
   spots), Gunther's walk passing a burning barrel as the original's does:
-  Deus Ex's test moves pass decorations as they pass pawns.
+  Deus Ex's test moves pass decorations as they pass pawns. **The look
+  items** (engine at `bf12e65`, the culling at `8f94d46`): Deus Ex's shaders
+  take no `darkClamp` off a texture's colours -- `D3DDrv` uses 32-bit
+  textures on any display of 24 bits or more (`Use32BitTextures` is no
+  option of its), the pier half as far off `D3DDrv`'s as it was, the
+  corridor within 0.9% --; and a mesh's faces turned away from the eye are
+  culled as the original's `DrawLodMesh` culls them, unless two-sided: the
+  laser tripwires' beams, which drew their tube's back faces through the
+  front ones, are within 0.5% of `D3DDrv`'s red (65-70% over), with the
+  iterator's own placement of the segments, and Liberty Island's trees,
+  1.9 times the original's, match it (`LaserConsole`, `CoronaConsole`).
 - **The path search is the original's** (2026-10-02, redone in the review),
   the game-fidelity pass's last diagnosed item: `FindPathToward` and
   `FindPathTo` as Deus Ex's Engine.dll has them end to end -- the lists
@@ -116,7 +126,7 @@ no facts of its own beyond those; each lives in one doc, and the
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
 - **Pushed and pinned** (2026-10-02, the owner's go-ahead): the engine at
-  `bf12e65` since the review's dropped `darkClamp`, `eb7a50e` its held-off moves, `6829f0e` its reachability tests, `f804c77` its DrawBorders layout, `9f45b2b` its path search, `ac0c28e` its first push (its fixes above, with
+  `8f94d46` since the review's culled mesh faces, `bf12e65` its dropped `darkClamp`, `eb7a50e` its held-off moves, `6829f0e` its reachability tests, `f804c77` its DrawBorders layout, `9f45b2b` its path search, `ac0c28e` its first push (its fixes above, with
   dx-reverse-info's correction of a pawn's attachments and the previous
   session's unpushed `acc4cf1`, LevelInfo's clock); before that at
   `cfda48d` -- the game-fidelity pass's five commits (the skip, the belt
@@ -246,15 +256,11 @@ no facts of its own beyond those; each lives in one doc, and the
   `D3DDrv`, since 2026-09-28 (`DXCAP_RENDERER=D3D`; its frames are
   `OpenGLDrv`'s, and a run the game moves to `SoftDrv` stops:
   [scripted runs](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)). The captures left potential work, in no order, each under its
-  feature: Liberty Island's laser tripwires a little stronger than the
-  original's, more of the beam red (drawn at all since the fractal textures;
-  [lasers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#particles-and-lasers-render-iterators)), Liberty
-  Island's pier floor 1.7 to 3% darker than `D3DDrv`'s in the frames' terms
-  (6% until 2026-10-02, when Deus Ex's shaders lost upstream's `darkClamp`:
-  `D3DDrv` draws a texture's colours as they are on any display of 24 bits
-  or more; [brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)), the island's trees about
-  1.9 times the original's in linear terms where the grass under them
-  matches (`CoronaConsole`, seen 2026-10-02, unread), the unread shapes of the cloud cast
+  feature: Liberty Island's pier floor 1.7 to 3% darker than `D3DDrv`'s in
+  the frames' terms (6% until 2026-10-02, when Deus Ex's shaders lost
+  upstream's `darkClamp`: `D3DDrv` draws a texture's colours as they are on
+  any display of 24 bits or more;
+  [brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)), the unread shapes of the cloud cast
   and of the effects still the fork's -- the light maps and meshes are the
   original's since 2026-09-28
   ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --; dropped
