@@ -38,11 +38,21 @@ no facts of its own beyond those; each lives in one doc, and the
   `actorReachable` and their walks with the original's own moves, and
   `AIDirectionReachable` stepping with them -- with the path search, 51 of
   Liberty Island's 52 pawns move within tolerance of the original's and none
-  stalls where it does not (`ReachConsole`, new, 142 of 144 answers alike).
-  **Narrowed, not fixed**: where a falling decoration rests, and the 2 units a
-  walk's steps end below the original's, are one difference -- the box check
-  meets the floor where the original's stops on a hull face above it
-  (`RestConsole`, new; the hull clipping, `0x103f42f0`, is the work left).
+  stalls where it does not (`ReachConsole`, new). **Where a falling actor
+  rests is the original's** (engine at `eb7a50e`): every move the original
+  makes is `ULevel::MoveActor`'s, which stops 2 units short of what it hits,
+  where the fork's went up to the hit -- the one difference behind both the
+  falling rest and the 2 units a walk's steps ended low, not the box check,
+  whose script traces agree (`RestConsole`, new). Deus Ex's falls and the
+  reach tests' moves hold off now, and landing is `processLanded`'s:
+  `setPhysics` given the hit actor (the `LevelInfo` for the world), through
+  its `SupportActor` -- based on the level as the original's, the scripts'
+  stomps and bounces with it. The crate and box rest within 0.04 of the
+  original's (−304 before), a carcass at 471.30 on the level as the
+  original's (`DeathConsole`), and 134 of `ReachConsole`'s 144 answers are to
+  the unit (124 before; the other ten two patrolling bots asked from other
+  spots), Gunther's walk passing a burning barrel as the original's does:
+  Deus Ex's test moves pass decorations as they pass pawns.
 - **The path search is the original's** (2026-10-02, redone in the review),
   the game-fidelity pass's last diagnosed item: `FindPathToward` and
   `FindPathTo` as Deus Ex's Engine.dll has them end to end -- the lists
@@ -106,7 +116,7 @@ no facts of its own beyond those; each lives in one doc, and the
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
 - **Pushed and pinned** (2026-10-02, the owner's go-ahead): the engine at
-  `6829f0e` since the review's reachability tests, `f804c77` its DrawBorders layout, `9f45b2b` its path search, `ac0c28e` its first push (its fixes above, with
+  `eb7a50e` since the review's held-off moves, `6829f0e` its reachability tests, `f804c77` its DrawBorders layout, `9f45b2b` its path search, `ac0c28e` its first push (its fixes above, with
   dx-reverse-info's correction of a pawn's attachments and the previous
   session's unpushed `acc4cf1`, LevelInfo's clock); before that at
   `cfda48d` -- the game-fidelity pass's five commits (the skip, the belt
@@ -244,9 +254,8 @@ no facts of its own beyond those; each lives in one doc, and the
   ([brightness](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#brightness)) --, the unread shapes of the cloud cast
   and of the effects still the fork's -- the light maps and meshes are the
   original's since 2026-09-28
-  ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --, and dropped
-  decorations resting 0.1 over the floor where the original's rest over 2
-  ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)). Where a trace
+  ([lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)) --; dropped
+  decorations rest where the original's do since 2026-10-02 (State). Where a trace
   stops -- a unit short in the fork, where the original's line checks stop
   half a unit short and its box checks a tenth of the trace -- is the
   original's since 2026-09-28, walking's float over the floor taking the
@@ -283,8 +292,8 @@ no facts of its own beyond those; each lives in one doc, and the
   back to the node it stood on; the latent moves are the original's since
   2026-09-28, NPCs walking around what they bump at last
   ([moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement)). The path
-  search and the reachability tests are the original's since 2026-10-02
-  (State; where a box meets the floor is the work left).
+  search, the reachability tests and where a falling actor rests are the
+  original's since 2026-10-02 (State).
   What remains of the milestones is by hand, waiting with the open
   decisions: the checks in [open decision 1](#open-decisions), the sound's
   heard with real audio, which the distrobox reaches now

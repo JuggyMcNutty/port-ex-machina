@@ -279,7 +279,12 @@ end.
       for the owner, since the capture path could not compare it. Runs:
       `fork-DeathConsole-182846`, `original-DeathConsole-182912`
       (humans), `fork-DeathConsole-182636`/`original-DeathConsole-182702`
-      (robots).
+      (robots). **The resting resolved 2026-10-02** (the review): the
+      carcass rests at its spawn spot on the level, at 471.30 as the
+      original's (`fork-DeathConsole-164111`). The original's
+      `ULevel::MoveActor` stops every move 2 units short of what it hits,
+      where the fork's went up to the hit, and landing now bases what lands
+      on the `LevelInfo` (VibeEngine `eb7a50e`).
 - [x] 7. **Choice repro** — done 2026-10-01: `ChoiceConsole`
       (vibe/tools/dxcap) plays MeetKaplan to its choices, logs each
       choice button's selectability/sensitivity/visibility and the focus
