@@ -93,6 +93,7 @@ deusex/                  the parent folder (any name)
     ENGINE-PIN.txt         the engine's version: VibeEngine's repository, branch and commit
     LAUNCHER-PIN.txt       the launcher's: deusex-launcher's repository, and each port's commit
     docs/                  DEVELOPMENT, PORTING
+    plans/                 the milestone records: the GLES renderer, the game-fidelity pass
     scripts/               dx.sh (the entry point), engine.sh, launcher.sh, recreation.sh,
                            check-docs.sh, lib/common.sh (shared with the ports' and the
                            engine's own scripts)

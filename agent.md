@@ -5,8 +5,35 @@ no facts of its own beyond those; each lives in one doc, and the
 [README's table](README.md#documentation) says which. Before working, read
 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
-## State (2026-10-02)
+## State (2026-10-04)
 
+- **The handoff** (2026-10-04, the owner's ask: every origin pushed and the
+  project ready for another developer to take over). All four repositories
+  are pushed -- every branch level with GitHub, nothing uncommitted or
+  stashed -- and the pins are at what is pushed (`dx.sh check`). A clone of
+  this repository from GitHub into an empty folder, run as the
+  [quick start](README.md#quick-start) has a newcomer run it, fetched the
+  others over anonymous HTTPS, passed `dx.sh check` (nothing missing; what
+  it cannot verify is the game install's and `reference/`'s), and built and
+  tested linux-x86_64 (`dx.sh test` passing, `test_gamefiles` skipped
+  without the game; `dx.sh build`, launcher and engine, warning-free). The
+  GLES renderer's milestone record and the two probes it cites, until then
+  only in the parent folder, are in this repository's `plans/`.
+  **Only on this machine**, so handed over apart from the repositories or
+  remade: `gamefiles/` -- the game install, which a developer supplies for
+  themselves (1112fm), and beside its binaries the IDA databases
+  (`System/*.i64`, the RE's working state; they hold the game's code, so
+  are never committed, and a fresh one gets its types, strings and names
+  from dx-reverse-info's scripts:
+  [working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries));
+  `reference/` -- the 1112f SDK, the DeusExe launcher source, the
+  databases' and the inis' backups, the original's saves and its wizard's
+  captures; and the machine's set-up, the distrobox and IDA under Proton's
+  wine ([this machine](docs/DEVELOPMENT.md#this-machine)). `deps/` and
+  `build/` the scripts remake. The fetches set the owner's commit identity,
+  JuggyMcNutty, in every fresh clone ([commits](docs/DEVELOPMENT.md#commits));
+  whether another developer commits as it or as themselves is the owner's
+  call.
 - **The review of the last session** (2026-10-02, the owner's ask: the open
   to-dos, the recent commits checked for inaccuracies and bugs, then the
   to-dos taken up; the owner's scope: the bugs, the path search, and four
@@ -222,11 +249,14 @@ no facts of its own beyond those; each lives in one doc, and the
     Render's and Engine's took the light maps' names and comments on
     2026-09-28, Galaxy's the mixer's and the reverb's and Render's the
     drawn test's, and are backed up again. Engine's was saved again early on
-    2026-10-02 (by whom unrecorded; its backup is of 2026-09-28), and it and
-    D3DDrv's were re-saved by idle workers later that day after read-only
-    sessions (decompiler caches): both are newer than their backups.
-    Render's and DeusEx's are as backed up. Each opens whole, and no
-    working files are left beside them.
+    2026-10-02 (by whom unrecorded), and it and D3DDrv's were re-saved by
+    idle workers later that day after read-only sessions (decompiler
+    caches); each opened whole then. Compared byte for byte with their
+    backups on 2026-10-04, seven match and six are newer: Core's,
+    DeusEx.dll's and IpDrv's (saved 2026-09-27), Extension's (2026-10-01),
+    D3DDrv's (2026-10-02) and Engine's (last 2026-10-03, unrecorded) --
+    what those saves hold beyond decompiler caches is not recorded, and the
+    backups are not refreshed. No working files are left beside them.
   - **What Surreal lacks** of them is VibeEngine's
     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md),
     from [`natives_audit.py`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/tools/natives_audit.py),
