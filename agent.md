@@ -251,12 +251,18 @@ no facts of its own beyond those; each lives in one doc, and the
     drawn test's, and are backed up again. Engine's was saved again early on
     2026-10-02 (by whom unrecorded), and it and D3DDrv's were re-saved by
     idle workers later that day after read-only sessions (decompiler
-    caches); each opened whole then. Compared byte for byte with their
-    backups on 2026-10-04, seven match and six are newer: Core's,
+    caches). On 2026-10-04 the six newer than their backups -- Core's,
     DeusEx.dll's and IpDrv's (saved 2026-09-27), Extension's (2026-10-01),
-    D3DDrv's (2026-10-02) and Engine's (last 2026-10-03, unrecorded) --
-    what those saves hold beyond decompiler caches is not recorded, and the
-    backups are not refreshed. No working files are left beside them.
+    D3DDrv's (2026-10-02) and Engine's (2026-10-03) -- were compared with
+    them item by item, copies of both opened in IDA: each holds all its
+    backup does (the input file's record, names, comments, local types,
+    functions, string definitions, the same hand-set prototypes), and more
+    only of the decompiler's own guesses, prototypes and data types set on
+    what was decompiled since -- a few in place of the ones the mangled
+    names gave. They are the backups now, all thirteen byte for byte the
+    databases; the six backups they replaced are kept in
+    `reference/idb-backup/superseded-2026-10-04/`. No working files are
+    left beside them.
   - **What Surreal lacks** of them is VibeEngine's
     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md),
     from [`natives_audit.py`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/tools/natives_audit.py),
