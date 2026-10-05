@@ -158,7 +158,8 @@ cmd_check() {
         for f in port.cmake port.sh README.md; do
             [ -f "$dir/$f" ] || missing="$missing $f"
         done
-        if grep -q '^PORT_ENGINE=1' "$dir/port.sh" 2>/dev/null && [ ! -f "$dir/engine.cmake" ]; then
+        # PORT_ENGINE=1 anywhere: a port may set it only when built natively.
+        if grep -q 'PORT_ENGINE=1' "$dir/port.sh" 2>/dev/null && [ ! -f "$dir/engine.cmake" ]; then
             missing="$missing engine.cmake"
         fi
         if [ -n "$missing" ]; then echo "FAIL ports/$p lacks$missing" >&2; rc=1; else echo "OK   ports/$p"; fi

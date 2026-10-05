@@ -43,6 +43,9 @@ cmd_fetch() {
         git clone --branch main "$(repo_url)" "$MAIN"
         git -C "$MAIN" config user.name JuggyMcNutty
         git -C "$MAIN" config user.email 11588877+JuggyMcNutty@users.noreply.github.com
+        # Worktrees linked by relative paths, so the parent folder can move
+        # (git 2.48 and later; an older git ignores it).
+        git -C "$MAIN" config worktree.useRelativePaths true
     fi
     link_workspace "$MAIN"
     local p wt
@@ -68,7 +71,10 @@ cmd_check() {
             rc=1; continue
         fi
         want="$(pinned "$p")"
-        head="$(git -C "$wt" rev-parse HEAD)"
+        if ! head="$(git -C "$wt" rev-parse HEAD 2>/dev/null)"; then
+            echo "FAIL git cannot read deusex-launcher/$p -- moved? git -C deusex-launcher/main worktree repair" >&2
+            rc=1; continue
+        fi
         if [ "$head" = "$want" ]; then
             echo "OK   deusex-launcher/$p is at its pin: $(git -C "$wt" log -1 --format='%h %s')"
         else

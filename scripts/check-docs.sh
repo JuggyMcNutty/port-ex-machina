@@ -178,19 +178,23 @@ check_url() {
 for c in "${checkouts[@]}"; do
     set -- $c
     co="$1" repo="$2"
+    where="${co#"$DX_ROOT"/}"
     cd "$co"
-    if [ "$repo" = VibeEngine ]; then
-        mapfile -t docs < <(git ls-files --cached --others --exclude-standard README.md 'vibe/*.md')
-    else
-        mapfile -t docs < <(git ls-files --cached --others --exclude-standard '*.md')
+    # A checkout git cannot read (a worktree whose link went stale when the
+    # folders moved) fails here: skipped, its docs would pass unchecked.
+    pathspec=('*.md'); [ "$repo" = VibeEngine ] && pathspec=(README.md 'vibe/*.md')
+    if ! list="$(git ls-files --cached --others --exclude-standard "${pathspec[@]}" 2>&1)"; then
+        fail "UNREADABLE $where: ${list%%$'\n'*} -- git -C deusex-launcher/main worktree repair, for a moved worktree"
+        continue
     fi
+    mapfile -t docs <<< "$list"
+    [ -n "$list" ] || docs=()
     [ ${#docs[@]} -gt 0 ] || continue
     ndocs=$((ndocs + ${#docs[@]}))
     roots=("$co")
     [ -d "$co/src" ] && roots+=("$co/src")
     for r in "$co"/ports/*/packaging "$co"/ports/*; do [ -d "$r" ] && roots+=("$r"); done
     roots+=("${workspace[@]}")
-    where="${co#"$DX_ROOT"/}"
 
     while IFS= read -r rec; do
         doc="${rec%%:*}"; rest="${rec#*:}"; line="${rest%%:*}"; rest="${rest#*:}"

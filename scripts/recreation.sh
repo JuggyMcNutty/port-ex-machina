@@ -12,9 +12,13 @@
 #
 # Installed: DeusEx and run-game.sh (main's own install), and the engine's
 # SurrealEngine, libSurrealVideo.so and SurrealEngine.pk3. Installing touches
-# none of the game's files; a run writes what the original's does
-# (DeusEx.ini, User.ini, DeusEx.log, Running.ini, Detected.*). The engine is
-# the clone's, which scripts/engine.sh check compares with the pin.
+# none of the game's files, but while DeusEx is there the original game does
+# not start under Wine or Proton: it takes the file for the DeusEx package
+# (dx-reverse-info's core-dll.md) -- uninstall takes it out. A run writes what
+# the original's does (DeusEx.ini, User.ini, DeusEx.log, Running.ini,
+# Detected.*), and the engine adds its own [Engine.Surreal*] sections to
+# DeusEx.ini. The engine is the clone's, which scripts/engine.sh check
+# compares with the pin.
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 

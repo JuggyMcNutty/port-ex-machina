@@ -39,7 +39,8 @@ is proven by scripted runs of both engines (dxcap) before it is called done.
 - The original: `Actor.StopSound(Id)` (Engine.dll `0x103e27d0`) hands the ID
   to the audio subsystem, which stops the channel **by ID alone** (Galaxy
   `StopSoundId` `0x10607ef0`; engine-dll.md#small, galaxy-dll.md#playing-a-sound).
-  The ID itself encodes actor (object index × 16) + slot.
+  The ID itself encodes the actor and the slot: object index × 16 + slot × 2,
+  + 1 with `bNoOverride` (engine-dll.md#small).
 - The fork: `USurrealAudioDevice::StopSound(UActor*, int)` requires **both**
   actor and ID to match (`SurrealEngine/Packages/Engine/Subsystems/USurrealAudioDevice.cpp`).
   Player ≠ speaker, so nothing matches and the line plays on. Its only
@@ -208,7 +209,11 @@ end.
       to match by ID alone — done 2026-10-01; the ID scheme stays the
       fork's own (the fork's `UObject` has no global object index to build
       the original's from, and the ID is opaque to scripts, only fed back
-      to `StopSound`). Builds clean; all 12 unit tests pass.
+      to `StopSound`). Builds clean; all 12 unit tests pass. **The ID
+      scheme moved since** (2026-10-02, the review, VibeEngine `6e96656`):
+      an ID is each object's own number -- a serial the audio device gives
+      it -- × 16 + the slot × 2, as the original packs its object index, no
+      longer its address's low 24 bits.
 - [x] 2. **Speech skip proof** — done 2026-10-01: new `SkipConsole`
       (`vibe/tools/dxcap`) plays Kaplan's MeetKaplan on Liberty Island and
       skips every line mid-line (13 lines, adopting the conversation that

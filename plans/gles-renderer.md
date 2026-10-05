@@ -20,8 +20,8 @@ ES 3.0 core; sampler `layout(binding)` is not GLSL ES 3.00; the desktop context 
   CPU-bound, so GLES changes nothing there).
 - The device (from the Smart Pro port README): **PowerVR Rogue GE8300**, **OpenGL ES 3.2** through EGL
   on the vendor SDL2 `mali` driver, **no desktop OpenGL**, no BC1–5/RGBA32F texture filtering
-  (engine patch 0002), no `VK_EXT_descriptor_indexing`. Vulkan 1.3.225 runs the game at 8.2 FPS
-  (853×480) / ~2 FPS (native) today.
+  (engine patch 0002), no `VK_EXT_descriptor_indexing`. Vulkan 1.3.225 runs the level start at 8.2 FPS
+  native and 11.5 at 853×480 today (M3–M7, the port README's Performance).
 
 ## Findings
 
@@ -72,7 +72,8 @@ function loader (`SurrealEngine/RenderDevice/OpenGL/gl_load/`, generated for des
   `centroid`, uniform blocks, `textureSize`, `textureOffset`, integer fragment outputs all
   ES 3.0. **Two semantic breaks**, not one: (1) the detail-texture distance fade uses
   `gl_FragCoord.w`, which is always 1.0 in ES (the Vulkan side uses the same expression, where
-  glslang gives it true clip-w) → move the fade to a vertex-computed varying; (2) the shaders
+  glslang gives it true clip-w) → move the fade to a vertex-computed varying (**wrong**, M2
+  found: `gl_FragCoord.w` is 1/w in ES as in desktop GL, and the fade stays as it is); (2) the shaders
   bind their samplers with `layout(binding = N)` (Scene.frag, Present.frag, the bloom pass) —
   a desktop-GLSL 4.20 feature the device relies on entirely (it never calls `glUniform1i`),
   and it is not in GLSL ES 3.00 (nor 3.10; it arrives in GLSL ES 3.20). Fix: after program link,
@@ -306,9 +307,16 @@ port-ex-machina: `agent.md` (state/next), pins at the end.
 
       | renderer @ setting | fps | frame | tick | render |
       |---|---|---|---|---|
-      | Vulkan @ native 1280×720 | 11.4 | 87.4 | 30.0 | 53.5 (gpu-wait 0.8) |
+      | Vulkan @ 853×480 (meant as native; see below) | 11.4 | 87.4 | 30.0 | 53.5 (gpu-wait 0.8) |
       | GLES @ native 1280×720 | 8.5–8.8 | 113–117 | 29–31 | 82–96 |
       | GLES @ 853×480 | 9.9–10.0 | 100.4 | 23.3 | 75.6 |
+
+      **Corrected 2026-10-04**: the Vulkan run (`perf-vk-native.log`) was
+      taken at the owner's 853×480 -- its log's `settings:` line reads
+      `RenderScale:0.666667` -- not at native, so it is the 853×480
+      comparison. The Vulkan device's native figure is M3–M7's, 8.2 fps
+      (frame ~121, render ~84 with a ~27 ms GPU wait; `perf-startnative.log`,
+      2026-09-28): at native GLES is level with Vulkan or a little ahead.
 
       Two levers, both found by the CPU samples (`SAMPLE=1`, `sample-report.py`):
       1. **The RGBA8 scene buffers when Hdr is off** (as decided; the original XOpenGLDrv's own
@@ -323,8 +331,8 @@ port-ex-machina: `agent.md` (state/next), pins at the end.
          staging arrays and every flush `glBufferSubData`s the range written since the last one;
          `glBufferStorage` (persistent mapping) is absent on the GE8300 (probed). 2.4 → 8.8 fps.
 
-      What remains between GLES and the Vulkan device at the same settings (~13–30 render-CPU
-      ms) is the GL driver's per-draw-call cost across the frame's ~700 calls — state, program
+      What remains between GLES and the Vulkan device at 853×480 (~22 render-CPU ms, 75.6
+      against 53.5) is the GL driver's per-draw-call cost across the frame's ~700 calls — state, program
       and texture binds included; the engine sections around them profile the same shape as the
       Vulkan device's. The numbers are recorded in the port README's Where-a-frame-goes and its
       measurement table (launcher `732cda4`). The profiling hooks are off again and the device
@@ -362,7 +370,7 @@ port-ex-machina: `agent.md` (state/next), pins at the end.
 
 - ~~Untested GL device: unknown bug count — bounded by the M1 gate.~~ (M1 done 2026-09-30: the device
   ran; its only missing piece was `ReadPixels`.)
-- GE8300 driver (panfrost): GLES may not beat Vulkan's GPU time out of the box — M4 measures before
+- GE8300 driver (PowerVR's own, the vendor's): GLES may not beat Vulkan's GPU time out of the box — M4 measures before
   any optimization; the 853×480 CPU-bound target is unaffected either way.
 - Upstream drift: the GL device is dormant upstream; fork-only changes are marked per the NO-AI Code
   Rule, and upstream merges (the fork's `vibe/tools/upgrade.sh`) may touch the GL directory.

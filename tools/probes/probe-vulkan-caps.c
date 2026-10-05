@@ -9,8 +9,9 @@
  *       multiDrawIndirect, independentBlend
  *     - a graphics queue family that can present to the surface
  *   SurrealEngine  VulkanRenderDevice.cpp
- *     - required extensions VK_EXT_descriptor_indexing,
- *       VK_KHR_sampler_mirror_clamp_to_edge
+ *     - required extension VK_KHR_sampler_mirror_clamp_to_edge
+ *     - optional: descriptor indexing (upstream requires it; without it the
+ *       fork binds a descriptor set per texture combination instead)
  *
  * Descriptor indexing is checked three ways, because a driver can advertise a
  * high API version without supporting what that version makes mandatory: as the
@@ -82,7 +83,6 @@ int main(int argc, char **argv) {
         printf("  -- required extensions --\n");
         static const char *req[] = {
             "VK_KHR_swapchain",
-            "VK_EXT_descriptor_indexing",
             "VK_KHR_sampler_mirror_clamp_to_edge",
         };
         int all = 1;
@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
             printf("    %-38s %s\n", req[k], got ? "present" : "ABSENT");
         }
 
-        printf("  -- descriptor indexing, three ways --\n");
+        printf("  -- descriptor indexing, three ways (optional: bindless textures) --\n");
         printf("    VK_EXT_descriptor_indexing            %s\n",
                YN(has_ext(ext, en, "VK_EXT_descriptor_indexing")));
         if (getFeatures2) {

@@ -31,8 +31,8 @@ things stand.
 | Port | For | Status |
 |---|---|---|
 | [`linux-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-x86_64/ports/linux-x86_64) | desktop Linux; **the base** | runs the game; where the tests, `dxl-shots` and engine validation run |
-| [`linux-aarch64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-aarch64/ports/linux-aarch64) | aarch64 devices with an ordinary distro | Builds not tested |
-| [`trimui-smartpro`](https://github.com/JuggyMcNutty/deusex-launcher/tree/trimui-smartpro/ports/trimui-smartpro) | TrimUI Smart Pro, spruceOS | builds and runs; performance work in progress |
+| [`linux-aarch64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-aarch64/ports/linux-aarch64) | aarch64 devices with an ordinary distro | the launcher cross-builds; not yet run on a device |
+| [`trimui-smartpro`](https://github.com/JuggyMcNutty/deusex-launcher/tree/trimui-smartpro/ports/trimui-smartpro) | TrimUI Smart Pro, spruceOS | builds and runs; performance work on hold, the engine first |
 | [`android`](https://github.com/JuggyMcNutty/deusex-launcher/tree/android/ports/android) | Android | planned |
 | [`x360`](https://github.com/JuggyMcNutty/deusex-launcher/tree/x360/ports/x360) | Xbox 360 | planned |
 
@@ -54,7 +54,7 @@ scripts/dx.sh build  <port>                # launcher, then engine
 scripts/dx.sh stage  <port>                # build/<port>/app: exactly what ships
 scripts/dx.sh run    <port>                # native ports
 scripts/dx.sh deploy <port>                # device ports: builds and stages first
-scripts/dx.sh profile <port>               # device ports: a frame-time profile (the engine's profiling hooks on)
+scripts/dx.sh profile <port>               # device ports: a frame-time profile (deploy with the engine's profiling hooks on first)
 
 scripts/dx.sh check                        # drift guards: every repository's docs, the pins, ports, ABI
 
@@ -106,7 +106,8 @@ deusex/                  the parent folder (any name)
   reference/             the 1112f SDK, the DeusExe launcher source, IDA and ini backups,
                          the original's saves and its wizard's captures
   deps/                  fetched toolchains and sysroots
-  build/                 build/<port>/{engine,app}, and the engine tools' own
+  build/                 build/<port>/{engine,app}, build/main/ (the recreation's launcher
+                         and its live check), and the engine tools' own
 ```
 
 A path in these docs that is not a repository's own is the parent folder's:

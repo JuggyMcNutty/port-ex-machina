@@ -5,8 +5,28 @@ no facts of its own beyond those; each lives in one doc, and the
 [README's table](README.md#documentation) says which. Before working, read
 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
-## State (2026-10-04)
+## State (2026-10-05)
 
+- **The audit** (2026-10-04/05, the owner's ask: every doc and the code read,
+  and made to line up). Every repository's docs were read against the code,
+  git history, the device logs and each other, then corrected where they had
+  drifted -- in the workspace, the RE, the engine's `vibe/docs/` and the
+  launcher's `main`, `linux-x86_64` and `trimui-smartpro` (the device branches
+  take `linux-x86_64`'s by merge). **Committed 2026-10-05, not pushed**: in
+  each repository and branch, `linux-x86_64` merged into the four device
+  branches; `main`'s commit waits, with its icons (State, below), for the
+  merge into `linux-x86_64`, the owner's call. The pushes wait for the SSH
+  key made here to be added to GitHub ([this
+  machine](docs/DEVELOPMENT.md#this-machine)); after them the pins move
+  (`engine.sh pin`, `launcher.sh pin --all`) -- until then `dx.sh check`
+  finds the engine and the launcher's branches past their pins. The machine changed under the workspace (a new container, its
+  folders moved, set up for the project on 2026-10-05 -- every port builds
+  and tests, the harness and the recreation's check run clean: [this
+  machine](docs/DEVELOPMENT.md#this-machine)); that left
+  the launcher's worktrees unreadable to git, which `check-docs.sh` passed
+  over in silence -- they are linked by relative paths now, and the guards
+  fail on an unreadable checkout. The code defects it found are
+  [known defects](#known-defects), not fixed.
 - **The handoff** (2026-10-04, the owner's ask: every origin pushed and the
   project ready for another developer to take over). All four repositories
   are pushed -- every branch level with GitHub, nothing uncommitted or
@@ -29,7 +49,8 @@ no facts of its own beyond those; each lives in one doc, and the
   `reference/` -- the 1112f SDK, the DeusExe launcher source, the
   databases' and the inis' backups, the original's saves and its wizard's
   captures; and the machine's set-up, the distrobox and IDA under Proton's
-  wine ([this machine](docs/DEVELOPMENT.md#this-machine)). `deps/` and
+  wine ([this machine](docs/DEVELOPMENT.md#this-machine): a new container
+  since, with IDA for Linux in their place, the audit above). `deps/` and
   `build/` the scripts remake. The fetches set the owner's commit identity,
   JuggyMcNutty, in every fresh clone ([commits](docs/DEVELOPMENT.md#commits));
   whether another developer commits as it or as themselves is the owner's
@@ -66,7 +87,7 @@ no facts of its own beyond those; each lives in one doc, and the
     on the level.
   - **The look items**, against `D3DDrv`: no `darkClamp` -- `D3DDrv` draws
     32-bit textures on any display of 24 bits or more (`Use32BitTextures`
-    is no option of its) -- the pier from 6% under to 1.7-3%, the corridor
+    is no option of its) -- the pier from 4.5-5.9% under to 1.7-3%, the corridor
     within 0.9%; a mesh's faces turned away culled unless two-sided, as
     Render.dll culls them -- the laser tripwires' beams within 0.5% of the
     original's red (65-70% over), with the iterator's own segment
@@ -78,13 +99,15 @@ no facts of its own beyond those; each lives in one doc, and the
     dx-reverse-info, VibeEngine's NATIVES.md, the fidelity plan.
 
   **Left open from it**, each in its doc: the pier's last 1.7-3% (unread);
-  `processLanded`'s nudge of a decoration off a ledge it overhangs and a
-  carcass's bounce off a slope, not ported; the other light effects' shapes
-  (the waves and the rest) the fork's, unread; Terrorist10 moving farther
-  than the original's (1010 units to 652, as before the review); the Vulkan
-  device's scene shader built but not run (the harness runs GL); by hand,
-  jumping onto an NPC's head (its stomp and bounce come through
-  `SupportActor` now).
+  `processLanded`'s other branches -- a decoration nudged off a ledge it
+  overhangs, a carcass's bounce off a slope, a bounce zone's re-throw, a pawn
+  fitted off a ledge -- not ported; the other light effects' shapes (the
+  waves and the rest) the fork's, unread; Terrorist10 moving farther than the
+  original's (1010 units to 652, as before the review); by hand, jumping onto
+  an NPC's head (its stomp and bounce come through `SupportActor` now). And,
+  recorded only here: the Vulkan device's scene shader without `darkClamp`
+  is built but has not run -- the comparisons ran the GL device, which the
+  per-user `Settings.json` named.
 - **The path search is the original's** (2026-10-02, redone in the review),
   the game-fidelity pass's last diagnosed item: `FindPathToward` and
   `FindPathTo` as Deus Ex's Engine.dll has them end to end -- the lists
@@ -103,7 +126,7 @@ no facts of its own beyond those; each lives in one doc, and the
   Terrorist34, which the redone search still stalled on the fork's own
   `pointReachable`, walks as the original's since the reachability tests
   are the original's too (the review): 51 of 52.
-- **Three small originals** (2026-10-02), each RE-backed and built: a pawn
+- **Three small originals** (2026-10-01), each RE-backed and built: a pawn
   holding no weapon draws its `SelectedItem` (`Render.dll`, a pawn's
   attachments) -- redone in the review above, the first port having drawn it
   "where the item is", a misreading; a script
@@ -135,8 +158,8 @@ no facts of its own beyond those; each lives in one doc, and the
   first bullet of this State. **Compared clean:** the
   death path matches the original's throughout (the robots' freeze in
   Dying forever is the original's own behaviour), and the mission sweep
-  (MissionConsole) is clean on all 83 maps, the two odd ones being the
-  original's own behaviour too.
+  (MissionConsole) finds nothing of the fork's on the 83 maps: 78 OK, three
+  not mission maps, and two odd ones the original's own behaviour too.
 - **The repositories**, four since the split (2026-09-27,
   [decided 7](#decided)): this one, the workspace, on `main`, public at
   https://github.com/JuggyMcNutty/port-ex-machina (its history was rewritten
@@ -155,8 +178,8 @@ no facts of its own beyond those; each lives in one doc, and the
   no `darkClamp`, `eb7a50e` moves held off and landing, `6829f0e` the
   reachability tests, `f804c77` DrawBorders' layout, `9f45b2b` the path
   search redone, `ac0c28e` the bugs (with dx-reverse-info's correction of a
-  pawn's attachments and the previous session's unpushed `acc4cf1`,
-  LevelInfo's clock). Before the review, `cfda48d`: the game-fidelity
+  pawn's attachments, and its `acc4cf1`, LevelInfo's clock, left unpushed by
+  the previous session). Before the review, `cfda48d`: the game-fidelity
   pass's five commits (the skip, the belt text, the focus movement, the
   direct-walk pre-check, the mission sweep) and that session's two (the
   first path-search port; a pawn's held item, `PlaySound`'s radius, `Mid`'s
@@ -194,7 +217,10 @@ no facts of its own beyond those; each lives in one doc, and the
   it (2026-09-24), and its docs and tools are its own `vibe/` (2026-09-27). It
   holds upstream's latest when last merged (2026-09-24); upstream has moved
   on since (`scripts/engine.sh status` says how far), and whether and when to
-  merge it (the fork's `vibe/tools/upgrade.sh`) is the owner's call. Its GL
+  merge it (the fork's `vibe/tools/upgrade.sh`) is the owner's call. A merge
+  needs care in the script VM: upstream has since written an interpreter of
+  its own (`Frame::RunExpr`, its default from 2026-10-04) in place of the
+  `ExpressionEvaluator` that the fork's VM work reworked ([decided 2](#decided)). Its GL
   device now runs on desktop GL and OpenGL ES 3.2 from one code path -- the
   GLES renderer (2026-10-01, [What the fork changes](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering),
   the workspace's `plans/gles-renderer.md` the milestone record); pinned at
@@ -212,9 +238,12 @@ no facts of its own beyond those; each lives in one doc, and the
   [its Performance](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#performance)). The device
   has the fork's GLES renderer (2026-10-01) in a clean build: the launcher's
   Video tab lists OpenGL ES as selectable, and the level start under
-  `Type=GLES` runs at 8.5–8.8 FPS native and 10.0 at 853×480 -- the Vulkan
-  device's same-build numbers are 11.4 and ~11.5 (the gap is the GL driver's
-  per-draw-call cost; the numbers and their story are in [the port
+  `Type=GLES` runs at 8.5–8.8 FPS native and 10.0 at 853×480. The Vulkan
+  device's same-build run is 11.4 at 853×480 -- the gap there is the GL
+  driver's per-draw-call cost -- and its native figure M3–M7's 8.2, so at
+  native the two are level (the run once given as Vulkan's native 11.4 was
+  at 853×480: its log's `RenderScale` is 0.666667, 2026-10-04; the numbers
+  and their story are in [the port
   README](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#where-a-frame-goes)).
   The Vulkan renderer's numbers stand (M3–M7: 8.2 FPS native, 11.5 at
   853×480). Its owner's settings are Distant AI
@@ -222,9 +251,11 @@ no facts of its own beyond those; each lives in one doc, and the
   which the level start's native rows switch to native for the run. It has no battery (its battery
   warnings are off: [its Gotchas](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#gotchas)).
 - **The game's DLLs**: seven passes are read (the last 2026-09-28;
-  [decided 4](#decided)). [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info)
+  [decided 4](#decided)), and what the game-fidelity pass and the review
+  needed since (2026-10-01/02). [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info)
   covers each binary read, and an IDA database gets three scripts from its
-  `tools/ida/` (types, strings, names).
+  `tools/ida/` (types, strings, names; `Render.dll` its types from a fourth,
+  `render_types.py`).
   - **`DeusEx.dll`**, **`Engine.dll`** (its network code in
     [`network.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/network.md)), **`Core.dll`**, **`Extension.dll`**,
     **`ConSys.dll`**, **`DeusExText.dll`**, **`Render.dll`** (where a
@@ -289,11 +320,12 @@ no facts of its own beyond those; each lives in one doc, and the
   [`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
 
   The reimplementation's milestones are done -- M0 through M6 all in
-  (2026-09-26, M0's acceptance captures last;
+  (most of their code 2026-09-25, M0's acceptance captures 2026-09-26, the
+  last item Galaxy's mixer 2026-09-28;
   [`ROADMAP.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ROADMAP.md) tracks each item, and
   [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md) says what changed and what stays the
   fork's own). The look is compared against the original's own renderer,
-  `D3DDrv`, since 2026-09-28 (`DXCAP_RENDERER=D3D`; its frames are
+  `D3DDrv`, since 2026-09-28 (`DXCAP_RENDERER=D3D`; its frames match
   `OpenGLDrv`'s, and a run the game moves to `SoftDrv` stops:
   [scripted runs](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
   **Potential work the comparisons left**, in no order, each under its
@@ -304,7 +336,7 @@ no facts of its own beyond those; each lives in one doc, and the
   as drawn where the original has 3, far off over the seawall, 1 to 9
   pixels of theirs showing at the edges -- a pixel's difference between the
   engines' rasterizing, the proxies' rectangles the original's and per-zone
-  span buffers no help (tried; `SaveConsole`,
+  span buffers no help (tried; `AIConsole`,
   [out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)); and the review's open items
   (State). **Matched since**, each in its section: the light maps and
   meshes (2026-09-28, [lighting](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting)); where a trace
@@ -317,14 +349,16 @@ no facts of its own beyond those; each lives in one doc, and the
   level's out-of-world troops, sitters, a terrorist fighting a security bot,
   the event manager's listeners, `TraceTexture`, traces from inside a pawn,
   and Terrorist15's patrol (2026-09-27 and 28;
+  [starting up](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#starting-up),
   [hearing](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#hearing-the-ai-event-system),
-  [moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement)); the path
+  [moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement),
+  [implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)); the path
   search, the reachability tests, where a falling actor rests and the look
   items (2026-10-02, State).
   What remains of the milestones is by hand, waiting with the open
   decisions: the checks in [open decision 1](#open-decisions), the sound's
-  heard with real audio, which the distrobox reaches now
-  ([this machine](docs/DEVELOPMENT.md#this-machine)). Waiting with the ports
+  heard with real audio, which this container reaches too, as the previous
+  one did ([this machine](docs/DEVELOPMENT.md#this-machine)). Waiting with the ports
   ([decided 8](#decided)): the Smart Pro's performance work ([decided
   2](#decided)) and the next ports ([open decision 2](#open-decisions)); the
   **[perf]** items that landed with M3 and M4 were re-measured on the device
@@ -357,6 +391,50 @@ no facts of its own beyond those; each lives in one doc, and the
   done since 2026-09-28: the wizard shows
   the game's, read out of the install's `DeusEx.exe`, and the error box
   wine's own, to the pixel.
+
+## Known defects
+
+Found by the audit (2026-10-04/05), not fixed: each wants a build, which this
+container can do once [this machine](docs/DEVELOPMENT.md#this-machine) is set
+up, and a run; some want a decision. Each is recorded where its code is
+documented.
+
+1. **No pad in game on the desktop build.** With SDL3 installed,
+   SurrealWidgets builds its SDL3 window backend, and the fork's pad support
+   is the SDL2 backend's alone; `run-game.sh` asks for SDL2 and falls back to
+   Wayland or X11 without a word
+   ([linux-x86_64's gotcha](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md#no-pad-in-game);
+   open decision 1's "a pad in game"). Likely fix: `ENABLE_SDL3` off in its
+   `engine.cmake`.
+2. **`main` drops the command line's quotes** on the way to the engine
+   (`INI="My Mod.ini"` arrives as `INI=My`), and **its `ParseParam` is
+   stricter than the original's** (`-safemode` is `-safe` to the original)
+   ([main's known defects](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md#known-defects)).
+3. **The ports' launcher**: the game gets the launcher's words as the
+   engine's own options, so a map, `-server` or `INI=` is lost; the
+   single-instance lock is let go at the hand-over, so a launch during a game
+   reads as a crash; the Video tab's Resolution row is Vulkan's only, though
+   the GL device honours `RenderScale`; and `test_target_<port>` passes a CPU
+   mode named anywhere in `port-hooks.sh`
+   ([LAUNCHER.md's known defects](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects)).
+4. **The engine**: anchored, the path search returns a navigation-point goal
+   where the original returns the anchor
+   ([moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement)); the coronas take
+   every dynamic corona light, not the viewer's leaf's (no Deus Ex map has
+   one: [coronas](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#coronas)); and `GC.DrawActor`, the vision
+   augmentation's, stamps no render time ([out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)).
+
+Smaller, recorded only here: `dxcap.sh help` stops without `gamefiles/`;
+`natives_audit.py --runs` names each run's map after its log file, which is
+`engine.log` for every harness run; `skip.py` prints nothing without
+arguments; the recreated launcher's `policy.c` keeps bypass and splash rules
+of its own that only its tests and nothing live use; dx-reverse-info's
+`types/launch.h` needs `<stddef.h>` to compile on its own (IDA parses it as
+is); and a clean Smart Pro build shows one warning, the third-party
+`Thirdparty/resample/pffft.cpp`'s own `#warning` that it builds without SIMD
+on aarch64 (it tests `__arm__`, not `__aarch64__`) -- compiled, but unused:
+the resampler is built without it (`R8B_PFFFT` 0). The builds that were
+called warning-free were incremental ones, which never recompiled it.
 
 ## Decided
 
@@ -447,15 +525,18 @@ no facts of its own beyond those; each lives in one doc, and the
    now** (2026-10-01): the GLES renderer is the fork's GL device on an ES 3.2
    context, selectable in the Smart Pro's Video tab (`renderers.ini`
    `EngineType=GLES`), measured at 10 fps at 853×480 against the Vulkan's
-   ~11.5 (the milestone record is the workspace's `plans/gles-renderer.md`);
-   what remains
-   to the ~20 FPS target is the GL driver's per-draw-call cost. Surreal has no
-   software renderer at all.
+   11.4 on the same build, and at native level with it (8.5–8.8 against 8.2;
+   the milestone record is the workspace's `plans/gles-renderer.md`); what
+   remains to the ~20 FPS target is the GL driver's per-draw-call cost.
+   Surreal has no software renderer at all.
 4. **Reverse-engineering the game's DLLs** (owner, 2026-09-24), documented
    in [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) as
    behaviour in our own words, never decompiled code. Desktop engine runs as needed to see what fires in play.
-   IDA runs headless in the distrobox, any database opened by name
-   ([how](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)).
+   IDA runs headless, any database opened by its path, through Hex-Rays'
+   own IDA MCP server and IDA for Linux since 2026-10-05 -- before, Windows
+   IDA under Proton ([how](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)).
+   A session rewrites a database's `.i64` when it closes, so the databases
+   drift from their backups as they are worked on.
    - **The first pass** (done): DeusEx, Engine, Core, Extension, ConSys,
      DeusExText, and Render.dll where a feature's drawing lives there.
    - **The second** (done): Render.dll's
@@ -497,6 +578,17 @@ no facts of its own beyond those; each lives in one doc, and the
      allpass stages, checked by running them over the original's own
      recording ([the mixer](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/galaxy-dll.md#the-mixer),
      [reverb](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/galaxy-dll.md#reverb)).
+   - **Since, as a fix needed it** (2026-10-01/02, the game-fidelity pass and
+     the review): `Engine.dll`'s path search, reachability tests, `MoveActor`'s
+     hold-off and landing, and `LevelInfo`'s clock
+     ([the search](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#the-search),
+     [reaching](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#reaching), [small](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#small));
+     `Render.dll`'s attachments, faces drawn, laser iterator, random tables
+     and cloud cast ([`render-dll.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/render-dll.md)); `D3DDrv.dll`'s
+     textures ([textures](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/d3ddrv-dll.md#textures)); `Extension.dll`'s
+     borders ([borders](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/extension-dll.md#borders)) -- its text alignment
+     and focus movement, read for the fidelity pass, are only in VibeEngine's
+     [the UI](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-ui) so far.
    - **Only if a need comes up**: `SoftDrv.dll` (a
      software renderer, decided 3), `WinDrv.dll` beyond its flags (mouse and keyboard), and the owner's copied
      `ALAudio.dll` for what the original lacks (an EFX take on the reverb,
@@ -543,8 +635,9 @@ no facts of its own beyond those; each lives in one doc, and the
    `trimui-smartpro` and pushed with it (2026-09-29). There the frame
    is the CPU's work, so [decided 2](#decided)'s speed-ups buy frames
    directly and the ~20 FPS target needs no GPU renderer work; at the
-   panel's 1280×720 the GPU's ~63 ms holds the frame until the GLES
-   renderer (decided 3) brings it down
+   panel's 1280×720 the GPU's ~63 ms holds the Vulkan device's frame, and
+   the GLES renderer (decided 3) runs level with it there, its time the GL
+   driver's draw calls on the CPU
    ([where a frame goes](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#where-a-frame-goes)).
    The device already ran 853×480 as its owner's setting (2026-09-23); the
    Video tab still offers 960×540 and the panel's 1280×720 per session. A
@@ -664,10 +757,11 @@ Each waits until the owner takes it up ([decided 8](#decided)).
      announces it nowhere: its uplinks lack `DoUplink`).
      The desktop defaults (4x MSAA, VSync on) are chosen by reasoning.
    - On a desktop, the review's (2026-10-02): jumping onto an NPC's head --
-     bounced off and the NPC stomped, through its `SupportActor` --, a crate
-     dropped on the floor resting just over it, and the laser tripwires,
-     Liberty Island's trees and the Dragon's Tooth's glow beside the
-     original's, by [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting).
+     bounced off and the NPC stomped, through its `SupportActor` --, and a
+     crate dropped on the floor resting just over it, by
+     [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original); the laser
+     tripwires, Liberty Island's trees and the Dragon's Tooth's glow beside
+     the original's, by [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#lighting).
    - linux-aarch64 on any real device.
 2. **Next ports**: a cross-built engine for linux-aarch64 (a sysroot with the
    engine's libraries, as the Smart Pro has); Android (its README lists the

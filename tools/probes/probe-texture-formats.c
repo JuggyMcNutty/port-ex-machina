@@ -1,10 +1,12 @@
 /* Does this GPU support the texture formats SurrealEngine uploads with?
  *
- * TextureUploader::GetUploader hardcodes a VK_FORMAT per TextureFormat and
- * nothing in the engine queries vkGetPhysicalDeviceFormatProperties, so a GPU
- * without desktop BCn support would still get images created and sampled in
- * those formats. This prints optimalTilingFeatures for every format the
- * uploaders can pick, sampled-image and filter-linear bits included.
+ * Upstream's TextureUploader::GetUploader hardcodes a VK_FORMAT per
+ * TextureFormat and never queries vkGetPhysicalDeviceFormatProperties, so a
+ * GPU without desktop BCn support would still get images created and sampled
+ * in those formats. The fork asks since (this probe's answer on the GE8300):
+ * a format the GPU cannot sample and linearly filter goes to a CPU decoder.
+ * This prints optimalTilingFeatures for every format the uploaders can pick,
+ * sampled-image and filter-linear bits included.
  *
  * Build and run: see docs/PORTING.md "Device probes" (same recipe as
  * probe-vulkan-caps.c).

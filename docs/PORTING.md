@@ -14,7 +14,7 @@ the ports that exist are listed in the [root README](../README.md#ports).
 | Branch | Holds |
 |---|---|
 | `main` | the original launcher, recreated almost 1:1: no additions, no ports |
-| `linux-x86_64` | `main`, plus the launcher as it grew for the ports (the tabbed home screen, `Settings.json`, pad layouts, the GPU probe), the generic device profile, and the base app every port ships (`ports/common/packaging`) with the desktop's port files (`ports/linux-x86_64`) |
+| `linux-x86_64` | `main`, plus the launcher as it grew for the ports (the tabbed home screen, `Settings.json`, pad layouts, the GPU probe), the generic device profile, and the base app every port ships (`ports/common/packaging`) with the desktop's port files (`ports/linux-x86_64`). `main`'s own program, its tools and its tests come along unbuilt: a port branch builds `deusex-launcher`, `dxl-cli` and `dxl-shots` |
 | `<id>`, a device | `linux-x86_64`, plus **only what differs** for one device: `ports/<id>/` and its preset |
 
 Changes flow one way, by merging: from `main` into `linux-x86_64`, and from
@@ -31,7 +31,7 @@ them.
 |---|---|---|
 | The launcher's core (the entry decision, command-line parsing, crash sentinel, config seeding) | `src/core/`, from `main`; `linux-x86_64` adds `Settings.json` and pad layouts | No. C11, no SDL, no device facts |
 | The device profile | `src/platform/target.h`; `ports/<id>/target.c` | Data only: a port may supply one |
-| The OS: handing over to the game, the GPU probe | `src/platform/launch.h`, `src/platform/posix/` | Only for a non-POSIX platform (below) |
+| The OS: handing over to the game, the GPU probe | `src/platform/launch.h`, `src/platform/posix/` | Only for a non-POSIX platform, and for Android's hand-over (below) |
 | The screens | `src/ui/` (SDL2), from `linux-x86_64` | No |
 | The engine | VibeEngine, its clone beside the workspace in `VibeEngine/`, pinned by `ENGINE-PIN.txt` | Built per port from its `ports/<id>/engine.cmake` |
 | The app around the binaries | `ports/common/packaging/` (the base app, what linux-x86_64 ships) + `ports/<id>/packaging/` | The port's files are laid over the base |
@@ -52,7 +52,8 @@ from linux-x86_64:
 | `README.md` | The device as measured, the port's status, what was verified on it | yes |
 
 A port also gets a configure preset in its branch's `CMakePresets.json` (its
-name is the port id; it only adds the toolchain file for a cross port).
+name is the port id; it only adds the toolchain file for a cross port). The
+planned ports, `android` and `x360`, have none yet.
 
 ## The pipeline
 
@@ -76,9 +77,9 @@ there too: `deps/toolchains/<name>` is shared between ports,
 None of it is versioned and all of it can be deleted; `deps/` costs a download
 (and for a vendor sysroot, the device) to rebuild.
 
-Staging installs the binaries, copies the engine's `SurrealEngine`,
-`libSurrealVideo.so` and `SurrealEngine.pk3`, lays `ports/common/packaging` and
-then the port's `packaging/` over them, and runs `port_stage`. `launcher.ini`
+Staging installs the binaries, lays `ports/common/packaging` and then the
+port's `packaging/` beside them, copies in the engine's `SurrealEngine`,
+`libSurrealVideo.so` and `SurrealEngine.pk3`, and runs `port_stage`. `launcher.ini`
 belongs to whoever runs the app: it is created from `launcher.ini.default`
 only when missing.
 
@@ -112,8 +113,8 @@ only when missing.
    device has.
 6. **Write `target.c`** if the device has anything to say: its fonts, CPU modes
    its hooks can apply (then `port-hooks.sh` must handle each one and fall back
-   to the profile's default, `CPU_MODE_DEFAULT` -- `test_target_<port>`
-   checks), a note about its pad.
+   to the profile's default, `CPU_MODE_DEFAULT` -- `test_target_<port>`,
+   with the port id's `-` as `_`, checks), a note about its pad.
 7. **Write `packaging/`**: what the device's frontend needs to list and start
    the app, `port-hooks.sh` for its library path and CPU modes, a
    `launcher.ini` with the usual `GameDir`.

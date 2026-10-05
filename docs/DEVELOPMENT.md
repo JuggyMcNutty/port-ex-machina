@@ -31,7 +31,10 @@ is the parent), and `dx.sh fetch` clones them there.
 | `dx-reverse-info/` | [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) | not pinned: docs and IDA scripts |
 
 `deusex-launcher/main` is the clone; each port is a worktree of it, on the
-branch of its name, with `deps/` and `gamefiles/` linked in. Its launcher
+branch of its name, with `deps/` and `gamefiles/` linked in. The worktrees are
+linked to the clone by relative paths (git 2.48 or later), so the parent
+folder can move; worktrees made with absolute links stop working when it does
+(`git -C deusex-launcher/main worktree repair --relative-paths` mends them). Its launcher
 builds inside it (`deusex-launcher/<port>/build/`); the engine and the staged
 app go to `build/<port>/`. A change to the launcher or the engine is
 committed in its repository, pushed, then pinned here (`launcher.sh pin
@@ -63,27 +66,61 @@ engine's three files in the game's `System/`, beside `DeusEx.exe`
 (`gamefiles/` by default); `check` runs main's `tools/livecheck.py` on a copy
 of that install, on a private X display, so nothing shows on the desktop and
 the install is not written; `run` starts it; `uninstall` takes the five files
-out again. Main is not pinned: it is the clone, and the ports take it by
+out again. While `DeusEx` is installed the original game does not start under
+Wine or Proton -- it takes the file for the `DeusEx` package
+([a package's file](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#packages-and-linkers)) -- so uninstall
+before playing the original from that folder. Main is not pinned: it is the clone, and the ports take it by
 merging ([the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher#branches)).
 
 ## This machine
 
-Claude runs in an Arch Linux distrobox on a Fedora Atomic host: `/home` here is
-`/var/home` there, and paths configured in one differ from the other (the old
-CMake caches, the engine's embedded source paths). Claude Code starts in the
-parent folder (`~/Documents/projects/deusex`), which reaches every repository;
-its `ida` MCP server is registered for that folder
-([dx-reverse-info's README](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)). The container has
-`libpipewire`/`libpulse` (installed 2026-09-25, for M5's audio work), so the
-engine reaches the desktop's audio -- a test run is audible on the owner's
-speakers as well as visible on their screen. The null OpenAL driver remains
-the way to run silently
-([linux-x86_64's README](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md#audio)). Its pacman
-has multilib (enabled 2026-09-26) and the 32-bit libraries the original needs
-under Proton's wine: X11, Mesa, PulseAudio, FreeType, GLib and theirs. Its
-user Python has `unicorn` (pip, 2026-09-27), the CPU emulator
-[`Fire.dll`'s check](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/fire-dll.md#how-it-was-checked) ran the DLL's
-routines in.
+Since 2026-10-04 Claude runs in a new Arch Linux distrobox,
+`ai_dev_container` (rootless podman), on the same Fedora Atomic host, with a
+home of its own, `/var/home/corpeder/containers/homes`: the parent folder is
+`~/Documents/projects/projects/deusex` there, and Claude Code starts in
+`port-ex-machina/`. IDA is IDA Pro 9.4 for Linux (`~/ida-pro-9.4`), and
+Claude Code reaches it through Hex-Rays' own IDA MCP server, the plugin
+`ida-mcp@HexRaysSA`, installed for the user on 2026-10-05 as the machine's pi
+harness has it ([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)).
+
+Set up 2026-10-05, with pacman's multilib enabled (`/etc/pacman.conf`, the
+original kept as `pacman.conf.pre-multilib`): to build, `base-devel`,
+CMake, Ninja, `pkgconf`, `sdl2-compat`, `sdl2_ttf`, `sdl3`, OpenAL,
+`libunwind`, `waylandpp`, `vulkan-headers` and `vulkan-tools`; to run,
+Mesa with `vulkan-radeon` (the GPU is a Radeon 780M, `radv` and
+`radeonsi`), `libpulse` and `libpipewire` (the desktop's PipeWire is
+reachable) and `ttf-dejavu`; for the harness and `recreation.sh check`,
+`xorg-server-xvfb`, `xdotool`, ImageMagick and gdb; for deploys, `sshpass`;
+for the original under Proton, the 32-bit X11, Mesa, Vulkan, PulseAudio,
+FreeType, fontconfig, GLib and GnuTLS libraries. Proton-CachyOS 11.0
+(2026-10-05) is in `~/.local/share/Steam/compatibilitytools.d`, linked as
+`Proton-CachyOS Latest`, the name `dxcap.sh` looks for; the user Python has
+`unicorn`, the CPU emulator [`Fire.dll`'s check](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/fire-dll.md#how-it-was-checked)
+ran the DLL's routines in. What came over with the folders and held the old
+one's absolute paths was remade, not moved: the CMake build directories
+([below](#gotchas-that-cost-time)), `build/dxcap`'s links
+(`VibeEngine/vibe/tools/dxcap.sh setup`, then `compile`) and the Vulkan
+validation layer's manifest (`VibeEngine/vibe/tools/host-tools.sh`). The
+per-user engine settings, `~/.config/SurrealEngine/Settings.json`, which the
+harness's fork runs take their renderer from, were made anew naming OpenGL, as
+the previous container's did: a hidden run's Xvfb has no Vulkan present.
+Checked: every port builds warning-free but for one third-party `#warning` a
+clean Smart Pro build shows (agent.md's known defects), every branch's unit
+tests pass, the hidden proving run on Liberty Island is clean, and
+`recreation.sh check` passes its 35 checks.
+
+For pushes (the remotes are `git@github.com:`), an SSH key is made,
+`~/.ssh/id_ed25519` (2026-10-05, no passphrase), with GitHub's host key in
+`~/.ssh/known_hosts`; it works once the owner adds `~/.ssh/id_ed25519.pub` to
+their GitHub account. Not tried yet: a deploy, which wants the Smart Pro
+awake on the network.
+
+The previous container (to 2026-10-04) had the host's home -- `/home` there,
+`/var/home` on the host -- with the parent folder at
+`~/Documents/projects/deusex`, where Claude Code started and its `ida` MCP
+server was registered. With `libpipewire`/`libpulse` the engine reached the
+desktop's audio; the null OpenAL driver remains the way to run silently
+([linux-x86_64's README](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md#audio)).
 
 ## Commits
 
@@ -120,14 +157,17 @@ rename fails loudly instead of leaving stale instructions:
 - `scripts/check-docs.sh`: across the workspace's repositories, every path a
   doc names in backticks or links must exist, every link to a heading
   (`#anchor`) must find one, and every link into another of the repositories
-  must resolve in that repository's checkout here.
+  must resolve in that repository's checkout here. A checkout git cannot read
+  fails rather than going unchecked.
 - `scripts/engine.sh check`: the engine clone is at the commit
   `ENGINE-PIN.txt` names, on the fork's branch.
 - `scripts/launcher.sh check`: each port's worktree is at the commit
-  `LAUNCHER-PIN.txt` names, on its branch.
-- `test_target_<port>`, on the port's branch: each CPU mode a profile offers is
-  handled by its `port-hooks.sh`, the hooks' fallback (`CPU_MODE_DEFAULT`) is
-  the profile's default, and the profile's id is its port's.
+  `LAUNCHER-PIN.txt` names, on its branch (and git can read it).
+- `test_target_<port>` (the id's `-` as `_`), on the port's branch: each CPU
+  mode a profile offers is named in its `port-hooks.sh` -- anywhere in the
+  file, a comment included, so it does not prove a `case` handles it -- the
+  hooks' fallback (`CPU_MODE_DEFAULT`) is the profile's default, and the
+  profile's id is its port's.
 - `scripts/dx.sh check` runs the first three, confirms every port has its
   required files, and checks the glibc ceiling of whatever is staged.
 
@@ -154,7 +194,9 @@ These apply everywhere:
   before guessing what the game's script does
   ([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)).
 - **CMake build directories cannot move.** Their caches hold absolute paths;
-  after moving a tree, delete its build directory and rebuild.
+  after moving a tree, delete its build directory and rebuild. So do
+  `build/dxcap`'s links and the validation layer's manifest in `deps/`: after
+  moving the parent folder, run `dxcap.sh setup` and `host-tools.sh` again.
 - **`build` does not restage.** The staged app keeps whatever binary the last
   `stage` copied; a run after `build` alone tests the old engine, which shows
   up as long-fixed `Unimplemented` lines in its log (a three-day-old staged
