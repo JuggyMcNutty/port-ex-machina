@@ -12,14 +12,12 @@ no facts of its own beyond those; each lives in one doc, and the
   git history, the device logs and each other, then corrected where they had
   drifted -- in the workspace, the RE, the engine's `vibe/docs/` and the
   launcher's `main`, `linux-x86_64` and `trimui-smartpro` (the device branches
-  take `linux-x86_64`'s by merge). **Committed 2026-10-05, not pushed**: in
-  each repository and branch, `linux-x86_64` merged into the four device
-  branches; `main`'s commit waits, with its icons (State, below), for the
-  merge into `linux-x86_64`, the owner's call. The pushes wait for the SSH
-  key made here to be added to GitHub ([this
-  machine](docs/DEVELOPMENT.md#this-machine)); after them the pins move
-  (`engine.sh pin`, `launcher.sh pin --all`) -- until then `dx.sh check`
-  finds the engine and the launcher's branches past their pins. The machine changed under the workspace (a new container, its
+  take `linux-x86_64`'s by merge). **Pushed and pinned 2026-10-05** (the
+  owner's go-ahead): each repository and branch committed, `linux-x86_64`
+  merged into the four device branches, and the engine and every port
+  branch pinned at what was pushed; `main`'s commit waits, with its icons
+  (State, below), for the merge into `linux-x86_64`, the owner's call. The
+  machine changed under the workspace (a new container, its
   folders moved, set up for the project on 2026-10-05 -- every port builds
   and tests, the harness and the recreation's check run clean: [this
   machine](docs/DEVELOPMENT.md#this-machine)); that left
@@ -170,7 +168,8 @@ no facts of its own beyond those; each lives in one doc, and the
   [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info). Each is
   a folder of its own beside the others ([the layout](README.md#layout)), and
   each is pushed with the owner's go-ahead.
-- **Pushed and pinned** (2026-10-02, the owner's go-ahead): everything in
+- **Pushed and pinned** (2026-10-05, the audit, above: the engine at
+  `8835557`). Before it (2026-10-02, the owner's go-ahead): everything in
   the four repositories; the engine pinned at `9861c61`, the review's last.
   The review's engine commits, newest first, each pushed with its
   dx-reverse-info commit and this file: `9861c61` the random tables and the
@@ -224,7 +223,7 @@ no facts of its own beyond those; each lives in one doc, and the
   device now runs on desktop GL and OpenGL ES 3.2 from one code path -- the
   GLES renderer (2026-10-01, [What the fork changes](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering),
   the workspace's `plans/gles-renderer.md` the milestone record); pinned at
-  `9861c61` since the review. The profiling hooks were re-based onto the
+  `8835557` since the audit (State). The profiling hooks were re-based onto the
   head of 2026-09-29 and are applied only
   for a device profile (`perf.sh on/off`; the device's current build is clean
   of them).

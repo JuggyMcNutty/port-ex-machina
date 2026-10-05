@@ -111,8 +111,8 @@ tests pass, the hidden proving run on Liberty Island is clean, and
 
 For pushes (the remotes are `git@github.com:`), an SSH key is made,
 `~/.ssh/id_ed25519` (2026-10-05, no passphrase), with GitHub's host key in
-`~/.ssh/known_hosts`; it works once the owner adds `~/.ssh/id_ed25519.pub` to
-their GitHub account. Not tried yet: a deploy, which wants the Smart Pro
+`~/.ssh/known_hosts`; its public half is on the owner's GitHub account
+(2026-10-05), and pushes from here work. Not tried yet: a deploy, which wants the Smart Pro
 awake on the network.
 
 The previous container (to 2026-10-04) had the host's home -- `/home` there,
