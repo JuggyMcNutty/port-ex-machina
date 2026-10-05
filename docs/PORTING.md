@@ -14,16 +14,18 @@ the ports that exist are listed in the [root README](../README.md#ports).
 | Branch | Holds |
 |---|---|
 | `main` | the original launcher, recreated almost 1:1: no additions, no ports |
-| `linux-x86_64` | `main`, plus the launcher as it grew for the ports (the tabbed home screen, `Settings.json`, pad layouts, the GPU probe), the generic device profile, and the base app every port ships (`ports/common/packaging`) with the desktop's port files (`ports/linux-x86_64`). `main`'s own program, its tools and its tests come along unbuilt: a port branch builds `deusex-launcher`, `dxl-cli` and `dxl-shots` |
+| `linux-x86_64` | `main`, plus the launcher as it grew for the ports (the tabbed home screen, `Settings.json`, pad layouts, the GPU probe), the generic device profile, and the base app every port ships (`ports/common/packaging`) with the desktop's port files (`ports/linux-x86_64`). `main`'s own program, its tools and its program's tests come along unbuilt: a port branch builds `deusex-launcher`, `dxl-cli`, `dxl-shots` and the core's tests |
 | `<id>`, a device | `linux-x86_64`, plus **only what differs** for one device: `ports/<id>/` and its preset |
 
 Changes flow one way, by merging: from `main` into `linux-x86_64`, and from
 `linux-x86_64` into each device's branch. A fix to the original's behaviour is
 made on `main`, one to the launcher every port runs on `linux-x86_64`, one for
 a device on its branch. A branch adds files rather than editing those it
-inherits where it can, and resolves a merge's conflicts itself.
-`scripts/launcher.sh status` says which pins lack commits of the branch below
-them.
+inherits where it can, and resolves a merge's conflicts itself. The one file
+that does not flow is `README.md`: `main`'s describes the recreation,
+`linux-x86_64`'s (which the device branches inherit) the ports' launcher, so a
+merge from `main` conflicts on it and keeps `linux-x86_64`'s. `scripts/launcher.sh status` says
+which pins lack commits of the branch below them.
 
 ## The layers
 
@@ -57,17 +59,11 @@ planned ports, `android` and `x360`, have none yet.
 
 ## The pipeline
 
-```sh
-scripts/dx.sh fetch                # once: the engine, the launcher's branches (deusex-launcher/<port>), the RE
-scripts/dx.sh deps   <port>        # port_deps: toolchains and sysroot into deps/
-scripts/dx.sh build  <port>        # the launcher's preset in deusex-launcher/<port>, then scripts/engine.sh build <port>
-scripts/dx.sh stage  <port>        # build/<port>/app, exactly what ships
-scripts/dx.sh deploy <port>        # build, stage, then port_deploy
-scripts/dx.sh run    <port>        # port_run
-scripts/dx.sh profile <port>       # port_profile
-scripts/dx.sh test   [<port>]      # the port's host build and unit tests
-scripts/dx.sh check                # the drift guards (DEVELOPMENT.md)
-```
+The commands are [the README's quick start](../README.md#quick-start). Each
+step runs a port's hooks: `deps` runs `port_deps`; `build` the launcher's
+preset in `deusex-launcher/<port>`, then `scripts/engine.sh build <port>`;
+`deploy` builds and stages, then runs `port_deploy`; `run` and `profile` run
+`port_run` and `port_profile`.
 
 Each port's launcher builds in its own checkout, `deusex-launcher/<port>/build/`;
 the engine goes to `build/<port>/engine`, and `build/<port>/app` is the staged
@@ -139,6 +135,7 @@ it (the Smart Pro's README has the exact command line).
 | `probe-sdl-vulkan.c` | can SDL2 hand out a Vulkan surface here | `-lSDL2 -lvulkan` |
 | `probe-vulkan-caps.c` | every requirement the engine's Vulkan device filter checks, with a verdict | `-lvulkan` |
 | `probe-texture-formats.c` | which texture formats the GPU can sample and linearly filter (BCn, RGB8, RGBA32F) | `-lvulkan` |
+| `probe-gles-sampler.c` | what an OpenGL ES driver accepts: each sampler parameter the engine sets, the extensions it looks for (S3TC, float-linear filtering, anisotropy, mirror-clamp, `glBufferStorage`), and the scene buffers' formats (RGBA16F, R32UI and D32F in one framebuffer); it draws to a pbuffer | `-ldl` (EGL and GLES are opened at run time) |
 
 `dxl-cli --probe` (built with every port) reports the Vulkan device and API,
 the OpenGL ES version and renderer, and desktop GL -- what the launcher's
@@ -162,7 +159,8 @@ app's process -- and more besides: [its README](https://github.com/JuggyMcNutty/
 **Xbox 360** (planned) is not POSIX, so it would need its own version of
 each; nothing about it is worked out yet ([its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/x360/ports/x360/README.md)).
 **Windows** would need win32 versions of all five; the original binary's own
-answers to the same questions are in [`porting-notes.md`](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/porting-notes.md).
+answers to the same questions are
+[launch-flow.md's platform seams](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/launch-flow.md#platform-seams).
 
 ## A port's README
 
@@ -175,6 +173,6 @@ that do not apply:
 | **Build and run** | the commands, where things live on the device, how to reach it |
 | **What differs from linux-x86_64** | the port's files, and why each difference was needed |
 | **The device, as measured** | what was probed, not assumed |
-| **Verified** | what was checked on real hardware, dated |
+| **Verified** | what was checked on real hardware |
 | **Performance** | where it is measured: the numbers and how to take them |
 | **Gotchas** | what bit on this device |

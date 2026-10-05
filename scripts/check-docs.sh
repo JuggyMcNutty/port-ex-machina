@@ -35,6 +35,9 @@
 # into a checkout that is absent, is counted as unverifiable rather than
 # failed. The ALLOW list below names what exists only at run time, inside an
 # archive, or on the device.
+#
+# AGENTS.md is loaded into every agent session, so it holds to a line budget
+# (docs/DEVELOPMENT.md#docs); going over it fails too.
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 ROOT="$DX_WORKSPACE"
@@ -244,6 +247,14 @@ for c in "${checkouts[@]}"; do
         fi
     done < <(extract "${docs[@]}")
 done
+
+AGENTS_BUDGET=150
+if [ ! -f "$ROOT/AGENTS.md" ]; then
+    fail "MISSING AGENTS.md: CLAUDE.md imports it"
+else
+    n="$(wc -l < "$ROOT/AGENTS.md")"
+    [ "$n" -le "$AGENTS_BUDGET" ] || fail "OVER BUDGET AGENTS.md: $n lines, the budget is $AGENTS_BUDGET (docs/DEVELOPMENT.md#docs)"
+fi
 
 summary="docs: $checked paths, $anchors anchors and $urls links between repositories checked in $ndocs files, $failed missing"
 [ "$unverifiable" = 0 ] || summary="$summary, $unverifiable unverifiable (a checkout, gamefiles/ or reference/ absent)"

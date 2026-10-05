@@ -1,30 +1,24 @@
 # Port Ex Machina
 
-## A modern, cross-platform launcher for Deus Ex with efforts to port to other platforms.
+A modern, cross-platform launcher for Deus Ex, and the work to bring the game to other
+platforms.
 
-# You supply your own game assets. None are included.
+**You supply your own game files (Deus Ex 1112fm). None are included.**
 
 ## What it is
 
-**The launcher** A reverse engineered modern launcher for the deus ex engine:
-[deusex-launcher](https://github.com/JuggyMcNutty/deusex-launcher). Its `main`
-recreates the original `DeusEx.exe` launcher almost 1:1; each port is a branch
-of it, holding that port's configs and additions.
-
-**The engine** is [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine), our
-fork of [Surreal Engine](https://github.com/dpjudas/SurrealEngine), an
-open-source UE1 re-implementation, carrying the changes our platforms and Deus
-Ex need -- with its own roadmap and docs.
-
-**The RE** of the original binaries, `DeusEx.exe` and the game's DLLs, is
-[dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info).
-
-**The ports** linux-x86_64 is the base target with linux-aarch64, android, and platform specific builds.
-
-**This repository** is the workspace that puts them together: the scripts
-that fetch the others and build, stage, deploy and profile a port, the pins
-naming which commits of the engine and the launcher it builds, and where
-things stand.
+- **The launcher**, [deusex-launcher](https://github.com/JuggyMcNutty/deusex-launcher): its
+  `main` recreates the original `DeusEx.exe` launcher almost 1:1; each port is a branch of it,
+  holding that port's configs and additions.
+- **The engine**, [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine): our fork of
+  [Surreal Engine](https://github.com/dpjudas/SurrealEngine), an open-source UE1
+  reimplementation, carrying what our platforms and Deus Ex need.
+- **The RE**, [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info): what the
+  original binaries -- `DeusEx.exe` and the game's DLLs -- do.
+- **The ports**: linux-x86_64 is the base; linux-aarch64, Android and device builds start from it.
+- **This repository**, the workspace: the scripts that fetch the others and build, stage, deploy
+  and profile a port; the pins naming the engine and launcher commits it builds; and where the
+  project stands.
 
 ## Ports
 
@@ -38,15 +32,14 @@ things stand.
 
 ## Quick start
 
-Each repository gets a folder of its own in one parent folder, so clone this
-one into an empty folder; `fetch` puts the others beside it
-([layout](#layout)).
+Each repository gets a folder of its own in one parent folder, so clone this one into an empty
+folder; `fetch` puts the others beside it ([layout](#layout)).
 
 ```sh
 mkdir deusex && cd deusex                  # the parent folder: any name
 git clone https://github.com/JuggyMcNutty/port-ex-machina.git && cd port-ex-machina
 scripts/dx.sh fetch                        # once: the engine, the launcher's port branches, the RE
-scripts/dx.sh test                         # unit tests (the base port's build)
+scripts/dx.sh test [<port>]                # unit tests: linux-x86_64's, or a device branch's host build
 scripts/engine.sh status                   # how far upstream is past the fork
 
 scripts/dx.sh deps   <port>                # toolchains and sysroot, if the port needs them
@@ -64,36 +57,34 @@ scripts/recreation.sh check [<GameDir>]    # run end to end on a copy, on a priv
 scripts/recreation.sh run [<args>]         # System/DeusEx, as a player starts it
 ```
 
-Put the game files where the port's `launcher.ini` says (`GameDir`); a
-`linux-x86_64` app staged here points at the `gamefiles/` beside the
-repositories.
+Put the game files where the port's `launcher.ini` says (`GameDir`); a `linux-x86_64` app
+staged here points at the `gamefiles/` beside the repositories.
 
 ## Documentation
 
 | Doc | Read it for |
 |---|---|
-| [`agent.md`](agent.md) | where things stand: decisions, open items, what is next |
-| [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | how to work here: the base port, the repositories, cold start, commits, docs rules, gotchas |
+| [`AGENTS.md`](AGENTS.md) | the rules, where things stand, the decisions, what is open (agents load it through `CLAUDE.md`) |
+| [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | how to work here: the repositories, dependencies, commits, docs, drift guards, gotchas |
 | [`docs/PORTING.md`](docs/PORTING.md) | how ports work -- a branch of the launcher each -- and how to add one |
-| [the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher) | `main`, the original recreated, and the branches |
+| [the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher) | `main`, the original recreated; [linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/README.md) introduces the ports' launcher |
 | [`LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md), on `linux-x86_64` | the launcher the ports run: the settings files the engine really reads, the screens, controller support, what it changes from the original |
 | a port's `ports/<id>/README.md`, on its branch | one device: status, what differs from linux-x86_64, measurements, what was verified |
-| VibeEngine's [`vibe/docs/`](https://github.com/JuggyMcNutty/VibeEngine/tree/deusex/vibe/docs) | the engine: how it is kept, run, profiled, and what it changes ([`ENGINE.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md)); the reimplementation roadmap ([`ROADMAP.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ROADMAP.md)); what it lacks of the original ([`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)); working on it ([`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md)) |
+| VibeEngine's [`vibe/docs/`](https://github.com/JuggyMcNutty/VibeEngine/tree/deusex/vibe/docs) | the engine: how it is kept, run, profiled and what the fork changes ([`ENGINE.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md)); where it still differs from the original ([`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)); working on it, the harness ([`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md)) |
 | [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) | the original binaries: `DeusEx.exe`, where the launcher began, and the game's DLLs -- what they do |
 
 ## Layout
 
-Every repository is a folder of its own in one parent folder, none inside
-another, beside what none of them owns. The parent is not versioned itself.
+Every repository is a folder of its own in one parent folder, none inside another, beside what
+none of them owns. The parent is not versioned itself.
 
 ```
 deusex/                  the parent folder (any name)
   port-ex-machina/       this repository:
-    agent.md               where things stand (session handoff)
+    AGENTS.md              rules, status, decisions, open items (CLAUDE.md imports it)
     ENGINE-PIN.txt         the engine's version: VibeEngine's repository, branch and commit
     LAUNCHER-PIN.txt       the launcher's: deusex-launcher's repository, and each port's commit
     docs/                  DEVELOPMENT, PORTING
-    plans/                 the milestone records: the GLES renderer, the game-fidelity pass
     scripts/               dx.sh (the entry point), engine.sh, launcher.sh, recreation.sh,
                            check-docs.sh, lib/common.sh (shared with the ports' and the
                            engine's own scripts)
@@ -115,9 +106,7 @@ A path in these docs that is not a repository's own is the parent folder's:
 
 ## License
 
-[zlib](LICENSE), for everything in this repository, the launcher and the RE,
-and for our commits in the engine fork. Surreal Engine has its own licences,
-in its `LICENSE.md`.
+[zlib](LICENSE), for everything in this repository, the launcher and the RE, and for our commits
+in the engine fork. Surreal Engine has its own licences, in its `LICENSE.md`.
 
-Deus Ex belongs to its owners; this project is not affiliated with or endorsed
-by them.
+Deus Ex belongs to its owners; this project is not affiliated with or endorsed by them.
