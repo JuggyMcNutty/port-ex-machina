@@ -24,7 +24,8 @@ a device on its branch. A branch adds files rather than editing those it
 inherits where it can, and resolves a merge's conflicts itself. The one file
 that does not flow is `README.md`: `main`'s describes the recreation,
 `linux-x86_64`'s (which the device branches inherit) the ports' launcher, so a
-merge from `main` conflicts on it and keeps `linux-x86_64`'s. `scripts/launcher.sh status` says
+merge from `main` conflicts on it and always keeps the port branch's own,
+never `main`'s. `scripts/launcher.sh status` says
 which pins lack commits of the branch below them.
 
 ## The layers

@@ -23,7 +23,8 @@ git is the record. Budget: 150 lines (`scripts/check-docs.sh` enforces it).
 - **Nothing goes upstream** from the engine fork: its changes are AI-written, and upstream asks
   that such changes stay in a fork.
 - **Launcher changes flow one way**, by merge: `main` → `linux-x86_64` → each device branch
-  ([the branches](docs/PORTING.md#the-branches)).
+  ([the branches](docs/PORTING.md#the-branches)). `README.md` never flows from `main`: a merge
+  always keeps the port branch's own README, never `main`'s.
 - **Done** means `scripts/dx.sh test` (linux-x86_64's unit tests) and `scripts/dx.sh check`
   (the drift guards) pass, and every cross port that ships -- today the Smart Pro -- builds
   warning-free but for one third-party warning (open items). An engine change is also proven
@@ -121,7 +122,8 @@ Known defects, each linked to the doc that owns its code (the last line's have n
   `main`'s `policy.c` keeps bypass and splash rules nothing live uses; dx-reverse-info's
   `types/launch.h` needs `<stddef.h>` to compile on its own; a clean Smart Pro build warns once,
   in the third-party `Thirdparty/resample/pffft.cpp` (it tests `__arm__`, not `__aarch64__`;
-  the resampler is built without it, `R8B_PFFFT` 0).
+  the resampler is built without it, `R8B_PFFFT` 0); dx-reverse-info's `launcher.md` counts
+  `DeusEx.exe`'s functions as 762 = 367 named + 371 unnamed (738): recount in IDA.
 
 Unverified, each a known risk:
 
