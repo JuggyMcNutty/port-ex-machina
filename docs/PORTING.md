@@ -3,9 +3,9 @@
 How a device becomes a port. **A port is a branch of the launcher**,
 [deusex-launcher](https://github.com/JuggyMcNutty/deusex-launcher), and the
 engine, [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine), is built for
-it. **linux-x86_64 is the base**: the project is developed and tested there
-([`DEVELOPMENT.md`](DEVELOPMENT.md)), and every other port starts from it. The
-launcher the ports run is
+it. **`main` is the working base**: each port branch is its own variant of it.
+linux-x86_64 is where the project is developed and tested
+([`DEVELOPMENT.md`](DEVELOPMENT.md)). The launcher the Linux ports run is
 [`LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md);
 the ports that exist are listed in the [root README](../README.md#ports).
 
@@ -15,18 +15,17 @@ the ports that exist are listed in the [root README](../README.md#ports).
 |---|---|
 | `main` | the original launcher, recreated almost 1:1: no additions, no ports |
 | `linux-x86_64` | `main`, plus the launcher as it grew for the ports (the tabbed home screen, `Settings.json`, pad layouts, the GPU probe), the generic device profile, and the base app every port ships (`ports/common/packaging`) with the desktop's port files (`ports/linux-x86_64`). `main`'s own program, its tools and its program's tests come along unbuilt: a port branch builds `deusex-launcher`, `dxl-cli`, `dxl-shots` and the core's tests |
-| `<id>`, a device | `linux-x86_64`, plus **only what differs** for one device: `ports/<id>/` and its preset |
+| `<id>`, a device | its own variant: the Linux devices (`trimui-smartpro`, `linux-aarch64`) began from `linux-x86_64` and add **only what differs**, `ports/<id>/` and its preset; a port for another platform may start from `main` alone (an Xbox 360 port would replace the start-up with its platform's) |
 
-Changes flow one way, by merging: from `main` into `linux-x86_64`, and from
-`linux-x86_64` into each device's branch. A fix to the original's behaviour is
-made on `main`, one to the launcher every port runs on `linux-x86_64`, one for
-a device on its branch. A branch adds files rather than editing those it
-inherits where it can, and resolves a merge's conflicts itself. The one file
-that does not flow is `README.md`: `main`'s describes the recreation,
-`linux-x86_64`'s (which the device branches inherit) the ports' launcher, so a
-merge from `main` conflicts on it and always keeps the port branch's own,
-never `main`'s. `scripts/launcher.sh status` says
-which pins lack commits of the branch below them.
+Every port branch takes `main`'s changes by merging `main` into it; port
+branches do not merge into each other. A fix to the original's behaviour is
+made on `main`; a fix to the ports' launcher, which each Linux port branch
+carries, is made on each of those branches; a fix for one device, on its
+branch. A branch adds files rather than editing `main`'s where it can, and
+resolves a merge's conflicts itself. `README.md` never flows: each port branch
+keeps its own, so a merge from `main` conflicts on it and always keeps the
+port branch's, never `main`'s. `scripts/launcher.sh status` says which pins
+lack commits of `main`.
 
 ## The layers
 
@@ -42,7 +41,7 @@ which pins lack commits of the branch below them.
 ## What a port is
 
 A port's directory, `ports/<id>/` on its branch, holds **only what differs**
-from linux-x86_64:
+from the branch it started from (linux-x86_64, for the Linux devices):
 
 | File | Purpose | Required |
 |---|---|---|
@@ -90,12 +89,15 @@ only when missing.
    (`probe-sdl.c --pad`); the screen size; the fonts on the system; what the
    device's own frontend expects an app to look like; how its CPU governor is
    managed.
-2. **Branch from linux-x86_64** (`git -C deusex-launcher/main worktree add -b
-   <id> ../<id> linux-x86_64`), and keep only what differs. A device running
-   an ordinary distro is often nothing more than a new name (`linux-aarch64`
-   is linux-x86_64 built for another architecture). For a vendor-firmware
-   handheld -- cross-built against the device's own libraries, its own frontend
-   and CPU modes -- `trimui-smartpro` shows what the differences look like.
+2. **Branch from `main`, or from the port closest to it**
+   (`git -C deusex-launcher/main worktree add -b <id> ../<id> <base>`), and
+   keep only what differs. A Linux device that runs the ports' launcher starts
+   from linux-x86_64: one with an ordinary distro is often nothing more than a
+   new name (`linux-aarch64` is linux-x86_64 built for another architecture);
+   for a vendor-firmware handheld -- cross-built against the device's own
+   libraries, its own frontend and CPU modes -- `trimui-smartpro` shows what
+   the differences look like. A platform that shares only `main`'s launcher
+   with the others, such as the Xbox 360, starts from `main`.
 3. **Pick a toolchain whose glibc is at or below the device's** -- one newer
    symbol and the binary will not load (see the Smart Pro's README for how that
    was found). Bootlin publishes many; `dx_fetch_bootlin <name> <ceiling>` in

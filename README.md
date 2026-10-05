@@ -15,7 +15,8 @@ platforms.
   reimplementation, carrying what our platforms and Deus Ex need.
 - **The RE**, [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info): what the
   original binaries -- `DeusEx.exe` and the game's DLLs -- do.
-- **The ports**: linux-x86_64 is the base; linux-aarch64, Android and device builds start from it.
+- **The ports**: each a branch of the launcher, a variant of its `main`; linux-x86_64 (desktop
+  Linux) is where the project is developed and tested.
 - **This repository**, the workspace: the scripts that fetch the others and build, stage, deploy
   and profile a port; the pins naming the engine and launcher commits it builds; and where the
   project stands.
@@ -24,7 +25,7 @@ platforms.
 
 | Port | For | Status |
 |---|---|---|
-| [`linux-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-x86_64/ports/linux-x86_64) | desktop Linux; **the base** | runs the game; where the tests, `dxl-shots` and engine validation run |
+| [`linux-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-x86_64/ports/linux-x86_64) | desktop Linux; **the development platform** | runs the game; where the tests, `dxl-shots` and engine validation run |
 | [`linux-aarch64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-aarch64/ports/linux-aarch64) | aarch64 devices with an ordinary distro | the launcher cross-builds; not yet run on a device |
 | [`trimui-smartpro`](https://github.com/JuggyMcNutty/deusex-launcher/tree/trimui-smartpro/ports/trimui-smartpro) | TrimUI Smart Pro, spruceOS | builds and runs; performance work on hold, the engine first |
 | [`android`](https://github.com/JuggyMcNutty/deusex-launcher/tree/android/ports/android) | Android | planned |

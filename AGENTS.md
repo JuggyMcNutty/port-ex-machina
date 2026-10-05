@@ -21,9 +21,9 @@ git is the record. Every session loads it, so keep it small.
   in its own repository with the docs it affects, pushed, then pinned here
   (`scripts/engine.sh pin`, `scripts/launcher.sh pin <port>`) and the pin committed.
 - **Nothing goes upstream** we have moved on from upstream and we no longer care about them as we have diverged so much. We dont care about their rules.
-- **Launcher changes flow one way**, by merge: `main` → each device branch
-  ([the branches](docs/PORTING.md#the-branches)). `README.md` never flows from `main`: a merge
-  always keeps the port branch's own README, never `main`'s.
+- **Launcher branches**: `main` is the working base; each port branch is its own variant of it
+  and takes `main`'s changes by merge ([the branches](docs/PORTING.md#the-branches)).
+  `README.md` never flows from `main`: a merge always keeps the port branch's own README.
 - **Done** means `scripts/dx.sh test` (linux-x86_64's unit tests) and `scripts/dx.sh check`
   (the drift guards) pass, and every cross port that ships -- today the Smart Pro -- builds
   warning-free but for one third-party warning (open items). An engine change is also proven
@@ -36,7 +36,7 @@ git is the record. Every session loads it, so keep it small.
 
 | Area | State |
 |---|---|
-| linux-x86_64 | The base. Launcher and engine build natively and run the game; the tests, `dxl-shots` and the engine harness run here. |
+| linux-x86_64 | The development platform. Launcher and engine build natively and run the game; the tests, `dxl-shots` and the engine harness run here. |
 | linux-aarch64 | The launcher cross-builds. Has never ran on a device. |
 | trimui-smartpro | The game runs under Vulkan or OpenGL ES (chosen in the Video tab), at 853×480 by default. Performance work is on hold. Numbers: [its Performance](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#performance). |
 | android | Planned: [its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/android/ports/android/README.md) is the plan. |
@@ -50,8 +50,9 @@ git is the record. Every session loads it, so keep it small.
 - **The project**: a modern, cross-platform launcher for Deus Ex of our own, on our own engine
   fork. The original `DeusEx.exe` was reverse-engineered as a starting point, not a contract:
   the ports' launcher departs from it where that serves the ports, and the launcher's `main`
-  keeps the original recreated beside it. linux-x86_64 is the base: the project is developed
-  there, and every port starts from it ([`docs/PORTING.md`](docs/PORTING.md)).
+  keeps the original recreated beside it. The launcher's `main` is the working base, each port
+  a variant of it ([`docs/PORTING.md`](docs/PORTING.md)); linux-x86_64 is where the project is
+  developed and tested.
 - **Four repositories**, each a folder of its own in one parent folder: this workspace;
   [deusex-launcher](https://github.com/JuggyMcNutty/deusex-launcher) (`main` the recreation, a
   branch per port); [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine) (the engine and
@@ -91,8 +92,8 @@ The owner's, each waiting until the owner takes it up.
   libraries, as the Smart Pro has); Android, starting with an in-process hand-over (its README).
 - **Merging upstream** (`vibe/tools/upgrade.sh`). Mind the script VM: upstream's default
   interpreter, `Frame::RunExpr`, replaces the `ExpressionEvaluator` the fork's VM work reworked.
-- **`main`'s window icons into the port branches**: the merge into linux-x86_64 conflicts in
-  `CMakeLists.txt` and `tests/test_gamefiles.c`, and keeps linux-x86_64's own README.
+- **`main`'s window icons into the port branches**: merging `main` into the port branches
+  conflicts in `CMakeLists.txt` and `tests/test_gamefiles.c`, and keeps each branch's own README.
 - **A fork server on the master servers' lists**: neither engine announces a server unless its
   uplink's `DoUplink` is set, which the game's `DeusEx.ini` does not set, and a master then
   queries the server's port, which this machine's NAT keeps from the internet

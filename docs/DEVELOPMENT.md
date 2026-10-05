@@ -5,12 +5,13 @@ How to work here, whatever the task. The rules, where things stand and what is o
 temporary debug hooks, its gotchas -- is VibeEngine's
 [`vibe/docs/DEVELOPMENT.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md).
 
-## The base: linux-x86_64
+## The development platform: linux-x86_64
 
 Development happens on
 [linux-x86_64](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md):
 the unit tests, `dxl-shots`, the engine's validation and the side-by-side checks of engine
-changes all build and run there. Every other port starts from it ([`PORTING.md`](PORTING.md)).
+changes all build and run there. Each port is a branch of the launcher, a variant of its `main`
+([`PORTING.md`](PORTING.md)).
 A change is clean when it builds and tests there *and* builds warning-free for each cross port
 that ships: the Smart Pro's GCC 9.3 is stricter about `-Wshadow` and `-Wformat-truncation` than
 a current host compiler. The one standing warning is third-party (AGENTS.md's open items).

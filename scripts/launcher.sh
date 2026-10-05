@@ -8,7 +8,7 @@
 #
 #   scripts/launcher.sh fetch                 clone it, and check out main and each pinned port (if absent)
 #   scripts/launcher.sh check                 each port's worktree is at its pin, on its branch
-#   scripts/launcher.sh status                the pins, and what each port's pin lacks of the branch below it
+#   scripts/launcher.sh status                the pins, and what each port's pin lacks of main
 #   scripts/launcher.sh pin <port>|--all      write a worktree's HEAD to LAUNCHER-PIN.txt (pushed commits only)
 #
 # How the branches relate: docs/PORTING.md.
@@ -95,19 +95,19 @@ cmd_check() {
     return "$rc"
 }
 
-# Changes flow main -> linux-x86_64 -> each device's branch: a pin that lacks
-# commits of the branch below it has merges to take.
+# main is the working base: each port branch takes main's changes by merging
+# main into it (docs/PORTING.md#the-branches), so a pin that lacks commits of
+# main has a merge to take.
 cmd_status() {
     need_clone
     git -C "$MAIN" fetch --quiet origin
     printf '%-16s %s\n' main "$(git -C "$MAIN" log -1 --format='%h  %cs  %s' origin/main)"
-    local p want below n
+    local p want n
     for p in $(dx_ports); do
         want="$(pinned "$p")"
         printf '%-16s %s\n' "$p" "$(git -C "$MAIN" log -1 --format='%h  %cs  %s' "$want")"
-        below=linux-x86_64; [ "$p" = linux-x86_64 ] && below=main
-        n=$(git -C "$MAIN" rev-list --count "$want..origin/$below")
-        [ "$n" = 0 ] || echo "                 lacks $n commit(s) of $below -- merge $below into $p"
+        n=$(git -C "$MAIN" rev-list --count "$want..origin/main")
+        [ "$n" = 0 ] || echo "                 lacks $n commit(s) of main -- merge main into $p"
     done
 }
 
