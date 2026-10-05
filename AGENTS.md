@@ -20,7 +20,7 @@ git is the record. Every session loads it, so keep it small.
 - **Push, merge upstream, or move a pin only with the owner's go-ahead.** A change is committed
   in its own repository with the docs it affects, pushed, then pinned here
   (`scripts/engine.sh pin`, `scripts/launcher.sh pin <port>`) and the pin committed.
-- **Nothing goes upstream** we have moved on from upstream and we no longer care about them as we have diverged so much. We dont care about their no ai rule.
+- **Nothing goes upstream** we have moved on from upstream and we no longer care about them as we have diverged so much. We dont care about their rules.
 - **Launcher changes flow one way**, by merge: `main` → each device branch
   ([the branches](docs/PORTING.md#the-branches)). `README.md` never flows from `main`: a merge
   always keeps the port branch's own README, never `main`'s.

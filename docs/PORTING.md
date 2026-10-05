@@ -83,7 +83,7 @@ only when missing.
 ## Adding a port
 
 1. **Measure the device before writing anything.** Every wrong guess about
-   the Smart Pro cost time. Find out: the glibc version (`/lib/ld-*.so`,
+   the device costs time. Find out: the glibc version (`/lib/ld-*.so`,
    `ldd --version`); whether SDL2 is the distro's or a vendor build with its own
    video driver; which GPU APIs exist (`dxl-cli --probe` from any aarch64 or
    x86_64 build, and the probes below); what the pad reports
