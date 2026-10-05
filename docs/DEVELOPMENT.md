@@ -129,7 +129,8 @@ written this way:
    lists.
 6. **A plan is deleted when its work is done**; what lasts of it moves to the doc that owns it,
    in the same commit.
-7. **`AGENTS.md` is edited in place**, never appended to, and stays within 150 lines.
+7. **`AGENTS.md` is edited in place**, never appended to, and kept small: every session loads
+   it.
 8. **A heading other docs link to keeps its words**; renaming one means fixing every link to it.
 
 Editing docs with string replacement fails silently when the pattern does not match: prefer full
@@ -143,8 +144,8 @@ loudly instead of leaving stale instructions:
 - `scripts/check-docs.sh`: across the workspace's repositories, every path a doc names in
   backticks or links must exist, every link to a heading (`#anchor`) must find one, and every
   link into another of the repositories must resolve in that repository's checkout here. A
-  checkout git cannot read fails rather than going unchecked, and so does an `AGENTS.md` over
-  its budget.
+  checkout git cannot read fails rather than going unchecked, and so does a missing
+  `AGENTS.md`.
 - `scripts/engine.sh check`: the engine clone is at the commit `ENGINE-PIN.txt` names, on the
   fork's branch.
 - `scripts/launcher.sh check`: each port's worktree is at the commit `LAUNCHER-PIN.txt` names,

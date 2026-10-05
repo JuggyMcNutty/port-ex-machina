@@ -8,7 +8,7 @@ the ports, and pins the commits they build ([the commands](README.md#quick-start
 changing anything, read [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
 
 This file is edited in place: change what changed, delete what is done, never append a log --
-git is the record. Budget: 150 lines (`scripts/check-docs.sh` enforces it).
+git is the record. Every session loads it, so keep it small.
 
 ## Rules
 
@@ -20,9 +20,8 @@ git is the record. Budget: 150 lines (`scripts/check-docs.sh` enforces it).
 - **Push, merge upstream, or move a pin only with the owner's go-ahead.** A change is committed
   in its own repository with the docs it affects, pushed, then pinned here
   (`scripts/engine.sh pin`, `scripts/launcher.sh pin <port>`) and the pin committed.
-- **Nothing goes upstream** from the engine fork: its changes are AI-written, and upstream asks
-  that such changes stay in a fork.
-- **Launcher changes flow one way**, by merge: `main` → `linux-x86_64` → each device branch
+- **Nothing goes upstream** we have moved on from upstream and we no longer care about them as we have diverged so much. We dont care about their no ai rule.
+- **Launcher changes flow one way**, by merge: `main` → each device branch
   ([the branches](docs/PORTING.md#the-branches)). `README.md` never flows from `main`: a merge
   always keeps the port branch's own README, never `main`'s.
 - **Done** means `scripts/dx.sh test` (linux-x86_64's unit tests) and `scripts/dx.sh check`
@@ -31,15 +30,15 @@ git is the record. Budget: 150 lines (`scripts/check-docs.sh` enforces it).
   against the original by a scripted run of both engines
   ([scripted runs](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
 - **Docs** hold the current state only, each fact in one place ([docs](docs/DEVELOPMENT.md#docs)).
-- **Ask the owner** when a decision blocks the work; otherwise the open decisions wait.
+- **Ask the owner** when you are unsure what the proper path forward is.
 
 ## Status
 
 | Area | State |
 |---|---|
 | linux-x86_64 | The base. Launcher and engine build natively and run the game; the tests, `dxl-shots` and the engine harness run here. |
+| linux-aarch64 | The launcher cross-builds. Has never ran on a device. |
 | trimui-smartpro | The game runs under Vulkan or OpenGL ES (chosen in the Video tab), at 853×480 by default. Performance work is on hold. Numbers: [its Performance](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#performance). |
-| linux-aarch64 | The launcher cross-builds. Never run on a device. |
 | android | Planned: [its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/android/ports/android/README.md) is the plan. |
 | x360 | Planned; nothing worked out. |
 | The engine | [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine), branch `deusex`, pinned by `ENGINE-PIN.txt`. The reimplementation milestones are done, from crashes through multiplayer; what still differs from the original is [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md). Upstream has moved on (`scripts/engine.sh status`). |
