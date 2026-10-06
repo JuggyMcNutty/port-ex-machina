@@ -107,9 +107,9 @@ Known defects, each linked to the doc that owns its code (the last line's have n
 - The ports' launcher: the game gets the launcher's words, the lock is let go at the hand-over,
   the Resolution row is Vulkan's only, the CPU-mode test is loose
   ([LAUNCHER.md's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects)).
-- The engine: no level ever freed, so each map load adds its level's memory for the session;
-  the sounds a server plays reaching no client; the anchored path search's goal, coronas taking
-  every dynamic corona light, `GC.DrawActor` stamping no render time
+- The engine: names never freed (each spawned actor's stays for the session), a destroyed decal
+  drawn until it is freed; the sounds a server plays reaching no client; the anchored path
+  search's goal, coronas taking every dynamic corona light, `GC.DrawActor` stamping no render time
   ([housekeeping](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#housekeeping-not-seen-directly),
   [multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer),
   [moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement),
@@ -118,7 +118,9 @@ Known defects, each linked to the doc that owns its code (the last line's have n
 - Recorded only here: `main`'s `policy.c` keeps bypass and splash rules nothing live uses;
   dx-reverse-info's `types/launch.h` needs `<stddef.h>` to compile on its own; a clean Smart Pro
   build warns once, in the third-party `Thirdparty/resample/pffft.cpp` (it tests `__arm__`, not
-  `__aarch64__`; the resampler is built without it, `R8B_PFFFT` 0); dx-reverse-info's
+  `__aarch64__`; the resampler is built without it, `R8B_PFFFT` 0); the script VM's
+  `StructMemberExpression` reads a returned frame's temporary (ASan's stack-use-after-return, in
+  the conversation consoles); `ChoiceConsole` never finishes, its conversation looping; dx-reverse-info's
   `launcher.md` counts `DeusEx.exe`'s functions as 762 = 367 named + 371 unnamed (738): recount
   in IDA.
 
