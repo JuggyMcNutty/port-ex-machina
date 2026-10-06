@@ -49,7 +49,7 @@ mkdir deusex && cd deusex                  # the parent folder: any name
 git clone https://github.com/JuggyMcNutty/port-ex-machina.git && cd port-ex-machina
 scripts/dx.sh fetch                        # once: the engine, the launcher's port branches, the RE
 scripts/dx.sh test [<port>]                # unit tests: linux-x86_64's, or a device branch's host build
-scripts/engine.sh status                   # how far upstream is past the fork
+scripts/engine.sh status                   # the pin and the fork's branch
 
 scripts/dx.sh deps   <port>                # toolchains and sysroot, if the port needs them
 scripts/dx.sh build  <port>                # launcher, then engine

@@ -17,7 +17,7 @@ git is the record. Every session loads it, so keep it small.
   identity is an open decision).
 - **Never commit the game's files**: no ini, `.int`, package, IDA database or capture. All four
   repositories are public. The RE is behaviour in our own words, never decompiled code.
-- **Push, merge upstream, or move a pin only with the owner's go-ahead.** A change is committed
+- **Push or move a pin only with the owner's go-ahead.** A change is committed
   in its own repository with the docs it affects, pushed, then pinned here
   (`scripts/engine.sh pin`, `scripts/launcher.sh pin <port>`) and the pin committed.
 - **Nothing goes upstream** we have moved on from upstream and we no longer care about them as we have diverged so much. We dont care about their rules.
@@ -41,7 +41,7 @@ git is the record. Every session loads it, so keep it small.
 | trimui-smartpro | The game runs under Vulkan or OpenGL ES (chosen in the Video tab), at 853×480 by default. Performance work is on hold. Numbers: [its Performance](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#performance). |
 | android | Planned: [its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/android/ports/android/README.md) is the plan. |
 | x360 | Planned; nothing worked out. |
-| The engine | [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine), branch `deusex`, pinned by `ENGINE-PIN.txt`. The reimplementation milestones are done, from crashes through multiplayer; what still differs from the original is [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md). Upstream has moved on (`scripts/engine.sh status`). |
+| The engine | [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine), branch `deusex`, pinned by `ENGINE-PIN.txt`. The reimplementation milestones are done, from crashes through multiplayer; what still differs from the original is [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md). |
 | The launcher's `main` | The original `DeusEx.exe` recreated almost 1:1: launch sequence, wizard, splash, message boxes. `scripts/recreation.sh` builds, installs, checks and runs it. |
 | The RE | [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) documents every binary read so far ([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)). |
 
@@ -58,8 +58,8 @@ git is the record. Every session loads it, so keep it small.
   branch per port); [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine) (the engine and
   everything about it, under `vibe/`); [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info)
   (the original binaries only).
-- **The engine fork** is pinned and does not follow upstream; it takes upstream's commits only
-  when the owner chooses
+- **The engine fork** is pinned and does not merge upstream: the two differ at the core, the
+  script VM first; a fix of upstream's worth having is ported by hand
   ([how it is kept](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#how-it-is-kept)).
 - **The engine first.** The porting work -- the Smart Pro's performance, the next ports -- waits
   until the engine is more stable and has more of the game. The open decisions wait for the
@@ -82,7 +82,11 @@ git is the record. Every session loads it, so keep it small.
   `D3DDrv`). Never: `Editor.dll`, `Window.dll`'s code, the Glide, Metal and SGL drivers,
   `Setup.exe`, the GOG DLL, `RGalaxy.dll`.
 - **Multiplayer**: the fork joins the original's servers, live ones included (joining public
-  servers is allowed), and hosts as the original does. Co-op is for later.
+  servers is allowed), and hosts as the original does. Co-op is for later. A fork server on the
+  public master servers' lists waits for the playtests: neither engine announces a server unless
+  its uplink's `DoUplink` is set, which the game's `DeusEx.ini` does not set, and a master then
+  queries the server's port, which this machine's NAT keeps from the internet
+  ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer)).
 
 ## Open decisions
 
@@ -90,40 +94,33 @@ The owner's, each waiting until the owner takes it up.
 
 - **The next ports**: a cross-built engine for linux-aarch64 (a sysroot with the engine's
   libraries, as the Smart Pro has); Android, starting with an in-process hand-over (its README).
-- **Merging upstream** (`vibe/tools/upgrade.sh`). Mind the script VM: upstream's default
-  interpreter, `Frame::RunExpr`, replaces the `ExpressionEvaluator` the fork's VM work reworked.
 - **`main`'s window icons into the port branches**: merging `main` into the port branches
   conflicts in `CMakeLists.txt` and `tests/test_gamefiles.c`, and keeps each branch's own README.
-- **A fork server on the master servers' lists**: neither engine announces a server unless its
-  uplink's `DoUplink` is set, which the game's `DeusEx.ini` does not set, and a master then
-  queries the server's port, which this machine's NAT keeps from the internet
-  ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer)).
 - **Another developer's commit identity**: JuggyMcNutty, or their own.
 
 ## Open items
 
 Known defects, each linked to the doc that owns its code (the last line's have no other home):
 
-- No pad in game on the desktop build: SurrealWidgets builds its SDL3 backend, which lacks the
-  fork's pad support; likely fix `ENABLE_SDL3` off in `engine.cmake`
-  ([no pad in game](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md#no-pad-in-game)).
 - `main` drops the command line's quotes, and its `ParseParam` is stricter than the original's
   ([main's known defects](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md#known-defects)).
 - The ports' launcher: the game gets the launcher's words, the lock is let go at the hand-over,
   the Resolution row is Vulkan's only, the CPU-mode test is loose
   ([LAUNCHER.md's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects)).
-- The engine: the anchored path search's goal, coronas taking every dynamic corona light,
-  `GC.DrawActor` stamping no render time
-  ([moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement),
+- The engine: no level ever freed, so each map load adds its level's memory for the session;
+  the sounds a server plays reaching no client; the anchored path search's goal, coronas taking
+  every dynamic corona light, `GC.DrawActor` stamping no render time
+  ([housekeeping](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#housekeeping-not-seen-directly),
+  [multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer),
+  [moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement),
   [coronas](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#coronas),
   [out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)).
-- Recorded only here: `dxcap.sh help` stops without `gamefiles/`; `natives_audit.py --runs`
-  names every harness run's map `engine.log`; `skip.py` prints nothing without arguments;
-  `main`'s `policy.c` keeps bypass and splash rules nothing live uses; dx-reverse-info's
-  `types/launch.h` needs `<stddef.h>` to compile on its own; a clean Smart Pro build warns once,
-  in the third-party `Thirdparty/resample/pffft.cpp` (it tests `__arm__`, not `__aarch64__`;
-  the resampler is built without it, `R8B_PFFFT` 0); dx-reverse-info's `launcher.md` counts
-  `DeusEx.exe`'s functions as 762 = 367 named + 371 unnamed (738): recount in IDA.
+- Recorded only here: `main`'s `policy.c` keeps bypass and splash rules nothing live uses;
+  dx-reverse-info's `types/launch.h` needs `<stddef.h>` to compile on its own; a clean Smart Pro
+  build warns once, in the third-party `Thirdparty/resample/pffft.cpp` (it tests `__arm__`, not
+  `__aarch64__`; the resampler is built without it, `R8B_PFFFT` 0); dx-reverse-info's
+  `launcher.md` counts `DeusEx.exe`'s functions as 762 = 367 named + 371 unnamed (738): recount
+  in IDA.
 
 Unverified, each a known risk:
 
@@ -131,9 +128,6 @@ Unverified, each a known risk:
   comparisons ran the GL device.
 - Jumping onto an NPC's head: the stomp and the bounce go through `SupportActor`; untried in play.
 - Distant AI, which the Smart Pro runs with: whether far NPCs still behave is unjudged in play.
-- Desktop GL on a strict driver: the windows ask for a 3.2 core context, and the shaders need
-  GLSL 4.20, which Mesa grants
-  ([rendering](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering)).
 - Fractal textures' cost on the Smart Pro: unmeasured.
 - A live server correcting the client at a stop, with the traces and moves as the original's
   ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer)).

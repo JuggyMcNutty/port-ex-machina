@@ -6,17 +6,17 @@
 #   scripts/engine.sh fetch                   clone the fork at the pin (if absent)
 #   scripts/engine.sh build <port>            build/<port>/engine from the port's engine.cmake
 #   scripts/engine.sh check                   the clone is at the pin, on its branch
-#   scripts/engine.sh status                  the pin, the fork, and how far upstream has moved
+#   scripts/engine.sh status                  the pin and the fork's branch
 #   scripts/engine.sh pin                     write the clone's HEAD to ENGINE-PIN.txt
 #
-# The fork's own tools -- the profiling hooks, merging upstream -- are in its
-# vibe/tools, and how it is kept is its vibe/docs/ENGINE.md.
+# The fork's own tools -- the profiling hooks, the harness -- are in its
+# vibe/tools, and how it is kept is its vibe/docs/ENGINE.md: it does not merge
+# upstream (dpjudas/SurrealEngine).
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
 ENGINE_DIR="${ENGINE_DIR:-$DX_ENGINE}"
 PIN_FILE="$DX_WORKSPACE/ENGINE-PIN.txt"
-UPSTREAM="https://github.com/dpjudas/SurrealEngine.git"
 
 [ -f "$PIN_FILE" ] || die "no ENGINE-PIN.txt at the repository root"
 pinned() { awk -v k="$1" '$1 == k { print $2 }' "$PIN_FILE"; }
@@ -27,7 +27,6 @@ usage() { sed -n '2,11p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 eng() { git -C "$ENGINE_DIR" "$@"; }
 
 need_clone() { [ -d "$ENGINE_DIR/.git" ] || die "no engine clone -- scripts/engine.sh fetch"; }
-ensure_upstream() { eng remote get-url upstream >/dev/null 2>&1 || eng remote add upstream "$UPSTREAM"; }
 
 cmd_fetch() {
     if [ -d "$ENGINE_DIR/.git" ]; then
@@ -36,7 +35,6 @@ cmd_fetch() {
     fi
     mkdir -p "$(dirname "$ENGINE_DIR")"
     git clone --branch "$BRANCH" "$FORK_URL" "$ENGINE_DIR"
-    ensure_upstream
     eng checkout -q -B "$BRANCH" "$(pinned commit)"
     eng config user.name JuggyMcNutty
     eng config user.email 11588877+JuggyMcNutty@users.noreply.github.com
@@ -118,7 +116,6 @@ cmd_status() {
     want="$(pinned commit)"
     printf 'pinned    %s\n' "$(oneline "$want")"
     printf 'fork      %s  (origin/%s)\n' "$(oneline "origin/$BRANCH")" "$BRANCH"
-    "$ENGINE_DIR/vibe/tools/upgrade.sh" status
     if [ "$(eng rev-parse HEAD)" = "$(eng rev-parse "$want^{commit}")" ]; then
         echo "the clone is at the pin"
     else
@@ -157,7 +154,7 @@ case "$cmd" in
     check)  cmd_check ;;
     status) cmd_status ;;
     pin)    cmd_pin ;;
-    upgrade) die "moved: VibeEngine/vibe/tools/upgrade.sh" ;;
+    upgrade) die "retired: the fork does not merge upstream (VibeEngine's vibe/docs/ENGINE.md)" ;;
     perf)   die "moved: VibeEngine/vibe/tools/perf/perf.sh" ;;
     export) die "retired: the fork is its own repository -- commit there, push, then scripts/engine.sh pin" ;;
     -h|--help|help) usage ;;
