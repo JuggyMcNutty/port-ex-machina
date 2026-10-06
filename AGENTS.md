@@ -20,7 +20,8 @@ git is the record. Every session loads it, so keep it small.
 - **Push or move a pin only with the owner's go-ahead.** A change is committed
   in its own repository with the docs it affects, pushed, then pinned here
   (`scripts/engine.sh pin`, `scripts/launcher.sh pin <port>`) and the pin committed.
-- **Nothing goes upstream** we have moved on from upstream and we no longer care about them as we have diverged so much. We dont care about their rules.
+- **Nothing goes upstream**: the fork has diverged from upstream, and upstream's rules do not
+  apply here.
 - **Launcher branches**: `main` is the working base; each port branch is its own variant of it
   and takes `main`'s changes by merge ([the branches](docs/PORTING.md#the-branches)).
   `README.md` never flows from `main`: a merge always keeps the port branch's own README.
@@ -37,7 +38,7 @@ git is the record. Every session loads it, so keep it small.
 | Area | State |
 |---|---|
 | linux-x86_64 | The development platform. Launcher and engine build natively and run the game; the tests, `dxl-shots` and the engine harness run here. |
-| linux-aarch64 | The launcher cross-builds. Has never ran on a device. |
+| linux-aarch64 | The launcher cross-builds. It has not run on a device yet. |
 | trimui-smartpro | The game runs under Vulkan or OpenGL ES (chosen in the Video tab), at 853×480 by default. Performance work is on hold. Numbers: [its Performance](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#performance). |
 | android | Planned: [its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/android/ports/android/README.md) is the plan. |
 | x360 | Planned; nothing worked out. |

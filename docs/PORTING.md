@@ -15,7 +15,7 @@ the ports that exist are listed in the [root README](../README.md#ports).
 |---|---|
 | `main` | the original launcher, recreated almost 1:1: no additions, no ports |
 | `linux-x86_64` | `main`, plus the launcher as it grew for the ports (the tabbed home screen, `Settings.json`, pad layouts, the GPU probe), the generic device profile, and the base app every port ships (`ports/common/packaging`) with the desktop's port files (`ports/linux-x86_64`). `main`'s own program, its tools and its program's tests come along unbuilt: a port branch builds `deusex-launcher`, `dxl-cli`, `dxl-shots` and the core's tests |
-| `<id>`, a device | its own variant: the Linux devices (`trimui-smartpro`, `linux-aarch64`) began from `linux-x86_64` and add **only what differs**, `ports/<id>/` and its preset; a port for another platform may start from `main` alone (an Xbox 360 port would replace the start-up with its platform's) |
+| `<id>`, a device | its own variant: every device branch (`trimui-smartpro`, `linux-aarch64`, `android`, `x360`) began from `linux-x86_64` and adds **only what differs**, `ports/<id>/` and its preset; a platform that shares only `main`'s launcher with the others replaces the ports' launcher when its work starts (an Xbox 360 port would replace the start-up with its platform's) |
 
 Every port branch takes `main`'s changes by merging `main` into it; port
 branches do not merge into each other. A fix to the original's behaviour is
@@ -97,7 +97,8 @@ only when missing.
    for a vendor-firmware handheld -- cross-built against the device's own
    libraries, its own frontend and CPU modes -- `trimui-smartpro` shows what
    the differences look like. A platform that shares only `main`'s launcher
-   with the others, such as the Xbox 360, starts from `main`.
+   with the others, such as the Xbox 360, replaces the ports' launcher on its
+   branch when its work starts.
 3. **Pick a toolchain whose glibc is at or below the device's** -- one newer
    symbol and the binary will not load (see the Smart Pro's README for how that
    was found). Bootlin publishes many; `dx_fetch_bootlin <name> <ceiling>` in

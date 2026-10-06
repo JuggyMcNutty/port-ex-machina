@@ -67,7 +67,7 @@ While `DeusEx` is installed, the original game does not start from that folder u
 Proton: it takes the file for the `DeusEx` package
 ([a package's file](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#packages-and-linkers)).
 Uninstall before playing the original there. `main` is not pinned: it is the clone, and the
-ports take it by merging ([the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher#branches)).
+ports take it by merging ([the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md#branches)).
 
 ## Dependencies
 
@@ -77,7 +77,7 @@ multilib repository enabled:
 
 | For | Packages |
 |---|---|
-| building | `base-devel`, CMake, Ninja, `pkgconf`, `sdl2-compat`, `sdl2_ttf`, `sdl3`, OpenAL, `libunwind`, `waylandpp`, `vulkan-headers`, `vulkan-tools` |
+| building | `base-devel`, CMake, Ninja, `pkgconf`, `sdl2-compat` (with `sdl3` under it), `sdl2_ttf`, OpenAL, `libunwind`, `waylandpp`, `vulkan-headers`, `vulkan-tools` |
 | running | Mesa with the GPU's Vulkan driver, `libpulse` and `libpipewire` (the desktop's audio), `ttf-dejavu` |
 | the harness and `recreation.sh check` | `xorg-server-xvfb`, `xdotool`, ImageMagick, gdb, Python 3 |
 | deploying | `sshpass` |
