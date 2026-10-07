@@ -108,9 +108,11 @@ Known defects, each linked to the doc that owns its code (the last line's have n
 - The ports' launcher: the game gets the launcher's words, the lock is let go at the hand-over,
   the Resolution row is Vulkan's only, the CPU-mode test is loose
   ([LAUNCHER.md's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects)).
-- The engine: the sounds a server plays reaching no client; the anchored path
-  search's goal, coronas taking every dynamic corona light, `GC.DrawActor` stamping no render time
+- The engine: the sounds a server plays reaching no client; a save of the original's loading
+  without its mission script; the anchored path search's goal, coronas taking every dynamic
+  corona light, `GC.DrawActor` stamping no render time
   ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer),
+  [saving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#saving-loading-and-travel),
   [moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement),
   [coronas](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#coronas),
   [out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)).
