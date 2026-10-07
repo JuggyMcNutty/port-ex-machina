@@ -108,16 +108,17 @@ Known defects, each linked to the doc that owns its code (the last line's have n
 - The ports' launcher: the game gets the launcher's words, the lock is let go at the hand-over,
   the Resolution row is Vulkan's only, the CPU-mode test is loose
   ([LAUNCHER.md's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects)).
-- The engine: the sounds a server plays reaching no client; the anchored path
-  search's goal, coronas taking every dynamic corona light, `GC.DrawActor` stamping no render time
+- The engine: the sounds a server plays reaching no client; coronas taking every dynamic corona
+  light, `GC.DrawActor` stamping no render time
   ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer),
-  [moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement),
   [coronas](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#coronas),
   [out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)).
 - Recorded only here: `main`'s `policy.c` keeps bypass and splash rules nothing live uses;
   dx-reverse-info's `types/launch.h` needs `<stddef.h>` to compile on its own; a clean Smart Pro
   build warns once, in the third-party `Thirdparty/resample/pffft.cpp` (it tests `__arm__`, not
-  `__aarch64__`; the resampler is built without it, `R8B_PFFFT` 0).
+  `__aarch64__`; the resampler is built without it, `R8B_PFFFT` 0); dx-reverse-info's
+  `engine-dll.md` (traces) has movers block the BSP line test and its `galaxy-dll.md` (sounds
+  behind walls) has them not, unread which holds where.
 
 Unverified, each a known risk:
 
