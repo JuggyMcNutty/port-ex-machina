@@ -126,6 +126,8 @@ Unverified, each a known risk:
 - Jumping onto an NPC's head: the stomp and the bounce go through `SupportActor`; untried in play.
 - Distant AI, which the Smart Pro runs with: whether far NPCs still behave is unjudged in play.
 - Fractal textures' cost on the Smart Pro: unmeasured.
+- The Smart Pro's frame with the Hor+ view (a third wider at 16:9): its Performance numbers
+  predate it.
 - The name walk's cost on the Smart Pro's collections (5 to 8 ms more on linux-x86_64): unmeasured.
 - A live server correcting the client at a stop, with the traces and moves as the original's
   ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer)).
