@@ -108,22 +108,16 @@ Known defects, each linked to the doc that owns its code (the last line's have n
 - The ports' launcher: the game gets the launcher's words, the lock is let go at the hand-over,
   the Resolution row is Vulkan's only, the CPU-mode test is loose
   ([LAUNCHER.md's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects)).
-- The engine: names never freed (each spawned actor's stays for the session), a destroyed decal
-  drawn until it is freed; the sounds a server plays reaching no client; the anchored path
+- The engine: the sounds a server plays reaching no client; the anchored path
   search's goal, coronas taking every dynamic corona light, `GC.DrawActor` stamping no render time
-  ([housekeeping](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#housekeeping-not-seen-directly),
-  [multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer),
+  ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer),
   [moving](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#moving-wandering-and-tactical-movement),
   [coronas](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#coronas),
   [out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)).
 - Recorded only here: `main`'s `policy.c` keeps bypass and splash rules nothing live uses;
   dx-reverse-info's `types/launch.h` needs `<stddef.h>` to compile on its own; a clean Smart Pro
   build warns once, in the third-party `Thirdparty/resample/pffft.cpp` (it tests `__arm__`, not
-  `__aarch64__`; the resampler is built without it, `R8B_PFFFT` 0); the script VM's
-  `StructMemberExpression` reads a returned frame's temporary (ASan's stack-use-after-return, in
-  the conversation consoles); `ChoiceConsole` never finishes, its conversation looping; dx-reverse-info's
-  `launcher.md` counts `DeusEx.exe`'s functions as 762 = 367 named + 371 unnamed (738): recount
-  in IDA.
+  `__aarch64__`; the resampler is built without it, `R8B_PFFFT` 0).
 
 Unverified, each a known risk:
 
@@ -132,6 +126,7 @@ Unverified, each a known risk:
 - Jumping onto an NPC's head: the stomp and the bounce go through `SupportActor`; untried in play.
 - Distant AI, which the Smart Pro runs with: whether far NPCs still behave is unjudged in play.
 - Fractal textures' cost on the Smart Pro: unmeasured.
+- The name walk's cost on the Smart Pro's collections (5 to 8 ms more on linux-x86_64): unmeasured.
 - A live server correcting the client at a stop, with the traces and moves as the original's
   ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer)).
 - linux-aarch64 on a real device.
@@ -141,5 +136,7 @@ Where the engine still differs from the original (each in
 Liberty Island's pier floor is 1.7-3% darker than `D3DDrv`'s; the light effects whose original
 is unread keep the fork's shapes; at the level start 9 NPCs count as drawn where the original
 counts 3; `processLanded`'s other branches are not ported; Terrorist10 moves farther than the
-original's; keyboard focus (Tab, the first focus, the keypad's) differs by the code, unchecked in a
-run ([the UI](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-ui)).
+original's; the root's first focus (the keypad's, none with no modal up) differs by the code,
+unchecked in a run ([the UI](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-ui));
+a collection deletes only the names made for objects, keeping the rest for the session
+([housekeeping](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#housekeeping-not-seen-directly)).
