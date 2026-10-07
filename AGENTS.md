@@ -108,8 +108,9 @@ Known defects, each linked to the doc that owns its code (the last line's have n
 - The ports' launcher: the game gets the launcher's words, the lock is let go at the hand-over,
   the Resolution row is Vulkan's only, the CPU-mode test is loose
   ([LAUNCHER.md's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects)).
-- The engine: the sounds a server plays reaching no client; coronas taking every dynamic corona
-  light, `GC.DrawActor` stamping no render time
+- The engine: a listen server at some 1,000 frames a second sending a client no unreliable call
+  (a sound it hears); coronas taking every dynamic corona light, `GC.DrawActor` stamping no
+  render time
   ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer),
   [coronas](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#coronas),
   [out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)).
@@ -138,8 +139,9 @@ Where the engine still differs from the original (each in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)):
 Liberty Island's pier floor is 1.7-3% darker than `D3DDrv`'s; the light effects whose original
 is unread keep the fork's shapes; at the level start 9 NPCs count as drawn where the original
-counts 3; `processLanded`'s other branches are not ported; Terrorist10 moves farther than the
-original's; the root's first focus (the keypad's, none with no modal up) differs by the code,
-unchecked in a run ([the UI](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-ui));
+counts 3; Terrorist10 moves farther than the original's, and Terrorist12 walks on from a ledge
+where the original's stops being ticked; a pawn falling into water sinks deeper; the root's first
+focus (the keypad's, none with no modal up) differs by the code, unchecked in a run
+([the UI](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-ui));
 a collection deletes only the names made for objects, keeping the rest for the session
 ([housekeeping](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#housekeeping-not-seen-directly)).
