@@ -14,7 +14,7 @@ changes all build and run there. Each port is a branch of the launcher, a varian
 ([`PORTING.md`](PORTING.md)).
 A change is clean when it builds and tests there *and* builds warning-free for each cross port
 that ships: the Smart Pro's GCC 9.3 is stricter about `-Wshadow` and `-Wformat-truncation` than
-a current host compiler. The one standing warning is third-party (AGENTS.md's open items).
+a current host compiler.
 
 ## The repositories
 

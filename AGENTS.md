@@ -27,8 +27,8 @@ git is the record. Every session loads it, so keep it small.
   `README.md` never flows from `main`: a merge always keeps the port branch's own README.
 - **Done** means `scripts/dx.sh test` (linux-x86_64's unit tests) and `scripts/dx.sh check`
   (the drift guards) pass, and every cross port that ships -- today the Smart Pro -- builds
-  warning-free but for one third-party warning (open items). An engine change is also proven
-  against the original by a scripted run of both engines
+  warning-free. An engine change is also proven against the original by a scripted run of both
+  engines
   ([scripted runs](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
 - **Docs** hold the current state only, each fact in one place ([docs](docs/DEVELOPMENT.md#docs)).
 - **Ask the owner** when you are unsure what the proper path forward is.
@@ -82,6 +82,8 @@ git is the record. Every session loads it, so keep it small.
   `ALAudio.dll`, `OpenGLDrv.dll` (its gamma ramp is read; the look is judged against
   `D3DDrv`). Never: `Editor.dll`, `Window.dll`'s code, the Glide, Metal and SGL drivers,
   `Setup.exe`, the GOG DLL, `RGalaxy.dll`.
+- **Visible desktop runs** wait for a round of tests that need the desktop: the Vulkan device's
+  scene shader without `darkClamp`, a listen server at desktop frame rates.
 - **Multiplayer**: the fork joins the original's servers, live ones included (joining public
   servers is allowed), and hosts as the original does. Co-op is for later. A fork server on the
   public master servers' lists waits for the playtests: neither engine announces a server unless
@@ -98,41 +100,38 @@ The owner's, each waiting until the owner takes it up.
 - **`main`'s window icons into the port branches**: merging `main` into the port branches
   conflicts in `CMakeLists.txt` and `tests/test_gamefiles.c`, and keeps each branch's own README.
 - **Another developer's commit identity**: JuggyMcNutty, or their own.
+- **Movers in the engine's line test**: the original's BSP files every mover for its line test,
+  blocking or not ([traces](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#traces));
+  the fork's skips a mover that does not block actors, engine-wide -- sight, hearing, reach,
+  paths, relevance. Of the game's maps' 2,235 movers, 7 (`BreakableGlass` in DXMP_Silo) differ.
 
 ## Open items
 
 Known defects, each linked to the doc that owns its code (the last line's have no other home):
 
-- `main` drops the command line's quotes, and its `ParseParam` is stricter than the original's
+- `main` drops the command line's quotes
   ([main's known defects](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md#known-defects)).
 - The ports' launcher: the game gets the launcher's words, the lock is let go at the hand-over,
   the Resolution row is Vulkan's only, the CPU-mode test is loose
   ([LAUNCHER.md's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects)).
-- The engine: a listen server at some 1,000 frames a second sending a client no unreliable call
-  (a sound it hears); coronas taking every dynamic corona light, `GC.DrawActor` stamping no
-  render time
-  ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer),
-  [coronas](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#coronas),
-  [out of sight](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#out-of-sight)).
-- Recorded only here: `main`'s `policy.c` keeps bypass and splash rules nothing live uses;
-  dx-reverse-info's `types/launch.h` needs `<stddef.h>` to compile on its own; a clean Smart Pro
-  build warns once, in the third-party `Thirdparty/resample/pffft.cpp` (it tests `__arm__`, not
-  `__aarch64__`; the resampler is built without it, `R8B_PFFFT` 0); dx-reverse-info's
-  `engine-dll.md` (traces) has movers block the BSP line test and its `galaxy-dll.md` (sounds
-  behind walls) has them not, unread which holds where.
+- Recorded only here: `main`'s `policy.c` keeps bypass and splash rules nothing live uses.
 
 Unverified, each a known risk:
 
 - The Vulkan device's scene shader without `darkClamp` is built but has never run: the
   comparisons ran the GL device.
-- Jumping onto an NPC's head: the stomp and the bounce go through `SupportActor`; untried in play.
 - Distant AI, which the Smart Pro runs with: whether far NPCs still behave is unjudged in play.
 - Fractal textures' cost on the Smart Pro: unmeasured.
 - The Smart Pro's frame with the Hor+ view (a third wider at 16:9): its Performance numbers
   predate it.
 - The name walk's cost on the Smart Pro's collections (5 to 8 ms more on linux-x86_64): unmeasured.
-- A live server correcting the client at a stop, with the traces and moves as the original's
+- The ladder probe's cost on the Smart Pro (some 21 µs a tick on linux-x86_64): unmeasured.
+- A live server correcting the client at a stop, with the traces and moves as the original's,
+  and a listen server at some 1,000 frames a second (the desktop) finding room for its
+  unreliable calls
   ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer)).
+- A pawn walking into water, a flying NPC's flight and a walking player's slide on a slippery
+  texture: each the original's, untried in a run.
 - linux-aarch64 on a real device.
 
 Where the engine still differs from the original (each in
@@ -140,8 +139,6 @@ Where the engine still differs from the original (each in
 Liberty Island's pier floor is 1.7-3% darker than `D3DDrv`'s; the light effects whose original
 is unread keep the fork's shapes; at the level start 9 NPCs count as drawn where the original
 counts 3; Terrorist10 moves farther than the original's, and Terrorist12 walks on from a ledge
-where the original's stops being ticked; a pawn falling into water sinks deeper; the root's first
-focus (the keypad's, none with no modal up) differs by the code, unchecked in a run
-([the UI](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-ui));
-a collection deletes only the names made for objects, keeping the rest for the session
+where the original's stops being ticked; a collection deletes only the names made for objects,
+keeping the rest for the session
 ([housekeeping](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#housekeeping-not-seen-directly)).
