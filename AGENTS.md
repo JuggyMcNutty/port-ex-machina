@@ -39,7 +39,7 @@ git is the record. Every session loads it, so keep it small.
 |---|---|
 | linux-x86_64 | The development platform. Launcher and engine build natively and run the game; the tests, `dxl-shots` and the engine harness run here. |
 | linux-aarch64 | The launcher cross-builds. It has not run on a device yet. |
-| trimui-smartpro | The game runs under Vulkan or OpenGL ES (chosen in the Video tab), at 853×480 by default. Performance work is on hold. Numbers: [its Performance](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#performance). |
+| trimui-smartpro | The game runs under Vulkan or OpenGL ES (chosen in the Video tab), at 853×480 by default, short of its ~20 FPS target. Measured when the owner chooses: [its Performance](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#performance). |
 | android | Planned: [its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/android/ports/android/README.md) is the plan. |
 | x360 | Planned; nothing worked out. |
 | The engine | [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine), branch `deusex`, pinned by `ENGINE-PIN.txt`. The reimplementation milestones are done, from crashes through multiplayer; what still differs from the original is [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md). |
@@ -62,9 +62,12 @@ git is the record. Every session loads it, so keep it small.
 - **The engine fork** is pinned and does not merge upstream: the two differ at the core, the
   script VM first; a fix of upstream's worth having is ported by hand
   ([how it is kept](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#how-it-is-kept)).
-- **The engine first.** The porting work -- the Smart Pro's performance, the next ports -- waits
-  until the engine is more stable and has more of the game. The open decisions wait for the
-  owner unless one blocks the work.
+- **The engine first.** The porting work -- the next ports, the Smart Pro's own -- waits until the
+  engine is more stable and has more of the game. The engine's speed against the original's is
+  worked on: the desktop first, measured as the harness measures both engines
+  ([measuring both engines](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#measuring-both-engines));
+  the Smart Pro when the owner chooses. The open decisions wait for the owner unless one blocks
+  the work.
 - **Smart Pro target: ~20 FPS at Liberty Island's level start** (~50 ms a frame), for when its
   performance work resumes. Every trade-off for it is accepted, and deep script-VM work is in
   scope. Re-measure after each change, profiling on the device (`SAMPLE=1`): the desktop's
@@ -82,8 +85,9 @@ git is the record. Every session loads it, so keep it small.
   `ALAudio.dll`, `OpenGLDrv.dll` (its gamma ramp is read; the look is judged against
   `D3DDrv`). Never: `Editor.dll`, `Window.dll`'s code, the Glide, Metal and SGL drivers,
   `Setup.exe`, the GOG DLL, `RGalaxy.dll`.
-- **Visible desktop runs** wait for a round of tests that need the desktop: the Vulkan device's
-  scene shader without `darkClamp`, a listen server at desktop frame rates.
+- **The harness runs on the desktop**: every scripted run of either engine draws on the desktop's
+  Xwayland, never a hidden display. This machine is a dedicated development device, and runs on
+  different displays do not compare.
 - **Multiplayer**: the fork joins the original's servers, live ones included (joining public
   servers is allowed), and hosts as the original does. Co-op is for later. A fork server on the
   public master servers' lists waits for the playtests: neither engine announces a server unless
@@ -121,11 +125,7 @@ Unverified, each a known risk:
 - The Vulkan device's scene shader without `darkClamp` is built but has never run: the
   comparisons ran the GL device.
 - Distant AI, which the Smart Pro runs with: whether far NPCs still behave is unjudged in play.
-- Fractal textures' cost on the Smart Pro: unmeasured.
-- The Smart Pro's frame with the Hor+ view (a third wider at 16:9): its Performance numbers
-  predate it.
 - The name walk's cost on the Smart Pro's collections (5 to 8 ms more on linux-x86_64): unmeasured.
-- The ladder probe's cost on the Smart Pro (some 21 µs a tick on linux-x86_64): unmeasured.
 - A live server correcting the client at a stop, with the traces and moves as the original's,
   and a listen server at some 1,000 frames a second (the desktop) finding room for its
   unreliable calls

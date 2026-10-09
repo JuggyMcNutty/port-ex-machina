@@ -79,7 +79,7 @@ multilib repository enabled:
 |---|---|
 | building | `base-devel`, CMake, Ninja, `pkgconf`, `sdl2-compat` (with `sdl3` under it), `sdl2_ttf`, OpenAL, `libunwind`, `waylandpp`, `vulkan-headers`, `vulkan-tools` |
 | running | Mesa with the GPU's Vulkan driver, `libpulse` and `libpipewire` (the desktop's audio), `ttf-dejavu` |
-| the harness and `recreation.sh check` | `xorg-server-xvfb`, `xdotool`, ImageMagick, gdb, Python 3 |
+| the harness and `recreation.sh check` | `xdotool`, ImageMagick, gdb, Python 3; MangoHud (`mangohud`, `lib32-mangohud`) for the harness's `DXCAP_FPS`; `xorg-server-xvfb` for the recreation's private display |
 | deploying | `sshpass` |
 | the original under Proton | the 32-bit X11, Mesa, Vulkan, PulseAudio, FreeType, fontconfig, GLib and GnuTLS libraries |
 
@@ -87,8 +87,9 @@ Besides:
 
 - **Proton**, to run the original: `dxcap.sh` looks for a build linked as
   `Proton-CachyOS Latest` in `~/.local/share/Steam/compatibilitytools.d`.
-- **`~/.config/SurrealEngine/Settings.json` naming OpenGL**: the harness's fork runs take their
-  renderer from it, and a hidden run's Xvfb has no Vulkan present.
+- **`~/.config/SurrealEngine/Settings.json`**: the harness's fork runs take their renderer from
+  it, unless `DXCAP_SETTINGS` names another file (`VibeEngine/vibe/tools/dxcap/perf-settings.json`
+  to measure).
 - **Python's `unicorn`**, the CPU emulator
   [`Fire.dll`'s check](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/fire-dll.md#how-it-was-checked)
   runs the DLL's routines in.

@@ -35,7 +35,7 @@ project's other three repositories together:
 | Port | For | Status |
 |---|---|---|
 | [`linux-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-x86_64/ports/linux-x86_64) | desktop Linux; **the development platform** | runs the game; where the tests, `dxl-shots` and engine validation run |
-| [`trimui-smartpro`](https://github.com/JuggyMcNutty/deusex-launcher/tree/trimui-smartpro/ports/trimui-smartpro) | TrimUI Smart Pro, spruceOS | runs the game under Vulkan or OpenGL ES; performance work on hold, the engine first |
+| [`trimui-smartpro`](https://github.com/JuggyMcNutty/deusex-launcher/tree/trimui-smartpro/ports/trimui-smartpro) | TrimUI Smart Pro, spruceOS | runs the game under Vulkan or OpenGL ES, short of its ~20 FPS target; the engine first |
 | [`linux-aarch64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-aarch64/ports/linux-aarch64) | aarch64 devices with an ordinary distro | the launcher cross-builds; not yet run on a device |
 | [`android`](https://github.com/JuggyMcNutty/deusex-launcher/tree/android/ports/android) | Android | planned |
 | [`x360`](https://github.com/JuggyMcNutty/deusex-launcher/tree/x360/ports/x360) | Xbox 360 | planned |
