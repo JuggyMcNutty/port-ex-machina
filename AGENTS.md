@@ -122,7 +122,8 @@ Known defects, each linked to the doc that owns its code (the last line's have n
 
 Unverified, each a known risk:
 
-- Distant AI, which the Smart Pro runs with: whether far NPCs still behave is unjudged in play.
+- Distant AI, which the Smart Pro runs with: far NPCs fighting with it is untried (their patrols
+  and states are as without it).
 - The name walk's cost on the Smart Pro's collections (5 to 8 ms more on linux-x86_64): unmeasured.
 - A live server correcting the client at a stop, with the traces and moves as the original's,
   and a listen server at some 1,000 frames a second (the desktop) finding room for its
