@@ -135,8 +135,7 @@ Unverified, each a known risk:
 Where the engine still differs from the original (each in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)):
 Liberty Island's pier floor is 1.7-3% darker than `D3DDrv`'s; the light effects whose original
-is unread keep the fork's shapes; at the level start 9 NPCs count as drawn where the original
-counts 3; Terrorist10 moves farther than the original's, and Terrorist12 walks on from a ledge
-where the original's stops being ticked; a collection deletes only the names made for objects,
-keeping the rest for the session
+is unread keep the fork's shapes; four of Liberty Island's pawns stop short of a path node the
+original's reaches; a collection deletes only the names made for objects, keeping the rest for
+the session
 ([housekeeping](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#housekeeping-not-seen-directly)).
