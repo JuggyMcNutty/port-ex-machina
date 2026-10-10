@@ -89,7 +89,9 @@ git is the record. Every session loads it, so keep it small.
   Xwayland, never a hidden display. This machine is a dedicated development device, and runs on
   different displays do not compare.
 - **Multiplayer**: the fork joins the original's servers, live ones included (joining public
-  servers is allowed), and hosts as the original does. Co-op is for later. A fork server on the
+  servers is allowed), and hosts as the original does but for two choices: a listen server held
+  to 144 frames a second, and `VibePlayer` for a name the player never chose (single player keeps
+  the game's). Co-op is for later. A fork server on the
   public master servers' lists waits for the playtests: neither engine announces a server unless
   its uplink's `DoUplink` is set, which the game's `DeusEx.ini` does not set, and a master then
   queries the server's port, which this machine's NAT keeps from the internet
@@ -122,12 +124,13 @@ Known defects, each linked to the doc that owns its code (the last line's have n
 
 Unverified, each a known risk:
 
-- Distant AI, which the Smart Pro runs with: far NPCs fighting with it is untried (their patrols
-  and states are as without it).
-- The name walk's cost on the Smart Pro's collections (5 to 8 ms more on linux-x86_64): unmeasured.
+- Distant AI, which the Smart Pro runs with: far NPCs fighting with it on is untried
+  ([what it throttles](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#settings-the-launcher-exposes)).
+- The name walk's cost on the Smart Pro's collections: unmeasured
+  ([housekeeping](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#housekeeping-not-seen-directly)).
 - A pawn walking into water, a flying NPC's flight and a walking player's slide on a slippery
-  texture: each the original's, untried in a run.
-- linux-aarch64 on a real device.
+  texture: each the original's, untried in a run
+  ([implemented](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)).
 
 Where the engine still differs from the original (each in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)):
