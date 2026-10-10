@@ -110,6 +110,13 @@ The owner's, each waiting until the owner takes it up.
   blocking or not ([traces](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#traces));
   the fork's skips a mover that does not block actors, engine-wide -- sight, hearing, reach,
   paths, relevance. Of the game's maps' 2,235 movers, 7 (`BreakableGlass` in DXMP_Silo) differ.
+- **The UI's frame**: the fork's root window is 4:3, its children across the screen up to 16:9,
+  and its scale the screen's height over 600; the original's root is the whole viewport, at the
+  largest whole multiple of 640x480 the screen holds
+  ([the UI](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-ui)).
+- **`RELAUNCH`**: the Display screen's Rendering Device and a dedicated server hosted from the
+  menu ask the game to restart itself; the fork has no restart, so nothing happens
+  ([the menus' settings](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-menus-settings)).
 
 ## Open items
 
@@ -131,6 +138,9 @@ Unverified, each a known risk:
 - A pawn walking into water, a flying NPC's flight and a walking player's slide on a slippery
   texture: each the original's, untried in a run
   ([implemented](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)).
+- A menu dragged by its title bar and the Alt accelerators under a real mouse and keyboard:
+  proven only with a timeline's input, which the original cannot take here
+  ([the UI](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-ui)).
 
 Where the engine still differs from the original (each in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)):
