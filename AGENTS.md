@@ -125,8 +125,6 @@ Unverified, each a known risk:
 - Distant AI, which the Smart Pro runs with: far NPCs fighting with it is untried (their patrols
   and states are as without it).
 - The name walk's cost on the Smart Pro's collections (5 to 8 ms more on linux-x86_64): unmeasured.
-- A live server correcting the client at a stop, with the traces and moves as the original's
-  ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer)).
 - A pawn walking into water, a flying NPC's flight and a walking player's slide on a slippery
   texture: each the original's, untried in a run.
 - linux-aarch64 on a real device.
@@ -135,6 +133,7 @@ Where the engine still differs from the original (each in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)):
 Liberty Island's pier floor is 1.7-3% darker than `D3DDrv`'s; the light effects whose original
 is unread keep the fork's shapes; four of Liberty Island's pawns stop short of a path node the
-original's reaches; a collection deletes only the names made for objects, keeping the rest for
-the session
+original's reaches; walking into a wall, the player stops 1.4 units nearer it, which a server of
+the original's corrects; a collection deletes only the names made for objects, keeping the rest
+for the session
 ([housekeeping](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#housekeeping-not-seen-directly)).
