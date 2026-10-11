@@ -112,6 +112,16 @@ The owner's, each waiting until the owner takes it up.
   the fork draws its own in one pass, which darkens Liberty Island's pier 2.3%, to 1.6% under
   `D3DDrv`'s. Keep the fork's, draw `D3DDrv`'s as read, or draw none
   ([the menus' settings](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-menus-settings)).
+- **Two ideas from DXD3D9 2.0**, a third-party renderer in `reference/` (ideas only:
+  [its terms](docs/DEVELOPMENT.md#the-repositories)). A depth bias on the movers' surfaces, so
+  the level wins where a door sits flush with a wall (its default: 4 steps of the depth buffer
+  and a slope of 1.0, pushed away;
+  [draw order and movers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#draw-order-and-movers)).
+  A 10-bit GL scene buffer, `GL_RGB10_A2` for RGBA8: the same 32 bits a pixel, four times the
+  steps before the gamma curve
+  ([rendering](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering)).
+  Its draw-call idea is the Smart Pro's
+  ([where a frame goes](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#where-a-frame-goes)).
 
 ## Open items
 
@@ -122,6 +132,11 @@ Known defects, each linked to the doc that owns its code (the last line's have n
 - The ports' launcher: the game gets the launcher's words, the lock is let go at the hand-over,
   no `RELAUNCH` reaches it, the Resolution row is Vulkan's only, the CPU-mode test is loose
   ([LAUNCHER.md's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects)).
+- The engine: every mover polygon is drawn twice, so a translucent one blends twice
+  ([draw order and movers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#draw-order-and-movers));
+  the GL device's present pass takes the last draw's samplers, its anisotropy goes to the
+  point-sampled ones, and its desktop depth clamp is inverted
+  ([rendering](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering)).
 - Recorded only here: `main`'s `launch.c` keeps its own copies of `policy.c`'s bypass and splash
   rules; of `policy.c`'s, only the ports' launcher uses the bypass, and nothing the splash.
 
@@ -137,11 +152,16 @@ Unverified, each a known risk:
 - A dedicated server's movers: drawing no frame, it never files one in the BSP again, as the
   original's code has it; no run proves it
   ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)).
+- A mover flush with a wall: drawn with no depth bias, it can fight the wall in the depth
+  buffer; no run shows it
+  ([draw order and movers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#draw-order-and-movers)).
 
 Where the engine still differs from the original (each in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)):
-06_HongKong_WanChai_Underworld's floor under its disco lights is 0.35-0.57 of `D3DDrv`'s, why
-unread; a spotlight's pool on a wall sits half a texel off the original's; a line wholly inside
+06_HongKong_WanChai_Underworld's floor under its disco lights, which do not reach it, is 0.35-0.57
+of `D3DDrv`'s, why unread; the light map builders light each texel half a texel off along U, so
+a spotlight's pool on a wall sits half a texel off the original's; solid actors are drawn before
+glass, the original's after it; a line wholly inside
 the level's solid meets nothing, and lines across two of DXMP_Silo's movers meet the mover where
 the original's meet the level; at 20 frames a second a gull flown level into a wall stays put,
 where the original's slides some 18 units along it; at Liberty Island's start the player stands

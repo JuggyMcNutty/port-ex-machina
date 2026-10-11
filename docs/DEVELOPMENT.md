@@ -46,7 +46,9 @@ Beside the repositories, in no repository:
   its types, strings and names from dx-reverse-info's scripts
   ([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)).
 - `reference/`: the 1112f SDK, the DeusExe launcher source, the IDA and ini backups, the
-  original's saves and its wizard's captures.
+  original's saves and its wizard's captures; and `DXD3D9_2.0`, a third-party Direct3D 9
+  renderer for the original. It is a closed DLL built on Chris Dohnal's UTD3D9 1.3, whose source
+  carries Epic's copyright and no licence: its ideas may be taken, never its code.
 - `deps/` and `build/`, which the scripts remake. For engine work,
   `VibeEngine/vibe/tools/host-tools.sh` unpacks `perf` and the Vulkan validation layer into
   `deps/`.
