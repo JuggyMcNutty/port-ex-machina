@@ -114,9 +114,6 @@ The owner's, each waiting until the owner takes it up.
   and its scale the screen's height over 600; the original's root is the whole viewport, at the
   largest whole multiple of 640x480 the screen holds
   ([the UI](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-ui)).
-- **`RELAUNCH`**: the Display screen's Rendering Device and a dedicated server hosted from the
-  menu ask the game to restart itself; the fork has no restart, so nothing happens
-  ([the menus' settings](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-menus-settings)).
 
 ## Open items
 
