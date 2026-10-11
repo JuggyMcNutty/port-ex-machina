@@ -106,14 +106,12 @@ The owner's, each waiting until the owner takes it up.
 - **`main`'s window icons into the port branches**: merging `main` into the port branches
   conflicts in `CMakeLists.txt` and `tests/test_gamefiles.c`, and keeps each branch's own README.
 - **Another developer's commit identity**: JuggyMcNutty, or their own.
-- **Movers in the engine's line test**: the original's BSP files every mover for its line test,
-  blocking or not ([traces](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#traces));
-  the fork's skips a mover that does not block actors, engine-wide -- sight, hearing, reach,
-  paths, relevance. Of the game's maps' 2,235 movers, 7 (`BreakableGlass` in DXMP_Silo) differ.
-- **The UI's frame**: the fork's root window is 4:3, its children across the screen up to 16:9,
-  and its scale the screen's height over 600; the original's root is the whole viewport, at the
-  largest whole multiple of 640x480 the screen holds
-  ([the UI](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-ui)).
+- **Detail textures**: the original, run here under Wine, draws none, `D3DDrv` and `OpenGLDrv`
+  alike, its frames the same with the setting on or off, though `D3DDrv` has a three-pass one
+  ([detail textures](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/d3ddrv-dll.md#detail-textures));
+  the fork draws its own in one pass, which darkens Liberty Island's pier 2.3%, to 1.6% under
+  `D3DDrv`'s. Keep the fork's, draw `D3DDrv`'s as read, or draw none
+  ([the menus' settings](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-menus-settings)).
 
 ## Open items
 
@@ -122,9 +120,10 @@ Known defects, each linked to the doc that owns its code (the last line's have n
 - `main` drops the command line's quotes
   ([main's known defects](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md#known-defects)).
 - The ports' launcher: the game gets the launcher's words, the lock is let go at the hand-over,
-  the Resolution row is Vulkan's only, the CPU-mode test is loose
+  no `RELAUNCH` reaches it, the Resolution row is Vulkan's only, the CPU-mode test is loose
   ([LAUNCHER.md's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects)).
-- Recorded only here: `main`'s `policy.c` keeps bypass and splash rules nothing live uses.
+- Recorded only here: `main`'s `launch.c` keeps its own copies of `policy.c`'s bypass and splash
+  rules; of `policy.c`'s, only the ports' launcher uses the bypass, and nothing the splash.
 
 Unverified, each a known risk:
 
@@ -135,11 +134,18 @@ Unverified, each a known risk:
 - A menu dragged by its title bar and the Alt accelerators under a real mouse and keyboard:
   proven only with a timeline's input, which the original cannot take here
   ([the UI](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-ui)).
+- A dedicated server's movers: drawing no frame, it never files one in the BSP again, as the
+  original's code has it; no run proves it
+  ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)).
 
 Where the engine still differs from the original (each in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)):
-Liberty Island's pier floor is 1.7-3% darker than `D3DDrv`'s; the light effects whose original
-is unread keep the fork's shapes; a net client's player lands 2.4 units low at its spawn, which
-its server corrects; a collection deletes only the names made for objects, keeping the rest for
-the session
+06_HongKong_WanChai_Underworld's floor under its disco lights is 0.35-0.57 of `D3DDrv`'s, why
+unread; a spotlight's pool on a wall sits half a texel off the original's; a line wholly inside
+the level's solid meets nothing, and lines across two of DXMP_Silo's movers meet the mover where
+the original's meet the level; at 20 frames a second a gull flown level into a wall stays put,
+where the original's slides some 18 units along it; at Liberty Island's start the player stands
+0.05 units higher, the original's first frame taking in the whole load; a net client's player
+lands 2.4 units low at its spawn, which its server corrects; a collection deletes only the names
+made for objects, keeping the rest for the session
 ([housekeeping](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#housekeeping-not-seen-directly)).
