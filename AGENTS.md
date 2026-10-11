@@ -135,9 +135,6 @@ Unverified, each a known risk:
   ([what it throttles](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#settings-the-launcher-exposes)).
 - The name walk's cost on the Smart Pro's collections: unmeasured
   ([housekeeping](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#housekeeping-not-seen-directly)).
-- A pawn walking into water, a flying NPC's flight and a walking player's slide on a slippery
-  texture: each the original's, untried in a run
-  ([implemented](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)).
 - A menu dragged by its title bar and the Alt accelerators under a real mouse and keyboard:
   proven only with a timeline's input, which the original cannot take here
   ([the UI](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-ui)).
@@ -145,8 +142,7 @@ Unverified, each a known risk:
 Where the engine still differs from the original (each in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)):
 Liberty Island's pier floor is 1.7-3% darker than `D3DDrv`'s; the light effects whose original
-is unread keep the fork's shapes; four of Liberty Island's pawns stop short of a path node the
-original's reaches; walking into a wall, the player stops 1.4 units nearer it, which a server of
-the original's corrects; a collection deletes only the names made for objects, keeping the rest
-for the session
+is unread keep the fork's shapes; a net client's player lands 2.4 units low at its spawn, which
+its server corrects; a collection deletes only the names made for objects, keeping the rest for
+the session
 ([housekeeping](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#housekeeping-not-seen-directly)).
