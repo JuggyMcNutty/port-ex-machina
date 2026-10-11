@@ -132,11 +132,6 @@ Known defects, each linked to the doc that owns its code (the last line's have n
 - The ports' launcher: the game gets the launcher's words, the lock is let go at the hand-over,
   no `RELAUNCH` reaches it, the Resolution row is Vulkan's only, the CPU-mode test is loose
   ([LAUNCHER.md's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects)).
-- The engine: every mover polygon is drawn twice, so a translucent one blends twice
-  ([draw order and movers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#draw-order-and-movers));
-  the GL device's present pass takes the last draw's samplers, its anisotropy goes to the
-  point-sampled ones, and its desktop depth clamp is inverted
-  ([rendering](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering)).
 - Recorded only here: `main`'s `launch.c` keeps its own copies of `policy.c`'s bypass and splash
   rules; of `policy.c`'s, only the ports' launcher uses the bypass, and nothing the splash.
 
@@ -159,13 +154,13 @@ Unverified, each a known risk:
 Where the engine still differs from the original (each in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)):
 06_HongKong_WanChai_Underworld's floor under its disco lights, which do not reach it, is 0.35-0.57
-of `D3DDrv`'s, why unread; the light map builders light each texel half a texel off along U, so
-a spotlight's pool on a wall sits half a texel off the original's; solid actors are drawn before
-glass, the original's after it; a line wholly inside
-the level's solid meets nothing, and lines across two of DXMP_Silo's movers meet the mover where
-the original's meet the level; at 20 frames a second a gull flown level into a wall stays put,
-where the original's slides some 18 units along it; at Liberty Island's start the player stands
-0.05 units higher, the original's first frame taking in the whole load; a net client's player
-lands 2.4 units low at its spawn, which its server corrects; a collection deletes only the names
-made for objects, keeping the rest for the session
+of `D3DDrv`'s, why unread; a mesh's translucent faces are drawn after its opaque ones, the
+original's in face order among them, which no close-up shows; the original keeps drawing a mover
+hidden after it is filed, which no stock script does; a line wholly inside the level's solid meets
+nothing, and lines across two of DXMP_Silo's movers meet the mover where the original's meet the
+level; at 20 frames a second a gull flown level into a wall stays put, where the original's slides
+some 18 units along it; at Liberty Island's start the player stands 0.05 units higher, the
+original's first frame taking in the whole load; a net client's player lands 2.4 units low at its
+spawn, which its server corrects; a collection deletes only the names made for objects, keeping the
+rest for the session
 ([housekeeping](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#housekeeping-not-seen-directly)).
