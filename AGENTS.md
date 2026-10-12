@@ -114,7 +114,8 @@ Unverified, each a known risk:
 
 - Distant AI, which the Smart Pro runs with: far NPCs fighting with it on is untried
   ([settings the launcher exposes](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#settings-the-launcher-exposes)).
-- The name walk's cost on the Smart Pro's collections: unmeasured
+- A collection's cost on the Smart Pro with the current collector: unmeasured, its row taken
+  at an earlier engine
   ([housekeeping](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#housekeeping-not-seen-directly)).
 - A menu dragged by its title bar and the Alt accelerators under a real mouse and keyboard:
   proven only with a timeline's input, which the original cannot take here
