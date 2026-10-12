@@ -5,21 +5,13 @@ to run the game, and the reverse engineering of the original binaries behind bot
 
 **You supply your own game files. None are included.**
 
-## The workspace
-
 This repository holds no launcher, engine or game code. It is the workspace that ties the
-project's other three repositories together:
-
-- `scripts/dx.sh fetch` clones them beside it, each a folder of its own in one parent folder
-  ([layout](#layout)).
-- Its scripts build each port (the launcher, then the engine), stage it, run it, and deploy it
-  to a device and profile it there ([quick start](#quick-start)).
-- `ENGINE-PIN.txt` and `LAUNCHER-PIN.txt` pin the exact engine and launcher commits the ports
-  build. A change is committed and pushed in its own repository, then pinned here.
-- `scripts/dx.sh check` guards all four repositories at once: every doc's paths and links, the
-  pins, the ports' files and the ABI of what is staged.
-- [`AGENTS.md`](AGENTS.md) and [`docs/`](docs/) say how the project is worked on, where it
-  stands and what is open ([documentation](#documentation)).
+project's other three repositories together: its scripts fetch them beside it
+([layout](#layout)), build each port (the launcher, then the engine), stage, run, deploy and
+profile it ([quick start](#quick-start)), pin the exact engine and launcher commits the ports
+build (`ENGINE-PIN.txt`, `LAUNCHER-PIN.txt`), and check all four repositories' docs, pins, ports
+and ABI at once (`scripts/dx.sh check`). How the project is worked on, where it stands and what
+is open: [`AGENTS.md`](AGENTS.md) and [`docs/`](docs/) ([documentation](#documentation)).
 
 ## The repositories
 
@@ -27,7 +19,7 @@ project's other three repositories together:
 |---|---|---|
 | [port-ex-machina](https://github.com/JuggyMcNutty/port-ex-machina) | this workspace | `port-ex-machina/` |
 | [deusex-launcher](https://github.com/JuggyMcNutty/deusex-launcher) | the launcher. `main`, the working base, recreates the original `DeusEx.exe` almost 1:1; each port is a branch of it, its own variant | `deusex-launcher/main/` and a worktree per port; each port's commit pinned in `LAUNCHER-PIN.txt` |
-| [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine) | the engine: our fork of [Surreal Engine](https://github.com/dpjudas/SurrealEngine), an open-source UE1 reimplementation, made to play Deus Ex as the original does and to run on our ports (branch `deusex`). The game's main menu shows the engine commit it was built from | `VibeEngine/`, pinned in `ENGINE-PIN.txt` |
+| [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine) | the engine: our fork of [Surreal Engine](https://github.com/dpjudas/SurrealEngine), an open-source UE1 reimplementation, made to play Deus Ex as the original does and to run on our ports (branch `deusex`) | `VibeEngine/`, pinned in `ENGINE-PIN.txt` |
 | [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) | what the original binaries do -- `DeusEx.exe` and the game's DLLs -- in our own words, and the IDA scripts that read them | `dx-reverse-info/`, not pinned |
 
 ## Ports
@@ -64,6 +56,7 @@ scripts/recreation.sh build                # the original launcher recreated (th
 scripts/recreation.sh install [<GameDir>]  # into the game's System/, beside DeusEx.exe
 scripts/recreation.sh check [<GameDir>]    # run end to end on a copy, on a private display
 scripts/recreation.sh run [<args>]         # System/DeusEx, as a player starts it
+scripts/recreation.sh uninstall [<GameDir>]  # the five files out again
 ```
 
 Put the game files where the port's `launcher.ini` says (`GameDir`); a `linux-x86_64` app
@@ -80,7 +73,7 @@ staged here points at the `gamefiles/` beside the repositories.
 | [`LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md), on `linux-x86_64` | the launcher the Linux ports run: the settings files the engine really reads, the screens, controller support, what it changes from the original |
 | a port's `ports/<id>/README.md`, on its branch | one device: status, what differs from the branch it started from, measurements, what was verified |
 | VibeEngine's [`vibe/docs/`](https://github.com/JuggyMcNutty/VibeEngine/tree/deusex/vibe/docs) | the engine: how it is kept, run, profiled and what the fork changes ([`ENGINE.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md)); where it still differs from the original ([`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)); working on it, the harness ([`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md)) |
-| [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) | the original binaries: `DeusEx.exe`, where the launcher began, and the game's DLLs -- what they do |
+| [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) | the original binaries: `DeusEx.exe`, which `main` recreates, and the game's DLLs -- what they do |
 
 ## Layout
 
@@ -104,7 +97,8 @@ deusex/                  the parent folder (any name)
   gamefiles/             your Deus Ex install: for running on this machine, test_gamefiles
                          and the IDA databases
   reference/             the 1112f SDK, the DeusExe launcher source, IDA and ini backups,
-                         the original's saves and its wizard's captures
+                         the original's saves and its wizard's captures, DXD3D9 2.0
+                         (docs/DEVELOPMENT.md)
   deps/                  fetched toolchains and sysroots
   build/                 build/<port>/{engine,app}, build/main/ (the recreation's launcher
                          and its live check), and the engine tools' own

@@ -1,31 +1,28 @@
 # Porting
 
-How a device becomes a port. **A port is a branch of the launcher**,
-[deusex-launcher](https://github.com/JuggyMcNutty/deusex-launcher), and the
-engine, [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine), is built for
-it. **`main` is the working base**: each port branch is its own variant of it.
-linux-x86_64 is where the project is developed and tested
-([`DEVELOPMENT.md`](DEVELOPMENT.md)). The launcher the Linux ports run is
+How a device becomes a port: **a branch of the launcher**,
+[deusex-launcher](https://github.com/JuggyMcNutty/deusex-launcher), with the
+engine, [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine), built for it.
+The launcher the Linux ports run is
 [`LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md);
-the ports that exist are listed in the [root README](../README.md#ports).
+the ports that exist are [the root README's](../README.md#ports).
 
 ## The branches
 
 | Branch | Holds |
 |---|---|
 | `main` | the original launcher, recreated almost 1:1: no additions, no ports |
-| `linux-x86_64` | `main`, plus the launcher as it grew for the ports (the tabbed home screen, `Settings.json`, pad layouts, the GPU probe), the generic device profile, and the base app every port ships (`ports/common/packaging`) with the desktop's port files (`ports/linux-x86_64`). `main`'s own program, its tools and its program's tests come along unbuilt: a port branch builds `deusex-launcher`, `dxl-cli`, `dxl-shots` and the core's tests |
-| `<id>`, a device | its own variant: every device branch (`trimui-smartpro`, `linux-aarch64`, `android`, `x360`) began from `linux-x86_64` and adds **only what differs**, `ports/<id>/` and its preset; a platform that shares only `main`'s launcher with the others replaces the ports' launcher when its work starts (an Xbox 360 port would replace the start-up with its platform's) |
+| `linux-x86_64` | `main`, plus the ports' launcher, the generic device profile, and the base app every port ships (`ports/common/packaging`) with the desktop's port files (`ports/linux-x86_64`); `main`'s own program, tools and tests come along unbuilt ([its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/README.md)) |
+| `<id>`, a device | its own variant: every device branch (`trimui-smartpro`, `linux-aarch64`, `android`, `x360`) is `linux-x86_64` plus **only what differs**, `ports/<id>/` and its preset |
 
 Every port branch takes `main`'s changes by merging `main` into it; port
 branches do not merge into each other. A fix to the original's behaviour is
 made on `main`; a fix to the ports' launcher, which each Linux port branch
 carries, is made on each of those branches; a fix for one device, on its
 branch. A branch adds files rather than editing `main`'s where it can, and
-resolves a merge's conflicts itself. `README.md` never flows: each port branch
-keeps its own, so a merge from `main` conflicts on it and always keeps the
-port branch's, never `main`'s. `scripts/launcher.sh status` says which pins
-lack commits of `main`.
+resolves a merge's conflicts itself. `README.md` never flows from `main`: the
+port branches share the ports' README, linux-x86_64's, and a merge from `main`
+keeps it. `scripts/launcher.sh status` says which pins lack commits of `main`.
 
 ## The layers
 
@@ -65,19 +62,19 @@ preset in `deusex-launcher/<port>`, then `scripts/engine.sh build <port>`;
 `deploy` builds and stages, then runs `port_deploy`; `run` and `profile` run
 `port_run` and `port_profile`.
 
-Each port's launcher builds in its own checkout, `deusex-launcher/<port>/build/`;
-the engine goes to `build/<port>/engine`, and `build/<port>/app` is the staged
-result, both beside the repositories. Everything fetched lands in `deps/`,
-there too: `deps/toolchains/<name>` is shared between ports,
-`deps/sysroots/<port>` is one device's; each launcher checkout links it in.
-None of it is versioned and all of it can be deleted; `deps/` costs a download
-(and for a vendor sysroot, the device) to rebuild.
+Each port's launcher builds in its own checkout,
+`deusex-launcher/<port>/build/`; the engine goes to `build/<port>/engine`, and
+`build/<port>/app` is the staged result, both beside the repositories.
+Everything fetched lands in `deps/`, there too: `deps/toolchains/<name>` is
+shared between ports, `deps/sysroots/<port>` is one device's; each launcher
+checkout links it in. None of it is versioned and all of it can be deleted;
+`deps/` costs a download (and for a vendor sysroot, the device) to rebuild.
 
-Staging installs the binaries, lays `ports/common/packaging` and then the
-port's `packaging/` beside them, copies in the engine's `SurrealEngine`,
-`libSurrealVideo.so` and `SurrealEngine.pk3`, and runs `port_stage`. `launcher.ini`
-belongs to whoever runs the app: it is created from `launcher.ini.default`
-only when missing.
+Staging installs the binaries, lays `ports/common/packaging` and then the port's
+`packaging/` beside them, copies in the engine's `SurrealEngine`,
+`libSurrealVideo.so` and `SurrealEngine.pk3`, and runs `port_stage`.
+`launcher.ini` belongs to whoever runs the app: it is created from
+`launcher.ini.default` only when missing.
 
 ## Adding a port
 
@@ -96,14 +93,13 @@ only when missing.
    new name (`linux-aarch64` is linux-x86_64 built for another architecture);
    for a vendor-firmware handheld -- cross-built against the device's own
    libraries, its own frontend and CPU modes -- `trimui-smartpro` shows what
-   the differences look like. A platform that shares only `main`'s launcher
-   with the others, such as the Xbox 360, replaces the ports' launcher on its
-   branch when its work starts.
-3. **Pick a toolchain whose glibc is at or below the device's** -- one newer
-   symbol and the binary will not load (see the Smart Pro's README for how that
-   was found). Bootlin publishes many; `dx_fetch_bootlin <name> <ceiling>` in
-   `port.sh` fetches one and refuses it if its glibc is too new. C11 is enough
-   for the launcher; the engine needs C++20 (GCC 10 or later).
+   the differences look like.
+3. **Pick a toolchain whose glibc is at or below the device's**: one newer
+   symbol and the binary will not load
+   ([the glibc ceiling](DEVELOPMENT.md#gotchas-that-cost-time)). Bootlin
+   publishes many; `dx_fetch_bootlin <name> <ceiling>` in `port.sh` fetches one
+   and refuses it if its glibc is too new. C11 is enough for the launcher; the
+   engine needs C++20 (GCC 10 or later).
 4. **Decide where SDL2 comes from.** The system's (`DXL_PORT_SDL system`) on a
    normal distro or a native build; the device's own libraries in a sysroot when
    the vendor's build is the only one that can draw. The launcher needs SDL
@@ -113,16 +109,16 @@ only when missing.
    device has.
 6. **Write `target.c`** if the device has anything to say: its fonts, CPU modes
    its hooks can apply (then `port-hooks.sh` must handle each one and fall back
-   to the profile's default, `CPU_MODE_DEFAULT` -- `test_target_<port>`,
-   with the port id's `-` as `_`, checks), a note about its pad.
+   to the profile's default, `CPU_MODE_DEFAULT`: `test_target_<port>` checks,
+   [drift guards](DEVELOPMENT.md#drift-guards)), a note about its pad.
 7. **Write `packaging/`**: what the device's frontend needs to list and start
    the app, `port-hooks.sh` for its library path and CPU modes, a
    `launcher.ini` with the usual `GameDir`.
 8. **Add the preset**, then `scripts/dx.sh build`, `stage`, `deploy`, and write
    the port's `README.md` (below).
-9. **Commit and push the branch, then pin it** here (`scripts/launcher.sh pin
-   <id>` adds it to `LAUNCHER-PIN.txt`); `scripts/dx.sh check` and
-   `scripts/dx.sh test <id>` must pass
+9. **Commit and push the branch, then pin it** here
+   (`scripts/launcher.sh pin <id>` adds it to `LAUNCHER-PIN.txt`);
+   `scripts/dx.sh check` and `scripts/dx.sh test <id>` must pass
    ([the drift guards](DEVELOPMENT.md#drift-guards)).
 
 ## Device probes
@@ -133,9 +129,8 @@ compile one with the port's toolchain against its sysroot, copy it over, run
 it (the Smart Pro's README has the exact command line).
 
 | Probe | Answers | Links |
-| --- | --- | --- |
+|---|---|---|
 | `probe-sdl.c` | video driver, surface size, renderer backend, what the pad reports; `--pad [s]` records every pad event with a per-axis range summary (no window) | `-lSDL2` |
-| `probe-vulkan.c` | is there a usable Vulkan device at all | `-lvulkan` |
 | `probe-sdl-vulkan.c` | can SDL2 hand out a Vulkan surface here | `-lSDL2 -lvulkan` |
 | `probe-vulkan-caps.c` | every requirement the engine's Vulkan device filter checks, with a verdict | `-lvulkan` |
 | `probe-texture-formats.c` | which texture formats the GPU can sample and linearly filter (BCn, RGB8, RGBA32F) | `-lvulkan` |
@@ -147,8 +142,9 @@ renderer list is built from.
 
 ## Other operating systems
 
-Every port built so far is POSIX, and so is Android (bionic has everything below).
-The launcher's OS dependencies are few and named:
+Every port is POSIX, and so is Android: bionic has everything below, though
+its app model changes the hand-over and the probe (its README, below). The
+launcher's OS dependencies are few and named:
 
 | What | Where | POSIX mechanism |
 |---|---|---|
@@ -159,9 +155,11 @@ The launcher's OS dependencies are few and named:
 | Atomic config writes | `core/ini.c`, `core/json.c` | write a temporary file, `rename` |
 
 **Android** needs a different hand-over -- the engine has to run inside the
-app's process -- and more besides: [its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/android/ports/android/README.md).
-**Xbox 360** (planned) is not POSIX, so it would need its own version of
-each; nothing about it is worked out yet ([its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/x360/ports/x360/README.md)).
+app's process -- and more besides:
+[its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/android/ports/android/README.md).
+**Xbox 360** (planned) is not POSIX, so it would need its own version of each;
+nothing about it is worked out yet
+([its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/x360/ports/x360/README.md)).
 **Windows** would need win32 versions of all five; the original binary's own
 answers to the same questions are
 [launch-flow.md's platform seams](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/launch-flow.md#platform-seams).

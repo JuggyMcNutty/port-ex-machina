@@ -154,9 +154,6 @@ case "$cmd" in
     check)  cmd_check ;;
     status) cmd_status ;;
     pin)    cmd_pin ;;
-    upgrade) die "retired: the fork does not merge upstream (VibeEngine's vibe/docs/ENGINE.md)" ;;
-    perf)   die "moved: VibeEngine/vibe/tools/perf/perf.sh" ;;
-    export) die "retired: the fork is its own repository -- commit there, push, then scripts/engine.sh pin" ;;
     -h|--help|help) usage ;;
     *)      die "unknown command '$cmd' (scripts/engine.sh help)" ;;
 esac

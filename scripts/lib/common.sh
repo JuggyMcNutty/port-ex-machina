@@ -1,6 +1,7 @@
-# Shared by scripts/dx.sh, engine.sh, launcher.sh and check-docs.sh, by the
-# ports' port.sh files (on their launcher branches, sourced by dx.sh) and by
-# the fork's vibe/tools/host-tools.sh. Sourced, never run; expects bash with
+# Shared by scripts/dx.sh, engine.sh, launcher.sh, recreation.sh and
+# check-docs.sh; by the ports' port.sh files (on their launcher branches,
+# sourced by dx.sh) and the Smart Pro's fetch-sysroot.sh; and by the fork's
+# vibe/tools/host-tools.sh. Sourced, never run; expects bash with
 # set -euo pipefail.
 
 # The layout (docs/DEVELOPMENT.md#the-repositories): each repository in its

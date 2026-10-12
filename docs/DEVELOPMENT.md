@@ -8,27 +8,19 @@ temporary debug hooks, its gotchas -- is VibeEngine's
 ## The development platform: linux-x86_64
 
 Development happens on
-[linux-x86_64](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md):
-the unit tests, `dxl-shots`, the engine's validation and the side-by-side checks of engine
-changes all build and run there. Each port is a branch of the launcher, a variant of its `main`
-([`PORTING.md`](PORTING.md)).
+[linux-x86_64](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md).
 A change is clean when it builds and tests there *and* builds warning-free for each cross port
 that ships: the Smart Pro's GCC 9.3 is stricter about `-Wshadow` and `-Wformat-truncation` than
 a current host compiler.
 
 ## The repositories
 
-Each is a folder of its own in one parent folder, none inside another
-([the README's layout](../README.md#layout)). This one is the workspace: its scripts find the
-others as its siblings (`DX_ROOT` in `scripts/lib/common.sh` is the parent), and `dx.sh fetch`
-clones them there. The commands: [the README's quick start](../README.md#quick-start).
-
-| Folder | Repository | Kept at |
-|---|---|---|
-| `port-ex-machina/` | this one, the workspace | -- |
-| `deusex-launcher/main`, and `deusex-launcher/<port>` for each port | [deusex-launcher](https://github.com/JuggyMcNutty/deusex-launcher): `main` the original recreated, a branch per port | `LAUNCHER-PIN.txt`: each port's commit; `scripts/launcher.sh` fetches, checks and pins them |
-| `VibeEngine/` | [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine), branch `deusex` | `ENGINE-PIN.txt`: one commit; `scripts/engine.sh` fetches, checks and pins it |
-| `dx-reverse-info/` | [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) | not pinned: docs and IDA scripts |
+Each is a folder of its own in one parent folder ([the layout](../README.md#layout)). This one
+is the workspace: its scripts find the others as its siblings (`DX_ROOT` in
+`scripts/lib/common.sh` is the parent), and `dx.sh fetch` clones them there. The engine is
+pinned at one commit (`ENGINE-PIN.txt`; `scripts/engine.sh` fetches, checks, builds and pins
+it), each port of the launcher at its own (`LAUNCHER-PIN.txt`; `scripts/launcher.sh`), the RE
+not at all.
 
 `deusex-launcher/main` is the clone; each port is a worktree of it, on the branch of its name,
 with `deps/` and `gamefiles/` linked in. The worktrees link to the clone by relative paths (git
@@ -39,37 +31,22 @@ app go to `build/<port>/`. A change to the launcher or the engine is committed i
 repository, pushed, then pinned here (`launcher.sh pin <port>`, `engine.sh pin`), and the pin
 committed with whatever depends on it.
 
-Beside the repositories, in no repository:
+Beside the repositories, in no repository ([the layout](../README.md#layout)): `gamefiles/`
+holds the IDA databases beside the game's binaries (`System/*.i64`), never committed, a fresh
+one given its types, strings and names by dx-reverse-info's scripts
+([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries));
+`reference/DXD3D9_2.0` is a third-party Direct3D 9 renderer for the original, a closed DLL built
+on Chris Dohnal's UTD3D9 1.3, whose source carries Epic's copyright and no licence: its ideas
+may be taken, never its code; `deps/` and `build/` the scripts remake, and for engine work
+`VibeEngine/vibe/tools/host-tools.sh` unpacks `perf` and the Vulkan validation layer into
+`deps/`.
 
-- `gamefiles/`: your Deus Ex install (1112fm), and beside its binaries the IDA databases
-  (`System/*.i64`). They hold the game's code, so they are never committed; a fresh database gets
-  its types, strings and names from dx-reverse-info's scripts
-  ([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)).
-- `reference/`: the 1112f SDK, the DeusExe launcher source, the IDA and ini backups, the
-  original's saves and its wizard's captures; and `DXD3D9_2.0`, a third-party Direct3D 9
-  renderer for the original. It is a closed DLL built on Chris Dohnal's UTD3D9 1.3, whose source
-  carries Epic's copyright and no licence: its ideas may be taken, never its code.
-- `deps/` and `build/`, which the scripts remake. For engine work,
-  `VibeEngine/vibe/tools/host-tools.sh` unpacks `perf` and the Vulkan validation layer into
-  `deps/`.
-
-### The recreation
-
-The launcher's `main` -- the original `DeusEx.exe` recreated, not a port -- is built, installed
-and run by `scripts/recreation.sh`, with the engine linux-x86_64 builds:
-
-- `build`: main into `build/main/launcher`, and the engine;
-- `install [<GameDir>]`: `DeusEx`, its `run-game.sh` and the engine's three files into the
-  game's `System/`, beside `DeusEx.exe` (`gamefiles/` by default);
-- `check`: main's `tools/livecheck.py` on a copy of that install, on a private X display, so
-  nothing shows on the desktop and the install is not written;
-- `run`: starts it; `uninstall`: takes the five files out again.
-
-While `DeusEx` is installed, the original game does not start from that folder under Wine or
-Proton: it takes the file for the `DeusEx` package
-([a package's file](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#packages-and-linkers)).
-Uninstall before playing the original there. `main` is not pinned: it is the clone, and the
-ports take it by merging ([the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md#branches)).
+The launcher's `main` -- the original `DeusEx.exe` recreated, not a port -- is built, installed,
+checked and run by `scripts/recreation.sh` (its header has the commands) into the game's
+`System/`, with the engine linux-x86_64 builds; while it is there the original does not start
+under Wine or Proton
+([installing](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md#installing)).
+`main` is not pinned: it is the clone, and the ports take it by merging.
 
 ## Dependencies
 
@@ -87,14 +64,9 @@ multilib repository enabled:
 
 Besides:
 
-- **Proton**, to run the original: `dxcap.sh` looks for a build linked as
-  `Proton-CachyOS Latest` in `~/.local/share/Steam/compatibilitytools.d`.
-- **`~/.config/SurrealEngine/Settings.json`**: the harness's fork runs take their renderer from
-  it, unless `DXCAP_SETTINGS` names another file (`VibeEngine/vibe/tools/dxcap/perf-settings.json`
-  to measure).
-- **Python's `unicorn`**, the CPU emulator
-  [`Fire.dll`'s check](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/fire-dll.md#how-it-was-checked)
-  runs the DLL's routines in.
+- **Proton**, to run the original, and **`~/.config/SurrealEngine/Settings.json`**, which the
+  harness's fork runs take their renderer from
+  ([scripted runs](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
 - **IDA Pro for Linux** with Hex-Rays' MCP plugin `ida-mcp@HexRaysSA`, for the RE
   ([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)).
 - **Write access to the owner's GitHub repositories**, to push. The fetches clone over HTTPS,
@@ -104,13 +76,12 @@ Besides:
 
 ## Commits
 
-- **Commit as JuggyMcNutty** (`11588877+JuggyMcNutty@users.noreply.github.com`), never the
-  machine's global git identity, which is a personal address. Every checkout here sets it in its
-  local git config, and the fetches set it in a fresh clone (`dx.sh fetch`, `engine.sh fetch`,
-  `launcher.sh fetch`); a clone made any other way needs it before its first commit.
-- **Never commit the game's files** -- not an ini, not a `.int`. The repositories are public; the
-  launcher's `tests/fixtures` are written stand-ins, and `test_gamefiles` reads the real ones
-  from `gamefiles/` in place.
+- **As JuggyMcNutty** ([the rule](../AGENTS.md#rules)), never the machine's global git identity,
+  which is a personal address: every checkout here sets it in its local git config, and the
+  fetches set it in a fresh clone (`dx.sh fetch`, `engine.sh fetch`, `launcher.sh fetch`); a
+  clone made any other way needs it before its first commit.
+- **No game files** ([the rule](../AGENTS.md#rules)): the launcher's `tests/fixtures` are
+  written stand-ins, and `test_gamefiles` reads the real ones from `gamefiles/` in place.
 - A change and the docs it affects go in the same commit, in the repository the change is in;
   the pin that follows it here, with the docs of this one.
 
@@ -122,8 +93,7 @@ written this way:
 
 1. **The current state, in the present tense.** No dates on facts; no "was", "once", "since" or
    "no longer"; no story of how something was found; no run IDs; no superseded numbers. Git and
-   the commit messages are the record. A table of measurements may name the engine commit it
-   was measured at.
+   the commit messages are the record.
 2. **A why only where it stops someone undoing a deliberate choice.**
 3. **Short sentences, lists and tables.** Plain words over chains of possessives.
 4. **Between repositories a link is absolute**, to a branch's copy on GitHub
@@ -136,11 +106,14 @@ written this way:
 7. **`AGENTS.md` is edited in place**, never appended to, and kept small: every session loads
    it.
 8. **A heading other docs link to keeps its words**; renaming one means fixing every link to it.
+9. **A measurement lives in a table that names the engine commit it was taken at**, never in
+   prose.
+10. **One wrap width per file, 100 at most**; a bare link may run over.
 
 Editing docs with string replacement fails silently when the pattern does not match: prefer full
 rewrites, or scripted replacements that assert the pattern was found.
 
-### Drift guards
+## Drift guards
 
 Docs and scripts that describe the tree are checked against it, so a move or a rename fails
 loudly instead of leaving stale instructions:
@@ -168,12 +141,12 @@ Device-specific ones are in each port's README, the engine's in its
 These apply everywhere:
 
 - **A binary built against a newer glibc than the device's will not load.** glibc 2.34
-  re-versioned the startup symbols; one `GLIBC_2.34` reference is enough. Every cross port sets a
-  ceiling (`DXL_PORT_GLIBC_MAX`) that its branch's `scripts/check-abi.sh` enforces after each
+  re-versioned the startup symbols; one `GLIBC_2.34` reference is enough. Every cross port sets
+  a ceiling (`DXL_PORT_GLIBC_MAX`) that its branch's `scripts/check-abi.sh` enforces after each
   build.
-- **Surreal Engine does not read what the original launcher wrote**, and after its first clean
-  exit it reads `SE-DeusEx.ini`/`SE-User.ini`, not `DeusEx.ini`/`User.ini`; a stub `DeusEx.ini`
-  kills it
+- **Surreal Engine does not read what the original launcher writes**, and started without
+  `--ini`, as the ports' `run-game.sh` starts it, after its first clean exit it reads
+  `SE-DeusEx.ini`/`SE-User.ini`, not `DeusEx.ini`/`User.ini`; a stub `DeusEx.ini` kills it
   ([where the settings actually live](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#where-the-settings-actually-live)).
 - **Never `pkill -f` or `pgrep -f <pattern>`** in a command whose own text contains the pattern:
   it matches the shell running it. Use `pidof`, `pgrep -x`, or bracket a letter
@@ -186,6 +159,6 @@ These apply everywhere:
   layer's manifest in `deps/`: after moving the parent folder, run `dxcap.sh setup` (then
   `compile`) and `host-tools.sh` again.
 - **`build` does not restage.** The staged app keeps whatever binary the last `stage` copied, so
-  a run after `build` alone tests the old engine (its log shows long-fixed `Unimplemented`
-  lines). Stage before running -- and never while the engine still runs: the copy fails with
-  `Text file busy` and the old binary runs again.
+  a run after `build` alone tests the old engine (its log shows `Unimplemented` lines the
+  current engine does not log). Stage before running -- and never while the engine still runs:
+  the copy fails with `Text file busy` and the old binary runs again.

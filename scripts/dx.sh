@@ -17,7 +17,7 @@
 # docs/PORTING.md.
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
-export DX_ROOT DX_WORKSPACE DX_DEPS   # for the ports' own scripts (fetch-sysroot.sh)
+export DX_WORKSPACE   # the Smart Pro's fetch-sysroot.sh loads lib/common.sh from it
 
 RE_URL="https://github.com/JuggyMcNutty/dx-reverse-info.git"
 
