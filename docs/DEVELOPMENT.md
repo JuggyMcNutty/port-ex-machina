@@ -120,9 +120,10 @@ loudly instead of leaving stale instructions:
 
 - `scripts/check-docs.sh`: across the workspace's repositories, every path a doc names in
   backticks or links must exist, every link to a heading (`#anchor`) must find one, and every
-  link into another of the repositories must resolve in that repository's checkout here. A
-  checkout git cannot read fails rather than going unchecked, and so does a missing
-  `AGENTS.md`.
+  link into another of the repositories must name a branch the workspace has (the launcher's
+  `main` and the ports `LAUNCHER-PIN.txt` pins, the engine's `deusex`, `main` elsewhere) and
+  resolve in that repository's checkout here. A checkout git cannot read fails rather than
+  going unchecked, and so does a missing `AGENTS.md`.
 - `scripts/engine.sh check`: the engine clone is at the commit `ENGINE-PIN.txt` names, on the
   fork's branch.
 - `scripts/launcher.sh check`: each port's worktree is at the commit `LAUNCHER-PIN.txt` names,

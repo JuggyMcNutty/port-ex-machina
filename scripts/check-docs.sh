@@ -20,11 +20,13 @@
 # gamefiles/ (the game install).
 #
 # A link to https://github.com/JuggyMcNutty/<repository>/(blob|tree)/<branch>/<path>
-# must name a path that exists in that repository's checkout here:
-# port-ex-machina at main is this one, dx-reverse-info at main and VibeEngine
-# at deusex are their clones, and deusex-launcher at <branch> is
-# deusex-launcher/<branch>/. A link to a VibeEngine commit must name one the
-# clone has.
+# must name a branch the workspace has -- main of port-ex-machina and
+# dx-reverse-info, deusex of VibeEngine, deusex-launcher's main and the ports
+# LAUNCHER-PIN.txt pins -- and a path that exists in that repository's
+# checkout here: port-ex-machina at main is this one, dx-reverse-info at main
+# and VibeEngine at deusex are their clones, and deusex-launcher at <branch>
+# is deusex-launcher/<branch>/. A link to a VibeEngine commit must name one
+# the clone has.
 #
 # A link with an #anchor to a markdown file (or to a heading of the doc itself)
 # must name one of that file's headings, as GitHub makes their ids: lower case,
@@ -144,6 +146,18 @@ allowed() {
 checked=0 anchors=0 urls=0 failed=0 unverifiable=0 ndocs=0
 fail() { echo "$1" >&2; failed=$((failed + 1)); }
 
+# The branches a link into one of our repositories may name: the ones the
+# workspace builds. Any other fails, even with a leftover folder of its name.
+LAUNCHER_BRANCHES=" main $(dx_ports | tr '\n' ' ')"
+known_branch() {
+    case "$1" in
+        deusex-launcher) [[ "$LAUNCHER_BRANCHES" == *" $2 "* ]] ;;
+        VibeEngine) [ "$2" = deusex ] ;;
+        port-ex-machina|dx-reverse-info) [ "$2" = main ] ;;
+        *) return 0 ;;                      # not a repository of the workspace
+    esac
+}
+
 # A link into one of our repositories: 0 checked (and fine), 1 failed,
 # 2 unverifiable (no checkout of it here), 3 not ours.
 check_url() {
@@ -162,6 +176,7 @@ check_url() {
     fi
     [[ "$rest" =~ ^[^/]+/(blob|tree)/([^/]+)/(.+)$ ]] || { fail "BAD LINK $doc:$line: $url"; return 1; }
     ref="${BASH_REMATCH[2]}"; sub="${BASH_REMATCH[3]}"
+    known_branch "$repo" "$ref" || { fail "NO BRANCH $doc:$line: $url"; return 1; }
     REPO_Q="$repo" REF_Q="$ref"
     dir="$(checkout_of)" || return 2
     if [ ! -e "$dir/$sub" ]; then
