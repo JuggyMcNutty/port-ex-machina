@@ -142,9 +142,9 @@ renderer list is built from.
 
 ## Other operating systems
 
-Every port is POSIX, and so is Android: bionic has everything below, though
-its app model changes the hand-over and the probe (its README, below). The
-launcher's OS dependencies are few and named:
+Every Linux port is POSIX, and so is Android: bionic has everything below,
+though its app model changes the hand-over and the probe (its README, below).
+The launcher's OS dependencies are few and named:
 
 | What | Where | POSIX mechanism |
 |---|---|---|

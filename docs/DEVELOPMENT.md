@@ -128,9 +128,10 @@ loudly instead of leaving stale instructions:
 - `scripts/launcher.sh check`: each port's worktree is at the commit `LAUNCHER-PIN.txt` names,
   on its branch (and git can read it).
 - `test_target_<port>` (the id's `-` as `_`), on the port's branch: each CPU mode a profile
-  offers is named in its `port-hooks.sh` -- anywhere in the file, a comment included, so it does
-  not prove a `case` handles it -- the hooks' fallback (`CPU_MODE_DEFAULT`) is the profile's
-  default, and the profile's id is its port's.
+  offers is named in its `port-hooks.sh` (loosely:
+  [known defects](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects)),
+  the hooks' fallback (`CPU_MODE_DEFAULT`) is the profile's default, and the profile's id is its
+  port's.
 - `scripts/dx.sh check` runs the first three, confirms every port has its required files, and
   checks the glibc ceiling of whatever is staged.
 

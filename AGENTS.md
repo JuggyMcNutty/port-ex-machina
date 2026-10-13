@@ -58,7 +58,7 @@ lists. The launcher's `main` is the original `DeusEx.exe` recreated almost 1:1;
   the work.
 - **Smart Pro target: ~20 FPS at Liberty Island's level start** (~50 ms a frame), for when its
   performance work resumes. Every trade-off for it is accepted but the AI's: every pawn thinks
-  every frame, as far pawns thinking less often made the AI behave oddly. Deep script-VM work is
+  every frame: far pawns thinking less often make the AI behave oddly. Deep script-VM work is
   in scope. Re-measure after each change, profiling on the device (`SAMPLE=1`): the desktop's
   proportions are not the device's. Where its frame goes and what is left:
   [its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#where-a-frame-goes).
@@ -89,8 +89,9 @@ The owner's, each waiting until the owner takes it up.
 - **The next ports**: a cross-built engine for linux-aarch64 (a sysroot with the engine's
   libraries, as the Smart Pro has); Android, starting with an in-process hand-over
   ([its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/android/ports/android/README.md)).
-- **`main`'s window icons into the port branches**: merging `main` into the port branches
-  conflicts in `CMakeLists.txt` and `tests/test_gamefiles.c`, and keeps the ports' README.
+- **`main` into the port branches**: its window icons and its change to the shared
+  command-line code (a `?` ends a flag's name too) wait for that merge, which conflicts in
+  `CMakeLists.txt` and `tests/test_gamefiles.c` and keeps the ports' README.
 - **Another developer's commit identity**: JuggyMcNutty, or their own.
 - **Detail textures**: keep the fork's one-pass ones, draw `D3DDrv`'s three-pass ones as read,
   or draw none, as the original run here does
