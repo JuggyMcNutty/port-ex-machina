@@ -57,8 +57,9 @@ lists. The launcher's `main` is the original `DeusEx.exe` recreated almost 1:1;
   the Smart Pro when the owner chooses. The open decisions wait for the owner unless one blocks
   the work.
 - **Smart Pro target: ~20 FPS at Liberty Island's level start** (~50 ms a frame), for when its
-  performance work resumes. Every trade-off for it is accepted, and deep script-VM work is in
-  scope. Re-measure after each change, profiling on the device (`SAMPLE=1`): the desktop's
+  performance work resumes. Every trade-off for it is accepted but the AI's: every pawn thinks
+  every frame, as far pawns thinking less often made the AI behave oddly. Deep script-VM work is
+  in scope. Re-measure after each change, profiling on the device (`SAMPLE=1`): the desktop's
   proportions are not the device's. Where its frame goes and what is left:
   [its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#where-a-frame-goes).
 - **Smart Pro default: 853x480** (`Performance.RenderScale` 0.6666667 in the port's
@@ -95,10 +96,9 @@ The owner's, each waiting until the owner takes it up.
   or draw none, as the original run here does
   ([the menus' settings](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-menus-settings),
   [detail textures](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/d3ddrv-dll.md#detail-textures)).
-- **Two ideas from DXD3D9 2.0** (a third-party renderer in `reference/`, ideas only:
-  [its terms](docs/DEVELOPMENT.md#the-repositories)): a depth bias on the movers' surfaces
-  ([draw order and movers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#draw-order-and-movers)),
-  and a 10-bit GL scene buffer, `GL_RGB10_A2` for RGBA8
+- **An idea from DXD3D9 2.0** (a third-party renderer in `reference/`, ideas only:
+  [its terms](docs/DEVELOPMENT.md#the-repositories)): a 10-bit GL scene buffer, `GL_RGB10_A2`
+  for RGBA8
   ([rendering](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering)).
 
 ## Open items
@@ -110,18 +110,8 @@ and
 Where the engine still differs from the original: each section's "Differs" in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md).
 
-Unverified, each a known risk:
+Unverified, a known risk the owner ranks low:
 
-- Distant AI, which the Smart Pro runs with: far NPCs fighting with it on is untried
-  ([settings the launcher exposes](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#settings-the-launcher-exposes)).
-- A collection's cost on the Smart Pro with the current collector: unmeasured, its row taken
-  at an earlier engine
-  ([housekeeping](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#housekeeping-not-seen-directly)).
 - A menu dragged by its title bar and the Alt accelerators under a real mouse and keyboard:
   proven only with a timeline's input, which the original cannot take here
   ([the UI](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-ui)).
-- A dedicated server's movers: drawing no frame, it never files one in the BSP again, as the
-  original's code has it; no run proves it
-  ([implemented, not as the original](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#implemented-not-as-the-original)).
-- A mover flush with a wall can fight it in the depth buffer; no run shows it
-  ([draw order and movers](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#draw-order-and-movers)).
