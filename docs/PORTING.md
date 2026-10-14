@@ -71,8 +71,8 @@ checkout links it in. None of it is versioned and all of it can be deleted;
 `deps/` costs a download (and for a vendor sysroot, the device) to rebuild.
 
 Staging installs the binaries, lays `ports/common/packaging` and then the port's
-`packaging/` beside them, copies in the engine's `SurrealEngine`,
-`libSurrealVideo.so` and `SurrealEngine.pk3`, and runs `port_stage`.
+`packaging/` beside them, copies in the engine's `SurrealEngine` and
+`SurrealEngine.pk3`, and runs `port_stage`.
 `launcher.ini` belongs to whoever runs the app: it is created from
 `launcher.ini.default` only when missing.
 

@@ -11,22 +11,23 @@
 #   scripts/recreation.sh uninstall [<GameDir>]  what install put there, taken out again
 #
 # Installed: DeusEx and run-game.sh (main's own install), and the engine's
-# SurrealEngine, libSurrealVideo.so and SurrealEngine.pk3. Installing touches
-# none of the game's files, but while DeusEx is there the original game does
-# not start under Wine or Proton: it takes the file for the DeusEx package
-# (dx-reverse-info's core-dll.md) -- uninstall takes it out. A run writes what
-# the original's does (DeusEx.ini, User.ini, DeusEx.log, Running.ini,
-# Detected.*), and the engine adds its own [Engine.Surreal*] sections to
-# DeusEx.ini. The engine is the clone's, which scripts/engine.sh check
-# compares with the pin.
+# SurrealEngine and SurrealEngine.pk3; uninstall also takes out an earlier
+# engine's libSurrealVideo.so. Installing touches none of the game's files,
+# but while DeusEx is there the original game does not start under Wine or
+# Proton: it takes the file for the DeusEx package (dx-reverse-info's
+# core-dll.md) -- uninstall takes it out. A run writes what the original's
+# does (DeusEx.ini, User.ini, DeusEx.log, Running.ini, Detected.*), and the
+# engine adds its own [Engine.Surreal*] sections to DeusEx.ini. The engine is
+# the clone's, which scripts/engine.sh check compares with the pin.
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
 MAIN_DIR="$DX_LAUNCHER/main"
 BUILD="$DX_ROOT/build/main/launcher"
 ENGINE_BUILD="$DX_ROOT/build/linux-x86_64/engine"
-ENGINE_FILES=(SurrealEngine libSurrealVideo.so SurrealEngine.pk3)
+ENGINE_FILES=(SurrealEngine SurrealEngine.pk3)
 INSTALLED=(DeusEx run-game.sh "${ENGINE_FILES[@]}")
+RETIRED=(libSurrealVideo.so)   # what an earlier install put there too
 
 usage() { sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 
@@ -73,7 +74,7 @@ cmd_check() {
 cmd_uninstall() {
     local sys f
     sys="$(system_dir "${1:-}")"
-    for f in "${INSTALLED[@]}"; do
+    for f in "${INSTALLED[@]}" "${RETIRED[@]}"; do
         rm -f "$sys/$f"
     done
     say "removed from $sys: ${INSTALLED[*]}"

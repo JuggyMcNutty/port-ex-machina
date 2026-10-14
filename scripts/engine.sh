@@ -75,7 +75,7 @@ cmd_build() {
     local max
     max=$(sed -n 's/^[[:space:]]*set(DXL_PORT_GLIBC_MAX[[:space:]]\{1,\}\([0-9.]\{1,\}\))/\1/p' "$pdir/port.cmake" | head -n 1)
     if [ -n "$max" ]; then
-        "$src/scripts/check-abi.sh" --max "$max" "$bdir/SurrealEngine" "$bdir/libSurrealVideo.so"
+        "$src/scripts/check-abi.sh" --max "$max" "$bdir/SurrealEngine"
     fi
 }
 

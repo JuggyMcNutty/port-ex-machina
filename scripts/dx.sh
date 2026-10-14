@@ -95,10 +95,7 @@ cmd_stage() {
         local e="$BUILD/engine"
         if [ -x "$e/SurrealEngine" ]; then
             cp "$e/SurrealEngine" "$APP/"
-            local f
-            for f in libSurrealVideo.so SurrealEngine.pk3; do
-                [ -f "$e/$f" ] && cp "$e/$f" "$APP/"
-            done
+            [ -f "$e/SurrealEngine.pk3" ] && cp "$e/SurrealEngine.pk3" "$APP/"
         else
             say "warning: no engine build in $e -- staged the launcher only (scripts/dx.sh build $PORT engine)"
         fi
