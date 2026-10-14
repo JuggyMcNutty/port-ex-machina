@@ -117,8 +117,9 @@ Staging installs the binaries, lays `ports/common/packaging` and then the port's
    branch has them, a `launcher.ini` with the usual `GameDir`.
 8. **Add the preset, commit and push the branch, then pin it** here
    (`scripts/launcher.sh pin <id>` adds it to `LAUNCHER-PIN.txt`;
-   `scripts/dx.sh` takes only pinned ports), and run `scripts/launcher.sh
-   fetch`, which links `deps/` and `gamefiles/` into its worktree.
+   `scripts/dx.sh` takes only pinned ports), and run
+   `scripts/launcher.sh fetch`, which links `deps/` and `gamefiles/` into its
+   worktree.
 9. **`scripts/dx.sh build`, `stage` and `deploy`**, write the port's
    `README.md` (below), and pin it again; `scripts/dx.sh check` and
    `scripts/dx.sh test <id>` must pass
@@ -172,7 +173,7 @@ that do not apply:
 |---|---|
 | **Status** | one paragraph: what runs, what does not yet |
 | **Build and run** | the commands, where things live on the device, how to reach it |
-| **What differs from the branch it started from** | the port's files, and why each difference was needed |
+| **What differs from the branch it started from** | the port's files, and why each difference was needed; linux-x86_64, which started from none, has **What it is made of** in its place |
 | **The device, as measured** | what was probed, not assumed |
 | **Verified** | what was checked on real hardware |
 | **Performance** | where it is measured: the numbers and how to take them |

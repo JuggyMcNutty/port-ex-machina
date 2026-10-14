@@ -130,7 +130,7 @@ loudly instead of leaving stale instructions:
 - `scripts/launcher.sh check`: each port's worktree is at the commit `LAUNCHER-PIN.txt` names,
   on its branch (and git can read it).
 - `test_target_<port>` (the id's `-` as `_`), on a device branch with a profile of its own
-  (trimui-smartpro's): each CPU mode the profile offers is named in its `port-hooks.sh` (loosely:
+  (trimui-smartpro's): each CPU mode the profile offers is named in `port-hooks.sh` (loosely:
   [known defects](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects)),
   the hooks' fallback (`CPU_MODE_DEFAULT`) is the profile's default, and the profile's id is its
   port's.
