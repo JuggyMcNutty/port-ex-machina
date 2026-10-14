@@ -3,8 +3,8 @@
 How a device becomes a port: **a branch of the launcher**,
 [deusex-launcher](https://github.com/JuggyMcNutty/deusex-launcher), with the
 engine, [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine), built for it.
-The launcher the Linux ports run is
-[`LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md);
+Each port branch's launcher is its own `docs/LAUNCHER.md`
+([linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md));
 the ports that exist are [the root README's](../README.md#ports).
 
 ## The branches
@@ -12,26 +12,27 @@ the ports that exist are [the root README's](../README.md#ports).
 | Branch | Holds |
 |---|---|
 | `main` | the original launcher, recreated almost 1:1: no additions, no ports |
-| `linux-x86_64` | `main`, plus the ports' launcher, the generic device profile, and the base app every port ships (`ports/common/packaging`) with the desktop's port files (`ports/linux-x86_64`); `main`'s own program, tools and tests come along unbuilt ([its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/README.md)) |
-| `<id>`, a device | its own variant: every device branch (`trimui-smartpro`, `linux-aarch64`, `android`, `x360`) is `linux-x86_64` plus **only what differs**, `ports/<id>/` and its preset |
+| `linux-x86_64` | the default of desktop Linux: the ports' launcher, the app every port ships (`ports/common/packaging`) and the desktop's port (`ports/linux-x86_64`), with no device's own choices |
+| `linux-aarch64` | the default of aarch64 Linux with an ordinary distro: linux-x86_64's launcher, cross-built (`ports/linux-aarch64`) |
+| `trimui-smartpro` | the TrimUI Smart Pro's own launcher: its device profile, CPU modes, cross toolchains and packaging (`ports/trimui-smartpro`) |
 
-Every port branch takes `main`'s changes by merging `main` into it; port
-branches do not merge into each other. A fix to the original's behaviour is
-made on `main`; a fix to the ports' launcher, which each Linux port branch
-carries, is made on each of those branches; a fix for one device, on its
-branch. A branch adds files rather than editing `main`'s where it can, and
-resolves a merge's conflicts itself. `README.md` never flows from `main`: the
-port branches share the ports' README, linux-x86_64's, and a merge from `main`
-keeps it. `scripts/launcher.sh status` says which pins lack commits of `main`.
+A port branch lives while its platform or device is worked on. It holds only
+what it builds, with its own `README.md` and `docs/LAUNCHER.md`; a device
+branch keeps the desktop's port as its host build
+(`ports/linux-x86_64/port.cmake` and its preset), all `scripts/dx.sh test`
+needs. Nothing merges between the branches, `main` included: a change crosses
+only by a deliberate cherry-pick, in a commit of its own on each branch it
+serves, with that branch's docs. `scripts/launcher.sh status` says which pins
+lack their branch's newer commits.
 
 ## The layers
 
 | Layer | Where | Changes per port? |
 |---|---|---|
-| The launcher's core (the entry decision, command-line parsing, crash sentinel, config seeding) | `src/core/`, from `main`; `linux-x86_64` adds `Settings.json` and pad layouts | No. C11, no SDL, no device facts |
-| The device profile | `src/platform/target.h`; `ports/<id>/target.c` | Data only: a port may supply one |
+| The launcher's core (the entry decision, command-line parsing, crash sentinel, config seeding) | `src/core/`: `main`'s, with the ports' `Settings.json` and pad layouts | No. C11, no SDL, no device facts |
+| The device profile | `src/platform/target.h`, `target_default.c`; a device branch's `ports/<id>/target.c` (trimui-smartpro's) | Data only: a device branch may supply one |
 | The OS: handing over to the game, the GPU probe | `src/platform/launch.h`, `src/platform/posix/` | Only for a non-POSIX platform, and for Android's hand-over (below) |
-| The screens | `src/ui/` (SDL2), from `linux-x86_64` | No |
+| The screens | `src/ui/` (SDL2) | A device branch's own choices (trimui-smartpro's) |
 | The engine | VibeEngine, its clone beside the workspace in `VibeEngine/`, pinned by `ENGINE-PIN.txt` | Built per port from its `ports/<id>/engine.cmake` |
 | The app around the binaries | `ports/common/packaging/` (the base app, what linux-x86_64 ships) + `ports/<id>/packaging/` | The port's files are laid over the base |
 
@@ -46,13 +47,12 @@ from the branch it started from (linux-x86_64, for the Linux devices):
 | `port.sh` | Sourced by this workspace's `scripts/dx.sh`, with `scripts/lib/common.sh` loaded. `PORT_DESC`; `PORT_ENGINE=1` if the engine builds for this port here; hooks `port_deps` (fetch toolchains/sysroot), `port_stage` (adjust the staged app), `port_deploy` (send it to the device; over SSH, `dx_ssh_sync` in `scripts/lib/common.sh` sends only what changed, keeps the device's previous copies and verifies), `port_run` (run it here), `port_profile` (a frame-time profile on the device). Unset hooks have safe defaults | yes |
 | `toolchain-c.cmake`, `toolchain-cxx.cmake` | Cross toolchains, referenced by the port's preset (C) and `engine.cmake` (C++). A toolchain file that `return()`s early when the host already is the target arch makes the same preset build natively | cross ports |
 | `engine.cmake` | A CMake initial cache (`cmake -C`) for building the engine: its toolchain and `ENABLE_*` switches, each set with `FORCE` so an edit reaches an existing build too | if it builds the engine |
-| `target.c` | The device profile, a `dxl_target`: fonts to try first, the panel size, the CPU modes the port's hooks can apply (with their help text), a note about the built-in pad, the About line, and the GPU `dxl-shots` should pretend to have. Without one the build uses `src/platform/target_default.c`, a generic desktop | optional |
-| `packaging/` | Laid over `ports/common/packaging/` when staging. `port-hooks.sh` is sourced by the shared `run-game.sh`: `PORT_LIB_PATH`, `port_env`, `port_before_game`, `port_after_game`. Also here: the port's own `launcher.ini`, `renderers.ini`, `engine-settings.json.default`, and whatever the device's frontend needs to list the app | optional |
+| `target.c` | A device branch's profile, a `dxl_target` (trimui-smartpro's): fonts to try first, the panel size, the CPU modes its hooks can apply (with their help text), a note about the built-in pad, the About line, and the GPU `dxl-shots` should pretend to have. Without one the build uses `src/platform/target_default.c`, a generic desktop | optional |
+| `packaging/` | Laid over `ports/common/packaging/` when staging. On a branch whose `run-game.sh` sources one (trimui-smartpro's), `port-hooks.sh`: `PORT_LIB_PATH`, `port_env`, `port_before_game`, `port_after_game`. Also here: the port's own `launcher.ini`, `renderers.ini`, `engine-settings.json.default`, and whatever the device's frontend needs to list the app | optional |
 | `README.md` | The device as measured, the port's status, what was verified on it | yes |
 
 A port also gets a configure preset in its branch's `CMakePresets.json` (its
-name is the port id; it only adds the toolchain file for a cross port). The
-planned ports, `android` and `x360`, have none yet.
+name is the port id; it only adds the toolchain file for a cross port).
 
 ## The pipeline
 
@@ -86,14 +86,14 @@ Staging installs the binaries, lays `ports/common/packaging` and then the port's
    (`probe-sdl.c --pad`); the screen size; the fonts on the system; what the
    device's own frontend expects an app to look like; how its CPU governor is
    managed.
-2. **Branch from `main`, or from the port closest to it**
+2. **Branch from the default of the device's platform, or from the device
+   branch closest to it**
    (`git -C deusex-launcher/main worktree add -b <id> ../<id> <base>`), and
-   keep only what differs. A Linux device that runs the ports' launcher starts
-   from linux-x86_64: one with an ordinary distro is often nothing more than a
-   new name (`linux-aarch64` is linux-x86_64 built for another architecture);
-   for a vendor-firmware handheld -- cross-built against the device's own
-   libraries, its own frontend and CPU modes -- `trimui-smartpro` shows what
-   the differences look like.
+   keep only what it builds. A device with an ordinary distro may need nothing
+   more than its platform's default (`linux-x86_64`, `linux-aarch64`); for a
+   vendor-firmware handheld -- cross-built against the device's own libraries,
+   its own frontend and CPU modes -- `trimui-smartpro` shows what a device
+   branch holds.
 3. **Pick a toolchain whose glibc is at or below the device's**: one newer
    symbol and the binary will not load
    ([the glibc ceiling](DEVELOPMENT.md#gotchas-that-cost-time)). Bootlin
@@ -107,13 +107,14 @@ Staging installs the binaries, lays `ports/common/packaging` and then the port's
 5. **Write `renderers.ini`** for what this engine build can run on the
    device's GPU APIs, and **`engine.cmake`** for the display backends the
    device has.
-6. **Write `target.c`** if the device has anything to say: its fonts, CPU modes
-   its hooks can apply (then `port-hooks.sh` must handle each one and fall back
-   to the profile's default, `CPU_MODE_DEFAULT`: `test_target_<port>` checks,
-   [drift guards](DEVELOPMENT.md#drift-guards)), a note about its pad.
+6. **Write `target.c`** if the device has anything to say: its fonts, a note
+   about its pad, and on a branch with CPU modes (trimui-smartpro's) those its
+   hooks can apply (then `port-hooks.sh` must handle each one and fall back to
+   the profile's default, `CPU_MODE_DEFAULT`: `test_target_<port>` checks,
+   [drift guards](DEVELOPMENT.md#drift-guards)).
 7. **Write `packaging/`**: what the device's frontend needs to list and start
-   the app, `port-hooks.sh` for its library path and CPU modes, a
-   `launcher.ini` with the usual `GameDir`.
+   the app, `port-hooks.sh` for its library path and CPU modes where the
+   branch has them, a `launcher.ini` with the usual `GameDir`.
 8. **Add the preset**, then `scripts/dx.sh build`, `stage`, `deploy`, and write
    the port's `README.md` (below).
 9. **Commit and push the branch, then pin it** here
@@ -143,7 +144,7 @@ renderer list is built from.
 ## Other operating systems
 
 Every Linux port is POSIX, and so is Android: bionic has everything below,
-though its app model changes the hand-over and the probe (its README, below).
+though its app model changes the hand-over and the probe (below).
 The launcher's OS dependencies are few and named:
 
 | What | Where | POSIX mechanism |
@@ -154,13 +155,9 @@ The launcher's OS dependencies are few and named:
 | The launcher's own path; case-insensitive lookups | `core/paths.c` | `/proc/self/exe`, `opendir` |
 | Atomic config writes | `core/ini.c`, `core/json.c` | write a temporary file, `rename` |
 
-**Android** needs a different hand-over -- the engine has to run inside the
-app's process -- and more besides:
-[its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/android/ports/android/README.md).
-**Xbox 360** (planned) is not POSIX, so it would need its own version of each;
-nothing about it is worked out yet
-([its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/x360/ports/x360/README.md)).
-**Windows** would need win32 versions of all five; the original binary's own
+**Android** needs a different hand-over: the engine has to run inside the
+app's process. **Xbox 360** is not POSIX, so it would need its own version of
+each. **Windows** would need win32 versions of all five; the original binary's own
 answers to the same questions are
 [launch-flow.md's platform seams](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/launch-flow.md#platform-seams).
 

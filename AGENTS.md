@@ -22,9 +22,10 @@ git is the record. Every session loads it, so keep it small.
   `scripts/launcher.sh pin <port>`) and the pin committed.
 - **Nothing goes upstream**: the fork has diverged, and upstream's rules do not apply here
   ([how it is kept](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#how-it-is-kept)).
-- **Launcher branches**: `main` is the working base; each port branch is a variant of it and
-  takes `main`'s changes by merge; the port branches share the ports' README, which never takes
-  `main`'s ([the branches](docs/PORTING.md#the-branches)).
+- **Launcher branches**: `main`, the original recreated, and a branch per platform or device
+  while it is worked on (`linux-x86_64`, `linux-aarch64`, `trimui-smartpro`). None merges
+  another: a change crosses only by a deliberate cherry-pick
+  ([the branches](docs/PORTING.md#the-branches)).
 - **Done** means `scripts/dx.sh test` and `scripts/dx.sh check` pass, and every cross port that
   ships (the Smart Pro) builds warning-free. An engine change is also proven against the
   original by a scripted run of both engines
@@ -50,6 +51,9 @@ lists. The launcher's `main` is the original `DeusEx.exe` recreated almost 1:1;
   original `DeusEx.exe` is the model, not a contract: the ports' launcher departs from it where
   that serves the ports, and the launcher's `main` keeps the original recreated beside it.
   linux-x86_64 is where the project is developed and tested ([porting](docs/PORTING.md)).
+- **The engine is Deus Ex's alone**: no other game's code, nor upstream's platforms and tools
+  that Deus Ex does not use, but the D3D11 device, SDL3 and the Win32 code D3D11 needs
+  ([how it is kept](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#how-it-is-kept)).
 - **The engine first.** The porting work -- the next ports, the Smart Pro's own -- waits until
   the engine is more stable and has more of the game. The engine's speed against the original's
   is worked on: the desktop first, measured as the harness measures both engines
@@ -87,11 +91,7 @@ lists. The launcher's `main` is the original `DeusEx.exe` recreated almost 1:1;
 The owner's, each waiting until the owner takes it up.
 
 - **The next ports**: a cross-built engine for linux-aarch64 (a sysroot with the engine's
-  libraries, as the Smart Pro has); Android, starting with an in-process hand-over
-  ([its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/android/ports/android/README.md)).
-- **`main` into the port branches**: its window icons and its change to the shared
-  command-line code (a `?` ends a flag's name too) wait for that merge, which conflicts in
-  `CMakeLists.txt` and `tests/test_gamefiles.c` and keeps the ports' README.
+  libraries, as the Smart Pro has); Android, starting with an in-process hand-over.
 - **Another developer's commit identity**: JuggyMcNutty, or their own.
 - **Detail textures**: keep the fork's one-pass ones, draw `D3DDrv`'s three-pass ones as read,
   or draw none, as the original run here does

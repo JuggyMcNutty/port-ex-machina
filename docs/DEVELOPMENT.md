@@ -46,7 +46,8 @@ checked and run by `scripts/recreation.sh` (its header has the commands) into th
 `System/`, with the engine linux-x86_64 builds; while it is there the original does not start
 under Wine or Proton
 ([installing](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md#installing)).
-`main` is not pinned: it is the clone, and the ports take it by merging.
+`main` is not pinned: it is the clone, and no port branch takes it by merging
+([the branches](PORTING.md#the-branches)).
 
 ## Dependencies
 
@@ -128,9 +129,9 @@ loudly instead of leaving stale instructions:
   fork's branch.
 - `scripts/launcher.sh check`: each port's worktree is at the commit `LAUNCHER-PIN.txt` names,
   on its branch (and git can read it).
-- `test_target_<port>` (the id's `-` as `_`), on the port's branch: each CPU mode a profile
-  offers is named in its `port-hooks.sh` (loosely:
-  [known defects](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects)),
+- `test_target_<port>` (the id's `-` as `_`), on a device branch with a profile of its own
+  (trimui-smartpro's): each CPU mode the profile offers is named in its `port-hooks.sh` (loosely:
+  [known defects](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects)),
   the hooks' fallback (`CPU_MODE_DEFAULT`) is the profile's default, and the profile's id is its
   port's.
 - `scripts/dx.sh check` runs the first three, confirms every port has its required files, and
