@@ -1,10 +1,8 @@
 /* Does this GPU support the texture formats SurrealEngine uploads with?
  *
- * Upstream's TextureUploader::GetUploader hardcodes a VK_FORMAT per
- * TextureFormat and never queries vkGetPhysicalDeviceFormatProperties, so a
- * GPU without desktop BCn support would still get images created and sampled
- * in those formats. The fork asks since (this probe's answer on the GE8300):
- * a format the GPU cannot sample and linearly filter goes to a CPU decoder.
+ * The fork's texture uploader asks (vkGetPhysicalDeviceFormatProperties): a
+ * format the GPU cannot sample and linearly filter goes to a CPU decoder, as
+ * BC1-5, RGB8 and RGBA32F do on the Smart Pro's GE8300 (this probe's answer).
  * This prints optimalTilingFeatures for every format the uploaders can pick,
  * sampled-image and filter-linear bits included.
  *

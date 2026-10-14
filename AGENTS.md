@@ -48,12 +48,14 @@ lists. The launcher's `main` is the original `DeusEx.exe` recreated almost 1:1;
 ## Decided
 
 - **The project**: a cross-platform launcher for Deus Ex of our own, on our own engine fork. The
-  original `DeusEx.exe` is the model, not a contract: the ports' launcher departs from it where
-  that serves the ports, and the launcher's `main` keeps the original recreated beside it.
+  original `DeusEx.exe` is the model, not a contract: each port's launcher departs from it where
+  that serves the port, and the launcher's `main` keeps the original recreated beside it.
   linux-x86_64 is where the project is developed and tested ([porting](docs/PORTING.md)).
 - **The engine is Deus Ex's alone**: no other game's code, nor upstream's platforms and tools
-  that Deus Ex does not use, but the D3D11 device, SDL3 and the Win32 code D3D11 needs
-  ([how it is kept](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#how-it-is-kept)).
+  that Deus Ex does not use
+  ([how it is kept](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#how-it-is-kept));
+  the D3D11 device, the Win32 code it needs and SDL3 are kept, neither built nor tested
+  ([building](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/README.md#building-and-running)).
 - **The engine first.** The porting work -- the next ports, the Smart Pro's own -- waits until
   the engine is more stable and has more of the game. The engine's speed against the original's
   is worked on: the desktop first, measured as the harness measures both engines
@@ -106,8 +108,10 @@ The owner's, each waiting until the owner takes it up.
 
 Known defects, each in the doc that owns its code:
 [`main`'s](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md#known-defects)
-and
-[the ports' launcher's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects).
+and each port branch's `docs/LAUNCHER.md`
+([linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects),
+[linux-aarch64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-aarch64/docs/LAUNCHER.md#known-defects),
+[trimui-smartpro's](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects)).
 Where the engine still differs from the original: each section's "Differs" in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md).
 

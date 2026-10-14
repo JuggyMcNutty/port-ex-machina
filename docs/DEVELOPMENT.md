@@ -57,7 +57,7 @@ multilib repository enabled:
 
 | For | Packages |
 |---|---|
-| building | `base-devel`, CMake, Ninja, `pkgconf`, `sdl2-compat` (with `sdl3` under it), `sdl2_ttf`, OpenAL, `libunwind`, `waylandpp`, `vulkan-headers`, `vulkan-tools` |
+| building | `base-devel`, CMake, Ninja, `pkgconf`, `sdl2-compat` (with `sdl3` under it), `sdl2_ttf`, OpenAL, `waylandpp`, `vulkan-headers`, `vulkan-tools` |
 | running | Mesa with the GPU's Vulkan driver, `libpulse` and `libpipewire` (the desktop's audio), `ttf-dejavu` |
 | the harness and `recreation.sh check` | `xdotool`, ImageMagick, gdb, Python 3; MangoHud (`mangohud`, `lib32-mangohud`) for the harness's `DXCAP_FPS`; `xorg-server-xvfb` for the recreation's private display |
 | deploying | `sshpass` |
@@ -99,7 +99,7 @@ written this way:
 3. **Short sentences, lists and tables.** Plain words over chains of possessives.
 4. **Between repositories a link is absolute**, to a branch's copy on GitHub
    (`blob/<branch>/<path>`): `main` of this repository and the RE, `deusex` of the engine, the
-   port's branch of the launcher.
+   launcher's `main` or the port branch that holds the fact.
 5. **No volatile details** that the pins' checks and git already know, such as commit counts and
    lists.
 6. **A plan is deleted when its work is done**; what lasts of it moves to the doc that owns it,
@@ -147,9 +147,9 @@ These apply everywhere:
   re-versioned the startup symbols; one `GLIBC_2.34` reference is enough. Every cross port sets
   a ceiling (`DXL_PORT_GLIBC_MAX`) that its branch's `scripts/check-abi.sh` enforces after each
   build.
-- **Surreal Engine does not read what the original launcher writes**, and started without
-  `--ini`, as the ports' `run-game.sh` starts it, after its first clean exit it reads
-  `SE-DeusEx.ini`/`SE-User.ini`, not `DeusEx.ini`/`User.ini`; a stub `DeusEx.ini` kills it
+- **Started without `--ini`, as the ports' `run-game.sh` starts it, Surreal Engine reads
+  `SE-DeusEx.ini`/`SE-User.ini` after its first clean exit**, not `DeusEx.ini`/`User.ini`, and
+  of the keys the original launcher writes it reads few; a stub `DeusEx.ini` kills it
   ([where the settings actually live](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#where-the-settings-actually-live)).
 - **Never `pkill -f` or `pgrep -f <pattern>`** in a command whose own text contains the pattern:
   it matches the shell running it. Use `pidof`, `pgrep -x`, or bracket a letter

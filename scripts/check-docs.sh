@@ -16,8 +16,8 @@
 # doc's own directory; its checkout's root, src/, ports/*/packaging/ and
 # ports/*/; then the workspace's -- the folder the repositories share (so
 # VibeEngine/..., gamefiles/... and reference/... resolve), this repository,
-# the engine clone, dx-reverse-info, each launcher checkout and its src/, and
-# gamefiles/ (the game install).
+# the engine clone, dx-reverse-info, gamefiles/ (the game install), and each
+# launcher checkout with its src/, ports/*/packaging/ and ports/*/.
 #
 # A link to https://github.com/JuggyMcNutty/<repository>/(blob|tree)/<branch>/<path>
 # must name a branch the workspace has -- main of port-ex-machina and

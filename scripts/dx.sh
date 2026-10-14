@@ -105,8 +105,8 @@ cmd_stage() {
     say "staged $APP"
 }
 
-# A device's branch builds for the host too: its tests, its profile's among
-# them, run there.
+# Every port branch builds for the host (the linux-x86_64 preset): its tests,
+# a device profile's among them, run there.
 cmd_test() {
     local p="${1:-linux-x86_64}"
     local src="$DX_LAUNCHER/$p"

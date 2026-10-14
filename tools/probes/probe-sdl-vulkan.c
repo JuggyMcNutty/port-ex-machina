@@ -1,12 +1,10 @@
 /* Can SDL2 on this device hand out a Vulkan surface?
  *
- * Decisive for the engine port. The vendor SDL2 registers only "dummy" and
- * "mali" video drivers, and the mali driver has no MALI_Vulkan_* entry points
- * -- but the binary does contain PVR_Vulkan_CreateSurface, so the hooks may be
- * wired to the PowerVR implementations under the mali driver's name.
- *
- * If this works, Surreal Engine's existing Vulkan renderer can drive the
- * device and no new renderer has to be written.
+ * The Smart Pro's vendor SDL2 registers only "dummy" and "mali" video
+ * drivers, and the mali driver has no MALI_Vulkan_* entry points: its Vulkan
+ * hooks are the PowerVR ones (PVR_Vulkan_CreateSurface) under the mali
+ * driver's name. This makes the surface and reports its drawable size and the
+ * queue families that can present to it.
  */
 #include <SDL.h>
 #include <SDL_vulkan.h>
@@ -68,9 +66,9 @@ int main(void) {
                 SDL_Vulkan_GetDrawableSize(w, &dw, &dh);
                 printf("drawable size: %dx%d\n", dw, dh);
 
-                /* This is the check SurrealGPU's device filter actually fails
-                 * on: a graphics queue family that can also present to THIS
-                 * surface. Report every family so we can see which. */
+                /* SurrealGPU's device filter needs a graphics queue family
+                 * that can also present to this surface: every family is
+                 * reported. */
                 uint32_t pdn = 0;
                 vkEnumeratePhysicalDevices(inst, &pdn, NULL);
                 VkPhysicalDevice *pds = calloc(pdn ? pdn : 1, sizeof *pds);

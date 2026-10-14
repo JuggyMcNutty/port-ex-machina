@@ -29,7 +29,7 @@ ENGINE_FILES=(SurrealEngine SurrealEngine.pk3)
 INSTALLED=(DeusEx run-game.sh "${ENGINE_FILES[@]}")
 RETIRED=(libSurrealVideo.so)   # what an earlier install put there too
 
-usage() { sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,21p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 
 # The game's System folder, which must hold the original's DeusEx.exe.
 system_dir() {
