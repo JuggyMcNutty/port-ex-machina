@@ -22,13 +22,13 @@ is open: [`AGENTS.md`](AGENTS.md) and [`docs/`](docs/) ([documentation](#documen
 | [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine) | the engine: our fork of [Surreal Engine](https://github.com/dpjudas/SurrealEngine), an open-source UE1 reimplementation, made to play Deus Ex as the original does and to run on our ports (branch `deusex`) | `VibeEngine/`, pinned in `ENGINE-PIN.txt` |
 | [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) | what the original binaries do -- `DeusEx.exe` and the game's DLLs -- in our own words, and the IDA scripts that read them | `dx-reverse-info/`, not pinned |
 
-## Ports
+## Engine Ports
 
 | Port | For | Status |
 |---|---|---|
-| [`linux-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-x86_64/ports/linux-x86_64) | desktop Linux, the platform's defaults; **the development platform** | runs the game; where the tests, `dxl-shots` and engine validation run |
-| [`trimui-smartpro`](https://github.com/JuggyMcNutty/deusex-launcher/tree/trimui-smartpro/ports/trimui-smartpro) | TrimUI Smart Pro, spruceOS: the device's own | runs the game under Vulkan or OpenGL ES, short of its ~20 FPS target; the engine first |
-| [`linux-aarch64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-aarch64/ports/linux-aarch64) | aarch64 devices with an ordinary distro, the platform's defaults | the launcher cross-builds; not yet run on a device |
+| [`linux-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-x86_64/ports/linux-x86_64) | desktop Linux, the platform's defaults; **the development platform** | currently under heavy development, not yet fully playable |
+| [`linux-aarch64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-aarch64/ports/linux-aarch64) | aarch64 devices with a standard desktop | builds but not yet run on a device |
+| [`trimui-smartpro`](https://github.com/JuggyMcNutty/deusex-launcher/tree/trimui-smartpro/ports/trimui-smartpro) | TrimUI Smart Pro, running spruce CFW | running at parity with linux-x86_64 |
 
 ## Quick start
 
@@ -57,17 +57,18 @@ scripts/recreation.sh run [<args>]         # System/DeusEx, as a player starts i
 scripts/recreation.sh uninstall [<GameDir>]  # the four files out again
 ```
 
-Put the game files where the port's `launcher.ini` says (`GameDir`); a `linux-x86_64` app
-staged here points at the `gamefiles/` beside the repositories.
+Put the game files where stated in a port's `launcher.ini`.
+
+The `linux-x86_64` app staged here points at the `gamefiles/` beside the repositories.
 
 ## Documentation
 
 | Doc | Read it for |
 |---|---|
-| [`AGENTS.md`](AGENTS.md) | the rules, where things stand, the decisions, what is open (agents load it through `CLAUDE.md`) |
-| [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | how to work here: the repositories, dependencies, commits, docs, drift guards, gotchas |
+| [`AGENTS.md`](AGENTS.md) | the rules, where things stand, the decisions, what is open |
+| [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | how to work here: the repositories, dependencies, commits, docs, drift guards, platform gotchas |
 | [`docs/PORTING.md`](docs/PORTING.md) | how ports work -- a branch of the launcher each -- and how to add one |
-| [the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md) | `main`, the original recreated; each port branch's own introduces its launcher ([linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/README.md)) |
+| [the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md) | `main`, the default branch: the original recreated |
 | `docs/LAUNCHER.md`, on each port's branch ([linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md)) | that branch's launcher: the settings files the engine really reads, the screens, controller support, what it changes from the original |
 | a port's `ports/<id>/README.md`, on its branch | one device: status, what differs from the branch it started from, measurements, what was verified |
 | VibeEngine's [`vibe/docs/`](https://github.com/JuggyMcNutty/VibeEngine/tree/deusex/vibe/docs) | the engine: how it is kept, run, profiled and what the fork changes ([`ENGINE.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md)); where it still differs from the original ([`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)); working on it, the harness ([`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md)) |

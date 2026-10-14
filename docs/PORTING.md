@@ -5,7 +5,7 @@ How a device becomes a port: **a branch of the launcher**,
 engine, [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine), built for it.
 Each port branch's launcher is its own `docs/LAUNCHER.md`
 ([linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md));
-the ports that exist are [the root README's](../README.md#ports).
+the ports that exist are [the root README's](../README.md#engine-ports).
 
 ## The branches
 
@@ -16,7 +16,7 @@ the ports that exist are [the root README's](../README.md#ports).
 | `linux-aarch64` | the default of aarch64 Linux with an ordinary distro: linux-x86_64's launcher, cross-built or native (`ports/linux-aarch64`) |
 | `trimui-smartpro` | the TrimUI Smart Pro's own launcher: its device profile, CPU modes, cross toolchains and packaging (`ports/trimui-smartpro`) |
 
-A port branch lives while its platform or device is worked on. It holds only
+A port branch lives while its platform or device is targeted. It holds only
 what it builds, with its own `README.md` and `docs/LAUNCHER.md`; every port
 branch but linux-x86_64 keeps the desktop's port as its host build
 (`ports/linux-x86_64/port.cmake` and its preset), all `scripts/dx.sh test`

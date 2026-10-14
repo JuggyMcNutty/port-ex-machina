@@ -1,18 +1,29 @@
 # Port Ex Machina -- agent guide
 
-Deus Ex (UE1) on modern platforms: our own launcher, our fork of Surreal Engine (VibeEngine),
-and what the original binaries do, in four repositories side by side
-([the repositories](README.md#the-repositories); which doc holds what:
-[the docs table](README.md#documentation)). This repository is the workspace: it fetches the
-others, builds, stages, deploys and profiles the ports, and pins the commits they build
-([the commands](README.md#quick-start)). Before changing anything, read
+Deus Ex (UE1) on modern platforms:
++ our own launcher
++ our fork of Surreal Engine now called VibeEngine
++ reverse engineering docs
+
+All in four repositories side by side
+([the repositories](README.md#the-repositories)).
+
+Which doc holds what:
+[the docs table](README.md#documentation).
+
+Before changing anything, read
 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md).
+
+This repository is the workspace: from it we fetch the
+others, build, stage, deploy and profile the ports, and pin the commits they build
+([the commands](README.md#quick-start)).
 
 This file is edited in place: change what changed, delete what is done, never append a log --
 git is the record. Every session loads it, so keep it small.
 
 ## Rules
 
+- **Ask the owner** when you are unsure what the proper path forward is.
 - **Commit as JuggyMcNutty** (`11588877+JuggyMcNutty@users.noreply.github.com`), never the
   machine's global identity ([commits](docs/DEVELOPMENT.md#commits)).
 - **Never commit the game's files**: no ini, `.int`, package, IDA database or capture. All four
@@ -22,9 +33,9 @@ git is the record. Every session loads it, so keep it small.
   `scripts/launcher.sh pin <port>`) and the pin committed.
 - **Nothing goes upstream**: the fork has diverged, and upstream's rules do not apply here
   ([how it is kept](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#how-it-is-kept)).
-- **Launcher branches**: `main`, the original recreated, and a branch per platform or device
-  while it is worked on (`linux-x86_64`, `linux-aarch64`, `trimui-smartpro`). None merges
-  another: a change crosses only by a deliberate cherry-pick
+- **Launcher branches**: `main`, the original recreated as close to 1:1 as possible, and a
+  branch per targeted platform, so far that includes (`linux-x86_64`, `linux-aarch64`,
+  `trimui-smartpro`). None merges another: a change crosses only by a deliberate cherry-pick
   ([the branches](docs/PORTING.md#the-branches)).
 - **Done** means `scripts/dx.sh test` and `scripts/dx.sh check` pass, and every cross port that
   ships (the Smart Pro) builds warning-free. An engine change is also proven against the
@@ -32,13 +43,12 @@ git is the record. Every session loads it, so keep it small.
   ([scripted runs](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
 - **Docs** hold the current state only, each fact in one place
   ([docs](docs/DEVELOPMENT.md#docs)).
-- **Ask the owner** when you are unsure what the proper path forward is.
 
 ## Status
 
-Each port's: [the ports](README.md#ports); linux-x86_64 is the development platform. The engine,
-[VibeEngine](https://github.com/JuggyMcNutty/VibeEngine) on branch `deusex`, pinned by
-`ENGINE-PIN.txt`, plays the game as the original does but for what
+Each port's: [the ports](README.md#engine-ports); linux-x86_64 is the main platform developed
+for. The engine, [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine) on branch `deusex`,
+pinned by `ENGINE-PIN.txt`, plays the game as the original does but for what
 [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)
 lists. The launcher's `main` is the original `DeusEx.exe` recreated almost 1:1;
 `scripts/recreation.sh` builds, installs, checks and runs it. The RE,
@@ -56,24 +66,7 @@ lists. The launcher's `main` is the original `DeusEx.exe` recreated almost 1:1;
   ([how it is kept](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#how-it-is-kept));
   the D3D11 device, the Win32 code it needs and SDL3 are kept, neither built nor tested
   ([building](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/README.md#building-and-running)).
-- **The engine first.** The porting work -- the next ports, the Smart Pro's own -- waits until
-  the engine is more stable and has more of the game. The engine's speed against the original's
-  is worked on: the desktop first, measured as the harness measures both engines
-  ([measuring both engines](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#measuring-both-engines));
-  the Smart Pro when the owner chooses. The open decisions wait for the owner unless one blocks
-  the work.
-- **Smart Pro target: ~20 FPS at Liberty Island's level start** (~50 ms a frame), for when its
-  performance work resumes. Every trade-off for it is accepted but the AI's: every pawn thinks
-  every frame: far pawns thinking less often make the AI behave oddly. Deep script-VM work is
-  in scope. Re-measure after each change, profiling on the device (`SAMPLE=1`): the desktop's
-  proportions are not the device's. Where its frame goes and what is left:
-  [its README](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#where-a-frame-goes).
-- **Smart Pro default: 853x480** (`Performance.RenderScale` 0.6666667 in the port's
-  `engine-settings.json.default`): 480 lines is the least Deus Ex's menus fit, so 640x360 is
-  out; at the panel's 1280x720 the GPU holds the frame.
-- **Renderers on aarch64 devices**: the goal is Vulkan, OpenGL ES and software, all selectable.
-  The Smart Pro has the first two; a software renderer would have to be written, as Surreal
-  Engine has none.
+- **VibeEngine is developed first.** All porting work is deferred until the owner chooses.
 - **Reading the original**: the game's DLLs are read when a need comes up and documented in
   dx-reverse-info. Only if needed: `SoftDrv.dll`, `WinDrv.dll` beyond its flags, the owner's
   `ALAudio.dll`, `OpenGLDrv.dll` beyond its gamma ramp (the look is judged against `D3DDrv`).
@@ -82,19 +75,11 @@ lists. The launcher's `main` is the original `DeusEx.exe` recreated almost 1:1;
 - **The harness runs on the desktop's display**, never a hidden one: this machine is a dedicated
   development device
   ([the display](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#the-display)).
-- **Multiplayer**: the fork joins the original's servers, live ones included (joining public
-  servers is allowed), and hosts as the original does but for two choices, a listen server held
-  to 144 frames a second and `VibePlayer` for a name the player never chose
-  ([multiplayer](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#multiplayer)).
-  Co-op is for later. A fork server on the public master servers' lists waits for the playtests.
 
 ## Open decisions
 
 The owner's, each waiting until the owner takes it up.
 
-- **The next ports**: a cross-built engine for linux-aarch64 (a sysroot with the engine's
-  libraries, as the Smart Pro has); Android, starting with an in-process hand-over.
-- **Another developer's commit identity**: JuggyMcNutty, or their own.
 - **Detail textures**: keep the fork's one-pass ones, draw `D3DDrv`'s three-pass ones as read,
   or draw none, as the original run here does
   ([the menus' settings](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-menus-settings),
