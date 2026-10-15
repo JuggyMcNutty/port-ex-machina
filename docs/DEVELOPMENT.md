@@ -164,5 +164,6 @@ These apply everywhere:
   `compile`) and `host-tools.sh` again.
 - **`build` does not restage.** The staged app keeps whatever binary the last `stage` copied, so
   a run after `build` alone tests the old engine (its log shows `Unimplemented` lines the
-  current engine does not log). Stage before running -- and never while the engine still runs:
-  the copy fails with `Text file busy` and the old binary runs again.
+  current engine does not log). Stage before running -- and never copy over an engine that still
+  runs (`stage` into the app it runs from, linux-x86_64's `run` into `gamefiles/System`): the
+  copy fails with `Text file busy` and the old binary stays.

@@ -115,8 +115,8 @@ Decided work for later sessions, each deleted when it is done.
 ## Open items
 
 Known defects, each in the doc that owns its code:
-[`main`'s](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md#known-defects)
-and each port branch's `docs/LAUNCHER.md`
+[`main`'s](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md#known-defects),
+which linux-x86_64 builds, and the other port branches' `docs/LAUNCHER.md`
 ([linux-aarch64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-aarch64/docs/LAUNCHER.md#known-defects),
 [trimui-smartpro's](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects)).
 Where the engine still differs from the original: each section's "Differs" in
