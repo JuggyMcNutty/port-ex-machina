@@ -38,6 +38,7 @@ load_port() {
     # Defaults a port.sh may override.
     PORT_DESC=""
     PORT_ENGINE=0
+    PORT_LAUNCHER=deusex-launcher   # the launcher's program, which run starts
     port_deps()   { say "$PORT: nothing to fetch"; }
     port_stage()  { :; }
     port_deploy() { die "$PORT has no deploy step; its app is $APP"; }
@@ -73,23 +74,27 @@ cmd_build() {
 }
 
 # The app directory is laid out exactly as it ships: the binaries, the
-# engine, ports/common/packaging and then the port's own packaging over it.
-# launcher.ini belongs to whoever runs the app, so it is only created when
-# missing; the packaged one is always there as launcher.ini.default.
+# engine, and on a branch with packaging, ports/common/packaging and then the
+# port's own packaging over it. launcher.ini belongs to whoever runs the app,
+# so it is only created when missing; the packaged one is always there as
+# launcher.ini.default. main's launcher, which linux-x86_64 builds, has no
+# packaging: its install is DeusEx and run-game.sh.
 cmd_stage() {
-    [ -x "$LAUNCHER_BUILD/deusex-launcher" ] || die "no launcher build -- scripts/dx.sh build $PORT"
+    [ -x "$LAUNCHER_BUILD/$PORT_LAUNCHER" ] || die "no launcher build -- scripts/dx.sh build $PORT"
     mkdir -p "$APP"
     cmake --install "$LAUNCHER_BUILD" --prefix "$APP" >/dev/null
 
-    local pkg; pkg="$(mktemp -d)"
-    cp -a "$SRC/ports/common/packaging/." "$pkg/"
-    [ -d "$PORT_DIR/packaging" ] && cp -a "$PORT_DIR/packaging/." "$pkg/"
-    mv "$pkg/launcher.ini" "$pkg/launcher.ini.default"
-    cp -a "$pkg/." "$APP/"
-    rm -rf "$pkg"
-    chmod +x "$APP"/*.sh
     local fresh=0
-    if [ ! -s "$APP/launcher.ini" ]; then cp "$APP/launcher.ini.default" "$APP/launcher.ini"; fresh=1; fi
+    if [ -d "$SRC/ports/common/packaging" ]; then
+        local pkg; pkg="$(mktemp -d)"
+        cp -a "$SRC/ports/common/packaging/." "$pkg/"
+        [ -d "$PORT_DIR/packaging" ] && cp -a "$PORT_DIR/packaging/." "$pkg/"
+        mv "$pkg/launcher.ini" "$pkg/launcher.ini.default"
+        cp -a "$pkg/." "$APP/"
+        rm -rf "$pkg"
+        if [ ! -s "$APP/launcher.ini" ]; then cp "$APP/launcher.ini.default" "$APP/launcher.ini"; fresh=1; fi
+    fi
+    chmod +x "$APP"/*.sh
 
     if [ "$PORT_ENGINE" = 1 ]; then
         local e="$BUILD/engine"
@@ -212,7 +217,7 @@ case "$cmd" in
     stage)  load_port "${1:-}"; cmd_stage ;;
     deploy) load_port "${1:-}"; shift || true; cmd_deploy "$@" ;;
     run)    load_port "${1:-}"; shift || true
-            [ -x "$APP/deusex-launcher" ] || die "nothing staged -- scripts/dx.sh stage $PORT"
+            [ -x "$APP/$PORT_LAUNCHER" ] || die "nothing staged -- scripts/dx.sh stage $PORT"
             port_run "$@" ;;
     profile) load_port "${1:-}"; shift || true; port_profile "$@" ;;
     test)   cmd_test "$@" ;;

@@ -147,10 +147,11 @@ These apply everywhere:
   re-versioned the startup symbols; one `GLIBC_2.34` reference is enough. Every cross port sets
   a ceiling (`DXL_PORT_GLIBC_MAX`) that its branch's `scripts/check-abi.sh` enforces after each
   build.
-- **Started without `--ini`, as the ports' `run-game.sh` starts it, Surreal Engine reads
-  `SE-DeusEx.ini`/`SE-User.ini` after its first clean exit**, not `DeusEx.ini`/`User.ini`, and
-  of the keys the original launcher writes it reads few; a stub `DeusEx.ini` kills it
-  ([where the settings actually live](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#where-the-settings-actually-live)).
+- **Started without `--ini`, as linux-aarch64's and the Smart Pro's `run-game.sh` start it,
+  Surreal Engine reads `SE-DeusEx.ini`/`SE-User.ini` after its first clean exit**, not
+  `DeusEx.ini`/`User.ini`, and of the keys the original launcher writes it reads few; a stub
+  `DeusEx.ini` kills it
+  ([where the settings actually live](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-aarch64/docs/LAUNCHER.md#where-the-settings-actually-live)).
 - **Never `pkill -f` or `pgrep -f <pattern>`** in a command whose own text contains the pattern:
   it matches the shell running it. Use `pidof`, `pgrep -x`, or bracket a letter
   (`pgrep -f "[S]urrealEngine --no-launcher"`).
