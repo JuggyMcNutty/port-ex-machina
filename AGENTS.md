@@ -34,9 +34,9 @@ git is the record. Every session loads it, so keep it small.
 - **Nothing goes upstream**: the fork has diverged, and upstream's rules do not apply here
   ([how it is kept](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#how-it-is-kept)).
 - **Launcher branches**: `main`, the original recreated as close to 1:1 as possible, and a
-  branch per targeted platform, so far that includes (`linux-x86_64`, `linux-aarch64`,
-  `trimui-smartpro`). None merges another: a change crosses only by a deliberate cherry-pick
-  ([the branches](docs/PORTING.md#the-branches)).
+  branch per targeted platform, each tailored to it, so far that includes (`linux-x86_64`,
+  `linux-aarch64`, `trimui-smartpro`). None merges another: a change crosses only by a
+  deliberate cherry-pick ([the branches](docs/PORTING.md#the-branches)).
 - **Done** means `scripts/dx.sh test` and `scripts/dx.sh check` pass, and every cross port that
   ships (the Smart Pro) builds warning-free. An engine change is also proven against the
   original by a scripted run of both engines
@@ -98,11 +98,11 @@ Decided work for later sessions, each deleted when it is done.
   ([the gamepad](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#running-on-our-devices)).
 - **The engine's own name**: the build named VibeEngine, not upstream's `SurrealEngine` (the
   executable, `SurrealEngine.pk3`, the settings folder).
-- **One linux-aarch64 build for every aarch64 target**, the Smart Pro included, with what
-  differs between devices found at run time: every GPU fully supported (Snapdragon, Mali,
-  PowerVR), on development boards the owner is acquiring; the engine's build-time device choices
-  moved to run time (the Smart Pro's borderless fullscreen; X11 and Wayland, compiled out of its
-  build); one glibc ceiling and sysroot for all
+- **One linux-aarch64 engine build for every aarch64 target**, the Smart Pro included (its
+  launcher stays its own), with what differs between devices found at run time: every GPU fully
+  supported (Snapdragon, Mali, PowerVR), on development boards the owner is acquiring; the
+  engine's build-time device choices moved to run time (the Smart Pro's borderless fullscreen;
+  X11 and Wayland, compiled out of its build); one glibc ceiling and sysroot for all
   ([running on our devices](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#running-on-our-devices)).
 - **Windows as a build target**: the engine's kept Windows code built and tested
   ([building](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/README.md#building-and-running)),
