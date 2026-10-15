@@ -89,6 +89,18 @@ The owner's, each waiting until the owner takes it up.
   for RGBA8
   ([rendering](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering)).
 
+## To do
+
+Decided work for later sessions, each deleted when it is done.
+
+- **SDL3**: the engine's SDL3 window backend brought level with SDL2's, the fork's gamepad
+  support first (`GetGamepadState`), then built and tested
+  ([the gamepad](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#running-on-our-devices)).
+- **The engine's own name**: the build named VibeEngine, not upstream's `SurrealEngine` (the
+  executable, `SurrealEngine.pk3`, the settings folder).
+- **Every aarch64 GPU** fully supported (Snapdragon, Mali, PowerVR), on development boards the
+  owner is acquiring.
+
 ## Open items
 
 Known defects, each in the doc that owns its code:

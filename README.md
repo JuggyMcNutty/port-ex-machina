@@ -65,7 +65,7 @@ The `linux-x86_64` app staged here points at the `gamefiles/` beside the reposit
 
 | Doc | Read it for |
 |---|---|
-| [`AGENTS.md`](AGENTS.md) | the rules, where things stand, the decisions, what is open |
+| [`AGENTS.md`](AGENTS.md) | the rules, where things stand, the decisions, the to-do list, what is open |
 | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | how to work here: the repositories, dependencies, commits, docs, drift guards, platform gotchas |
 | [`docs/PORTING.md`](docs/PORTING.md) | how ports work -- a branch of the launcher each -- and how to add one |
 | [the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md) | `main`, the default branch: the original recreated |
@@ -82,7 +82,7 @@ none of them owns. The parent is not versioned itself.
 ```
 deusex/                  the parent folder (any name)
   port-ex-machina/       this repository:
-    AGENTS.md              rules, status, decisions, open items (CLAUDE.md imports it)
+    AGENTS.md              rules, status, decisions, to do, open items (CLAUDE.md imports it)
     ENGINE-PIN.txt         the engine's version: VibeEngine's repository, branch and commit
     LAUNCHER-PIN.txt       the launcher's: deusex-launcher's repository, and each port's commit
     docs/                  DEVELOPMENT, PORTING
