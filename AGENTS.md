@@ -98,8 +98,12 @@ Decided work for later sessions, each deleted when it is done.
   ([the gamepad](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#running-on-our-devices)).
 - **The engine's own name**: the build named VibeEngine, not upstream's `SurrealEngine` (the
   executable, `SurrealEngine.pk3`, the settings folder).
-- **Every aarch64 GPU** fully supported (Snapdragon, Mali, PowerVR), on development boards the
-  owner is acquiring.
+- **One linux-aarch64 build for every aarch64 target**, the Smart Pro included, with what
+  differs between devices found at run time: every GPU fully supported (Snapdragon, Mali,
+  PowerVR), on development boards the owner is acquiring; the engine's build-time device choices
+  moved to run time (the Smart Pro's borderless fullscreen; X11 and Wayland, compiled out of its
+  build); one glibc ceiling and sysroot for all
+  ([running on our devices](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#running-on-our-devices)).
 - **Windows as a build target**: the engine's kept Windows code built and tested
   ([building](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/README.md#building-and-running)),
   and a launcher branch with win32 versions of the launcher's OS dependencies
