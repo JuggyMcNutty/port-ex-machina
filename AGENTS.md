@@ -100,6 +100,10 @@ Decided work for later sessions, each deleted when it is done.
   executable, `SurrealEngine.pk3`, the settings folder).
 - **Every aarch64 GPU** fully supported (Snapdragon, Mali, PowerVR), on development boards the
   owner is acquiring.
+- **Windows as a build target**: the engine's kept Windows code built and tested
+  ([building](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/README.md#building-and-running)),
+  and a launcher branch with win32 versions of the launcher's OS dependencies
+  ([other operating systems](docs/PORTING.md#other-operating-systems)).
 
 ## Open items
 
