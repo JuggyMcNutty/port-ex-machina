@@ -147,11 +147,10 @@ These apply everywhere:
   re-versioned the startup symbols; one `GLIBC_2.34` reference is enough. Every cross port sets
   a ceiling (`DXL_PORT_GLIBC_MAX`) that its branch's `scripts/check-abi.sh` enforces after each
   build.
-- **Started without `--ini`, as linux-aarch64's and the Smart Pro's `run-game.sh` start it,
-  Surreal Engine reads `SE-DeusEx.ini`/`SE-User.ini` after its first clean exit**, not
-  `DeusEx.ini`/`User.ini`, and of the keys the original launcher writes it reads few; a stub
-  `DeusEx.ini` kills it
-  ([where the settings actually live](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-aarch64/docs/LAUNCHER.md#where-the-settings-actually-live)).
+- **Started without `--ini`, as the Smart Pro's `run-game.sh` starts it, Surreal Engine reads
+  `SE-DeusEx.ini`/`SE-User.ini` after its first clean exit**, not `DeusEx.ini`/`User.ini`, and
+  of the keys the original launcher writes it reads few; a stub `DeusEx.ini` kills it
+  ([where the settings actually live](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#where-the-settings-actually-live)).
 - **Never `pkill -f` or `pgrep -f <pattern>`** in a command whose own text contains the pattern:
   it matches the shell running it. Use `pidof`, `pgrep -x`, or bracket a letter
   (`pgrep -f "[S]urrealEngine --no-launcher"`).
@@ -165,5 +164,5 @@ These apply everywhere:
 - **`build` does not restage.** The staged app keeps whatever binary the last `stage` copied, so
   a run after `build` alone tests the old engine (its log shows `Unimplemented` lines the
   current engine does not log). Stage before running -- and never copy over an engine that still
-  runs (`stage` into the app it runs from, linux-x86_64's `run` into `gamefiles/System`): the
-  copy fails with `Text file busy` and the old binary stays.
+  runs (`stage` into the app it runs from; `run`, on a branch that builds `main`'s launcher,
+  into `gamefiles/System`): the copy fails with `Text file busy` and the old binary stays.

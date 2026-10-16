@@ -173,7 +173,7 @@ cmd_check() {
         [ -f "$src/ports/$p/port.cmake" ] || continue
         max=$(sed -n 's/^[[:space:]]*set(DXL_PORT_GLIBC_MAX[[:space:]]\{1,\}\([0-9.]\{1,\}\))/\1/p' "$src/ports/$p/port.cmake" | head -n 1)
         [ -n "$max" ] || continue
-        for f in deusex-launcher dxl-cli SurrealEngine; do
+        for f in deusex-launcher DeusEx dxl-cli SurrealEngine; do
             [ -f "$DX_ROOT/build/$p/app/$f" ] && bins+=("$DX_ROOT/build/$p/app/$f")
         done
         [ ${#bins[@]} -gt 0 ] || continue

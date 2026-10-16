@@ -50,7 +50,8 @@ Each port's: [the ports](README.md#engine-ports); linux-x86_64 is the main platf
 for. The engine, [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine) on branch `deusex`,
 pinned by `ENGINE-PIN.txt`, plays the game as the original does but for what
 [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)
-lists. The launcher's `main` is the original `DeusEx.exe` recreated almost 1:1;
+lists. The launcher's `main` is the original `DeusEx.exe` recreated almost 1:1, and done: the
+reference the port branches start from, changed only for a feature found missing;
 `scripts/recreation.sh` builds, installs, checks and runs it. The RE,
 [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info), documents every binary read
 ([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)).
@@ -93,9 +94,9 @@ The owner's, each waiting until the owner takes it up.
 
 Decided work for later sessions, each deleted when it is done.
 
-- **The desktop launcher**: linux-x86_64's own, planned with the owner first and made from
-  `main`'s launcher, which the branch builds as it is for now
-  ([the branches](docs/PORTING.md#the-branches)).
+- **The desktop launcher**: linux-x86_64's and linux-aarch64's, likely one codebase, planned
+  with the owner first and made from `main`'s launcher, which both branches build as it is for
+  now ([the branches](docs/PORTING.md#the-branches)).
 - **SDL3**: the engine's SDL3 window backend brought level with SDL2's, the fork's gamepad
   support first (`GetGamepadState`), then built and tested
   ([the gamepad](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#running-on-our-devices)).
@@ -116,9 +117,8 @@ Decided work for later sessions, each deleted when it is done.
 
 Known defects, each in the doc that owns its code:
 [`main`'s](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md#known-defects),
-which linux-x86_64 builds, and the other port branches' `docs/LAUNCHER.md`
-([linux-aarch64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-aarch64/docs/LAUNCHER.md#known-defects),
-[trimui-smartpro's](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects)).
+which linux-x86_64 and linux-aarch64 build, and the Smart Pro's
+[`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects).
 Where the engine still differs from the original: each section's "Differs" in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md).
 
