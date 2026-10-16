@@ -77,8 +77,8 @@ cmd_build() {
 # engine, and on a branch with packaging, ports/common/packaging and then the
 # port's own packaging over it. launcher.ini belongs to whoever runs the app,
 # so it is only created when missing; the packaged one is always there as
-# launcher.ini.default. main's launcher, which linux-x86_64 builds, has no
-# packaging: its install is DeusEx and run-game.sh.
+# launcher.ini.default. main's launcher, which linux-x86_64 and linux-aarch64
+# build, has no packaging: its install is DeusEx and run-game.sh.
 cmd_stage() {
     [ -x "$LAUNCHER_BUILD/$PORT_LAUNCHER" ] || die "no launcher build -- scripts/dx.sh build $PORT"
     mkdir -p "$APP"

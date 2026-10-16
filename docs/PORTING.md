@@ -35,7 +35,7 @@ build `main`'s as `main` has it.
 
 | Layer | Where | Changes per port? |
 |---|---|---|
-| The launcher's core (the entry decision, command-line parsing, crash sentinel, config seeding) | `src/core/`: `main`'s, with the ports' config, `Settings.json`, renderer list and pad layouts | A device branch's own facts (trimui-smartpro's buttons, PowerVR anti-aliasing lock and defaults). C11, no SDL |
+| The launcher's core (the entry decision, command-line parsing, crash sentinel, config seeding) | `src/core/`: `main`'s, with its own config, `Settings.json`, renderer list and pad layouts | A device branch's own facts (trimui-smartpro's buttons, PowerVR anti-aliasing lock and defaults). C11, no SDL |
 | The device profile | `src/platform/target.h`, `target_default.c`; trimui-smartpro's profile code and its `ports/trimui-smartpro/target.c` | Data only, on a branch with that code |
 | The OS: handing over to the game, the GPU probe | `src/platform/launch.h`, `src/platform/posix/` | Only for a non-POSIX platform, and for Android's hand-over (below) |
 | The screens | `src/ui/` (SDL2) | A device branch's own choices (trimui-smartpro's) |
@@ -83,8 +83,8 @@ checkout links it in. None of it is versioned and all of it can be deleted;
 
 Staging installs the binaries, lays `ports/common/packaging` and then the port's
 `packaging/` beside them on a branch that has them, copies in the engine's
-`SurrealEngine` and `SurrealEngine.pk3`, and runs `port_stage`.
-`launcher.ini` belongs to whoever runs the app: it is created from
+`SurrealEngine` and `SurrealEngine.pk3`, and runs `port_stage`. On such a
+branch `launcher.ini` belongs to whoever runs the app: it is created from
 `launcher.ini.default` only when missing.
 
 ## Adding a port
@@ -97,11 +97,11 @@ Staging installs the binaries, lays `ports/common/packaging` and then the port's
    pad reports (`probe-sdl.c --pad`); the screen size; the fonts on the
    system; what the device's own frontend expects an app to look like; how its
    CPU governor is managed.
-2. **Branch from the default of the device's platform, or from the device
-   branch closest to it**
+2. **Branch from the default of the device's platform**, `main`'s launcher with
+   that platform's port
    (`git -C deusex-launcher/main worktree add -b <id> ../<id> <base>`), and
    keep only what it builds. A device with an ordinary distro may need nothing
-   more than its platform's default (`linux-x86_64`, `linux-aarch64`); for a
+   more than that default (`linux-x86_64`, `linux-aarch64`); for a
    vendor-firmware handheld -- cross-built against the device's own libraries,
    its own frontend and CPU modes -- `trimui-smartpro` shows what a device
    branch holds.
@@ -114,7 +114,8 @@ Staging installs the binaries, lays `ports/common/packaging` and then the port's
 4. **Decide where SDL2 comes from.** The system's (`DXL_PORT_SDL system`) on a
    native build; a sysroot's for a cross build: a distro's packages
    (linux-aarch64's), or the device's own libraries when the vendor's build is
-   the only one that can draw. The launcher needs SDL 2.0.18 or later.
+   the only one that can draw. `main`'s launcher needs SDL 2.0.16 and SDL_ttf
+   2.0.18 or later; the tabbed one, SDL 2.0.18.
 5. **Write `renderers.ini`**, on a branch with the tabbed launcher, for what
    this engine build can run on the device's GPU APIs, and **`engine.cmake`**
    for the display backends the device has.
@@ -152,7 +153,7 @@ it (the Smart Pro's README has the exact command line).
 | `probe-texture-formats.c` | which texture formats the GPU can sample and linearly filter (BCn, RGB8, RGBA32F) | `-lvulkan` |
 | `probe-gles-sampler.c` | what an OpenGL ES driver accepts: each sampler parameter the engine sets, the extensions it looks for (S3TC, float-linear filtering, anisotropy, mirror-clamp, `glBufferStorage`), and the scene buffers' formats (RGBA16F, R32UI and D32F in one framebuffer); it draws to a pbuffer | `-ldl` (EGL and GLES are opened at run time) |
 
-`dxl-cli --probe` (trimui-smartpro's build, for the device and the host)
+`dxl-cli --probe` (trimui-smartpro's build, for any aarch64 Linux and the host)
 reports the Vulkan device and API, the OpenGL ES version and renderer, and
 desktop GL -- what the launcher's renderer list is built from.
 

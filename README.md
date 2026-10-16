@@ -57,9 +57,9 @@ scripts/recreation.sh run [<args>]         # System/DeusEx, as a player starts i
 scripts/recreation.sh uninstall [<GameDir>]  # the four files out again
 ```
 
-Put the game files where stated in a port's `launcher.ini`. linux-x86_64's, whose launcher is
-`main`'s for now, are the `gamefiles/` beside the repositories: its `run` puts the staged app in
-their `System/`.
+Put the game files where stated in a port's `launcher.ini`, the Smart Pro's. linux-x86_64's and
+linux-aarch64's, whose launcher is `main`'s for now, are the `gamefiles/` beside the
+repositories: their `run` (linux-aarch64's natively) puts the staged app in their `System/`.
 
 ## Documentation
 
