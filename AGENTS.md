@@ -89,6 +89,10 @@ The owner's, each waiting until the owner takes it up.
   [its terms](docs/DEVELOPMENT.md#the-repositories)): a 10-bit GL scene buffer, `GL_RGB10_A2`
   for RGBA8
   ([rendering](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering)).
+- **A newer glibc for modern platforms**: target one in their builds, or keep every build at an
+  old ceiling, as the to-do's one ceiling for every aarch64 target would (linux-aarch64's is
+  2.31, the Smart Pro's 2.33, its device's; linux-x86_64, built where it runs, has none)
+  ([the glibc ceiling](docs/DEVELOPMENT.md#gotchas-that-cost-time)).
 
 ## To do
 
@@ -112,6 +116,9 @@ Decided work for later sessions, each deleted when it is done.
   ([building](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/README.md#building-and-running)),
   and a launcher branch with win32 versions of the launcher's OS dependencies
   ([other operating systems](docs/PORTING.md#other-operating-systems)).
+- **CI**: the ports built on GitHub's CI, aarch64's always cross-built: linux-aarch64's engine
+  too, which builds only natively for now
+  ([the port](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-aarch64/ports/linux-aarch64/README.md#build-and-run)).
 
 ## Open items
 
