@@ -15,7 +15,7 @@ the ports that exist are [the root README's](../README.md#engine-ports).
 | Branch | Holds |
 |---|---|
 | `main` | the original launcher, recreated almost 1:1: no additions, no ports; the reference the port branches start from |
-| `linux-x86_64` | the default of desktop Linux: DXLauncher, the desktop's own launcher, begun from `main`'s, whose core it keeps, with the desktop's port around it (`ports/linux-x86_64`, its preset, its block in `CMakeLists.txt`); its window has Home, the first run and Recovery, the rest to come ([to do](../AGENTS.md#to-do)) |
+| `linux-x86_64` | the default of desktop Linux: DXLauncher, the desktop's own launcher, begun from `main`'s, whose core it keeps, with the desktop's port around it (`ports/linux-x86_64`, its preset, its block in `CMakeLists.txt`) |
 | `linux-aarch64` | the default of aarch64 Linux with an ordinary distro: DXLauncher, as linux-x86_64 has it, each launcher commit cherry-picked from one to the other, with the port around it (`ports/linux-aarch64`, its presets), cross-built or native |
 | `trimui-smartpro` | the TrimUI Smart Pro's own launcher, the tabbed home screen: its device profile, CPU modes, cross toolchains and packaging (`ports/trimui-smartpro`) |
 
