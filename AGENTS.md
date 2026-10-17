@@ -76,6 +76,9 @@ reference the port branches start from, changed only for a feature found missing
 - **The harness runs on the desktop's display**, never a hidden one: this machine is a dedicated
   development device
   ([the display](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#the-display)).
+- **Every Linux build at a glibc ceiling**: one old enough for every actively maintained mainline
+  distribution, linux-x86_64's too, not the build system's own
+  ([the glibc ceiling](docs/DEVELOPMENT.md#gotchas-that-cost-time)).
 
 ## Open decisions
 
@@ -89,10 +92,6 @@ The owner's, each waiting until the owner takes it up.
   [its terms](docs/DEVELOPMENT.md#the-repositories)): a 10-bit GL scene buffer, `GL_RGB10_A2`
   for RGBA8
   ([rendering](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering)).
-- **A newer glibc for modern platforms**: target one in their builds, or keep every build at an
-  old ceiling, as the to-do's one ceiling for every aarch64 target would (linux-aarch64's is
-  2.31, the Smart Pro's 2.33, its device's; linux-x86_64, built where it runs, has none)
-  ([the glibc ceiling](docs/DEVELOPMENT.md#gotchas-that-cost-time)).
 
 ## To do
 
@@ -103,6 +102,11 @@ Decided work for later sessions, each deleted when it is done.
   places and big screen, the server browser, mods
   ([the launcher](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md),
   [the branches](docs/PORTING.md#the-branches)).
+- **linux-x86_64's glibc ceiling**: its launcher and engine built to run on the oldest glibc
+  of the actively maintained mainline distributions, checked as the cross ports' are; the
+  ceiling and how to build to it settled with the owner first. Today it has none: built in the
+  Arch container (2.44), its engine does not start on the owner's Bazzite host (2.43)
+  ([where it runs](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md#where-it-runs)).
 - **SDL3**: the engine's SDL3 window backend brought level with SDL2's, the fork's gamepad
   support first (`GetGamepadState`), then built and tested
   ([the gamepad](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#running-on-our-devices)).

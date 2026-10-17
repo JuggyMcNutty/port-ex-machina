@@ -26,7 +26,7 @@ is open: [`AGENTS.md`](AGENTS.md) and [`docs/`](docs/) ([documentation](#documen
 
 | Port | For | Status |
 |---|---|---|
-| [`linux-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-x86_64/ports/linux-x86_64) | desktop Linux, DXLauncher, the desktop's own launcher: Home, the first run, Settings and Recovery made, the rest to come; **the development platform** | currently under heavy development, not yet fully playable |
+| [`linux-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-x86_64/ports/linux-x86_64) | desktop Linux, DXLauncher, the desktop's own launcher: Home, the first run, Settings, Profiles and Recovery made, the rest to come; **the development platform** | currently under heavy development, not yet fully playable |
 | [`linux-aarch64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-aarch64/ports/linux-aarch64) | aarch64 devices with a standard desktop, DXLauncher, as linux-x86_64 has it | builds but not yet run on a device |
 | [`trimui-smartpro`](https://github.com/JuggyMcNutty/deusex-launcher/tree/trimui-smartpro/ports/trimui-smartpro) | TrimUI Smart Pro, running spruce CFW | running at parity with linux-x86_64 |
 
