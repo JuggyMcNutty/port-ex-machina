@@ -36,7 +36,7 @@ and linux-aarch64's.
 
 | Layer | Where | Changes per port? |
 |---|---|---|
-| The launcher's core (the entry decision, command-line parsing, crash sentinel, config seeding) | `src/core/`: `main`'s, with its own config, `Settings.json`, renderer list and pad layouts; DXLauncher's with its folders, profiles, installs and the engine's command line too | A device branch's own facts (trimui-smartpro's buttons, PowerVR anti-aliasing lock and defaults). C11, no SDL |
+| The launcher's core (the entry decision, command-line parsing, crash sentinel, config seeding) | `src/core/`: `main`'s, with its own config, `Settings.json`, renderer list and pad layouts; DXLauncher's with its folders, profiles, installs, settings and the engine's command line too | A device branch's own facts (trimui-smartpro's buttons, PowerVR anti-aliasing lock and defaults). C11, no SDL |
 | The device profile | `src/platform/target.h`, `target_default.c`; trimui-smartpro's profile code and its `ports/trimui-smartpro/target.c` | Data only, on a branch with that code |
 | The OS: handing over to the game, the GPU probe | `src/platform/`: the tabbed launcher's `launch.h`, its own replaced by the game's; DXLauncher's `process.h`, the game a child it waits for; `src/platform/posix/` | Only for a non-POSIX platform, and for Android's hand-over (below) |
 | One start and the game | DXLauncher's `src/app/`, no SDL | no |
