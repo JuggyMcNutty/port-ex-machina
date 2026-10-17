@@ -165,3 +165,35 @@ dx_fetch_arch_pkg() {
     fi
     tar -C "$dest" --zstd -xf "$cache/$file" "${@:-usr/include}"
 }
+
+# ---- a launcher branch's vendored sources ------------------------------------
+# dx_fetch_src <deps.lock> [name]...
+#
+# The sources a launcher branch's cmake/deps.lock pins, each by version and
+# SHA256, into deps/cache/src, where its vendored build reads them with no
+# network: every one, or the names given. One already there with the pinned
+# hash is kept.
+dx_fetch_src() {
+    local lock="$1"; shift
+    local dest="$DX_DEPS/cache/src" name ver file sum url w want
+    mkdir -p "$dest"
+    while read -r name ver file sum url; do
+        case "$name" in ''|'#'*) continue ;; esac
+        if [ $# -gt 0 ]; then
+            want=0
+            for w in "$@"; do [ "$w" != "$name" ] || want=1; done
+            [ "$want" = 1 ] || continue
+        fi
+        if [ -s "$dest/$file" ] && echo "$sum  $dest/$file" | sha256sum -c --status; then
+            say "source present: $file"
+            continue
+        fi
+        say "downloading $file ..."
+        curl -fL --retry 3 --progress-bar -o "$dest/$file.part" "$url"
+        if ! echo "$sum  $dest/$file.part" | sha256sum -c --status; then
+            rm -f "$dest/$file.part"
+            die "$file is not the one $lock pins (SHA256 $sum)"
+        fi
+        mv "$dest/$file.part" "$dest/$file"
+    done < "$lock"
+}

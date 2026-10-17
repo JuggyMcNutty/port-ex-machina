@@ -57,7 +57,7 @@ multilib repository enabled:
 
 | For | Packages |
 |---|---|
-| building | `base-devel`, CMake, Ninja, `pkgconf`, `sdl2-compat` (with `sdl3` under it), `sdl2_ttf`, OpenAL, `waylandpp`, `vulkan-headers`, `vulkan-tools` |
+| building | `base-devel`, CMake, Ninja, `pkgconf`, `sdl2-compat` (with `sdl3` under it), `sdl2_ttf`, `sdl3_ttf` (the desktop launcher's window), OpenAL, `waylandpp`, `vulkan-headers`, `vulkan-tools` |
 | running | Mesa with the GPU's Vulkan driver, `libpulse` and `libpipewire` (the desktop's audio), `ttf-dejavu` |
 | the harness and `recreation.sh check` | `xdotool`, ImageMagick, gdb, Python 3; MangoHud (`mangohud`, `lib32-mangohud`) for the harness's `DXCAP_FPS`; `xorg-server-xvfb` for the recreation's private display |
 | deploying | `sshpass` |
