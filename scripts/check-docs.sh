@@ -49,6 +49,7 @@ OWNER_URL="https://github.com/JuggyMcNutty"
 ALLOW=(
     '^home/'                          # the app dir's pinned HOME, created by run-game.sh at run time
     '^System/(Running\.ini|SE-DeusEx\.ini|SE-User\.ini|DeusExLauncher\.log)$'  # created at run time
+    '^System/(DeusEx|run-game\.sh|SurrealEngine|SurrealEngine\.pk3)$'  # main's launcher, while scripts/recreation.sh installs it
     '^build/'                         # build output
     '^deps/'                          # fetched toolchains and sysroots
     '^(Window|Launch|Core|Engine|DeusEx|DeusExText|Extension|ConSys|WinDrv)/Inc/' # SDK headers inside reference/ReleaseSDK1112f/Headers/DxHeaders.zip
