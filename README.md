@@ -26,7 +26,7 @@ is open: [`AGENTS.md`](AGENTS.md) and [`docs/`](docs/) ([documentation](#documen
 
 | Port | For | Status |
 |---|---|---|
-| [`linux-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-x86_64/ports/linux-x86_64) | desktop Linux, `main`'s launcher for now; **the development platform** | currently under heavy development, not yet fully playable |
+| [`linux-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-x86_64/ports/linux-x86_64) | desktop Linux, DXLauncher, the desktop's own launcher, its screens to come; **the development platform** | currently under heavy development, not yet fully playable |
 | [`linux-aarch64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-aarch64/ports/linux-aarch64) | aarch64 devices with a standard desktop, `main`'s launcher for now | builds but not yet run on a device |
 | [`trimui-smartpro`](https://github.com/JuggyMcNutty/deusex-launcher/tree/trimui-smartpro/ports/trimui-smartpro) | TrimUI Smart Pro, running spruce CFW | running at parity with linux-x86_64 |
 
@@ -57,9 +57,11 @@ scripts/recreation.sh run [<args>]         # System/DeusEx, as a player starts i
 scripts/recreation.sh uninstall [<GameDir>]  # the four files out again
 ```
 
-Put the game files where stated in a port's `launcher.ini`, the Smart Pro's. linux-x86_64's and
-linux-aarch64's, whose launcher is `main`'s for now, are the `gamefiles/` beside the
-repositories: their `run` (linux-aarch64's natively) puts the staged app in their `System/`.
+Put the game files where stated in a port's `launcher.ini`, the Smart Pro's. linux-x86_64's are
+the `gamefiles/` beside the repositories, which its `run` names to the launcher, copying nothing
+in (`--fresh`: a scratch home for the launcher's files). linux-aarch64's, whose launcher is
+`main`'s for now, are the same folder: its `run`, natively, puts the staged app in its
+`System/`.
 
 ## Documentation
 
@@ -69,7 +71,7 @@ repositories: their `run` (linux-aarch64's natively) puts the staged app in thei
 | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | how to work here: the repositories, dependencies, commits, docs, drift guards, platform gotchas |
 | [`docs/PORTING.md`](docs/PORTING.md) | how ports work -- a branch of the launcher each -- and how to add one |
 | [the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md) | `main`, the default branch: the original recreated |
-| `docs/LAUNCHER.md`, on the Smart Pro's branch ([trimui-smartpro's](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md)); linux-x86_64's and linux-aarch64's launcher is `main`'s for now | that branch's launcher: the settings files the engine really reads, the screens, controller support, what it changes from the original |
+| `docs/LAUNCHER.md`, on each port branch with a launcher of its own ([linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md), [trimui-smartpro's](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md)); linux-aarch64's launcher is `main`'s for now | that branch's launcher: the files it writes and the settings the engine really reads, the screens, the hand-over to the engine, what it changes from the original |
 | a port's `ports/<id>/README.md`, on its branch | one device: status, what differs from the branch it started from, measurements, what was verified |
 | VibeEngine's [`vibe/docs/`](https://github.com/JuggyMcNutty/VibeEngine/tree/deusex/vibe/docs) | the engine: how it is kept, run, profiled and what the fork changes ([`ENGINE.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md)); where it still differs from the original ([`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)); working on it, the harness ([`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md)) |
 | [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) | the original binaries: `DeusEx.exe`, which `main` recreates, and the game's DLLs -- what they do |

@@ -68,6 +68,8 @@ Besides:
 - **Proton**, to run the original, and **`~/.config/SurrealEngine/Settings.json`**, which the
   harness's fork runs take their renderer from
   ([scripted runs](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
+  The desktop launcher never writes it: it gives the engine a folder of its own for each
+  profile (`--userdir`), and refuses an engine that has none.
 - **IDA Pro for Linux** with Hex-Rays' MCP plugin `ida-mcp@HexRaysSA`, for the RE
   ([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)).
 - **Write access to the owner's GitHub repositories**, to push. The fetches clone over HTTPS,

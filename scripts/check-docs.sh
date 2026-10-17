@@ -53,6 +53,8 @@ ALLOW=(
     '^deps/'                          # fetched toolchains and sysroots
     '^(Window|Launch|Core|Engine|DeusEx|DeusExText|Extension|ConSys|WinDrv)/Inc/' # SDK headers inside reference/ReleaseSDK1112f/Headers/DxHeaders.zip
     '^spruce/'                        # spruceOS on the device (/mnt/SDCARD/spruce/...)
+    '^~/'                             # a player's home: the launchers' files in it
+    '^\$(XDG_[A-Z_]+|DXL_HOME|HOME)/'  # the XDG folders and the homes the desktop launcher's files go in
 )
 
 ENGINE="$DX_ENGINE"

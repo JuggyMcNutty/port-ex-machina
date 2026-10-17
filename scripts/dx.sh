@@ -73,12 +73,12 @@ cmd_build() {
     esac
 }
 
-# The app directory is laid out exactly as it ships: the binaries, the
-# engine, and on a branch with packaging, ports/common/packaging and then the
-# port's own packaging over it. launcher.ini belongs to whoever runs the app,
-# so it is only created when missing; the packaged one is always there as
-# launcher.ini.default. main's launcher, which linux-x86_64 and linux-aarch64
-# build, has no packaging: its install is DeusEx and run-game.sh.
+# The app directory is laid out exactly as it ships: the binaries and what
+# the launcher's install rules add, the engine, and on a branch with
+# packaging, ports/common/packaging and then the port's own packaging over
+# it. launcher.ini belongs to whoever runs the app, so it is only created
+# when missing; the packaged one is always there as launcher.ini.default.
+# The engine is VibeEngine, or SurrealEngine, the name the build has today.
 cmd_stage() {
     [ -x "$LAUNCHER_BUILD/$PORT_LAUNCHER" ] || die "no launcher build -- scripts/dx.sh build $PORT"
     mkdir -p "$APP"
@@ -94,16 +94,22 @@ cmd_stage() {
         rm -rf "$pkg"
         if [ ! -s "$APP/launcher.ini" ]; then cp "$APP/launcher.ini.default" "$APP/launcher.ini"; fresh=1; fi
     fi
-    chmod +x "$APP"/*.sh
+    local sh
+    for sh in "$APP"/*.sh; do
+        [ ! -f "$sh" ] || chmod +x "$sh"
+    done
 
     if [ "$PORT_ENGINE" = 1 ]; then
-        local e="$BUILD/engine"
-        if [ -x "$e/SurrealEngine" ]; then
-            cp "$e/SurrealEngine" "$APP/"
-            [ -f "$e/SurrealEngine.pk3" ] && cp "$e/SurrealEngine.pk3" "$APP/"
-        else
+        local e="$BUILD/engine" name staged=0
+        for name in VibeEngine SurrealEngine; do
+            [ -x "$e/$name" ] || continue
+            cp "$e/$name" "$APP/"
+            [ ! -f "$e/$name.pk3" ] || cp "$e/$name.pk3" "$APP/"
+            staged=1
+            break
+        done
+        [ "$staged" = 1 ] ||
             say "warning: no engine build in $e -- staged the launcher only (scripts/dx.sh build $PORT engine)"
-        fi
     fi
 
     port_stage "$fresh"
@@ -173,12 +179,33 @@ cmd_check() {
         [ -f "$src/ports/$p/port.cmake" ] || continue
         max=$(sed -n 's/^[[:space:]]*set(DXL_PORT_GLIBC_MAX[[:space:]]\{1,\}\([0-9.]\{1,\}\))/\1/p' "$src/ports/$p/port.cmake" | head -n 1)
         [ -n "$max" ] || continue
-        for f in deusex-launcher DeusEx dxl-cli SurrealEngine; do
+        for f in deusex-launcher DeusEx dxl-cli VibeEngine SurrealEngine; do
             [ -f "$DX_ROOT/build/$p/app/$f" ] && bins+=("$DX_ROOT/build/$p/app/$f")
         done
         [ ${#bins[@]} -gt 0 ] || continue
         "$src/scripts/check-abi.sh" --max "$max" "${bins[@]}" || rc=1
     done
+
+    # The builds of Deus Ex a launcher takes are the engine's: it plays only
+    # a DeusEx.exe whose SHA1 its own list has.
+    say "== the launchers' game builds against the engine's"
+    local engine_db="$DX_ENGINE/SurrealEngine/UE1GameDatabase.h" want have
+    if [ -f "$engine_db" ]; then
+        want="$(grep -oE '"[0-9a-f]{40}"' "$engine_db" | tr -d '"' | sort)"
+        for p in $(dx_ports); do
+            local db="$DX_LAUNCHER/$p/src/core/gamedb.c"
+            [ -f "$db" ] || continue
+            have="$(grep -oE '"[0-9a-f]{40}"' "$db" | tr -d '"' | sort)"
+            if [ "$have" = "$want" ]; then
+                echo "OK   $p: src/core/gamedb.c"
+            else
+                echo "FAIL $p: src/core/gamedb.c's builds are not the engine's UE1GameDatabase.h's" >&2
+                rc=1
+            fi
+        done
+    else
+        say "skipped: no engine clone (scripts/engine.sh fetch)"
+    fi
 
     [ "$rc" = 0 ] && say "all checks passed" || say "checks FAILED"
     return "$rc"
