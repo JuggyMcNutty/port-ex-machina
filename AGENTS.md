@@ -65,7 +65,7 @@ reference the port branches start from, changed only for a feature found missing
 - **The engine is Deus Ex's alone**: no other game's code, nor upstream's platforms and tools
   that Deus Ex does not use
   ([how it is kept](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#how-it-is-kept));
-  the D3D11 device, the Win32 code it needs and SDL3 are kept, neither built nor tested
+  the D3D11 device and the Win32 code it needs are kept, neither built nor tested
   ([building](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/README.md#building-and-running)).
 - **VibeEngine is developed first.** All porting work is deferred until the owner chooses.
 - **Reading the original**: the game's DLLs are read when a need comes up and documented in
@@ -98,9 +98,6 @@ The owner's, each waiting until the owner takes it up.
 
 Decided work for later sessions, each deleted when it is done.
 
-- **SDL3**: the engine's SDL3 window backend brought level with SDL2's, the fork's gamepad
-  support first (`GetGamepadState`), then built and tested
-  ([the gamepad](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#running-on-our-devices)).
 - **The engine's own name**: the build named VibeEngine, not upstream's `SurrealEngine` (the
   executable, `SurrealEngine.pk3`, the settings folder).
 - **One linux-aarch64 engine build for every aarch64 target**, the Smart Pro included (its
