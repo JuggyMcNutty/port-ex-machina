@@ -78,7 +78,7 @@ cmd_build() {
 # packaging, ports/common/packaging and then the port's own packaging over
 # it. launcher.ini belongs to whoever runs the app, so it is only created
 # when missing; the packaged one is always there as launcher.ini.default.
-# The engine is VibeEngine, or SurrealEngine, the name the build has today.
+# The engine is VibeEngine, or SurrealEngine, whichever the build makes.
 cmd_stage() {
     [ -x "$LAUNCHER_BUILD/$PORT_LAUNCHER" ] || die "no launcher build -- scripts/dx.sh build $PORT"
     mkdir -p "$APP"
@@ -173,7 +173,7 @@ cmd_check() {
         if [ -n "$missing" ]; then echo "FAIL ports/$p lacks$missing" >&2; rc=1; else echo "OK   ports/$p"; fi
     done
 
-    say "== ABI of staged cross builds"
+    say "== ABI of staged builds"
     for p in $(dx_ports); do
         local src="$DX_LAUNCHER/$p" max bins=()
         [ -f "$src/ports/$p/port.cmake" ] || continue

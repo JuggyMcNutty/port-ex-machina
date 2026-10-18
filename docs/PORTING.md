@@ -16,7 +16,7 @@ the ports that exist are [the root README's](../README.md#engine-ports).
 |---|---|
 | `main` | the original launcher, recreated almost 1:1: no additions, no ports; the reference the port branches start from |
 | `linux-x86_64` | the default of desktop Linux: DXLauncher, the desktop's own launcher, begun from `main`'s, whose core it keeps, with the desktop's port around it (`ports/linux-x86_64`, its preset, its block in `CMakeLists.txt`) |
-| `linux-aarch64` | the default of aarch64 Linux with an ordinary distro: DXLauncher, as linux-x86_64 has it, each launcher commit cherry-picked from one to the other, with the port around it (`ports/linux-aarch64`, its presets), cross-built or native |
+| `linux-aarch64` | the default of aarch64 Linux with an ordinary distro: DXLauncher, as linux-x86_64 has it but for the engine's SDL window it asks for (`src/app/run.c`), each launcher commit cherry-picked from one to the other, with the port around it (`ports/linux-aarch64`, its presets), cross-built or native |
 | `trimui-smartpro` | the TrimUI Smart Pro's own launcher, the tabbed home screen: its device profile, CPU modes, cross toolchains and packaging (`ports/trimui-smartpro`) |
 
 A port branch lives while its platform or device is targeted. It holds only
@@ -50,7 +50,7 @@ from the branch it started from:
 
 | File | Purpose | Required |
 |---|---|---|
-| `port.cmake` | Included by the branch's `CMakeLists.txt` when `DXL_PORT=<id>`. Sets `DXL_PORT_GLIBC_MAX` (turns on the post-build `scripts/check-abi.sh`), `DXL_PORT_SYSROOT` and `DXL_PORT_LINK_OPTIONS`; on DXLauncher's branches also where SDL3 and SDL3_ttf come from (`DXL_PORT_DEPS_DEFAULT`: `auto`, `system`, or `vendored`, built from `cmake/deps.lock`'s sources, with `DXL_PORT_DEPS_ENV` and `DXL_PORT_DEPS_C_FLAGS` for a cross build's) and the sysroot's header folders (`DXL_PORT_INCLUDE_DIRS`); on the tabbed launcher's, `DXL_PORT_SDL` (`system`: pkg-config; `sysroot`: SDL2 from `DXL_PORT_SYSROOT`, the device's own) | yes |
+| `port.cmake` | Included by the branch's `CMakeLists.txt` when `DXL_PORT=<id>`. Sets `DXL_PORT_GLIBC_MAX` (turns on the post-build `scripts/check-abi.sh`), `DXL_PORT_SYSROOT` and `DXL_PORT_LINK_OPTIONS`; on DXLauncher's branches also where SDL3, SDL3_ttf and libxmp come from (`DXL_PORT_DEPS_DEFAULT`: `auto`, `system`, or `vendored`, built from `cmake/deps.lock`'s sources, with `DXL_PORT_DEPS_ENV` and `DXL_PORT_DEPS_C_FLAGS` for a cross build's) and the sysroot's header folders (`DXL_PORT_INCLUDE_DIRS`); on the tabbed launcher's, `DXL_PORT_SDL` (`system`: pkg-config; `sysroot`: SDL2 from `DXL_PORT_SYSROOT`, the device's own) | yes |
 | `port.sh` | Sourced by this workspace's `scripts/dx.sh`, with `scripts/lib/common.sh` loaded. `PORT_DESC`; `PORT_ENGINE=1` if the engine builds for this port here; `PORT_LAUNCHER`, the launcher's program that `stage` and `run` look for (`deusex-launcher` unless set); hooks `port_deps` (fetch toolchains/sysroot), `port_stage` (adjust the staged app), `port_deploy` (send it to the device; over SSH, `dx_ssh_sync` in `scripts/lib/common.sh` sends only what changed, keeps the device's previous copies and verifies), `port_run` (run it here), `port_profile` (a frame-time profile on the device). Unset hooks have safe defaults | yes |
 | `toolchain-c.cmake`, `toolchain-cxx.cmake` | Cross toolchains, referenced by the port's preset (C) and `engine.cmake` (C++); linux-x86_64 has one for both, `toolchain.cmake`, its SDK's, a native build against a sysroot. A toolchain file that `return()`s early when the host already is the target arch makes the same preset build natively | cross ports, and a port built by an SDK (`toolchain-cxx.cmake` where the engine cross-builds) |
 | `engine.cmake` | A CMake initial cache (`cmake -C`) for building the engine: its toolchain and `ENABLE_*` switches, each set with `FORCE` so an edit reaches an existing build too | if it builds the engine |
@@ -63,9 +63,9 @@ name is the port id; it only adds the port's toolchain file, if it has one).
 
 On DXLauncher's branches, linux-x86_64 and linux-aarch64, `CMakeLists.txt`
 takes `port.cmake`'s sysroot and its header folders, the glibc ceiling and
-link options for both programs, and where SDL3 and SDL3_ttf come from.
-Neither has `ports/common/packaging` for a `packaging/` to be laid over,
-nor a profile for a `target.c`.
+link options for both programs, and where SDL3, SDL3_ttf and libxmp come
+from. Neither has `ports/common/packaging` for a `packaging/` to be laid
+over, nor a profile for a `target.c`.
 
 ## The pipeline
 
