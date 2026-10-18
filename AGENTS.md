@@ -102,10 +102,8 @@ Decided work for later sessions, each deleted when it is done.
   planned it: the install finder's other places and big screen, the server browser, mods
   ([the launcher](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md),
   [the branches](docs/PORTING.md#the-branches)).
-- **linux-x86_64 at glibc 2.28**: its launcher and engine built with the buildroot toolchain,
-  fetched and pinned as linux-aarch64's Bootlin one is, and checked as the cross ports' are;
-  then linux-aarch64's 2.31 brought down to 2.28 the same way. Today linux-x86_64 has none:
-  built in the Arch container (2.44), its engine does not start on the owner's Bazzite host (2.43)
+- **linux-aarch64 at glibc 2.28**: its cross build moved from Bootlin's 2.31 toolchain to
+  Godot's aarch64 Buildroot SDK, as linux-x86_64's is
   ([where it runs](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md#where-it-runs)).
 - **SDL3**: the engine's SDL3 window backend brought level with SDL2's, the fork's gamepad
   support first (`GetGamepadState`), then built and tested

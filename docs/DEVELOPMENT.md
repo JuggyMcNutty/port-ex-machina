@@ -146,9 +146,11 @@ Device-specific ones are in each port's README, the engine's in its
 These apply everywhere:
 
 - **A binary built against a newer glibc than the device's will not load.** glibc 2.34
-  re-versioned the startup symbols; one `GLIBC_2.34` reference is enough. Every cross port sets
+  re-versioned the startup symbols; one `GLIBC_2.34` reference is enough. Every Linux port sets
   a ceiling (`DXL_PORT_GLIBC_MAX`) that its branch's `scripts/check-abi.sh` enforces after each
-  build.
+  build, built with a toolchain whose own glibc is the ceiling: linux-x86_64's 2.28 by a
+  Buildroot SDK (`dx_fetch_buildroot`), the aarch64 ports' by Bootlin's (`dx_fetch_bootlin`);
+  each port's README says which.
 - **Started without `--ini`, as the Smart Pro's `run-game.sh` starts it, Surreal Engine reads
   `SE-DeusEx.ini`/`SE-User.ini` after its first clean exit**, not `DeusEx.ini`/`User.ini`, and
   of the keys the original launcher writes it reads few; a stub `DeusEx.ini` kills it

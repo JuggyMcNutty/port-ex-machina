@@ -114,15 +114,58 @@ dx_fetch_bootlin() {
     say "  glibc 2.$minor (ceiling $max)"
 }
 
+# ---- buildroot SDKs ---------------------------------------------------------
+# dx_fetch_buildroot <name> <url> <sha256> <glibc-max>
+#
+# A Buildroot SDK -- a toolchain and its sysroot, as Godot's
+# (github.com/godotengine/buildroot) -- into deps/toolchains/<name>: the
+# tarball checked against its pinned SHA256, unpacked, relocated to where it
+# is (relocate-sdk.sh, once), and refused when its own glibc is above the
+# ceiling, as dx_fetch_bootlin refuses one.
+dx_fetch_buildroot() {
+    local name="$1" url="$2" sha="$3" max="$4"
+    local dest="$DX_DEPS/toolchains" tar="$DX_DEPS/cache/$name.tar.bz2"
+    local dir="$dest/$name"
+
+    if [ -x "$dir/relocate-sdk.sh" ] && [ -f "$dir/.dx-relocated" ]; then
+        say "toolchain present: $name"
+    else
+        mkdir -p "$dest" "$DX_DEPS/cache"
+        if [ ! -f "$tar" ] || ! echo "$sha  $tar" | sha256sum -c --status; then
+            say "downloading $name ..."
+            curl -fL --retry 3 --progress-bar -o "$tar.part" "$url"
+            mv "$tar.part" "$tar"
+        fi
+        echo "$sha  $tar" | sha256sum -c --status || die "$tar is not the pinned $name ($sha)"
+        local tmp; tmp="$(mktemp -d "$dest/.unpack.XXXXXX")"
+        tar -C "$tmp" -xjf "$tar"
+        local top; top="$(ls "$tmp")"
+        [ -n "$top" ] && [ -x "$tmp/$top/relocate-sdk.sh" ] || die "$tar holds no buildroot SDK"
+        rm -rf "$dir"
+        mv "$tmp/$top" "$dir"
+        rmdir "$tmp"
+        (cd "$dir" && ./relocate-sdk.sh >/dev/null) || die "$name would not relocate"
+        touch "$dir/.dx-relocated"
+    fi
+
+    local features minor
+    features="$(ls "$dir"/*/sysroot/usr/include/features.h | head -n 1)"
+    minor=$(grep -oE 'define[[:space:]]+__GLIBC_MINOR__[[:space:]]+[0-9]+' "$features" | grep -oE '[0-9]+$')
+    [ "$minor" -le "${max#2.}" ] || die "$name has glibc 2.$minor, above the ceiling $max"
+    say "  glibc 2.$minor (ceiling $max)"
+}
+
 # ---- Debian packages --------------------------------------------------------
 # dx_fetch_debs <dest> <suite> <arch> <package>...
 #
 # Downloads each package (resolved through the suite's Packages index, so no
 # version numbers are hardcoded) and unpacks its data into <dest>, the way
-# dpkg would lay it out. Downloads are cached in deps/cache/.
+# dpkg would lay it out. Downloads are cached in deps/cache/. A suite gone to
+# Debian's archive (buster) is fetched from there.
 dx_fetch_debs() {
     local dest="$1" suite="$2" arch="$3"; shift 3
     local mirror="https://deb.debian.org/debian"
+    case "$suite" in buster|stretch|jessie) mirror="https://archive.debian.org/debian" ;; esac
     local cache="$DX_DEPS/cache/debian-$suite-$arch"
     mkdir -p "$cache" "$dest"
     if [ ! -s "$cache/Packages" ]; then
