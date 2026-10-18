@@ -98,10 +98,6 @@ The owner's, each waiting until the owner takes it up.
 
 Decided work for later sessions, each deleted when it is done.
 
-- **The desktop launcher**: DXLauncher, linux-x86_64's and linux-aarch64's, as the owner
-  planned it: mods
-  ([the launcher](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md),
-  [the branches](docs/PORTING.md#the-branches)).
 - **SDL3**: the engine's SDL3 window backend brought level with SDL2's, the fork's gamepad
   support first (`GetGamepadState`), then built and tested
   ([the gamepad](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#running-on-our-devices)).

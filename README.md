@@ -26,7 +26,7 @@ is open: [`AGENTS.md`](AGENTS.md) and [`docs/`](docs/) ([documentation](#documen
 
 | Port | For | Status |
 |---|---|---|
-| [`linux-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-x86_64/ports/linux-x86_64) | desktop Linux, DXLauncher, the desktop's own launcher: Home, the first run, Settings, Profiles, Saves, Screenshots, Multiplayer, Recovery and the big screen made, in the game's look and sound, the rest to come; glibc 2.28 or newer; **the development platform** | currently under heavy development, not yet fully playable |
+| [`linux-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-x86_64/ports/linux-x86_64) | desktop Linux, DXLauncher, the desktop's own launcher: Home, the first run, Settings, Profiles, Mods, Saves, Screenshots, Multiplayer, Recovery and the big screen, in the game's look and sound; glibc 2.28 or newer; **the development platform** | currently under heavy development, not yet fully playable |
 | [`linux-aarch64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-aarch64/ports/linux-aarch64) | aarch64 devices with a standard desktop, DXLauncher, as linux-x86_64 has it; glibc 2.28 or newer | builds but not yet run on a device |
 | [`trimui-smartpro`](https://github.com/JuggyMcNutty/deusex-launcher/tree/trimui-smartpro/ports/trimui-smartpro) | TrimUI Smart Pro, running spruce CFW | running at parity with linux-x86_64 |
 
