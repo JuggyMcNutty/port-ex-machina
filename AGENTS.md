@@ -76,9 +76,10 @@ reference the port branches start from, changed only for a feature found missing
 - **The harness runs on the desktop's display**, never a hidden one: this machine is a dedicated
   development device
   ([the display](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#the-display)).
-- **Every Linux build at a glibc ceiling**: one old enough for every actively maintained mainline
-  distribution, linux-x86_64's too, not the build system's own
-  ([the glibc ceiling](docs/DEVELOPMENT.md#gotchas-that-cost-time)).
+- **Every Linux build at glibc 2.28**: RHEL 8's, the oldest of the actively maintained mainline
+  distributions (to 2029), so that every one runs it, linux-x86_64's too, not the build
+  system's own; built with a buildroot toolchain, a GCC 13 on glibc 2.28, as Godot's Linux
+  builds are ([the glibc ceiling](docs/DEVELOPMENT.md#gotchas-that-cost-time)).
 
 ## Open decisions
 
@@ -101,10 +102,10 @@ Decided work for later sessions, each deleted when it is done.
   planned it: the install finder's other places and big screen, the server browser, mods
   ([the launcher](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md),
   [the branches](docs/PORTING.md#the-branches)).
-- **linux-x86_64's glibc ceiling**: its launcher and engine built to run on the oldest glibc
-  of the actively maintained mainline distributions, checked as the cross ports' are; the
-  ceiling and how to build to it settled with the owner first. Today it has none: built in the
-  Arch container (2.44), its engine does not start on the owner's Bazzite host (2.43)
+- **linux-x86_64 at glibc 2.28**: its launcher and engine built with the buildroot toolchain,
+  fetched and pinned as linux-aarch64's Bootlin one is, and checked as the cross ports' are;
+  then linux-aarch64's 2.31 brought down to 2.28 the same way. Today linux-x86_64 has none:
+  built in the Arch container (2.44), its engine does not start on the owner's Bazzite host (2.43)
   ([where it runs](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md#where-it-runs)).
 - **SDL3**: the engine's SDL3 window backend brought level with SDL2's, the fork's gamepad
   support first (`GetGamepadState`), then built and tested
