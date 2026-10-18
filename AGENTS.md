@@ -123,3 +123,10 @@ and the Smart Pro's
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects).
 Where the engine still differs from the original: each section's "Differs" in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md).
+
+The engine's, which its docs have no place for:
+
+- **A save loaded in the running game stutters hard**: DXEngine then spawns and destroys actors
+  by the hundred thousand within a minute, its main thread busy for most of it, and its resident
+  memory more than doubles for good. The save, Liberty Island's, loads cleanly when the launcher
+  starts the game on it. The log names no class; the cause is unknown.
