@@ -110,10 +110,12 @@ branch `launcher.ini` belongs to whoever runs the app: it is created from
    branch holds.
 3. **Pick a toolchain whose glibc is at or below the device's**: one newer
    symbol and the binary will not load
-   ([the glibc ceiling](DEVELOPMENT.md#gotchas-that-cost-time)). Bootlin
-   publishes many; `dx_fetch_bootlin <name> <ceiling>` in `port.sh` fetches one
-   and refuses it if its glibc is too new. C11 is enough for the launcher; the
-   engine needs C++20 (GCC 10 or later).
+   ([the glibc ceiling](DEVELOPMENT.md#gotchas-that-cost-time)). A branch of
+   linux-x86_64 or linux-aarch64 starts with theirs, Godot's Buildroot SDK,
+   GCC 13.2 on glibc 2.28 (`dx_fetch_buildroot` in `port.sh`); for an older
+   glibc, Bootlin publishes many (`dx_fetch_bootlin <name> <ceiling>`). Both
+   refuse a toolchain whose glibc is too new. C11 is enough for the launcher;
+   the engine needs C++20 (GCC 10 or later).
 4. **Decide where SDL comes from.** DXLauncher's SDL3 and SDL3_ttf, 3.2 or
    later: the system's on a native build, or built in from `cmake/deps.lock`'s
    sources for a cross one, SDL3's backends against a sysroot of a distro's

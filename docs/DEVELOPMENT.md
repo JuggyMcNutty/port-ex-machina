@@ -148,9 +148,9 @@ These apply everywhere:
 - **A binary built against a newer glibc than the device's will not load.** glibc 2.34
   re-versioned the startup symbols; one `GLIBC_2.34` reference is enough. Every Linux port sets
   a ceiling (`DXL_PORT_GLIBC_MAX`) that its branch's `scripts/check-abi.sh` enforces after each
-  build, built with a toolchain whose own glibc is the ceiling: linux-x86_64's 2.28 by a
-  Buildroot SDK (`dx_fetch_buildroot`), the aarch64 ports' by Bootlin's (`dx_fetch_bootlin`);
-  each port's README says which.
+  build, built with a toolchain whose own glibc is at most the ceiling: linux-x86_64's and
+  linux-aarch64's 2.28 by Godot's Buildroot SDKs (`dx_fetch_buildroot`), the Smart Pro's 2.33,
+  the device's own, by Bootlin's (`dx_fetch_bootlin`); each port's README says which.
 - **Started without `--ini`, as the Smart Pro's `run-game.sh` starts it, Surreal Engine reads
   `SE-DeusEx.ini`/`SE-User.ini` after its first clean exit**, not `DeusEx.ini`/`User.ini`, and
   of the keys the original launcher writes it reads few; a stub `DeusEx.ini` kills it
