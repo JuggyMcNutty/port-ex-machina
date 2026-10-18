@@ -10,7 +10,7 @@
 #   scripts/dx.sh run     <port> [args]       run the staged app here (native ports)
 #   scripts/dx.sh profile <port> [args]       frame-time profile on the device (port-specific)
 #   scripts/dx.sh test    [<port>]            a port's host build + unit tests (default: linux-x86_64)
-#   scripts/dx.sh check                       every repository's docs, the pins, port files, ABI
+#   scripts/dx.sh check                       every repository's docs, the pins, port files, ABI, game builds
 #
 # A port is a branch of the launcher, checked out beside this repository in
 # deusex-launcher/<port> (scripts/launcher.sh); what it provides is in
@@ -179,7 +179,7 @@ cmd_check() {
         [ -f "$src/ports/$p/port.cmake" ] || continue
         max=$(sed -n 's/^[[:space:]]*set(DXL_PORT_GLIBC_MAX[[:space:]]\{1,\}\([0-9.]\{1,\}\))/\1/p' "$src/ports/$p/port.cmake" | head -n 1)
         [ -n "$max" ] || continue
-        for f in deusex-launcher DeusEx dxl-cli VibeEngine SurrealEngine; do
+        for f in deusex-launcher dxl-cli VibeEngine SurrealEngine; do
             [ -f "$DX_ROOT/build/$p/app/$f" ] && bins+=("$DX_ROOT/build/$p/app/$f")
         done
         [ ${#bins[@]} -gt 0 ] || continue

@@ -20,14 +20,13 @@ the ports that exist are [the root README's](../README.md#engine-ports).
 | `trimui-smartpro` | the TrimUI Smart Pro's own launcher, the tabbed home screen: its device profile, CPU modes, cross toolchains and packaging (`ports/trimui-smartpro`) |
 
 A port branch lives while its platform or device is targeted. It holds only
-what it builds, with its own `README.md` and, but for the branches that
-build `main`'s launcher, `docs/LAUNCHER.md`; every port branch but
-linux-x86_64 keeps the desktop's port as its host build
+what it builds, with its own `README.md` and `docs/LAUNCHER.md`; every port
+branch but linux-x86_64 keeps the desktop's port as its host build
 (`ports/linux-x86_64/port.cmake` and its preset), all `scripts/dx.sh test`
-needs. Nothing merges between the branches,
-`main` included: a change crosses only by a deliberate cherry-pick, in a
-commit of its own on each branch it serves, with that branch's docs.
-`scripts/launcher.sh status` says which pins lack their branch's newer commits.
+needs. Nothing merges between the branches, `main` included: a change
+crosses only by a deliberate cherry-pick, in a commit of its own on each
+branch it serves, with that branch's docs. `scripts/launcher.sh status` says
+which pins lack their branch's newer commits.
 
 ## The layers
 
@@ -40,7 +39,7 @@ and linux-aarch64's.
 | The device profile | `src/platform/target.h`, `target_default.c`; trimui-smartpro's profile code and its `ports/trimui-smartpro/target.c` | Data only, on a branch with that code |
 | The OS: handing over to the game, the GPU probe | `src/platform/`: the tabbed launcher's `launch.h`, its own replaced by the game's; DXLauncher's `process.h`, the game a child it waits for; `src/platform/posix/` | Only for a non-POSIX platform, and for Android's hand-over (below) |
 | One start and the game | DXLauncher's `src/app/`, no SDL | no |
-| The screens | `src/ui/` (SDL2) | A device branch's own choices (trimui-smartpro's) |
+| The screens | the tabbed launcher's `src/ui/` (SDL2); DXLauncher's `src/screens/`, on its UI kit, `src/ui/` (SDL3 and SDL3_ttf) | A device branch's own choices (trimui-smartpro's) |
 | The engine | VibeEngine, its clone beside the workspace in `VibeEngine/`, pinned by `ENGINE-PIN.txt` | Built per port from its `ports/<id>/engine.cmake` |
 | The app around the binaries | `ports/common/packaging/` (the base app, trimui-smartpro's) + `ports/<id>/packaging/` | The port's files are laid over the base |
 
@@ -53,14 +52,14 @@ from the branch it started from:
 |---|---|---|
 | `port.cmake` | Included by the branch's `CMakeLists.txt` when `DXL_PORT=<id>`. Sets `DXL_PORT_GLIBC_MAX` (turns on the post-build `scripts/check-abi.sh`), `DXL_PORT_SYSROOT` and `DXL_PORT_LINK_OPTIONS`; on DXLauncher's branches also where SDL3 and SDL3_ttf come from (`DXL_PORT_DEPS_DEFAULT`: `auto`, `system`, or `vendored`, built from `cmake/deps.lock`'s sources, with `DXL_PORT_DEPS_ENV` and `DXL_PORT_DEPS_C_FLAGS` for a cross build's) and the sysroot's header folders (`DXL_PORT_INCLUDE_DIRS`); on the tabbed launcher's, `DXL_PORT_SDL` (`system`: pkg-config; `sysroot`: SDL2 from `DXL_PORT_SYSROOT`, the device's own) | yes |
 | `port.sh` | Sourced by this workspace's `scripts/dx.sh`, with `scripts/lib/common.sh` loaded. `PORT_DESC`; `PORT_ENGINE=1` if the engine builds for this port here; `PORT_LAUNCHER`, the launcher's program that `stage` and `run` look for (`deusex-launcher` unless set); hooks `port_deps` (fetch toolchains/sysroot), `port_stage` (adjust the staged app), `port_deploy` (send it to the device; over SSH, `dx_ssh_sync` in `scripts/lib/common.sh` sends only what changed, keeps the device's previous copies and verifies), `port_run` (run it here), `port_profile` (a frame-time profile on the device). Unset hooks have safe defaults | yes |
-| `toolchain-c.cmake`, `toolchain-cxx.cmake` | Cross toolchains, referenced by the port's preset (C) and `engine.cmake` (C++). A toolchain file that `return()`s early when the host already is the target arch makes the same preset build natively | cross ports (`toolchain-cxx.cmake` where the engine cross-builds) |
+| `toolchain-c.cmake`, `toolchain-cxx.cmake` | Cross toolchains, referenced by the port's preset (C) and `engine.cmake` (C++); linux-x86_64 has one for both, `toolchain.cmake`, its SDK's, a native build against a sysroot. A toolchain file that `return()`s early when the host already is the target arch makes the same preset build natively | cross ports, and a port built by an SDK (`toolchain-cxx.cmake` where the engine cross-builds) |
 | `engine.cmake` | A CMake initial cache (`cmake -C`) for building the engine: its toolchain and `ENABLE_*` switches, each set with `FORCE` so an edit reaches an existing build too | if it builds the engine |
 | `target.c` | A device's profile, a `dxl_target`, on a branch with trimui-smartpro's profile code: fonts to try first, the panel size, the CPU modes its hooks can apply (with their help text), a note about the built-in pad, the About line, and the GPU `dxl-shots` should pretend to have. Without one the build uses `src/platform/target_default.c`, a generic desktop | optional |
 | `packaging/` | Laid over `ports/common/packaging/` when staging. On a branch whose `run-game.sh` sources one (trimui-smartpro's), `port-hooks.sh`: `PORT_LIB_PATH`, `port_env`, `port_before_game`, `port_after_game`. Also here: the port's own `launcher.ini`, `renderers.ini`, `engine-settings.json.default`, and whatever the device's frontend needs to list the app | optional |
 | `README.md` | The device as measured, the port's status, what was verified on it | yes |
 
 A port also gets a configure preset in its branch's `CMakePresets.json` (its
-name is the port id; it only adds the toolchain file for a cross port).
+name is the port id; it only adds the port's toolchain file, if it has one).
 
 On DXLauncher's branches, linux-x86_64 and linux-aarch64, `CMakeLists.txt`
 takes `port.cmake`'s sysroot and its header folders, the glibc ceiling and
@@ -117,12 +116,14 @@ branch `launcher.ini` belongs to whoever runs the app: it is created from
    refuse a toolchain whose glibc is too new. C11 is enough for the launcher;
    the engine needs C++20 (GCC 10 or later).
 4. **Decide where SDL comes from.** DXLauncher's SDL3 and SDL3_ttf, 3.2 or
-   later: the system's on a native build, or built in from `cmake/deps.lock`'s
-   sources for a cross one, SDL3's backends against a sysroot of a distro's
-   headers (linux-aarch64's). The tabbed launcher's SDL2, 2.0.18 or later:
-   the system's (`DXL_PORT_SDL system`), or a sysroot's, the device's own
-   libraries when the vendor's build is the only one that can draw.
-   `main`'s launcher needs SDL 2.0.16 and SDL_ttf 2.0.18 or later.
+   later, and libxmp 4.4 or later: built in from `cmake/deps.lock`'s sources
+   on a build with the SDK, SDL3's backends against a sysroot of a distro's
+   headers (linux-x86_64's and linux-aarch64's), or the system's, when it has
+   them, on a build with the machine's own compiler. The tabbed launcher's
+   SDL2, 2.0.18 or later: the system's (`DXL_PORT_SDL system`), or a
+   sysroot's, the device's own libraries when the vendor's build is the only
+   one that can draw. `main`'s launcher needs SDL 2.0.16 and SDL_ttf 2.0.18
+   or later.
 5. **Write `renderers.ini`**, on a branch with the tabbed launcher, for what
    this engine build can run on the device's GPU APIs, and **`engine.cmake`**
    for the display backends the device has.
@@ -178,16 +179,20 @@ The tabbed launcher's OS dependencies, the Smart Pro's, are few and named:
 | The launcher's own path; case-insensitive lookups | `core/paths.c` | `/proc/self/exe`, `opendir` |
 | Atomic config writes | `core/ini.c`, `core/json.c` | write a temporary file, `rename` |
 
-DXLauncher, linux-x86_64's and linux-aarch64's, has the same single instance, paths, atomic
-writes (`mkstemp`, `fsync`, `rename`) and GPU probe, and in place of the
-hand-over the game as a child it waits for, over a socket line
-(`platform/posix/process.c`: `fork`, `execv`, `socketpair`), and its folders
-(`core/xdg.c`: the XDG base directories). `main`'s launcher shares
-`core/instance.c`, `core/paths.c` and
-`core/ini.c`, and has three more: the game as a child, as DXLauncher's; its
-own start again for safe mode (`platform/posix/launch.c`: `execv`); the
-Detail page's machine (`platform/posix/machine.c`: `/proc/cpuinfo`,
-cpufreq's maximum, `sysinfo`).
+DXLauncher, linux-x86_64's and linux-aarch64's, has the same single instance,
+paths, atomic writes (`mkstemp`, `fsync`, `rename`) and GPU probe, and in
+place of the hand-over the game as a child it waits for, over a socket line
+(`platform/posix/process.c`: `fork`, `execv`, `socketpair`; a folder or page
+opened by `xdg-open`); and its folders (`core/xdg.c`: the XDG base
+directories), its entry in the desktop's app menu, which takes the
+`deusex://` links too (`platform/posix/desktop.c`: a freedesktop.org desktop
+entry), the trash (`platform/posix/trash.c`: freedesktop.org's Trash spec, a
+`rename`) and the server browser's network (`platform/posix/net.c`:
+`getaddrinfo`, TCP and UDP sockets, `poll`). `main`'s launcher shares
+`core/instance.c`, `core/paths.c` and `core/ini.c`, and has three more: the
+game as a child, as DXLauncher's; its own start again for safe mode
+(`platform/posix/launch.c`: `execv`); the Detail page's machine
+(`platform/posix/machine.c`: `/proc/cpuinfo`, cpufreq's maximum, `sysinfo`).
 
 **Android** needs a different hand-over: the engine has to run inside the
 app's process. **Xbox 360** is not POSIX, so it would need its own version of

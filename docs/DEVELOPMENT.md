@@ -136,8 +136,9 @@ loudly instead of leaving stale instructions:
   [known defects](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects)),
   the hooks' fallback (`CPU_MODE_DEFAULT`) is the profile's default, and the profile's id is its
   port's.
-- `scripts/dx.sh check` runs the first three, confirms every port has its required files, and
-  checks the glibc ceiling of whatever is staged.
+- `scripts/dx.sh check` runs the first three, confirms every port has its required files,
+  checks the glibc ceiling of whatever is staged, and checks that a port's list of the game's
+  builds (`src/core/gamedb.c`, DXLauncher's) is the engine's (`UE1GameDatabase.h`).
 
 ## Gotchas that cost time
 
@@ -168,5 +169,5 @@ These apply everywhere:
 - **`build` does not restage.** The staged app keeps whatever binary the last `stage` copied, so
   a run after `build` alone tests the old engine (its log shows `Unimplemented` lines the
   current engine does not log). Stage before running -- and never copy over an engine that still
-  runs (`stage` into the app it runs from; `run`, on a branch that builds `main`'s launcher,
-  into `gamefiles/System`): the copy fails with `Text file busy` and the old binary stays.
+  runs (`stage` into the app it runs from; `recreation.sh install` into `gamefiles/System`): the
+  copy fails with `Text file busy` and the old binary stays.

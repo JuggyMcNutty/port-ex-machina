@@ -38,7 +38,7 @@ Clone this repository into an empty folder; `fetch` puts the others beside it.
 mkdir deusex && cd deusex                  # the parent folder: any name
 git clone https://github.com/JuggyMcNutty/port-ex-machina.git && cd port-ex-machina
 scripts/dx.sh fetch                        # once: the engine, the launcher's port branches, the RE
-scripts/dx.sh test [<port>]                # unit tests: linux-x86_64's, or another port branch's host build
+scripts/dx.sh test [<port>]                # unit tests: linux-x86_64's (after its deps), or another port branch's host build
 scripts/engine.sh status                   # the pin and the fork's branch
 
 scripts/dx.sh deps   <port>                # toolchains and sysroot, if the port needs them
