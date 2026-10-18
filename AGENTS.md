@@ -112,6 +112,12 @@ Decided work for later sessions, each deleted when it is done.
 - **CI**: the ports built on GitHub's CI, aarch64's always cross-built: linux-aarch64's engine
   too, which builds only natively for now
   ([the port](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-aarch64/ports/linux-aarch64/README.md#build-and-run)).
+- **The stutter when a save is loaded in the running game**: DXEngine then spawns and destroys
+  actors by the hundred thousand within a minute, its main thread busy for most of it, and its
+  resident memory more than doubles for good; the same save, Liberty Island's, loads cleanly
+  when the launcher starts the game on it. The log names no class: a console that loads a save
+  in the game and counts the actors by class each second, in both engines, finds what is
+  spawned and whether the original spawns it too.
 
 ## Open items
 
@@ -123,10 +129,3 @@ and the Smart Pro's
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects).
 Where the engine still differs from the original: each section's "Differs" in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md).
-
-The engine's, which its docs have no place for:
-
-- **A save loaded in the running game stutters hard**: DXEngine then spawns and destroys actors
-  by the hundred thousand within a minute, its main thread busy for most of it, and its resident
-  memory more than doubles for good. The save, Liberty Island's, loads cleanly when the launcher
-  starts the game on it. The log names no class; the cause is unknown.
