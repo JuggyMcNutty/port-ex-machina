@@ -123,9 +123,3 @@ and the Smart Pro's
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects).
 Where the engine still differs from the original: each section's "Differs" in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md).
-
-Unverified, a known risk the owner ranks low:
-
-- A menu dragged by its title bar and the Alt accelerators under a real mouse and keyboard:
-  proven only with a timeline's input, which the original cannot take here
-  ([the UI](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md#the-ui)).
