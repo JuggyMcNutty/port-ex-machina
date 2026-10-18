@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# The engine: VibeEngine, our fork of dpjudas/SurrealEngine, cloned beside
-# this repository in VibeEngine/. ENGINE-PIN.txt (repo, branch, commit) names
-# the one commit this workspace builds.
+# The engine: DXEngine, our hard fork of dpjudas/SurrealEngine, cloned
+# beside this repository in DXEngine/. ENGINE-PIN.txt (repo, branch, commit)
+# names the one commit this workspace builds.
 #
-#   scripts/engine.sh fetch                   clone the fork at the pin (if absent)
+#   scripts/engine.sh fetch                   clone the engine at the pin (if absent)
 #   scripts/engine.sh build <port>            build/<port>/engine from the port's engine.cmake
 #   scripts/engine.sh check                   the clone is at the pin, on its branch
-#   scripts/engine.sh status                  the pin and the fork's branch
+#   scripts/engine.sh status                  the pin and the engine's branch
 #   scripts/engine.sh pin                     write the clone's HEAD to ENGINE-PIN.txt
 #
-# The fork's own tools -- the profiling hooks, the harness -- are in its
-# vibe/tools, and how it is kept is its vibe/docs/ENGINE.md: it does not merge
-# upstream (dpjudas/SurrealEngine).
+# The engine's own tools -- the profiling hooks, the harness -- are in its
+# tools/, and how it is kept is its docs/ENGINE.md: nothing is merged from
+# Surreal Engine (dpjudas/SurrealEngine).
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
@@ -20,7 +20,7 @@ PIN_FILE="$DX_WORKSPACE/ENGINE-PIN.txt"
 
 [ -f "$PIN_FILE" ] || die "no ENGINE-PIN.txt at the repository root"
 pinned() { awk -v k="$1" '$1 == k { print $2 }' "$PIN_FILE"; }
-FORK_URL="$(pinned repo)"
+REPO_URL="$(pinned repo)"
 BRANCH="$(pinned branch)"
 
 usage() { sed -n '2,11p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
@@ -34,7 +34,7 @@ cmd_fetch() {
         return 0
     fi
     mkdir -p "$(dirname "$ENGINE_DIR")"
-    git clone --branch "$BRANCH" "$FORK_URL" "$ENGINE_DIR"
+    git clone --branch "$BRANCH" "$REPO_URL" "$ENGINE_DIR"
     eng checkout -q -B "$BRANCH" "$(pinned commit)"
     eng config user.name JuggyMcNutty
     eng config user.email 11588877+JuggyMcNutty@users.noreply.github.com
@@ -71,11 +71,11 @@ cmd_build() {
         extra+=("-DZIPDIR_EXECUTABLE=$(host_zipdir)")
     fi
     cmake -S "$ENGINE_DIR" -B "$bdir" -C "$cfg" "${extra[@]}"
-    cmake --build "$bdir" --target SurrealEngine -j"$(nproc)"
+    cmake --build "$bdir" --target DXEngine -j"$(nproc)"
     local max
     max=$(sed -n 's/^[[:space:]]*set(DXL_PORT_GLIBC_MAX[[:space:]]\{1,\}\([0-9.]\{1,\}\))/\1/p' "$pdir/port.cmake" | head -n 1)
     if [ -n "$max" ]; then
-        "$src/scripts/check-abi.sh" --max "$max" "$bdir/SurrealEngine"
+        "$src/scripts/check-abi.sh" --max "$max" "$bdir/DXEngine"
     fi
 }
 
@@ -115,7 +115,7 @@ cmd_status() {
     local want
     want="$(pinned commit)"
     printf 'pinned    %s\n' "$(oneline "$want")"
-    printf 'fork      %s  (origin/%s)\n' "$(oneline "origin/$BRANCH")" "$BRANCH"
+    printf 'engine    %s  (origin/%s)\n' "$(oneline "origin/$BRANCH")" "$BRANCH"
     if [ "$(eng rev-parse HEAD)" = "$(eng rev-parse "$want^{commit}")" ]; then
         echo "the clone is at the pin"
     else
@@ -123,14 +123,14 @@ cmd_status() {
     fi
 }
 
-# The pin moves only to a commit the fork repository has: a pin no one can
+# The pin moves only to a commit the engine's repository has: a pin no one can
 # fetch would break every other clone's cold start.
 cmd_pin() {
     need_clone
     [ "$(eng rev-parse --abbrev-ref HEAD)" = "$BRANCH" ] || die "the engine clone is not on $BRANCH"
     [ -z "$(eng status --porcelain --untracked-files=no)" ] ||
-        die "uncommitted changes in the engine tree -- commit them (or vibe/tools/perf/perf.sh off) first"
-    ! eng grep -q 'TEMPORARY DEBUG TOOL' "$BRANCH" -- SurrealEngine 2>/dev/null ||
+        die "uncommitted changes in the engine tree -- commit them (or tools/perf/perf.sh off) first"
+    ! eng grep -q 'TEMPORARY DEBUG TOOL' "$BRANCH" -- DXEngine 2>/dev/null ||
         die "TEMPORARY DEBUG TOOL hooks are committed on $BRANCH -- remove them before pinning"
     local head; head="$(eng rev-parse HEAD)"
     eng fetch --quiet origin
@@ -138,8 +138,8 @@ cmd_pin() {
         die "HEAD is not on origin/$BRANCH -- push it first, or fetch cannot reproduce this pin"
     {
         printf '# The engine this workspace builds: scripts/engine.sh fetch clones it, check\n'
-        printf '# verifies it, pin (after pushing a fork commit) moves it. The fork'\''s vibe/docs/ENGINE.md.\n'
-        printf 'repo    %s\n' "$FORK_URL"
+        printf '# verifies it, pin (after pushing an engine commit) moves it. The engine'\''s docs/ENGINE.md.\n'
+        printf 'repo    %s\n' "$REPO_URL"
         printf 'branch  %s\n' "$BRANCH"
         printf 'commit  %s\n' "$head"
     } > "$PIN_FILE"

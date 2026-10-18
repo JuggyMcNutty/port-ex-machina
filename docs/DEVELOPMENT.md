@@ -2,8 +2,8 @@
 
 How to work here, whatever the task. The rules, where things stand and what is open:
 [`../AGENTS.md`](../AGENTS.md). Working on the engine itself -- scripted runs of both engines,
-temporary debug hooks, its gotchas -- is VibeEngine's
-[`vibe/docs/DEVELOPMENT.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md).
+temporary debug hooks, its gotchas -- is DXEngine's
+[`docs/DEVELOPMENT.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md).
 
 ## The development platform: linux-x86_64
 
@@ -38,7 +38,7 @@ one given its types, strings and names by dx-reverse-info's scripts
 `reference/DXD3D9_2.0` is a third-party Direct3D 9 renderer for the original, a closed DLL built
 on Chris Dohnal's UTD3D9 1.3, whose source carries Epic's copyright and no licence: its ideas
 may be taken, never its code; `deps/` and `build/` the scripts remake, and for engine work
-`VibeEngine/vibe/tools/host-tools.sh` unpacks `perf` and the Vulkan validation layer into
+`DXEngine/tools/host-tools.sh` unpacks `perf` and the Vulkan validation layer into
 `deps/`.
 
 The launcher's `main` -- the original `DeusEx.exe` recreated, not a port -- is built, installed,
@@ -65,9 +65,9 @@ multilib repository enabled:
 
 Besides:
 
-- **Proton**, to run the original, and **`~/.config/SurrealEngine/Settings.json`**, which the
-  harness's fork runs take their renderer from
-  ([scripted runs](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
+- **Proton**, to run the original, and **`~/.config/DXEngine/Settings.json`**, which the
+  harness's dxe runs take their renderer from
+  ([scripted runs](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
   The desktop launcher never writes it: it gives the engine a folder of its own for each
   profile (`--userdir`), and refuses an engine that has none.
 - **IDA Pro for Linux** with Hex-Rays' MCP plugin `ida-mcp@HexRaysSA`, for the RE
@@ -100,8 +100,8 @@ written this way:
 2. **A why only where it stops someone undoing a deliberate choice.**
 3. **Short sentences, lists and tables.** Plain words over chains of possessives.
 4. **Between repositories a link is absolute**, to a branch's copy on GitHub
-   (`blob/<branch>/<path>`): `main` of this repository and the RE, `deusex` of the engine, the
-   launcher's `main` or the port branch that holds the fact.
+   (`blob/<branch>/<path>`): `main` of this repository, the RE and the engine, the launcher's
+   `main` or the port branch that holds the fact.
 5. **No volatile details** that the pins' checks and git already know, such as commit counts and
    lists.
 6. **A plan is deleted when its work is done**; what lasts of it moves to the doc that owns it,
@@ -124,11 +124,11 @@ loudly instead of leaving stale instructions:
 - `scripts/check-docs.sh`: across the workspace's repositories, every path a doc names in
   backticks or links must exist, every link to a heading (`#anchor`) must find one, and every
   link into another of the repositories must name a branch the workspace has (the launcher's
-  `main` and the ports `LAUNCHER-PIN.txt` pins, the engine's `deusex`, `main` elsewhere) and
+  `main` and the ports `LAUNCHER-PIN.txt` pins, `main` elsewhere) and
   resolve in that repository's checkout here. A checkout git cannot read fails rather than
   going unchecked, and so does a missing `AGENTS.md`.
-- `scripts/engine.sh check`: the engine clone is at the commit `ENGINE-PIN.txt` names, on the
-  fork's branch.
+- `scripts/engine.sh check`: the engine clone is at the commit `ENGINE-PIN.txt` names, on its
+  branch.
 - `scripts/launcher.sh check`: each port's worktree is at the commit `LAUNCHER-PIN.txt` names,
   on its branch (and git can read it).
 - `test_target_<port>` (the id's `-` as `_`), on a device branch with a profile of its own
@@ -143,7 +143,7 @@ loudly instead of leaving stale instructions:
 ## Gotchas that cost time
 
 Device-specific ones are in each port's README, the engine's in its
-[`vibe/docs/DEVELOPMENT.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#gotchas).
+[`docs/DEVELOPMENT.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#gotchas).
 These apply everywhere:
 
 - **A binary built against a newer glibc than the device's will not load.** glibc 2.34
@@ -152,13 +152,13 @@ These apply everywhere:
   build, built with a toolchain whose own glibc is at most the ceiling: linux-x86_64's and
   linux-aarch64's 2.28 by Godot's Buildroot SDKs (`dx_fetch_buildroot`), the Smart Pro's 2.33,
   the device's own, by Bootlin's (`dx_fetch_bootlin`); each port's README says which.
-- **Started without `--ini`, as the Smart Pro's `run-game.sh` starts it, Surreal Engine reads
-  `SE-DeusEx.ini`/`SE-User.ini` after its first clean exit**, not `DeusEx.ini`/`User.ini`, and
+- **Started without `--ini`, as the Smart Pro's `run-game.sh` starts it, DXEngine reads
+  `DXE-DeusEx.ini`/`DXE-User.ini` after its first clean exit**, not `DeusEx.ini`/`User.ini`, and
   of the keys the original launcher writes it reads few; a stub `DeusEx.ini` kills it
   ([where the settings actually live](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#where-the-settings-actually-live)).
 - **Never `pkill -f` or `pgrep -f <pattern>`** in a command whose own text contains the pattern:
   it matches the shell running it. Use `pidof`, `pgrep -x`, or bracket a letter
-  (`pgrep -f "[S]urrealEngine --no-launcher"`).
+  (`pgrep -f "[D]XEngine --no-launcher"`).
 - **Deus Ex's UnrealScript source is embedded in `System/DeusEx.u`**: search it before guessing
   what the game's script does
   ([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)).

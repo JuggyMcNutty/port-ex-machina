@@ -1,7 +1,8 @@
 # Port Ex Machina
 
-Deus Ex (version 1112fm) on modern platforms: a launcher of our own, a fork of Surreal Engine
-to run the game, and the reverse engineering of the original binaries behind both.
+Deus Ex (version 1112fm) on modern platforms: a launcher of our own, DXEngine, a hard fork of
+Surreal Engine, to run the game, and the reverse engineering of the original binaries behind
+both.
 
 **You supply your own game files. None are included.**
 
@@ -19,7 +20,7 @@ is open: [`AGENTS.md`](AGENTS.md) and [`docs/`](docs/) ([documentation](#documen
 |---|---|---|
 | [port-ex-machina](https://github.com/JuggyMcNutty/port-ex-machina) | this workspace | `port-ex-machina/` |
 | [deusex-launcher](https://github.com/JuggyMcNutty/deusex-launcher) | the launcher. `main` recreates the original `DeusEx.exe` almost 1:1; each port is a branch of its own, for its platform or device | `deusex-launcher/main/` and a worktree per port; each port's commit pinned in `LAUNCHER-PIN.txt` |
-| [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine) | the engine: our fork of [Surreal Engine](https://github.com/dpjudas/SurrealEngine), an open-source UE1 reimplementation, made to play Deus Ex as the original does and to run on our ports (branch `deusex`) | `VibeEngine/`, pinned in `ENGINE-PIN.txt` |
+| [DXEngine](https://github.com/JuggyMcNutty/DXEngine) | the engine: our hard fork of [Surreal Engine](https://github.com/dpjudas/SurrealEngine), an open-source UE1 reimplementation, made to play Deus Ex as the original does and to run on our ports (branch `main`) | `DXEngine/`, pinned in `ENGINE-PIN.txt` |
 | [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) | what the original binaries do -- `DeusEx.exe` and the game's DLLs -- in our own words, and the IDA scripts that read them | `dx-reverse-info/`, not pinned |
 
 ## Engine Ports
@@ -39,7 +40,7 @@ mkdir deusex && cd deusex                  # the parent folder: any name
 git clone https://github.com/JuggyMcNutty/port-ex-machina.git && cd port-ex-machina
 scripts/dx.sh fetch                        # once: the engine, the launcher's port branches, the RE
 scripts/dx.sh test [<port>]                # unit tests: linux-x86_64's (after its deps), or another port branch's host build
-scripts/engine.sh status                   # the pin and the fork's branch
+scripts/engine.sh status                   # the pin and the engine's branch
 
 scripts/dx.sh deps   <port>                # toolchains and sysroot, if the port needs them
 scripts/dx.sh build  <port>                # launcher, then engine
@@ -72,7 +73,7 @@ the same.
 | [the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md) | `main`, the default branch: the original recreated |
 | `docs/LAUNCHER.md`, on each port branch: DXLauncher's, the same on linux-x86_64 and linux-aarch64 ([linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md)), the tabbed launcher's ([trimui-smartpro's](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md)) | that branch's launcher: the files it writes and the settings the engine really reads, the screens, the hand-over to the engine, what it changes from the original |
 | a port's `ports/<id>/README.md`, on its branch | one device: status, what differs from the branch it started from, measurements, what was verified |
-| VibeEngine's [`vibe/docs/`](https://github.com/JuggyMcNutty/VibeEngine/tree/deusex/vibe/docs) | the engine: how it is kept, run, profiled and what the fork changes ([`ENGINE.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md)); where it still differs from the original ([`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)); working on it, the harness ([`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md)) |
+| DXEngine's [`docs/`](https://github.com/JuggyMcNutty/DXEngine/tree/main/docs) | the engine: how it is kept, run, profiled and what it changes from Surreal Engine ([`ENGINE.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md)); where it still differs from the original ([`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md)); working on it, the harness ([`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md)) |
 | [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) | the original binaries: `DeusEx.exe`, which `main` recreates, and the game's DLLs -- what they do |
 
 ## Layout
@@ -84,14 +85,14 @@ none of them owns. The parent is not versioned itself.
 deusex/                  the parent folder (any name)
   port-ex-machina/       this repository:
     AGENTS.md              rules, status, decisions, to do, open items (CLAUDE.md imports it)
-    ENGINE-PIN.txt         the engine's version: VibeEngine's repository, branch and commit
+    ENGINE-PIN.txt         the engine's version: DXEngine's repository, branch and commit
     LAUNCHER-PIN.txt       the launcher's: deusex-launcher's repository, and each port's commit
     docs/                  DEVELOPMENT, PORTING
     scripts/               dx.sh (the entry point), engine.sh, launcher.sh, recreation.sh,
                            check-docs.sh, lib/common.sh (shared with the ports' and the
                            engine's own scripts)
     tools/probes/          device probes (docs/PORTING.md)
-  VibeEngine/            the engine, a clone (scripts/engine.sh)
+  DXEngine/              the engine, a clone (scripts/engine.sh)
   deusex-launcher/       the launcher: main/, and a worktree per port (scripts/launcher.sh)
   dx-reverse-info/       the RE, a clone (scripts/dx.sh fetch)
   gamefiles/             your Deus Ex install: for running on this machine, test_gamefiles
@@ -106,11 +107,11 @@ deusex/                  the parent folder (any name)
 ```
 
 A path in these docs that is not a repository's own is the parent folder's:
-`VibeEngine/vibe/tools`, `gamefiles/System`.
+`DXEngine/tools`, `gamefiles/System`.
 
 ## License
 
-[zlib](LICENSE), for everything in this repository, the launcher and the RE, and for our commits
-in the engine fork. Surreal Engine has its own licences, in its `LICENSE.md`.
+[zlib](LICENSE), for everything in this repository, the launcher and the RE. DXEngine is zlib
+too, an altered version of Surreal Engine: both their licences are in its `LICENSE.md`.
 
 Deus Ex belongs to its owners; this project is not affiliated with or endorsed by them.

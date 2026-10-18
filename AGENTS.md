@@ -2,7 +2,7 @@
 
 Deus Ex (UE1) on modern platforms:
 + our own launcher
-+ our fork of Surreal Engine now called VibeEngine
++ our hard fork of Surreal Engine, now called DXEngine
 + reverse engineering docs
 
 All in four repositories side by side
@@ -31,8 +31,9 @@ git is the record. Every session loads it, so keep it small.
 - **Push or move a pin only with the owner's go-ahead.** A change is committed in its own
   repository with the docs it affects, pushed, then pinned here (`scripts/engine.sh pin`,
   `scripts/launcher.sh pin <port>`) and the pin committed.
-- **Nothing goes upstream**: the fork has diverged, and upstream's rules do not apply here
-  ([how it is kept](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#how-it-is-kept)).
+- **A hard fork**: DXEngine is not in Surreal Engine's fork network; nothing is merged from it
+  or sent to it, and its rules do not apply here
+  ([how it is kept](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#how-it-is-kept)).
 - **Launcher branches**: `main`, the original recreated as close to 1:1 as possible, and a
   branch per targeted platform, each tailored to it, so far that includes (`linux-x86_64`,
   `linux-aarch64`, `trimui-smartpro`). None merges another: a change crosses only by a
@@ -40,16 +41,16 @@ git is the record. Every session loads it, so keep it small.
 - **Done** means `scripts/dx.sh test` and `scripts/dx.sh check` pass, and every cross port that
   ships (the Smart Pro) builds warning-free. An engine change is also proven against the
   original by a scripted run of both engines
-  ([scripted runs](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
+  ([scripted runs](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
 - **Docs** hold the current state only, each fact in one place
   ([docs](docs/DEVELOPMENT.md#docs)).
 
 ## Status
 
 Each port's: [the ports](README.md#engine-ports); linux-x86_64 is the main platform developed
-for. The engine, [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine) on branch `deusex`,
+for. The engine, [DXEngine](https://github.com/JuggyMcNutty/DXEngine) on branch `main`,
 pinned by `ENGINE-PIN.txt`, plays the game as the original does but for what
-[`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md)
+[`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md)
 lists. The launcher's `main` is the original `DeusEx.exe` recreated almost 1:1, and done: the
 reference the port branches start from, changed only for a feature found missing;
 `scripts/recreation.sh` builds, installs, checks and runs it. The RE,
@@ -58,16 +59,16 @@ reference the port branches start from, changed only for a feature found missing
 
 ## Decided
 
-- **The project**: a cross-platform launcher for Deus Ex of our own, on our own engine fork. The
+- **The project**: a cross-platform launcher for Deus Ex of our own, on our own engine. The
   original `DeusEx.exe` is the model, not a contract: each port's launcher departs from it where
   that serves the port, and the launcher's `main` keeps the original recreated beside it.
   linux-x86_64 is where the project is developed and tested ([porting](docs/PORTING.md)).
-- **The engine is Deus Ex's alone**: no other game's code, nor upstream's platforms and tools
-  that Deus Ex does not use
-  ([how it is kept](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#how-it-is-kept));
+- **The engine is Deus Ex's alone**: no other game's code, nor Surreal Engine's platforms and
+  tools that Deus Ex does not use
+  ([how it is kept](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#how-it-is-kept));
   the D3D11 device and the Win32 code it needs are kept, neither built nor tested
-  ([building](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/README.md#building-and-running)).
-- **VibeEngine is developed first.** All porting work is deferred until the owner chooses.
+  ([building](https://github.com/JuggyMcNutty/DXEngine/blob/main/README.md#building-and-running)).
+- **DXEngine is developed first.** All porting work is deferred until the owner chooses.
 - **Reading the original**: the game's DLLs are read when a need comes up and documented in
   dx-reverse-info. Only if needed: `SoftDrv.dll`, `WinDrv.dll` beyond its flags, the owner's
   `ALAudio.dll`, `OpenGLDrv.dll` beyond its gamma ramp (the look is judged against `D3DDrv`).
@@ -75,7 +76,7 @@ reference the port branches start from, changed only for a feature found missing
   GOG DLL, `RGalaxy.dll`.
 - **The harness runs on the desktop's display**, never a hidden one: this machine is a dedicated
   development device
-  ([the display](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/DEVELOPMENT.md#the-display)).
+  ([the display](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#the-display)).
 - **Every Linux build at glibc 2.28**: RHEL 8's, the oldest of the actively maintained mainline
   distributions (to 2029), so that every one runs it, linux-x86_64's too, not the build
   system's own; built with a buildroot toolchain, a GCC 13 on glibc 2.28, as Godot's Linux
@@ -85,29 +86,27 @@ reference the port branches start from, changed only for a feature found missing
 
 The owner's, each waiting until the owner takes it up.
 
-- **Detail textures**: keep the fork's one-pass ones, draw `D3DDrv`'s three-pass ones as read,
+- **Detail textures**: keep DXEngine's one-pass ones, draw `D3DDrv`'s three-pass ones as read,
   or draw none, as the original run here does
-  ([the menus' settings](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-menus-settings),
+  ([the menus' settings](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md#the-menus-settings),
   [detail textures](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/d3ddrv-dll.md#detail-textures)).
 - **An idea from DXD3D9 2.0** (a third-party renderer in `reference/`, ideas only:
   [its terms](docs/DEVELOPMENT.md#the-repositories)): a 10-bit GL scene buffer, `GL_RGB10_A2`
   for RGBA8
-  ([rendering](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#rendering)).
+  ([rendering](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#rendering)).
 
 ## To do
 
 Decided work for later sessions, each deleted when it is done.
 
-- **The engine's own name**: the build named VibeEngine, not upstream's `SurrealEngine` (the
-  executable, `SurrealEngine.pk3`, the settings folder).
 - **One linux-aarch64 engine build for every aarch64 target**, the Smart Pro included (its
   launcher stays its own), with what differs between devices found at run time: every GPU fully
   supported (Snapdragon, Mali, PowerVR), on development boards the owner is acquiring; the
   engine's build-time device choices moved to run time (the Smart Pro's borderless fullscreen;
   X11 and Wayland, compiled out of its build); one glibc ceiling and sysroot for all
-  ([running on our devices](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/ENGINE.md#running-on-our-devices)).
+  ([running on our devices](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#running-on-our-devices)).
 - **Windows as a build target**: the engine's kept Windows code built and tested
-  ([building](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/README.md#building-and-running)),
+  ([building](https://github.com/JuggyMcNutty/DXEngine/blob/main/README.md#building-and-running)),
   and a launcher branch with win32 versions of the launcher's OS dependencies
   ([other operating systems](docs/PORTING.md#other-operating-systems)).
 - **CI**: the ports built on GitHub's CI, aarch64's always cross-built: linux-aarch64's engine
@@ -123,10 +122,10 @@ DXLauncher's, linux-x86_64's and linux-aarch64's
 and the Smart Pro's
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects).
 Where the engine still differs from the original: each section's "Differs" in
-[`NATIVES.md`](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md).
+[`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md).
 
 Unverified, a known risk the owner ranks low:
 
 - A menu dragged by its title bar and the Alt accelerators under a real mouse and keyboard:
   proven only with a timeline's input, which the original cannot take here
-  ([the UI](https://github.com/JuggyMcNutty/VibeEngine/blob/deusex/vibe/docs/NATIVES.md#the-ui)).
+  ([the UI](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md#the-ui)).

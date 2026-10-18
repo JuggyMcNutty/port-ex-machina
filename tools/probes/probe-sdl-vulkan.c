@@ -66,7 +66,7 @@ int main(void) {
                 SDL_Vulkan_GetDrawableSize(w, &dw, &dh);
                 printf("drawable size: %dx%d\n", dw, dh);
 
-                /* SurrealGPU's device filter needs a graphics queue family
+                /* DXGPU's device filter needs a graphics queue family
                  * that can also present to this surface: every family is
                  * reported. */
                 uint32_t pdn = 0;

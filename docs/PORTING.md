@@ -2,7 +2,7 @@
 
 How a device becomes a port: **a branch of the launcher**,
 [deusex-launcher](https://github.com/JuggyMcNutty/deusex-launcher), with the
-engine, [VibeEngine](https://github.com/JuggyMcNutty/VibeEngine), built for it.
+engine, [DXEngine](https://github.com/JuggyMcNutty/DXEngine), built for it.
 Each port branch's launcher is its own `docs/LAUNCHER.md`: DXLauncher's,
 the same on linux-x86_64 and linux-aarch64
 ([linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md)),
@@ -40,7 +40,7 @@ and linux-aarch64's.
 | The OS: handing over to the game, the GPU probe | `src/platform/`: the tabbed launcher's `launch.h`, its own replaced by the game's; DXLauncher's `process.h`, the game a child it waits for; `src/platform/posix/` | Only for a non-POSIX platform, and for Android's hand-over (below) |
 | One start and the game | DXLauncher's `src/app/`, no SDL | no |
 | The screens | the tabbed launcher's `src/ui/` (SDL2); DXLauncher's `src/screens/`, on its UI kit, `src/ui/` (SDL3 and SDL3_ttf) | A device branch's own choices (trimui-smartpro's) |
-| The engine | VibeEngine, its clone beside the workspace in `VibeEngine/`, pinned by `ENGINE-PIN.txt` | Built per port from its `ports/<id>/engine.cmake` |
+| The engine | DXEngine, its clone beside the workspace in `DXEngine/`, pinned by `ENGINE-PIN.txt` | Built per port from its `ports/<id>/engine.cmake` |
 | The app around the binaries | `ports/common/packaging/` (the base app, trimui-smartpro's) + `ports/<id>/packaging/` | The port's files are laid over the base |
 
 ## What a port is
@@ -85,7 +85,7 @@ checkout links it in. None of it is versioned and all of it can be deleted;
 
 Staging installs the binaries, lays `ports/common/packaging` and then the port's
 `packaging/` beside them on a branch that has them, copies in the engine's
-`SurrealEngine` and `SurrealEngine.pk3`, and runs `port_stage`. On such a
+`DXEngine` and `DXEngine.pk3`, and runs `port_stage`. On such a
 branch `launcher.ini` belongs to whoever runs the app: it is created from
 `launcher.ini.default` only when missing.
 

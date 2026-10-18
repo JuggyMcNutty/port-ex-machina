@@ -1,17 +1,17 @@
-/* Reports exactly what Surreal Engine's Vulkan device filter checks.
+/* Reports exactly what DXEngine's Vulkan device filter checks.
  *
  * Every requirement in one place, so the verdict for a given GPU is one run
  * rather than a series of guesses:
  *
- *   SurrealGPU  VulkanDeviceBuilder::FindDevices
+ *   DXGPU  VulkanDeviceBuilder::FindDevices
  *     - required extension VK_KHR_swapchain
  *     - features samplerAnisotropy, fragmentStoresAndAtomics,
  *       multiDrawIndirect, independentBlend
  *     - a graphics queue family that can present to the surface
- *   SurrealEngine  VulkanRenderDevice.cpp
+ *   DXEngine  VulkanRenderDevice.cpp
  *     - required extension VK_KHR_sampler_mirror_clamp_to_edge
- *     - optional: descriptor indexing (upstream requires it; without it the
- *       fork binds a descriptor set per texture combination instead)
+ *     - optional: descriptor indexing (Surreal Engine requires it; without
+ *       it DXEngine binds a descriptor set per texture combination instead)
  *
  * Descriptor indexing is checked three ways, because a driver can advertise a
  * high API version without supporting what that version makes mandatory: as the

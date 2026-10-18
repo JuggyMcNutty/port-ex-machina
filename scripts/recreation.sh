@@ -11,13 +11,13 @@
 #   scripts/recreation.sh uninstall [<GameDir>]  what install put there, taken out again
 #
 # Installed: DeusEx and run-game.sh (main's own install), and the engine's
-# SurrealEngine and SurrealEngine.pk3; uninstall also takes out an earlier
-# engine's libSurrealVideo.so. Installing touches none of the game's files,
+# DXEngine and DXEngine.pk3; uninstall also takes out what an earlier
+# install put there (RETIRED). Installing touches none of the game's files,
 # but while DeusEx is there the original game does not start under Wine or
 # Proton: it takes the file for the DeusEx package (dx-reverse-info's
 # core-dll.md) -- uninstall takes it out. A run writes what the original's
 # does (DeusEx.ini, User.ini, DeusEx.log, Running.ini, Detected.*), and the
-# engine adds its own [Engine.Surreal*] sections to DeusEx.ini. The engine is
+# engine adds its own [Engine.DXEngine*] sections to DeusEx.ini. The engine is
 # the clone's, which scripts/engine.sh check compares with the pin.
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
@@ -25,9 +25,9 @@ set -euo pipefail
 MAIN_DIR="$DX_LAUNCHER/main"
 BUILD="$DX_ROOT/build/main/launcher"
 ENGINE_BUILD="$DX_ROOT/build/linux-x86_64/engine"
-ENGINE_FILES=(SurrealEngine SurrealEngine.pk3)
+ENGINE_FILES=(DXEngine DXEngine.pk3)
 INSTALLED=(DeusEx run-game.sh "${ENGINE_FILES[@]}")
-RETIRED=(libSurrealVideo.so)   # what an earlier install put there too
+RETIRED=(SurrealEngine SurrealEngine.pk3 libSurrealVideo.so)   # what an earlier install put there too
 
 usage() { sed -n '2,21p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 
@@ -49,7 +49,7 @@ cmd_install() {
     local sys f
     sys="$(system_dir "${1:-}")"
     [ -x "$BUILD/DeusEx" ] || die "no build of main -- scripts/recreation.sh build"
-    [ -x "$ENGINE_BUILD/SurrealEngine" ] || die "no engine build -- scripts/recreation.sh build"
+    [ -x "$ENGINE_BUILD/DXEngine" ] || die "no engine build -- scripts/recreation.sh build"
     cmake --install "$BUILD" --prefix "$sys" >/dev/null
     for f in "${ENGINE_FILES[@]}"; do
         [ -f "$ENGINE_BUILD/$f" ] || die "no $f in $ENGINE_BUILD"

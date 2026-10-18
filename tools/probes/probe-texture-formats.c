@@ -1,6 +1,6 @@
-/* Does this GPU support the texture formats SurrealEngine uploads with?
+/* Does this GPU support the texture formats DXEngine uploads with?
  *
- * The fork's texture uploader asks (vkGetPhysicalDeviceFormatProperties): a
+ * The engine's texture uploader asks (vkGetPhysicalDeviceFormatProperties): a
  * format the GPU cannot sample and linearly filter goes to a CPU decoder, as
  * BC1-5, RGB8 and RGBA32F do on the Smart Pro's GE8300 (this probe's answer).
  * This prints optimalTilingFeatures for every format the uploaders can pick,

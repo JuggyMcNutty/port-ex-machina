@@ -78,7 +78,7 @@ cmd_build() {
 # packaging, ports/common/packaging and then the port's own packaging over
 # it. launcher.ini belongs to whoever runs the app, so it is only created
 # when missing; the packaged one is always there as launcher.ini.default.
-# The engine is VibeEngine, or SurrealEngine, whichever the build makes.
+# The engine is DXEngine, with its DXEngine.pk3.
 cmd_stage() {
     [ -x "$LAUNCHER_BUILD/$PORT_LAUNCHER" ] || die "no launcher build -- scripts/dx.sh build $PORT"
     mkdir -p "$APP"
@@ -100,16 +100,13 @@ cmd_stage() {
     done
 
     if [ "$PORT_ENGINE" = 1 ]; then
-        local e="$BUILD/engine" name staged=0
-        for name in VibeEngine SurrealEngine; do
-            [ -x "$e/$name" ] || continue
-            cp "$e/$name" "$APP/"
-            [ ! -f "$e/$name.pk3" ] || cp "$e/$name.pk3" "$APP/"
-            staged=1
-            break
-        done
-        [ "$staged" = 1 ] ||
+        local e="$BUILD/engine"
+        if [ -x "$e/DXEngine" ]; then
+            cp "$e/DXEngine" "$APP/"
+            [ ! -f "$e/DXEngine.pk3" ] || cp "$e/DXEngine.pk3" "$APP/"
+        else
             say "warning: no engine build in $e -- staged the launcher only (scripts/dx.sh build $PORT engine)"
+        fi
     fi
 
     port_stage "$fresh"
@@ -179,7 +176,7 @@ cmd_check() {
         [ -f "$src/ports/$p/port.cmake" ] || continue
         max=$(sed -n 's/^[[:space:]]*set(DXL_PORT_GLIBC_MAX[[:space:]]\{1,\}\([0-9.]\{1,\}\))/\1/p' "$src/ports/$p/port.cmake" | head -n 1)
         [ -n "$max" ] || continue
-        for f in deusex-launcher dxl-cli VibeEngine SurrealEngine; do
+        for f in deusex-launcher dxl-cli DXEngine; do
             [ -f "$DX_ROOT/build/$p/app/$f" ] && bins+=("$DX_ROOT/build/$p/app/$f")
         done
         [ ${#bins[@]} -gt 0 ] || continue
@@ -189,7 +186,7 @@ cmd_check() {
     # The builds of Deus Ex a launcher takes are the engine's: it plays only
     # a DeusEx.exe whose SHA1 its own list has.
     say "== the launchers' game builds against the engine's"
-    local engine_db="$DX_ENGINE/SurrealEngine/UE1GameDatabase.h" want have
+    local engine_db="$DX_ENGINE/DXEngine/UE1GameDatabase.h" want have
     if [ -f "$engine_db" ]; then
         want="$(grep -oE '"[0-9a-f]{40}"' "$engine_db" | tr -d '"' | sort)"
         for p in $(dx_ports); do
@@ -229,8 +226,8 @@ cmd_deploy() {
     cmd_build
     cmd_stage
     local eng="$DX_ENGINE"
-    if [ "$PORT_ENGINE" = 1 ] && [ -d "$eng/.git" ] && ! git -C "$eng" diff --quiet HEAD -- . ':(exclude)vibe'; then
-        say "warning: the engine has uncommitted changes (profiling hooks? vibe/tools/perf/perf.sh off) -- deploying them"
+    if [ "$PORT_ENGINE" = 1 ] && [ -d "$eng/.git" ] && ! git -C "$eng" diff --quiet HEAD -- . ':(exclude)docs' ':(exclude)tools'; then
+        say "warning: the engine has uncommitted changes (profiling hooks? tools/perf/perf.sh off) -- deploying them"
     fi
     port_deploy "$@"
 }

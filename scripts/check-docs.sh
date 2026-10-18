@@ -8,25 +8,25 @@
 # The checkouts are the ones beside this repository
 # (docs/DEVELOPMENT.md#the-repositories). The docs checked: this
 # repository's; dx-reverse-info's; each branch of deusex-launcher checked out
-# in deusex-launcher/<branch>/; and VibeEngine's own (its README and vibe/,
-# not upstream's docs).
+# in deusex-launcher/<branch>/; and DXEngine's own (its README and docs/,
+# not its libraries' or the third-party code's).
 #
 # In each doc, the `inline code` spans and the link targets that look like
 # relative paths (they contain a "/") must resolve against, in order: the
 # doc's own directory; its checkout's root, src/, ports/*/packaging/ and
 # ports/*/; then the workspace's -- the folder the repositories share (so
-# VibeEngine/..., gamefiles/... and reference/... resolve), this repository,
+# DXEngine/..., gamefiles/... and reference/... resolve), this repository,
 # the engine clone, dx-reverse-info, gamefiles/ (the game install), and each
 # launcher checkout with its src/, ports/*/packaging/ and ports/*/.
 #
 # A link to https://github.com/JuggyMcNutty/<repository>/(blob|tree)/<branch>/<path>
-# must name a branch the workspace has -- main of port-ex-machina and
-# dx-reverse-info, deusex of VibeEngine, deusex-launcher's main and the ports
+# must name a branch the workspace has -- main of port-ex-machina,
+# dx-reverse-info and DXEngine, deusex-launcher's main and the ports
 # LAUNCHER-PIN.txt pins -- and a path that exists in that repository's
-# checkout here: port-ex-machina at main is this one, dx-reverse-info at main
-# and VibeEngine at deusex are their clones, and deusex-launcher at <branch>
-# is deusex-launcher/<branch>/. A link to a VibeEngine commit must name one
-# the clone has.
+# checkout here: port-ex-machina at main is this one, dx-reverse-info and
+# DXEngine at main are their clones, and deusex-launcher at <branch> is
+# deusex-launcher/<branch>/. A link to a DXEngine commit must name one the
+# clone has.
 #
 # A link with an #anchor to a markdown file (or to a heading of the doc itself)
 # must name one of that file's headings, as GitHub makes their ids: lower case,
@@ -48,8 +48,8 @@ OWNER_URL="https://github.com/JuggyMcNutty"
 # Paths that are correct but have nothing to resolve against here.
 ALLOW=(
     '^home/'                          # the app dir's pinned HOME, created by run-game.sh at run time
-    '^System/(Running\.ini|SE-DeusEx\.ini|SE-User\.ini|DeusExLauncher\.log)$'  # created at run time
-    '^System/(DeusEx|run-game\.sh|SurrealEngine|SurrealEngine\.pk3)$'  # main's launcher, while scripts/recreation.sh installs it
+    '^System/(Running\.ini|DXE-DeusEx\.ini|DXE-User\.ini|DeusExLauncher\.log)$'  # created at run time
+    '^System/(DeusEx|run-game\.sh|DXEngine|DXEngine\.pk3)$'  # main's launcher, while scripts/recreation.sh installs it
     '^build/'                         # build output
     '^deps/'                          # fetched toolchains and sysroots
     '^(Window|Launch|Core|Engine|DeusEx|DeusExText|Extension|ConSys|WinDrv)/Inc/' # SDK headers inside reference/ReleaseSDK1112f/Headers/DxHeaders.zip
@@ -67,7 +67,7 @@ done
 # The checkouts, as "dir repository branch".
 checkouts=("$ROOT port-ex-machina main")
 [ -d "$DX_RE/.git" ] && checkouts+=("$DX_RE dx-reverse-info main")
-[ -d "$ENGINE/.git" ] && checkouts+=("$ENGINE VibeEngine deusex")
+[ -d "$ENGINE/.git" ] && checkouts+=("$ENGINE DXEngine main")
 for d in "$DX_LAUNCHER"/*/; do
     d="${d%/}"
     [ -e "$d/.git" ] && checkouts+=("$d deusex-launcher $(basename "$d")")
@@ -155,8 +155,7 @@ LAUNCHER_BRANCHES=" main $(dx_ports | tr '\n' ' ')"
 known_branch() {
     case "$1" in
         deusex-launcher) [[ "$LAUNCHER_BRANCHES" == *" $2 "* ]] ;;
-        VibeEngine) [ "$2" = deusex ] ;;
-        port-ex-machina|dx-reverse-info) [ "$2" = main ] ;;
+        port-ex-machina|dx-reverse-info|DXEngine) [ "$2" = main ] ;;
         *) return 0 ;;                      # not a repository of the workspace
     esac
 }
@@ -170,7 +169,7 @@ check_url() {
     local rest="${path#"$OWNER_URL"/}" repo kind ref sub dir
     repo="${rest%%/*}"
     if [[ "$rest" =~ ^[^/]+/commit/([0-9a-f]+)$ ]]; then
-        [ "$repo" = VibeEngine ] && [ -d "$ENGINE/.git" ] || return 2
+        [ "$repo" = DXEngine ] && [ -d "$ENGINE/.git" ] || return 2
         git -C "$ENGINE" cat-file -e "${BASH_REMATCH[1]}^{commit}" 2>/dev/null && return 0
         fail "NO COMMIT $doc:$line: $url"; return 1
     fi
@@ -199,7 +198,7 @@ for c in "${checkouts[@]}"; do
     cd "$co"
     # A checkout git cannot read (a worktree whose link went stale when the
     # folders moved) fails here: skipped, its docs would pass unchecked.
-    pathspec=('*.md'); [ "$repo" = VibeEngine ] && pathspec=(README.md 'vibe/*.md')
+    pathspec=('*.md'); [ "$repo" = DXEngine ] && pathspec=(README.md 'docs/*.md')
     if ! list="$(git ls-files --cached --others --exclude-standard "${pathspec[@]}" 2>&1)"; then
         fail "UNREADABLE $where: ${list%%$'\n'*} -- git -C deusex-launcher/main worktree repair, for a moved worktree"
         continue

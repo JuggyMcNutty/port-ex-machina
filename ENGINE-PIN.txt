@@ -1,5 +1,5 @@
 # The engine this workspace builds: scripts/engine.sh fetch clones it, check
-# verifies it, pin (after pushing a fork commit) moves it. The fork's vibe/docs/ENGINE.md.
-repo    https://github.com/JuggyMcNutty/VibeEngine.git
-branch  deusex
-commit  c7dedae7439203199dcd45c44db5c5c4257423e1
+# verifies it, pin (after pushing an engine commit) moves it. The engine's docs/ENGINE.md.
+repo    https://github.com/JuggyMcNutty/DXEngine.git
+branch  main
+commit  c886883861481b24a46de778ecaed483d699bb0e
