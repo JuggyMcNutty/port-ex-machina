@@ -98,8 +98,7 @@ The owner's, each waiting until the owner takes it up.
 Decided work for later sessions, each deleted when it is done.
 
 - **The desktop launcher**: DXLauncher, linux-x86_64's and linux-aarch64's, as the owner
-  planned it: the game's look, music and sounds, saves and shots, the install finder's other
-  places and big screen, the server browser, mods
+  planned it: the install finder's other places and big screen, the server browser, mods
   ([the launcher](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md),
   [the branches](docs/PORTING.md#the-branches)).
 - **linux-x86_64's glibc ceiling**: its launcher and engine built to run on the oldest glibc
