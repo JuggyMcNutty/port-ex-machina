@@ -103,7 +103,7 @@ deusex/                  the parent folder (any name)
   deps/                  fetched toolchains and sysroots
   build/                 build/<port>/{engine,app,profile}, build/main/ (the recreation's
                          launcher and its live check), build/host-tools (the engine's
-                         zipdir for cross builds), and the engine tools' own (dxcap)
+                         zipdir for its toolchain builds), and the engine tools' own (dxcap)
 ```
 
 A path in these docs that is not a repository's own is the parent folder's:
