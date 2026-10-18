@@ -2,4 +2,4 @@
 # verifies it, pin (after pushing a fork commit) moves it. The fork's vibe/docs/ENGINE.md.
 repo    https://github.com/JuggyMcNutty/VibeEngine.git
 branch  deusex
-commit  e781e36c00543cb5be9d926e72da78a36c61b419
+commit  c7dedae7439203199dcd45c44db5c5c4257423e1
