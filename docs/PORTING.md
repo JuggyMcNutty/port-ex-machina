@@ -160,6 +160,7 @@ it (the Smart Pro's README has the exact command line).
 | `probe-vulkan-caps.c` | every requirement the engine's Vulkan device filter checks, with a verdict | `-lvulkan` |
 | `probe-texture-formats.c` | which texture formats the GPU can sample and linearly filter (BCn, RGB8, RGBA32F) | `-lvulkan` |
 | `probe-gles-sampler.c` | what an OpenGL ES driver accepts: each sampler parameter the engine sets, the extensions it looks for (S3TC, float-linear filtering, anisotropy, mirror-clamp, `glBufferStorage`), and the scene buffers' formats (RGBA16F, R32UI and D32F in one framebuffer); it draws to a pbuffer | `-ldl` (EGL and GLES are opened at run time) |
+| `probe-gles-scene.c` | what the GL device's scene asks of an OpenGL ES driver beyond the samplers: a clip distance (`GL_EXT_clip_cull_distance`) that clips a draw only while `GL_CLIP_DISTANCE0` is on, and RGB10_A2 scene buffers made with `glTexStorage2D` beside R32UI and D32F, single and multisampled, resolved by a blit, sampled by a pass and read back as `UNSIGNED_BYTE` and `2_10_10_10_REV`, their ten bits kept; it draws to framebuffers in a pbuffer's context | `-ldl` |
 
 `dxl-cli --probe` (trimui-smartpro's build, for any aarch64 Linux and the host)
 reports the Vulkan device and API, the OpenGL ES version and renderer, and

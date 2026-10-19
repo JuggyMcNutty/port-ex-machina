@@ -30,7 +30,7 @@ typedef void* (*egl_get_proc_fn)(const char*);
 #define EGL_HEIGHT 0x3058
 #define EGL_DEFAULT_DISPLAY ((void*)0)
 #define EGL_NO_DISPLAY ((void*)0)
-#define EGL_OPENGL_ES_API 0x30A2
+#define EGL_OPENGL_ES_API 0x30A0
 #define EGL_OPENGL_ES3_BIT 0x0040
 #define EGL_CONTEXT_MAJOR_VERSION 0x3098
 #define EGL_CONTEXT_MINOR_VERSION 0x30FB
