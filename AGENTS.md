@@ -52,8 +52,8 @@ for. The engine, [DXEngine](https://github.com/JuggyMcNutty/DXEngine) on branch 
 pinned by `ENGINE-PIN.txt`, plays the game as the original does but for what
 [`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md)
 lists. The launcher's `main` is the original `DeusEx.exe` recreated almost 1:1, and done: the
-reference the port branches start from, changed only for a feature found missing;
-`scripts/recreation.sh` builds, installs, checks and runs it. The RE,
+reference the port branches start from, changed only for a defect found (a missing feature is
+one); `scripts/recreation.sh` builds, installs, checks and runs it. The RE,
 [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info), documents every binary read
 ([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)).
 
@@ -68,7 +68,7 @@ reference the port branches start from, changed only for a feature found missing
   ([how it is kept](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#how-it-is-kept));
   the D3D11 device and the Win32 code it needs are kept, neither built nor tested
   ([building](https://github.com/JuggyMcNutty/DXEngine/blob/main/README.md#building-and-running)).
-- **DXEngine is developed first.** All porting work is deferred until the owner chooses.
+- **DXEngine is developed first.** Porting work is taken up when the owner chooses.
 - **Reading the original**: the game's DLLs are read when a need comes up and documented in
   dx-reverse-info. Only if needed: `SoftDrv.dll`, `WinDrv.dll` beyond its flags, the owner's
   `ALAudio.dll`, `OpenGLDrv.dll` beyond its gamma ramp (the look is judged against `D3DDrv`).
@@ -90,8 +90,15 @@ Decided work for later sessions, each deleted when it is done.
   launcher stays its own), with what differs between devices found at run time: every GPU fully
   supported (Snapdragon, Mali, PowerVR), on development boards the owner is acquiring; the
   engine's build-time device choices moved to run time (the Smart Pro's borderless fullscreen;
-  X11 and Wayland, compiled out of its build); one glibc ceiling and sysroot for all
+  X11 and Wayland, compiled out of its build); one sysroot for all
   ([running on our devices](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#running-on-our-devices)).
+- **The Smart Pro at glibc 2.28**, as every Linux build is, if the device's libraries allow it:
+  its engine and launcher built by linux-aarch64's Buildroot SDK, not Bootlin's toolchains
+  ([its toolchains](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#the-toolchains)).
+- **The Smart Pro's launcher in line with DXLauncher**: the `trimui-smartpro` branch rebuilt on
+  linux-aarch64's launcher, taken by cherry-pick and tailored to the device (its screen and pad,
+  no desktop), its own launcher's known defects gone with it
+  ([its known defects](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects)).
 - **Windows as a build target**: the engine's kept Windows code built and tested
   ([building](https://github.com/JuggyMcNutty/DXEngine/blob/main/README.md#building-and-running)),
   and a launcher branch with win32 versions of the launcher's OS dependencies
