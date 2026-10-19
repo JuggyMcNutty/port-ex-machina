@@ -189,10 +189,11 @@ directories), its entry in the desktop's app menu, which takes the
 `deusex://` links too (`platform/posix/desktop.c`: a freedesktop.org desktop
 entry), the trash (`platform/posix/trash.c`: freedesktop.org's Trash spec, a
 `rename`) and the server browser's network (`platform/posix/net.c`:
-`getaddrinfo`, TCP and UDP sockets, `poll`). `main`'s launcher shares
-`core/instance.c`, `core/paths.c` and `core/ini.c`, and has three more: the
-game as a child, as DXLauncher's; its own start again for safe mode
-(`platform/posix/launch.c`: `execv`); the Detail page's machine
+`getaddrinfo`, TCP and UDP sockets, `poll`, and for the local network's servers
+`SO_BROADCAST` to each interface's broadcast address from `getifaddrs`).
+`main`'s launcher shares `core/instance.c`, `core/paths.c` and `core/ini.c`, and
+has three more: the game as a child, as DXLauncher's; its own start again for
+safe mode (`platform/posix/launch.c`: `execv`); the Detail page's machine
 (`platform/posix/machine.c`: `/proc/cpuinfo`, cpufreq's maximum, `sysinfo`).
 
 **Android** needs a different hand-over: the engine has to run inside the
