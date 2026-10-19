@@ -1,5 +1,6 @@
-/* Smart Pro GLES probe: which sampler parameters and scene-buffer formats
- * the vendor driver (PowerVR Rogue GE8300, ES 3.2) actually accepts.
+/* Smart Pro GLES probe: which sampler parameters and framebuffer formats
+ * (the scene's with Hdr: RGBA16F beside R32UI and D32F) the vendor driver
+ * (PowerVR Rogue GE8300, ES 3.2) actually accepts.
  * No link-time GL deps: everything through dlopen/dlsym, like the launcher's
  * GPU probe. Cross-compile with the aarch64 toolchain, run on the device. */
 #include <stdio.h>

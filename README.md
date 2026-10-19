@@ -38,7 +38,7 @@ Clone this repository into an empty folder; `fetch` puts the others beside it.
 ```sh
 mkdir deusex && cd deusex                  # the parent folder: any name
 git clone https://github.com/JuggyMcNutty/port-ex-machina.git && cd port-ex-machina
-scripts/dx.sh fetch                        # once: the engine, the launcher's port branches, the RE
+scripts/dx.sh fetch                        # once: the engine, the launcher's main and port branches, the RE
 scripts/dx.sh test [<port>]                # unit tests: linux-x86_64's (after its deps), or another port branch's host build
 scripts/engine.sh status                   # the pin and the engine's branch
 
@@ -72,8 +72,8 @@ the same.
 | [`docs/PORTING.md`](docs/PORTING.md) | how ports work -- a branch of the launcher each -- and how to add one |
 | [the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md) | `main`, the default branch: the original recreated |
 | `docs/LAUNCHER.md`, on each port branch: DXLauncher's, the same on linux-x86_64 and linux-aarch64 ([linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md)), the tabbed launcher's ([trimui-smartpro's](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md)) | that branch's launcher: the files it writes and the settings the engine really reads, the screens, the hand-over to the engine, what it changes from the original |
-| a port's `ports/<id>/README.md`, on its branch | one device: status, what differs from the branch it started from, measurements, what was verified |
-| DXEngine's [`docs/`](https://github.com/JuggyMcNutty/DXEngine/tree/main/docs) | the engine: how it is kept, run, profiled and what it changes from Surreal Engine ([`ENGINE.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md)); where it still differs from the original ([`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md)); working on it, the harness ([`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md)) |
+| a port's `ports/<id>/README.md`, on its branch | one device: status, what differs from the branch it started from, measurements, what is verified |
+| DXEngine's [`docs/`](https://github.com/JuggyMcNutty/DXEngine/tree/main/docs) | the engine: how it is kept, run, profiled and what it changes from Surreal Engine ([`ENGINE.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md)); where it differs from the original ([`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md)); working on it, the harness ([`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md)) |
 | [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) | the original binaries: `DeusEx.exe`, which `main` recreates, and the game's DLLs -- what they do |
 
 ## Layout

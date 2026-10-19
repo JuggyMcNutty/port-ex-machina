@@ -82,19 +82,6 @@ reference the port branches start from, changed only for a feature found missing
   system's own; built with a buildroot toolchain, a GCC 13 on glibc 2.28, as Godot's Linux
   builds are ([the glibc ceiling](docs/DEVELOPMENT.md#gotchas-that-cost-time)).
 
-## Open decisions
-
-The owner's, each waiting until the owner takes it up.
-
-- **Detail textures**: keep DXEngine's one-pass ones, draw `D3DDrv`'s three-pass ones as read,
-  or draw none, as the original run here does
-  ([the menus' settings](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md#the-menus-settings),
-  [detail textures](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/d3ddrv-dll.md#detail-textures)).
-- **An idea from DXD3D9 2.0** (a third-party renderer in `reference/`, ideas only:
-  [its terms](docs/DEVELOPMENT.md#the-repositories)): a 10-bit GL scene buffer, `GL_RGB10_A2`
-  for RGBA8
-  ([rendering](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#rendering)).
-
 ## To do
 
 Decided work for later sessions, each deleted when it is done.
@@ -112,20 +99,12 @@ Decided work for later sessions, each deleted when it is done.
 - **CI**: the ports built on GitHub's CI, aarch64's always cross-built: linux-aarch64's engine
   too, which builds only natively for now
   ([the port](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-aarch64/ports/linux-aarch64/README.md#build-and-run)).
-- **The stutter when a save is loaded in the running game**: DXEngine then spawns and destroys
-  actors by the hundred thousand within a minute, its main thread busy for most of it, and its
-  resident memory more than doubles for good; the same save, Liberty Island's, loads cleanly
-  when the launcher starts the game on it. The log names no class: a console that loads a save
-  in the game and counts the actors by class each second, in both engines, finds what is
-  spawned and whether the original spawns it too.
 
 ## Open items
 
-Known defects, each in the doc that owns its code:
-[`main`'s](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md#known-defects),
-DXLauncher's, linux-x86_64's and linux-aarch64's
+Known defects, each in the doc that owns its code: DXLauncher's (linux-x86_64, linux-aarch64)
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects),
 and the Smart Pro's
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects).
-Where the engine still differs from the original: each section's "Differs" in
+Where the engine differs from the original: each section's "Differs" in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md).

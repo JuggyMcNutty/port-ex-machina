@@ -2,12 +2,13 @@
  * for its scene beyond the samplers (probe-gles-sampler.c):
  *   - a clip distance, GL_EXT_clip_cull_distance: a shader that writes
  *     gl_ClipDistance[0] compiles, and the draw is clipped only while
- *     GL_CLIP_DISTANCE0 is on (a mirror's plane);
+ *     GL_CLIP_DISTANCE0 is on (a mirror's plane; without one the device
+ *     clips by a discard);
  *   - RGB10_A2 scene buffers made with glTexStorage2D: beside the R32UI hit
  *     buffer and D32F depth, single and multisampled, the samples resolved by
- *     a blit, sampled by a pass, and read back as RGBA/UNSIGNED_BYTE (as the
- *     device reads a shot) and as RGBA/UNSIGNED_INT_2_10_10_10_REV, with all
- *     ten bits kept.
+ *     a blit, sampled by a pass, and read back as
+ *     RGBA/UNSIGNED_INT_2_10_10_10_REV (as the device reads a shot), with all
+ *     ten bits kept, and as RGBA/UNSIGNED_BYTE.
  * No link-time GL deps: everything through dlopen/dlsym, like the launcher's
  * GPU probe. Cross-compile with the aarch64 toolchain, run on the device. */
 #include <stdio.h>

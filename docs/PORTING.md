@@ -56,7 +56,7 @@ from the branch it started from:
 | `engine.cmake` | A CMake initial cache (`cmake -C`) for building the engine: its toolchain and `ENABLE_*` switches, each set with `FORCE` so an edit reaches an existing build too | if it builds the engine |
 | `target.c` | A device's profile, a `dxl_target`, on a branch with trimui-smartpro's profile code: fonts to try first, the panel size, the CPU modes its hooks can apply (with their help text), a note about the built-in pad, the About line, and the GPU `dxl-shots` should pretend to have. Without one the build uses `src/platform/target_default.c`, a generic desktop | optional |
 | `packaging/` | Laid over `ports/common/packaging/` when staging. On a branch whose `run-game.sh` sources one (trimui-smartpro's), `port-hooks.sh`: `PORT_LIB_PATH`, `port_env`, `port_before_game`, `port_after_game`. Also here: the port's own `launcher.ini`, `renderers.ini`, `engine-settings.json.default`, and whatever the device's frontend needs to list the app | optional |
-| `README.md` | The device as measured, the port's status, what was verified on it | yes |
+| `README.md` | The device as measured, the port's status, what is verified on it | yes |
 
 A port also gets a configure preset in its branch's `CMakePresets.json` (its
 name is the port id; it only adds the port's toolchain file, if it has one).
@@ -159,8 +159,8 @@ it (the Smart Pro's README has the exact command line).
 | `probe-sdl-vulkan.c` | can SDL2 hand out a Vulkan surface here | `-lSDL2 -lvulkan` |
 | `probe-vulkan-caps.c` | every requirement the engine's Vulkan device filter checks, with a verdict | `-lvulkan` |
 | `probe-texture-formats.c` | which texture formats the GPU can sample and linearly filter (BCn, RGB8, RGBA32F) | `-lvulkan` |
-| `probe-gles-sampler.c` | what an OpenGL ES driver accepts: each sampler parameter the engine sets, the extensions it looks for (S3TC, float-linear filtering, anisotropy, mirror-clamp, `glBufferStorage`), and the scene buffers' formats (RGBA16F, R32UI and D32F in one framebuffer); it draws to a pbuffer | `-ldl` (EGL and GLES are opened at run time) |
-| `probe-gles-scene.c` | what the GL device's scene asks of an OpenGL ES driver beyond the samplers: a clip distance (`GL_EXT_clip_cull_distance`) that clips a draw only while `GL_CLIP_DISTANCE0` is on, and RGB10_A2 scene buffers made with `glTexStorage2D` beside R32UI and D32F, single and multisampled, resolved by a blit, sampled by a pass and read back as `UNSIGNED_BYTE` and `2_10_10_10_REV`, their ten bits kept; it draws to framebuffers in a pbuffer's context | `-ldl` |
+| `probe-gles-sampler.c` | what an OpenGL ES driver accepts: each sampler parameter the engine sets, the extensions it looks for (S3TC, float-linear filtering, anisotropy, mirror-clamp, `glBufferStorage`), and the scene buffers' formats with `Hdr` (RGBA16F, R32UI and D32F in one framebuffer); it draws to a pbuffer | `-ldl` (EGL and GLES are opened at run time) |
+| `probe-gles-scene.c` | what the GL device's scene asks of an OpenGL ES driver beyond the samplers: a clip distance (`GL_EXT_clip_cull_distance`; without one the device clips a mirror by a discard) that clips a draw only while `GL_CLIP_DISTANCE0` is on, and RGB10_A2 scene buffers made with `glTexStorage2D` beside R32UI and D32F, single and multisampled, resolved by a blit, sampled by a pass and read back as `UNSIGNED_BYTE` and `2_10_10_10_REV`, their ten bits kept; it draws to framebuffers in a pbuffer's context | `-ldl` |
 
 `dxl-cli --probe` (trimui-smartpro's build, for any aarch64 Linux and the host)
 reports the Vulkan device and API, the OpenGL ES version and renderer, and
@@ -211,8 +211,8 @@ that do not apply:
 |---|---|
 | **Status** | one paragraph: what runs, what does not yet |
 | **Build and run** | the commands, where things live on the device, how to reach it |
-| **What differs from the branch it started from** | the port's files, and why each difference was needed; linux-x86_64, the desktop's default, has **What it is made of** in its place |
-| **The device, as measured** | what was probed, not assumed |
-| **Verified** | what was checked on real hardware |
+| **What differs from the branch it started from** | the port's files, and why each difference is needed; linux-x86_64, the desktop's default, has **What it is made of** in its place |
+| **The device, as measured** | what is probed, not assumed |
+| **Verified** | what is checked on real hardware |
 | **Performance** | where it is measured: the numbers and how to take them |
 | **Gotchas** | what bit on this device |
