@@ -92,26 +92,19 @@ Decided work for later sessions, each deleted when it is done.
   engine's build-time device choices moved to run time (the Smart Pro's borderless fullscreen;
   X11 and Wayland, compiled out of its build); one sysroot for all
   ([running on our devices](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#running-on-our-devices)).
-- **The Smart Pro at glibc 2.28**, as every Linux build is, if the device's libraries allow it:
-  its engine and launcher built by linux-aarch64's Buildroot SDK, not Bootlin's toolchains
-  ([its toolchains](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#the-toolchains)).
-- **The Smart Pro's launcher in line with DXLauncher**: the `trimui-smartpro` branch rebuilt on
-  linux-aarch64's launcher, taken by cherry-pick and tailored to the device (its screen and pad,
-  no desktop), its own launcher's known defects gone with it
-  ([its known defects](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects)).
 - **Windows as a build target**: the engine's kept Windows code built and tested
   ([building](https://github.com/JuggyMcNutty/DXEngine/blob/main/README.md#building-and-running)),
   and a launcher branch with win32 versions of the launcher's OS dependencies
   ([other operating systems](docs/PORTING.md#other-operating-systems)).
 - **CI**: the ports built on GitHub's CI, aarch64's always cross-built: linux-aarch64's engine
-  too, which builds only natively for now
+  too, which builds only natively
   ([the port](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-aarch64/ports/linux-aarch64/README.md#build-and-run)).
 
 ## Open items
 
 Known defects, each in the doc that owns its code: DXLauncher's (linux-x86_64, linux-aarch64)
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects),
-and the Smart Pro's
+and the Smart Pro's tailored copy of it
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects).
 Where the engine differs from the original: each section's "Differs" in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md).

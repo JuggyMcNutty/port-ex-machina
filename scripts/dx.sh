@@ -73,27 +73,16 @@ cmd_build() {
     esac
 }
 
-# The app directory is laid out exactly as it ships: the binaries and what
-# the launcher's install rules add, the engine, and on a branch with
-# packaging, ports/common/packaging and then the port's own packaging over
-# it. launcher.ini belongs to whoever runs the app, so it is only created
-# when missing; the packaged one is always there as launcher.ini.default.
-# The engine is DXEngine, with its DXEngine.pk3.
+# The app directory is laid out exactly as it ships, from empty: the
+# binaries and what the launcher's install rules add, the port's own
+# packaging/ over them (a device's app files: its entry script, icon and
+# hooks), and the engine, DXEngine with its DXEngine.pk3.
 cmd_stage() {
     [ -x "$LAUNCHER_BUILD/$PORT_LAUNCHER" ] || die "no launcher build -- scripts/dx.sh build $PORT"
+    rm -rf "$APP"
     mkdir -p "$APP"
     cmake --install "$LAUNCHER_BUILD" --prefix "$APP" >/dev/null
-
-    local fresh=0
-    if [ -d "$SRC/ports/common/packaging" ]; then
-        local pkg; pkg="$(mktemp -d)"
-        cp -a "$SRC/ports/common/packaging/." "$pkg/"
-        [ -d "$PORT_DIR/packaging" ] && cp -a "$PORT_DIR/packaging/." "$pkg/"
-        mv "$pkg/launcher.ini" "$pkg/launcher.ini.default"
-        cp -a "$pkg/." "$APP/"
-        rm -rf "$pkg"
-        if [ ! -s "$APP/launcher.ini" ]; then cp "$APP/launcher.ini.default" "$APP/launcher.ini"; fresh=1; fi
-    fi
+    [ ! -d "$PORT_DIR/packaging" ] || cp -a "$PORT_DIR/packaging/." "$APP/"
     local sh
     for sh in "$APP"/*.sh; do
         [ ! -f "$sh" ] || chmod +x "$sh"
@@ -109,7 +98,7 @@ cmd_stage() {
         fi
     fi
 
-    port_stage "$fresh"
+    port_stage
     say "staged $APP"
 }
 

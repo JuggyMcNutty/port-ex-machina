@@ -10,8 +10,8 @@ temporary debug hooks, its gotchas -- is DXEngine's
 Development happens on
 [linux-x86_64](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md).
 A change is clean when it builds and tests there *and* builds warning-free for each cross port
-that ships: the Smart Pro's GCC 9.3 is stricter about `-Wshadow` and `-Wformat-truncation` than
-a current host compiler.
+that ships: the Smart Pro builds with the same GCC 13.2, but code linux-x86_64 does not (the
+engine's SDL2 backend, the port's own files).
 
 ## The repositories
 
@@ -131,11 +131,9 @@ loudly instead of leaving stale instructions:
   branch.
 - `scripts/launcher.sh check`: each port's worktree is at the commit `LAUNCHER-PIN.txt` names,
   on its branch (and git can read it).
-- `test_target_<port>` (the id's `-` as `_`), on a device branch with a profile of its own
-  (trimui-smartpro's): each CPU mode the profile offers is named in `port-hooks.sh` (loosely:
-  [known defects](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects)),
-  the hooks' fallback (`CPU_MODE_DEFAULT`) is the profile's default, and the profile's id is its
-  port's.
+- `test_cpumode`, on trimui-smartpro: the Smart Pro's game hook, `port-hooks.sh`, run against
+  stand-in spruceOS helpers: each CPU mode the launcher offers (`src/core/cpumode.c`) runs its
+  own helper there, and one the hook does not know takes the launcher's default.
 - `scripts/dx.sh check` runs the first three, confirms every port has its required files,
   checks the glibc ceiling of whatever is staged, and checks that a port's list of the game's
   builds (`src/core/gamedb.c`, DXLauncher's) is the engine's (`UE1GameDatabase.h`).
@@ -149,13 +147,17 @@ These apply everywhere:
 - **A binary built against a newer glibc than the device's will not load.** glibc 2.34
   re-versioned the startup symbols; one `GLIBC_2.34` reference is enough. Every Linux port sets
   a ceiling (`DXL_PORT_GLIBC_MAX`) that its branch's `scripts/check-abi.sh` enforces after each
-  build, built with a toolchain whose own glibc is at most the ceiling: linux-x86_64's and
-  linux-aarch64's 2.28 by Godot's Buildroot SDKs (`dx_fetch_buildroot`), the Smart Pro's 2.33,
-  the device's own, by Bootlin's (`dx_fetch_bootlin`); each port's README says which.
-- **Started without `--ini`, as the Smart Pro's `run-game.sh` starts it, DXEngine reads
-  `DXE-DeusEx.ini`/`DXE-User.ini` after its first clean exit**, not `DeusEx.ini`/`User.ini`, and
-  of the keys the original launcher writes it reads few; a stub `DeusEx.ini` kills it
-  ([where the settings actually live](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#where-the-settings-actually-live)).
+  build, built with a toolchain whose own glibc is at most the ceiling: every port's 2.28 by
+  Godot's Buildroot SDKs (`dx_fetch_buildroot`); Bootlin's (`dx_fetch_bootlin`) for a device
+  older than that. A device's own libraries may need more than the ceiling, which GNU ld
+  rejects: the link then ignores what shared libraries leave undefined, as
+  [the Smart Pro's](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#the-toolchains)
+  does.
+- **Started without `--ini`, as a bare engine run is (a harness's, or one by hand), DXEngine
+  reads `DXE-DeusEx.ini`/`DXE-User.ini` in the game's `System` after its first clean exit**,
+  not `DeusEx.ini`/`User.ini`, and of the keys the original launcher writes it reads few; a stub
+  `DeusEx.ini` kills it. The launchers start it with `--ini` and `--userini`, the profile's
+  ([running it](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#running-it)).
 - **Never `pkill -f` or `pgrep -f <pattern>`** in a command whose own text contains the pattern:
   it matches the shell running it. Use `pidof`, `pgrep -x`, or bracket a letter
   (`pgrep -f "[D]XEngine --no-launcher"`).

@@ -52,7 +52,9 @@ cmd_fetch() {
     for p in $(dx_ports); do
         wt="$LAUNCHER_DIR/$p"
         if [ ! -e "$wt/.git" ]; then
-            git -C "$MAIN" fetch --quiet origin
+            # With the tags: a commit no branch holds stays reachable
+            # through its tag (trimui-smartpro-tabbed).
+            git -C "$MAIN" fetch --quiet --tags origin
             git -C "$MAIN" worktree add -q -B "$p" "$wt" "$(pinned "$p")"
             git -C "$wt" branch -q --set-upstream-to "origin/$p"
             say "deusex-launcher/$p ready ($(git -C "$wt" rev-parse --short HEAD))"

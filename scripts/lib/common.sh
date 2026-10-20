@@ -84,7 +84,7 @@ dx_ssh_sync() {
 }
 
 # ---- Bootlin toolchains -----------------------------------------------------
-# dx_fetch_bootlin <name> <glibc-max>, e.g. aarch64--glibc--stable-2020.08-1 2.33
+# dx_fetch_bootlin <name> <glibc-max>: the toolchain as Bootlin names it, and the device's glibc
 #
 # Into deps/toolchains/<name>. Refuses a toolchain whose own glibc is newer than
 # the ceiling: glibc 2.34 re-versioned the startup symbols, so anything linked

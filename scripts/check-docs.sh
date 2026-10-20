@@ -47,13 +47,14 @@ OWNER_URL="https://github.com/JuggyMcNutty"
 
 # Paths that are correct but have nothing to resolve against here.
 ALLOW=(
-    '^home/'                          # the app dir's pinned HOME, created by run-game.sh at run time
+    '^home/'                          # the Smart Pro's DXL_HOME in the app's folder, launch.sh's
     '^System/(Running\.ini|DXE-DeusEx\.ini|DXE-User\.ini|DeusExLauncher\.log)$'  # created at run time
     '^System/(DeusEx|run-game\.sh|DXEngine|DXEngine\.pk3)$'  # main's launcher, while scripts/recreation.sh installs it
     '^build/'                         # build output
     '^deps/'                          # fetched toolchains and sysroots
     '^(Window|Launch|Core|Engine|DeusEx|DeusExText|Extension|ConSys|WinDrv)/Inc/' # SDK headers inside reference/ReleaseSDK1112f/Headers/DxHeaders.zip
     '^spruce/'                        # spruceOS on the device (/mnt/SDCARD/spruce/...)
+    '^Roms/'                          # spruceOS's games folders on the device's card (/mnt/SDCARD/Roms/...)
     '^~/'                             # a player's home: the launchers' files in it
     '^\$(XDG_[A-Z_]+|DXL_HOME|HOME)/'  # the XDG folders and the homes the desktop launcher's files go in
 )
