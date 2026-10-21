@@ -1,5 +1,5 @@
-# Shared by scripts/dx.sh, engine.sh, launcher.sh, recreation.sh and
-# check-docs.sh; by the ports' port.sh files (on their launcher branches,
+# Shared by scripts/dx.sh, engine.sh, launcher.sh, recreation.sh, wine.sh
+# and check-docs.sh; by the ports' port.sh files (on their launcher branches,
 # sourced by dx.sh) and the Smart Pro's fetch-sysroot.sh; and by the engine's
 # tools/host-tools.sh. Sourced, never run; expects bash with
 # set -euo pipefail.
@@ -114,6 +114,43 @@ dx_fetch_bootlin() {
     say "  glibc 2.$minor (ceiling $max)"
 }
 
+# ---- pinned tarballs --------------------------------------------------------
+# dx_fetch_cached <file> <url> <sha256>
+#
+# Into deps/cache/<file>, downloaded again unless it is the pinned one; the
+# path printed.
+dx_fetch_cached() {
+    local file="$1" url="$2" sha="$3"
+    local tar="$DX_DEPS/cache/$file"
+    mkdir -p "$DX_DEPS/cache"
+    if [ ! -f "$tar" ] || ! echo "$sha  $tar" | sha256sum -c --status; then
+        say "downloading $file ..."
+        curl -fL --retry 3 --progress-bar -o "$tar.part" "$url"
+        mv "$tar.part" "$tar"
+    fi
+    echo "$sha  $tar" | sha256sum -c --status || die "$tar is not the pinned one ($sha)"
+    printf '%s\n' "$tar"
+}
+
+# dx_unpack_into <tarball> <dir> <path>
+#
+# The tarball's one top folder becomes <dir>, replacing it: unpacked beside it
+# first (tar takes any compression), and refused unless it holds <path>.
+dx_unpack_into() {
+    local tar="$1" dir="$2" need="$3"
+    mkdir -p "$(dirname "$dir")"
+    local tmp; tmp="$(mktemp -d "$(dirname "$dir")/.unpack.XXXXXX")"
+    tar -C "$tmp" -xf "$tar"
+    local top; top="$(ls "$tmp")"
+    if [ -z "$top" ] || [ "$(printf '%s\n' "$top" | wc -l)" != 1 ] || [ ! -e "$tmp/$top/$need" ]; then
+        rm -rf "$tmp"
+        die "$tar holds no one folder with $need"
+    fi
+    rm -rf "$dir"
+    mv "$tmp/$top" "$dir"
+    rmdir "$tmp"
+}
+
 # ---- buildroot SDKs ---------------------------------------------------------
 # dx_fetch_buildroot <name> <url> <sha256> <glibc-max>
 #
@@ -124,26 +161,13 @@ dx_fetch_bootlin() {
 # ceiling, as dx_fetch_bootlin refuses one.
 dx_fetch_buildroot() {
     local name="$1" url="$2" sha="$3" max="$4"
-    local dest="$DX_DEPS/toolchains" tar="$DX_DEPS/cache/$name.tar.bz2"
-    local dir="$dest/$name"
+    local dir="$DX_DEPS/toolchains/$name"
 
     if [ -x "$dir/relocate-sdk.sh" ] && [ -f "$dir/.dx-relocated" ]; then
         say "toolchain present: $name"
     else
-        mkdir -p "$dest" "$DX_DEPS/cache"
-        if [ ! -f "$tar" ] || ! echo "$sha  $tar" | sha256sum -c --status; then
-            say "downloading $name ..."
-            curl -fL --retry 3 --progress-bar -o "$tar.part" "$url"
-            mv "$tar.part" "$tar"
-        fi
-        echo "$sha  $tar" | sha256sum -c --status || die "$tar is not the pinned $name ($sha)"
-        local tmp; tmp="$(mktemp -d "$dest/.unpack.XXXXXX")"
-        tar -C "$tmp" -xjf "$tar"
-        local top; top="$(ls "$tmp")"
-        [ -n "$top" ] && [ -x "$tmp/$top/relocate-sdk.sh" ] || die "$tar holds no buildroot SDK"
-        rm -rf "$dir"
-        mv "$tmp/$top" "$dir"
-        rmdir "$tmp"
+        local tar; tar="$(dx_fetch_cached "$name.tar.bz2" "$url" "$sha")"
+        dx_unpack_into "$tar" "$dir" relocate-sdk.sh
         (cd "$dir" && ./relocate-sdk.sh >/dev/null) || die "$name would not relocate"
         touch "$dir/.dx-relocated"
     fi
@@ -153,6 +177,127 @@ dx_fetch_buildroot() {
     minor=$(grep -oE 'define[[:space:]]+__GLIBC_MINOR__[[:space:]]+[0-9]+' "$features" | grep -oE '[0-9]+$')
     [ "$minor" -le "${max#2.}" ] || die "$name has glibc 2.$minor, above the ceiling $max"
     say "  glibc 2.$minor (ceiling $max)"
+}
+
+# ---- llvm-mingw -------------------------------------------------------------
+# dx_fetch_llvm_mingw <tag> <sha256>
+#
+# llvm-mingw (github.com/mstorsjo/llvm-mingw): Clang, LLD and mingw-w64 on the
+# UCRT, a cross toolchain for Windows that runs here, into
+# deps/toolchains/llvm-mingw-<tag>-ucrt-ubuntu-22.04-x86_64. Its release is
+# checked against the SHA256 the port pins, then a C and a C++ program built
+# with it statically must import none of its own DLLs (libc++, libunwind,
+# winpthread): its programs need Windows' alone. No glibc to hold it to: it
+# is a tool of this machine's, linking nothing of it into its programs.
+dx_fetch_llvm_mingw() {
+    local tag="$1" sha="$2"
+    local name="llvm-mingw-$tag-ucrt-ubuntu-22.04-x86_64"
+    local dir="$DX_DEPS/toolchains/$name"
+    if [ -f "$dir/.dx-ready" ]; then
+        say "toolchain present: $name"
+        return 0
+    fi
+    local tar
+    tar="$(dx_fetch_cached "$name.tar.xz" "https://github.com/mstorsjo/llvm-mingw/releases/download/$tag/$name.tar.xz" "$sha")"
+    dx_unpack_into "$tar" "$dir" bin/x86_64-w64-mingw32-clang
+    local tmp; tmp="$(mktemp -d)"
+    printf '#include <stdio.h>\nint main(void) { puts("c"); return 0; }\n' > "$tmp/c.c"
+    printf '%s\n' '#include <filesystem>' '#include <thread>' \
+        'int main() { std::thread t([] {}); t.join(); return std::filesystem::exists(".") ? 0 : 1; }' > "$tmp/cxx.cpp"
+    "$dir/bin/x86_64-w64-mingw32-clang" -static -o "$tmp/c.exe" "$tmp/c.c" || die "$name builds no C program"
+    "$dir/bin/x86_64-w64-mingw32-clang++" -std=c++20 -static -o "$tmp/cxx.exe" "$tmp/cxx.cpp" ||
+        die "$name builds no C++ program"
+    local imports
+    imports="$("$dir/bin/llvm-readobj" --coff-imports "$tmp/c.exe" "$tmp/cxx.exe")" || die "$name builds no PE program"
+    rm -rf "$tmp"
+    if printf '%s\n' "$imports" | grep -qiE 'Name: (libc\+\+|libunwind|libwinpthread)'; then
+        die "$name links its own runtime DLLs into a static program"
+    fi
+    touch "$dir/.dx-ready"
+    say "toolchain ready: $name ($("$dir/bin/x86_64-w64-mingw32-clang" --version | head -n 1))"
+}
+
+# ---- Wine -------------------------------------------------------------------
+# The Windows port's programs and tests run here under a Proton build's own
+# wine, as the engine's harness runs the original (DXEngine's tools/dxcap.sh):
+# DX_PROTON names the build in Steam's compatibility tools (default
+# "Proton-CachyOS Latest"), and its prefix is build/windows-x86_64/prefix
+# (DX_WINEPREFIX another), made on first use.
+dx_wine() {
+    local w="$HOME/.local/share/Steam/compatibilitytools.d/${DX_PROTON:-Proton-CachyOS Latest}/files/bin/wine"
+    [ -x "$w" ] || die "no Proton wine at $w (DX_PROTON names a build in ~/.local/share/Steam/compatibilitytools.d)"
+    printf '%s\n' "$w"
+}
+
+dx_wine_prefix() { printf '%s\n' "${DX_WINEPREFIX:-$DX_ROOT/build/windows-x86_64/prefix}"; }
+
+# dx_wine_ready: the prefix, made if missing -- by wineboot without Mono or
+# Gecko, which nothing here needs, and with no crash dialog -- and given
+# vkd3d's libraries, which Proton's wined3d, under its d3d11 and dxgi, imports
+# and a bare wineboot's prefix lacks.
+dx_wine_ready() {
+    local wine prefix
+    wine="$(dx_wine)"
+    prefix="$(dx_wine_prefix)"
+    if [ ! -f "$prefix/system.reg" ]; then
+        say "making the Wine prefix $prefix ($("$wine" --version 2>/dev/null))"
+        mkdir -p "$(dirname "$prefix")"
+        env -u WAYLAND_DISPLAY WINEPREFIX="$prefix" WINEDEBUG=-all \
+            WINEDLLOVERRIDES="winemenubuilder.exe=d;mscoree,mshtml=" "$wine" wineboot -i >/dev/null 2>&1 || true
+        env WINEPREFIX="$prefix" "${wine%/wine}/wineserver" -w || true
+        [ -f "$prefix/system.reg" ] || die "wineboot made no prefix at $prefix"
+        env WINEPREFIX="$prefix" WINEDEBUG=-all "$wine" reg add 'HKCU\Software\Wine\WineDbg' \
+            /v ShowCrashDialog /t REG_DWORD /d 0 /f >/dev/null 2>&1 || true
+        env WINEPREFIX="$prefix" "${wine%/wine}/wineserver" -w || true
+    fi
+    local vkd3d="${wine%/bin/wine}/lib/vkd3d" arch dir f
+    for arch in x86_64:system32 i386:syswow64; do
+        dir="$prefix/drive_c/windows/${arch#*:}"
+        for f in "$vkd3d/${arch%%:*}-windows"/libvkd3d*.dll; do
+            [ -f "$f" ] || die "no vkd3d libraries in $vkd3d"
+            [ -f "$dir/${f##*/}" ] || cp "$f" "$dir/"
+        done
+    done
+}
+
+# dx_wine_run <program> [args]: in the prefix, with nothing reaching the
+# desktop's menus or file associations (winemenubuilder off), on its X display.
+dx_wine_run() {
+    local overrides="winemenubuilder.exe=d"
+    [ -z "${WINEDLLOVERRIDES:-}" ] || overrides="$overrides;$WINEDLLOVERRIDES"
+    env -u WAYLAND_DISPLAY WINEPREFIX="$(dx_wine_prefix)" WINEDEBUG="${WINEDEBUG:--all}" \
+        WINEDLLOVERRIDES="$overrides" "$(dx_wine)" "$@"
+}
+
+# dx_winpath <absolute path>: Wine's name for it, Z: being the root.
+dx_winpath() { printf 'Z:%s' "${1//\//\\}"; }
+
+# dx_wine_dxvk: Proton's DXVK -- D3D11 on Vulkan -- in the prefix beside
+# Wine's own d3d11 and dxgi, which stay the default: a run takes DXVK's with
+# WINEDLLOVERRIDES="d3d11,dxgi=n,b".
+dx_wine_dxvk() {
+    local wine dxvk dir f
+    wine="$(dx_wine)"
+    dxvk="${wine%/bin/wine}/lib/wine/dxvk/x86_64-windows"
+    dir="$(dx_wine_prefix)/drive_c/windows/system32"
+    for f in d3d11.dll dxgi.dll; do
+        [ -f "$dxvk/$f" ] || die "no DXVK $f in $dxvk"
+        cmp -s "$dxvk/$f" "$dir/$f" || cp "$dxvk/$f" "$dir/$f"
+    done
+}
+
+# dx_abi_args <port.cmake>: what the branch's scripts/check-abi.sh takes for
+# the port -- --max <glibc> for a ceiling (DXL_PORT_GLIBC_MAX), --windows
+# <version> for Windows' floor (DXL_PORT_WINDOWS_MIN) -- or nothing.
+dx_abi_args() {
+    local v
+    v=$(sed -n 's/^[[:space:]]*set(DXL_PORT_GLIBC_MAX[[:space:]]\{1,\}\([0-9.]\{1,\}\))/\1/p' "$1" | head -n 1)
+    if [ -n "$v" ]; then
+        printf -- '--max %s\n' "$v"
+        return 0
+    fi
+    v=$(sed -n 's/^[[:space:]]*set(DXL_PORT_WINDOWS_MIN[[:space:]]\{1,\}\([0-9.]\{1,\}\))/\1/p' "$1" | head -n 1)
+    [ -z "$v" ] || printf -- '--windows %s\n' "$v"
 }
 
 # ---- Debian packages --------------------------------------------------------

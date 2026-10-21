@@ -65,8 +65,9 @@ multilib repository enabled:
 
 Besides:
 
-- **Proton**, to run the original, and **`~/.config/DXEngine/Settings.json`**, which the
-  harness's dxe runs take their renderer from
+- **Proton**, to run the original and a Windows port's programs and tests (`scripts/wine.sh`),
+  and **`~/.config/DXEngine/Settings.json`**, which the harness's dxe runs take their renderer
+  from
   ([scripted runs](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
   The desktop launcher never writes it: it gives the engine a folder of its own for each
   profile (`--userdir`), and refuses an engine that has none.
@@ -135,8 +136,9 @@ loudly instead of leaving stale instructions:
   stand-in spruceOS helpers: each CPU mode the launcher offers (`src/core/cpumode.c`) runs its
   own helper there, and one the hook does not know takes the launcher's default.
 - `scripts/dx.sh check` runs the first three, confirms every port has its required files,
-  checks the glibc ceiling of whatever is staged, and checks that a port's list of the game's
-  builds (`src/core/gamedb.c`, DXLauncher's) is the engine's (`UE1GameDatabase.h`).
+  checks the glibc ceiling of whatever is staged (a Windows port's floor and the DLLs its
+  programs import), and checks that a port's list of the game's builds (`src/core/gamedb.c`,
+  DXLauncher's) is the engine's (`UE1GameDatabase.h`).
 
 ## Gotchas that cost time
 

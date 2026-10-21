@@ -9,7 +9,8 @@
 #   scripts/dx.sh deploy  <port> [args]       build, stage, send the app to the device (port-specific)
 #   scripts/dx.sh run     <port> [args]       run the staged app here (native ports)
 #   scripts/dx.sh profile <port> [args]       frame-time profile on the device (port-specific)
-#   scripts/dx.sh test    [<port>]            a port's host build + unit tests (default: linux-x86_64)
+#   scripts/dx.sh test    [<port>]            a port's host build + unit tests (default: linux-x86_64),
+#                                             then its own (port_test: Windows' under Wine)
 #   scripts/dx.sh check                       every repository's docs, the pins, port files, ABI, game builds
 #
 # A port is a branch of the launcher, checked out beside this repository in
@@ -21,13 +22,18 @@ export DX_WORKSPACE   # the Smart Pro's fetch-sysroot.sh loads lib/common.sh fro
 
 RE_URL="https://github.com/JuggyMcNutty/dx-reverse-info.git"
 
-usage() { sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 
 load_port() {
     PORT="${1:-}"
     [ -n "$PORT" ] || die "which port? ($(dx_ports | tr '\n' ' '))"
-    dx_ports | grep -qx -- "$PORT" || die "no port '$PORT' (have: $(dx_ports | tr '\n' ' '))"
     SRC="$DX_LAUNCHER/$PORT"
+    # A port is pinned once its branch is pushed (scripts/launcher.sh pin);
+    # before that, its worktree alone makes it one, with a warning.
+    if ! dx_ports | grep -qx -- "$PORT"; then
+        [ -e "$SRC/.git" ] || die "no port '$PORT' (have: $(dx_ports | tr '\n' ' '))"
+        say "warning: $PORT is not pinned in LAUNCHER-PIN.txt -- its worktree's branch, unpushed"
+    fi
     [ -e "$SRC/.git" ] || die "no deusex-launcher/$PORT -- scripts/launcher.sh fetch"
     PORT_DIR="$SRC/ports/$PORT"
     [ -f "$PORT_DIR/port.sh" ] || die "deusex-launcher/$PORT has no ports/$PORT/port.sh"
@@ -39,11 +45,13 @@ load_port() {
     PORT_DESC=""
     PORT_ENGINE=0
     PORT_LAUNCHER=deusex-launcher   # the launcher's program, which run starts
+    PORT_ENGINE_FILES="DXEngine DXEngine.pk3"   # the engine's build that stage copies, its program first
     port_deps()   { say "$PORT: nothing to fetch"; }
     port_stage()  { :; }
     port_deploy() { die "$PORT has no deploy step; its app is $APP"; }
     port_run()    { die "$PORT does not run on this machine; deploy it instead"; }
     port_profile() { die "$PORT has no profile step"; }
+    port_test()   { :; }
     # shellcheck source=/dev/null
     . "$PORT_DIR/port.sh"
 }
@@ -76,7 +84,8 @@ cmd_build() {
 # The app directory is laid out exactly as it ships, from empty: the
 # binaries and what the launcher's install rules add, the port's own
 # packaging/ over them (a device's app files: its entry script, icon and
-# hooks), and the engine, DXEngine with its DXEngine.pk3.
+# hooks), and the engine's files (PORT_ENGINE_FILES: DXEngine with its
+# DXEngine.pk3, unless the port names others).
 cmd_stage() {
     [ -x "$LAUNCHER_BUILD/$PORT_LAUNCHER" ] || die "no launcher build -- scripts/dx.sh build $PORT"
     rm -rf "$APP"
@@ -89,10 +98,11 @@ cmd_stage() {
     done
 
     if [ "$PORT_ENGINE" = 1 ]; then
-        local e="$BUILD/engine"
-        if [ -x "$e/DXEngine" ]; then
-            cp "$e/DXEngine" "$APP/"
-            [ ! -f "$e/DXEngine.pk3" ] || cp "$e/DXEngine.pk3" "$APP/"
+        local e="$BUILD/engine" f
+        if [ -x "$e/${PORT_ENGINE_FILES%% *}" ]; then
+            for f in $PORT_ENGINE_FILES; do
+                [ ! -f "$e/$f" ] || cp "$e/$f" "$APP/"
+            done
         else
             say "warning: no engine build in $e -- staged the launcher only (scripts/dx.sh build $PORT engine)"
         fi
@@ -103,7 +113,8 @@ cmd_stage() {
 }
 
 # Every port branch builds for the host (the linux-x86_64 preset): its tests,
-# a device profile's among them, run there.
+# a device profile's among them, run there. Then the port's own, where it has
+# them (port_test): the Windows port's, cross-built, under Wine.
 cmd_test() {
     local p="${1:-linux-x86_64}"
     local src="$DX_LAUNCHER/$p"
@@ -112,6 +123,7 @@ cmd_test() {
     cmake --preset linux-x86_64 >/dev/null
     cmake --build --preset linux-x86_64 -j"$(nproc)"
     ctest --preset linux-x86_64
+    [ ! -f "$src/ports/$p/port.sh" ] || ( load_port "$p"; port_test )
 }
 
 cmd_fetch() {
@@ -159,17 +171,21 @@ cmd_check() {
         if [ -n "$missing" ]; then echo "FAIL ports/$p lacks$missing" >&2; rc=1; else echo "OK   ports/$p"; fi
     done
 
+    # A Linux port's glibc ceiling, or a Windows port's floor and the DLLs its
+    # programs import (dx_abi_args): the branch's scripts/check-abi.sh.
     say "== ABI of staged builds"
     for p in $(dx_ports); do
-        local src="$DX_LAUNCHER/$p" max bins=()
+        local src="$DX_LAUNCHER/$p" app="$DX_ROOT/build/$p/app" abi bins=()
         [ -f "$src/ports/$p/port.cmake" ] || continue
-        max=$(sed -n 's/^[[:space:]]*set(DXL_PORT_GLIBC_MAX[[:space:]]\{1,\}\([0-9.]\{1,\}\))/\1/p' "$src/ports/$p/port.cmake" | head -n 1)
-        [ -n "$max" ] || continue
-        for f in deusex-launcher dxl-cli DXEngine; do
-            [ -f "$DX_ROOT/build/$p/app/$f" ] && bins+=("$DX_ROOT/build/$p/app/$f")
+        abi="$(dx_abi_args "$src/ports/$p/port.cmake")"
+        [ -n "$abi" ] || continue
+        for f in deusex-launcher dxl-cli DXEngine "$app"/*.exe "$app"/*.dll; do
+            f="$app/${f##*/}"
+            [ -f "$f" ] && bins+=("$f")
         done
         [ ${#bins[@]} -gt 0 ] || continue
-        "$src/scripts/check-abi.sh" --max "$max" "${bins[@]}" || rc=1
+        # shellcheck disable=SC2086
+        "$src/scripts/check-abi.sh" $abi "${bins[@]}" || rc=1
     done
 
     # The builds of Deus Ex a launcher takes are the engine's: it plays only

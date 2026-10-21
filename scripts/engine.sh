@@ -62,8 +62,11 @@ cmd_build() {
     local pdir="$src/ports/$port"
     local cfg="$pdir/engine.cmake"
     [ -f "$pdir/port.sh" ] || die "no port '$port' in deusex-launcher/$port -- scripts/launcher.sh fetch"
-    # port.sh decides whether the engine builds for this port on this machine.
-    local ships; ships=$(PORT_ENGINE=0; . "$pdir/port.sh"; echo "$PORT_ENGINE")
+    # port.sh decides whether the engine builds for this port on this machine,
+    # and names the build's files (dx.sh's defaults otherwise).
+    local ships files
+    read -r ships files < <(PORT_ENGINE=0; PORT_ENGINE_FILES="DXEngine DXEngine.pk3"
+                            . "$pdir/port.sh"; echo "$PORT_ENGINE $PORT_ENGINE_FILES")
     [ "$ships" = 1 ] && [ -f "$cfg" ] || die "port $port does not build the engine here -- see its ports/$port/README.md"
     [ -d "$ENGINE_DIR/.git" ] || die "no engine clone -- scripts/engine.sh fetch"
     local bdir="$DX_ROOT/build/$port/engine" extra=()
@@ -72,10 +75,15 @@ cmd_build() {
     fi
     cmake -S "$ENGINE_DIR" -B "$bdir" -C "$cfg" "${extra[@]}"
     cmake --build "$bdir" --target DXEngine -j"$(nproc)"
-    local max
-    max=$(sed -n 's/^[[:space:]]*set(DXL_PORT_GLIBC_MAX[[:space:]]\{1,\}\([0-9.]\{1,\}\))/\1/p' "$pdir/port.cmake" | head -n 1)
-    if [ -n "$max" ]; then
-        "$src/scripts/check-abi.sh" --max "$max" "$bdir/DXEngine"
+    # Its programs and libraries held to the port's ABI (dx_abi_args).
+    local abi f bins=()
+    abi="$(dx_abi_args "$pdir/port.cmake")"
+    if [ -n "$abi" ]; then
+        for f in $files; do
+            case "$f" in *.pk3) ;; *) bins+=("$bdir/$f") ;; esac
+        done
+        # shellcheck disable=SC2086
+        "$src/scripts/check-abi.sh" $abi "${bins[@]}"
     fi
 }
 
