@@ -153,7 +153,7 @@ These apply everywhere:
   rejects: the link then ignores what shared libraries leave undefined, as
   [the Smart Pro's](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#the-toolchains)
   does.
-- **Started without `--ini`, as a bare engine run is (a harness's, or one by hand), DXEngine
+- **Started without `--ini`, as an engine run by hand is, DXEngine
   reads `DXE-DeusEx.ini`/`DXE-User.ini` in the game's `System` after its first clean exit**,
   not `DeusEx.ini`/`User.ini`, and of the keys the original launcher writes it reads few; a stub
   `DeusEx.ini` kills it. The launchers start it with `--ini` and `--userini`, the profile's

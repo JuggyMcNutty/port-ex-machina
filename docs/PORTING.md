@@ -164,8 +164,8 @@ it (the Smart Pro's README has the exact command line).
 | `probe-fbdev-egl.c` | what a video driver of a port's own needs where fbdev and the vendor's EGL are the only display path: the framebuffer's mode and layout, whether it takes 2x and 3x `yres_virtual`, pans and waits for vsync; which EGL and GLES sonames load; which native window `eglCreateWindowSurface` takes (`{ushort w,h}`, `{int w,h}`, NULL), each read back from fb0; swap timings; five create-draw-terminate cycles; the consoles' modes; a 1280x720 copy into fb0; each input device's name, ids and capabilities, and whether `libudev.so.1` loads. `--draw <s>` draws until killed, `--beside <cmd>` runs a command beside a live surface | `-ldl` |
 
 `dxl-cli --probe` (any DXLauncher build: the host's, linux-aarch64's, the
-Smart Pro's) reports the Vulkan device and API, the OpenGL ES version and renderer, and
-desktop GL -- what the launcher's renderer list is built from.
+Smart Pro's) reports the Vulkan device and API, the OpenGL ES version and
+renderer, and desktop GL -- what the launcher's renderer list is built from.
 
 ## Other operating systems
 

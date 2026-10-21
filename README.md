@@ -10,9 +10,10 @@ This repository holds no launcher, engine or game code. It is the workspace that
 project's other three repositories together: its scripts fetch them beside it
 ([layout](#layout)), build each port (the launcher, then the engine), stage, run, deploy and
 profile it ([quick start](#quick-start)), pin the exact engine and launcher commits the ports
-build (`ENGINE-PIN.txt`, `LAUNCHER-PIN.txt`), and check all four repositories' docs, pins, ports
-and ABI at once (`scripts/dx.sh check`). How the project is worked on, where it stands and what
-is open: [`AGENTS.md`](AGENTS.md) and [`docs/`](docs/) ([documentation](#documentation)).
+build (`ENGINE-PIN.txt`, `LAUNCHER-PIN.txt`), and check all four repositories' docs, pins,
+ports, ABI and game builds at once (`scripts/dx.sh check`). How the project is worked on, where
+it stands and what is open: [`AGENTS.md`](AGENTS.md) and [`docs/`](docs/)
+([documentation](#documentation)).
 
 ## The repositories
 
@@ -49,7 +50,7 @@ scripts/dx.sh run    <port>                # native ports
 scripts/dx.sh deploy <port>                # device ports: builds and stages first
 scripts/dx.sh profile <port>               # device ports: a frame-time profile (deploy with the engine's profiling hooks on first)
 
-scripts/dx.sh check                        # drift guards: every repository's docs, the pins, ports, ABI
+scripts/dx.sh check                        # drift guards: every repository's docs, the pins, ports, ABI, game builds
 
 scripts/recreation.sh build                # the original launcher recreated (the launcher's main), and the engine
 scripts/recreation.sh install [<GameDir>]  # into the game's System/, beside DeusEx.exe
