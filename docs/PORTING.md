@@ -171,33 +171,40 @@ renderer, and desktop GL -- what the launcher's renderer list is built from.
 
 Every Linux port is POSIX, and so is Android: bionic has everything below,
 though its app model changes the hand-over (below) and the GPU probe.
-DXLauncher's OS dependencies are few and named:
+DXLauncher's OS dependencies are few and named: each behind a header in
+`src/platform/`, POSIX's in `src/platform/posix/`, what both C libraries do
+alike (stdio, `stat`, `opendir`) called as it is.
 
-| What | Where | POSIX mechanism |
+| What | Seam | POSIX's |
 |---|---|---|
-| The game as a child it waits for, over a socket line | `platform/posix/process.c` behind `platform/process.h` | `fork`, `execv`, `socketpair` |
-| Crash-isolated GPU detection | `platform/posix/gpu_probe.c` | `fork` + `dlopen` of the Vulkan loader and EGL |
-| Single instance, and handing a command line to it | `core/instance.c` | `flock` on a pidfile, an abstract unix socket |
-| The launcher's own path; case-insensitive lookups | `core/paths.c` | `/proc/self/exe`, `opendir` |
-| Atomic writes | `core/paths.c` | `mkstemp`, `fsync`, `rename` |
-| Its folders | `core/xdg.c` | the XDG base directories |
-| The server browser's network | `platform/posix/net.c` | `getaddrinfo`, TCP and UDP sockets, `poll`, and for the local network's servers `SO_BROADCAST` to each interface's broadcast address from `getifaddrs` |
+| The game as a child it waits for, over a line both ways | `platform/process.h` | `process.c`: `fork`, `execv`, `socketpair` |
+| Crash-isolated GPU detection | `platform/gpu_probe.h` | `gpu_probe.c`: `fork` + `dlopen` of the Vulkan loader and EGL |
+| Single instance, and handing a command line to it | `platform/instance.h` | `instance.c`: `flock` on a pidfile, an abstract unix socket |
+| Waiting on that, and on a signal | `platform/wait.h` | `wait.c`: a pipe each, `poll` |
+| The file system where it differs: the launcher's own path, a path's root, links, atomic writes | `platform/fs.h` | `fs.c`: `/proc/self/exe`, `realpath`, `symlink`, `mkstemp`, `fsync`, `rename` |
+| Its folders | `platform/folders.h` | `folders.c`: the XDG base directories |
+| How a program it started ended; its environment | `platform/os.h` | `os.c`: the signals' names, `setenv` |
+| What ends a start from outside | `platform/startup.h` | `startup.c`: SIGINT, SIGTERM, SIGHUP |
+| The server browser's network | `platform/net.h` | `net.c`: `getaddrinfo`, TCP and UDP sockets, `poll`, and for the local network's servers `SO_BROADCAST` to each interface's broadcast address from `getifaddrs` |
 
+Where the game is on the platform is the finder's places,
+`core/finder_places.c` (desktop Linux's: Steam's, Heroic's, Lutris',
+Bottles', the Wine prefixes, the drives), made of `core/finder.c`'s looking.
 On the desktop's branches, linux-x86_64 and linux-aarch64, also: a folder
 or page opened by `xdg-open` (`platform/posix/process.c`); its entry in the
 desktop's app menu, which takes the `deusex://` links too
 (`platform/posix/desktop.c`: a freedesktop.org desktop entry); the trash
 (`platform/posix/trash.c`: freedesktop.org's Trash spec, a `rename`). The
 Smart Pro has no desktop for them: it deletes for good
-(`platform/posix/delete.c`: `nftw`). `main`'s launcher shares
-`core/instance.c`, `core/paths.c` and `core/ini.c`, and has three more: the
-game as a child, as DXLauncher's; its own start again for safe mode
+(`platform/posix/delete.c`: `nftw`). `main`'s launcher has its own
+`core/instance.c` and `core/paths.c`, and three more: the game as a child,
+as DXLauncher's; its own start again for safe mode
 (`platform/posix/launch.c`: `execv`); the Detail page's machine
 (`platform/posix/machine.c`: `/proc/cpuinfo`, cpufreq's maximum, `sysinfo`).
 
 **Android** needs a different hand-over: the engine has to run inside the
 app's process. **Xbox 360** is not POSIX, so it would need its own version of
-each. **Windows** would need win32 versions of each; the original binary's
+each. **Windows** needs a win32 version of each seam; the original binary's
 own answers to the same questions are
 [launch-flow.md's platform seams](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/launch-flow.md#platform-seams).
 
