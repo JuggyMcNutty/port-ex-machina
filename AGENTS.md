@@ -81,6 +81,11 @@ one); `scripts/recreation.sh` builds, installs, checks and runs it. The RE,
   distributions (to 2029), so that every one runs it, linux-x86_64's too, not the build
   system's own; built with a buildroot toolchain, a GCC 13 on glibc 2.28, as Godot's Linux
   builds are ([the glibc ceiling](docs/DEVELOPMENT.md#gotchas-that-cost-time)).
+- **Windows at 10 1903 or newer, x86_64**: the UCRT and a UTF-8 code page; built here by
+  llvm-mingw (Clang), pinned as the SDKs are, the C++ runtime and SDL3 linked in, OpenAL Soft
+  beside the engine as `OpenAL32.dll` (LGPL); proven under Proton's wine alone, there being no
+  Windows machine. Its engine builds D3D11, which no launcher offers until it matches the
+  Vulkan device.
 
 ## To do
 
@@ -92,10 +97,12 @@ Decided work for later sessions, each deleted when it is done.
   engine's build-time device choices moved to run time (the Smart Pro's borderless fullscreen;
   X11 and Wayland, compiled out of its build); one sysroot for all
   ([running on our devices](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#running-on-our-devices)).
-- **Windows as a build target**: the engine's kept Windows code built and tested
+- **Windows as a build target**, `windows-x86_64`: the engine's kept Windows code built and
+  tested
   ([building](https://github.com/JuggyMcNutty/DXEngine/blob/main/README.md#building-and-running)),
   and a launcher branch with win32 versions of the launcher's OS dependencies
-  ([other operating systems](docs/PORTING.md#other-operating-systems)).
+  ([other operating systems](docs/PORTING.md#other-operating-systems)), after DXLauncher's OS
+  calls move behind `src/platform/` on linux-x86_64, cherry-picked to the other branches.
 - **CI**: the ports built on GitHub's CI, aarch64's always cross-built: linux-aarch64's engine
   too, which builds only natively
   ([the port](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-aarch64/ports/linux-aarch64/README.md#build-and-run)).
