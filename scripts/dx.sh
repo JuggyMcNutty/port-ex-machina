@@ -103,6 +103,8 @@ cmd_stage() {
             for f in $PORT_ENGINE_FILES; do
                 [ ! -f "$e/$f" ] || cp "$e/$f" "$APP/"
             done
+            # Its notices, and those of the code it carries, with it.
+            cp "$DX_ENGINE/LICENSE.md" "$APP/DXEngine-LICENSE.md"
         else
             say "warning: no engine build in $e -- staged the launcher only (scripts/dx.sh build $PORT engine)"
         fi
