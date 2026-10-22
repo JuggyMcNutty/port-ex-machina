@@ -8,6 +8,7 @@
 #   scripts/ci.sh proton                     the pinned Proton where the Wine helpers look; prints its name
 #   scripts/ci.sh warnings <log>             fails on a compiler or linker warning in our own code
 #   scripts/ci.sh skips <log> [<test>]...    fails on a skipped test not named
+#   scripts/ci.sh failed <log>               the tests that failed, as GitHub annotations
 #   scripts/ci.sh package <port>             a staged port as the release's file; prints its path
 #   scripts/ci.sh notes                      the release's notes, markdown, for the workspace's HEAD
 #
@@ -20,7 +21,7 @@ set -euo pipefail
 
 OWNER_URL="https://github.com/JuggyMcNutty"
 
-usage() { sed -n '2,17p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 
 # What no build reads: the docs, and what is never built. Not the notices
 # the apps carry (the engine's LICENSE.md, the launcher's THIRD-PARTY.md).
@@ -175,6 +176,14 @@ cmd_skips() {
     say "no test skipped but: ${*:-none}"
 }
 
+# Each failed test named where the run's page shows it to anyone (its log
+# only to the signed-in): ctest's line for it, an error annotation.
+cmd_failed() {
+    local log="${1:?which log?}"
+    [ -f "$log" ] || die "no log $log"
+    grep -E 'Test +#[0-9]+: .*\*\*\*(Failed|Timeout|Exception)' "$log" | sed 's/^ */::error::/' || true
+}
+
 # The release's file for a port, from its staged app: the Windows port's
 # zip, which its staging makes; the Smart Pro's app folder as spruceOS's
 # App/ takes it; any other's a tarball of DXLauncher/.
@@ -244,6 +253,7 @@ case "$cmd" in
     proton)   cmd_proton ;;
     warnings) cmd_warnings "$@" ;;
     skips)    cmd_skips "$@" ;;
+    failed)   cmd_failed "$@" ;;
     package)  cmd_package "$@" ;;
     notes)    cmd_notes ;;
     -h|--help|help) usage ;;

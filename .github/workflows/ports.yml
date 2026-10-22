@@ -179,7 +179,9 @@ jobs:
 
       - name: test
         timeout-minutes: 40
-        run: port-ex-machina/scripts/dx.sh test "$PORT" 2>&1 | tee "build/$PORT/ci-test.log"
+        run: |
+          port-ex-machina/scripts/dx.sh test "$PORT" 2>&1 | tee "build/$PORT/ci-test.log" ||
+              { port-ex-machina/scripts/ci.sh failed "build/$PORT/ci-test.log"; exit 1; }
 
       - name: skipped tests
         run: port-ex-machina/scripts/ci.sh skips "build/$PORT/ci-test.log" test_gamefiles test_ui_scripts

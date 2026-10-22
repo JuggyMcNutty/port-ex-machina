@@ -170,7 +170,8 @@ here, so a run can be repeated on this machine:
   ([the toolchains](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#the-toolchains)).
 - A port's job fails on a compiler or linker warning in our own code, third-party code exempt
   (`scripts/ci.sh warnings`), and on a skipped test but `test_gamefiles` and `test_ui_scripts`,
-  which need the game (`scripts/ci.sh skips`).
+  which need the game (`scripts/ci.sh skips`). A failed test is named on the run's page, which
+  anyone can read, where its log needs a GitHub account (`scripts/ci.sh failed`).
 - The recreation's job is `scripts/recreation.sh test`: its build, with the runner's compiler
   and SDL2, and its tests.
 
