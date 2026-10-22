@@ -7,7 +7,7 @@
 #   scripts/dx.sh build   <port> [launcher|engine]   default: both, if the port ships the engine
 #   scripts/dx.sh stage   <port>              build/<port>/app: exactly what ships
 #   scripts/dx.sh deploy  <port> [args]       build, stage, send the app to the device (port-specific)
-#   scripts/dx.sh run     <port> [args]       run the staged app here (native ports)
+#   scripts/dx.sh run     <port> [args]       run the staged app here (native ports; Windows' under Wine)
 #   scripts/dx.sh profile <port> [args]       frame-time profile on the device (port-specific)
 #   scripts/dx.sh test    [<port>]            a port's host build + unit tests (default: linux-x86_64),
 #                                             then its own (port_test: Windows' under Wine)

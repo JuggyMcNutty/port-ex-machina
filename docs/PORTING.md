@@ -6,7 +6,8 @@ engine, [DXEngine](https://github.com/JuggyMcNutty/DXEngine), built for it.
 Each port branch's launcher is DXLauncher, its `docs/LAUNCHER.md` its own:
 the same on linux-x86_64 and linux-aarch64
 ([linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md)),
-and on a device branch a copy with the device's changes
+on windows-x86_64 a copy on Windows' own calls, and on a device branch a copy
+with the device's changes
 ([trimui-smartpro's](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md));
 the ports that exist are [the root README's](../README.md#engine-ports).
 
@@ -40,8 +41,8 @@ DXLauncher's, every port branch's.
 
 | Layer | Where | Changes per port? |
 |---|---|---|
-| The launcher's core (the entry decision, command-line parsing, crash sentinel, config seeding) | `src/core/`: `main`'s, with DXLauncher's folders, profiles, installs, settings, `Settings.json`, renderer list, pad layouts and the engine's command line | A device branch's own facts (trimui-smartpro's CPU modes, pad, finder). C11, no SDL |
-| The OS: the game as a child, the GPU probe | `src/platform/`: `process.h`, the game a child it waits for; `src/platform/posix/` | Only for a non-POSIX platform, and for Android's hand-over (below) |
+| The launcher's core (the entry decision, command-line parsing, crash sentinel, config seeding) | `src/core/`: `main`'s, with DXLauncher's folders, profiles, installs, settings, `Settings.json`, renderer list, pad layouts and the engine's command line | A branch's own facts (windows-x86_64's finder places and no-sound advice; trimui-smartpro's CPU modes, pad, finder). C11, no SDL |
+| The OS: the game as a child, the GPU probe, the single instance and its waits, the file system and folders, the network ([its seams](#other-operating-systems)) | `src/platform/`, a header per seam: POSIX's in `src/platform/posix/`, Windows' in `src/platform/win32/` | For a non-POSIX platform (windows-x86_64's), a device without a desktop (trimui-smartpro's, which deletes for good), and Android's hand-over (below) |
 | One start and the game | `src/app/`, no SDL | A device branch's hook around the game (trimui-smartpro's `gamehook.c`) |
 | The screens | `src/screens/`, on its UI kit, `src/ui/` (SDL3 and SDL3_ttf); SDL3 with a video driver of the port's own where only the vendor's draws | A device branch's own choices (trimui-smartpro's) |
 | The engine | DXEngine, its clone beside the workspace in `DXEngine/`, pinned by `ENGINE-PIN.txt` | Built per port from its `ports/<id>/engine.cmake` |
@@ -54,20 +55,21 @@ from the branch it started from:
 
 | File | Purpose | Required |
 |---|---|---|
-| `port.cmake` | Included by the branch's `CMakeLists.txt` when `DXL_PORT=<id>`. Sets `DXL_PORT_GLIBC_MAX`, a Linux port's glibc ceiling, or `DXL_PORT_WINDOWS_MIN`, a Windows port's floor (either turns on the post-build `scripts/check-abi.sh`), `DXL_PORT_SYSROOT` and `DXL_PORT_LINK_OPTIONS`; where SDL3, SDL3_ttf and libxmp come from (`DXL_PORT_DEPS_DEFAULT`: `auto`, `system`, or `vendored`, built from `cmake/deps.lock`'s sources, with `DXL_PORT_DEPS_ENV` and `DXL_PORT_DEPS_C_FLAGS` for a cross build's); the sysroot's header folders (`DXL_PORT_INCLUDE_DIRS`); and on a branch whose `cmake/deps.cmake` takes them, SDL3's own options (`DXL_PORT_SDL3_ARGS`) and a video driver's files (`DXL_PORT_SDL3_DRIVER`, trimui-smartpro's) | yes |
+| `port.cmake` | Included by the branch's `CMakeLists.txt` when `DXL_PORT=<id>`. Sets `DXL_PORT_GLIBC_MAX`, a Linux port's glibc ceiling, or `DXL_PORT_WINDOWS_MIN`, a Windows port's floor (either turns on the post-build `scripts/check-abi.sh`), `DXL_PORT_SYSROOT` and `DXL_PORT_LINK_OPTIONS`; where SDL3, SDL3_ttf and libxmp come from (`DXL_PORT_DEPS_DEFAULT`: `auto`, `system`, or `vendored`, built from `cmake/deps.lock`'s sources, with `DXL_PORT_DEPS_ENV` and `DXL_PORT_DEPS_C_FLAGS` for a cross build's); the sysroot's header folders (`DXL_PORT_INCLUDE_DIRS`); and on a branch whose `cmake/deps.cmake` takes them, SDL3's own options (`DXL_PORT_SDL3_ARGS`) and a video driver's files (`DXL_PORT_SDL3_DRIVER`, trimui-smartpro's); and the programs' further sources (`DXL_PORT_LAUNCHER_SOURCES`, `DXL_PORT_CLI_SOURCES`, `DXL_PORT_TEST_SOURCES`: windows-x86_64's resources in `win32/`) | yes |
 | `port.sh` | Sourced by this workspace's `scripts/dx.sh`, with `scripts/lib/common.sh` loaded. `PORT_DESC`; `PORT_ENGINE=1` if the engine builds for this port here; `PORT_LAUNCHER`, the launcher's program that `stage` and `run` look for (`deusex-launcher` unless set); `PORT_ENGINE_FILES`, the engine build's files that `stage` copies, its program first (`DXEngine DXEngine.pk3` unless set); hooks `port_deps` (fetch toolchains/sysroot), `port_stage` (adjust the staged app), `port_deploy` (send it to the device; over SSH, `dx_ssh_sync` in `scripts/lib/common.sh` sends only what changed, keeps the device's previous copies and verifies), `port_run` (run it here), `port_profile` (a frame-time profile on the device), `port_test` (tests of the port's own, which `scripts/dx.sh test <port>` runs after the host build's; a Windows port's under Wine, `scripts/wine.sh`). Unset hooks have safe defaults | yes |
-| `toolchain-c.cmake`, `toolchain-cxx.cmake` | Cross toolchains, referenced by the port's preset (C) and `engine.cmake` (C++); linux-x86_64 has one for both, `toolchain.cmake`, its SDK's, a native build against a sysroot. A toolchain file that `return()`s early when the host already is the target arch makes the same preset build natively | cross ports, and a port built by an SDK (`toolchain-cxx.cmake` where the engine cross-builds) |
+| `toolchain-c.cmake`, `toolchain-cxx.cmake` | Cross toolchains, referenced by the port's preset (C) and `engine.cmake` (C++); linux-x86_64 and windows-x86_64 have one for both, `toolchain.cmake`: linux-x86_64's its SDK's, a native build against a sysroot; windows-x86_64's llvm-mingw's, the tests' emulator `scripts/wine.sh`. A toolchain file that `return()`s early when the host already is the target arch makes the same preset build natively | cross ports, and a port built by an SDK (`toolchain-cxx.cmake` where the engine cross-builds) |
 | `engine.cmake` | A CMake initial cache (`cmake -C`) for building the engine: its toolchain and `ENABLE_*` switches, each set with `FORCE` so an edit reaches an existing build too | if it builds the engine |
 | `packaging/` | Laid over the staged app: whatever the device's frontend needs to list and start the app (trimui-smartpro's `launch.sh`, `config.json`, icon), and on a branch with the game hook, `port-hooks.sh` (`before <CPU mode>`, `after`) | optional |
 | `sdl3/` | A video driver of the port's own for SDL3, where only the vendor's library draws (trimui-smartpro's, fb0 and the PowerVR EGL), on a branch whose `cmake/deps.cmake` takes `DXL_PORT_SDL3_DRIVER` | optional |
+| `win32/` | The programs' manifest (Windows 10's, the UTF-8 code page) and resource scripts with their versions, which `port.cmake` names (windows-x86_64's) | a Windows port |
 | `README.md` | The device as measured, the port's status, what is verified on it | yes |
 
 A port also gets a configure preset in its branch's `CMakePresets.json` (its
 name is the port id; it only adds the port's toolchain file, if it has one).
 
 `CMakeLists.txt` takes `port.cmake`'s sysroot and its header folders, the
-glibc ceiling and link options for both programs, and where SDL3, SDL3_ttf
-and libxmp come from.
+glibc ceiling or Windows' floor, the programs' link options and further
+sources, and where SDL3, SDL3_ttf and libxmp come from.
 
 ## The pipeline
 
@@ -139,10 +141,11 @@ The launcher's own files are in its home, never in the app.
 7. **Write `packaging/`**: what the device's frontend needs to list and
    start the app, and `port-hooks.sh` where the branch has the game hook.
 8. **Add the preset, commit and push the branch, then pin it** here
-   (`scripts/launcher.sh pin <id>` adds it to `LAUNCHER-PIN.txt`;
-   `scripts/dx.sh` takes only pinned ports), and run
+   (`scripts/launcher.sh pin <id>` adds it to `LAUNCHER-PIN.txt`), and run
    `scripts/launcher.sh fetch`, which links `deps/` and `gamefiles/` into its
-   worktree.
+   worktree. Before the pin, `scripts/dx.sh` takes the port by its worktree
+   alone, with a warning, its links made by hand, and `scripts/dx.sh check`
+   passes it over.
 9. **`scripts/dx.sh build`, `stage` and `deploy`**, write the port's
    `README.md` (below), and pin it again; `scripts/dx.sh check` and
    `scripts/dx.sh test <id>` must pass
@@ -166,8 +169,9 @@ it (the Smart Pro's README has the exact command line).
 | `probe-fbdev-egl.c` | what a video driver of a port's own needs where fbdev and the vendor's EGL are the only display path: the framebuffer's mode and layout, whether it takes 2x and 3x `yres_virtual`, pans and waits for vsync; which EGL and GLES sonames load; which native window `eglCreateWindowSurface` takes (`{ushort w,h}`, `{int w,h}`, NULL), each read back from fb0; swap timings; five create-draw-terminate cycles; the consoles' modes; a 1280x720 copy into fb0; each input device's name, ids and capabilities, and whether `libudev.so.1` loads. `--draw <s>` draws until killed, `--beside <cmd>` runs a command beside a live surface | `-ldl` |
 
 `dxl-cli --probe` (any DXLauncher build: the host's, linux-aarch64's, the
-Smart Pro's) reports the Vulkan device and API, the OpenGL ES version and
-renderer, and desktop GL -- what the launcher's renderer list is built from.
+Smart Pro's, windows-x86_64's) reports the Vulkan device and API, the OpenGL
+ES version and renderer where there is OpenGL ES (Windows has none), and
+desktop GL -- what the launcher's renderer list is built from.
 
 ## Other operating systems
 

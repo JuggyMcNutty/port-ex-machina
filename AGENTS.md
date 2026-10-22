@@ -36,8 +36,8 @@ git is the record. Every session loads it, so keep it small.
   ([how it is kept](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#how-it-is-kept)).
 - **Launcher branches**: `main`, the original recreated as close to 1:1 as possible, and a
   branch per targeted platform, each tailored to it, so far that includes (`linux-x86_64`,
-  `linux-aarch64`, `trimui-smartpro`). None merges another: a change crosses only by a
-  deliberate cherry-pick ([the branches](docs/PORTING.md#the-branches)).
+  `linux-aarch64`, `windows-x86_64`, `trimui-smartpro`). None merges another: a change crosses
+  only by a deliberate cherry-pick ([the branches](docs/PORTING.md#the-branches)).
 - **Done** means `scripts/dx.sh test` and `scripts/dx.sh check` pass, and every cross port that
   ships (the Smart Pro) builds warning-free. An engine change is also proven against the
   original by a scripted run of both engines
@@ -66,7 +66,7 @@ one); `scripts/recreation.sh` builds, installs, checks and runs it. The RE,
 - **The engine is Deus Ex's alone**: no other game's code, nor Surreal Engine's platforms and
   tools that Deus Ex does not use
   ([how it is kept](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#how-it-is-kept));
-  the D3D11 device and the Win32 code it needs are kept, neither built nor tested
+  what is MSVC's alone is kept, neither built nor tested
   ([building](https://github.com/JuggyMcNutty/DXEngine/blob/main/README.md#building-and-running)).
 - **DXEngine is developed first.** Porting work is taken up when the owner chooses.
 - **Reading the original**: the game's DLLs are read when a need comes up and documented in
@@ -97,21 +97,19 @@ Decided work for later sessions, each deleted when it is done.
   engine's build-time device choices moved to run time (the Smart Pro's borderless fullscreen;
   X11 and Wayland, compiled out of its build); one sysroot for all
   ([running on our devices](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#running-on-our-devices)).
-- **Windows as a build target**, `windows-x86_64`: the engine's kept Windows code built and
-  tested
-  ([building](https://github.com/JuggyMcNutty/DXEngine/blob/main/README.md#building-and-running)),
-  and a launcher branch with win32 versions of the launcher's OS dependencies
-  ([other operating systems](docs/PORTING.md#other-operating-systems)), after DXLauncher's OS
-  calls move behind `src/platform/` on linux-x86_64, cherry-picked to the other branches.
+- **D3D11 to parity**: windows-x86_64's D3D11 device brought to the Vulkan device's picture
+  and features, then offered by its launcher, its GPU probe naming the D3D11 adapter
+  ([where it stands](https://github.com/JuggyMcNutty/DXEngine/blob/main/README.md#for-advanced-users)).
 - **CI**: the ports built on GitHub's CI, aarch64's always cross-built: linux-aarch64's engine
   too, which builds only natively
-  ([the port](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-aarch64/ports/linux-aarch64/README.md#build-and-run)).
+  ([the port](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-aarch64/ports/linux-aarch64/README.md#build-and-run));
+  windows-x86_64's with its tests under Wine.
 
 ## Open items
 
 Known defects, each in the doc that owns its code: DXLauncher's (linux-x86_64, linux-aarch64)
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects),
-and the Smart Pro's tailored copy of it
+windows-x86_64's copy of it on Windows' own calls, and the Smart Pro's tailored copy of it
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects).
 Where the engine differs from the original: each section's "Differs" in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md).

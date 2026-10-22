@@ -30,6 +30,7 @@ it stands and what is open: [`AGENTS.md`](AGENTS.md) and [`docs/`](docs/)
 |---|---|---|
 | [`linux-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-x86_64/ports/linux-x86_64) | desktop Linux, DXLauncher, the desktop's own launcher: Home, the first run, Settings, Profiles, Mods, Saves, Screenshots, Multiplayer, Recovery and the big screen, in the game's look and sound; glibc 2.28 or newer; **the development platform** | currently under heavy development, not yet fully playable |
 | [`linux-aarch64`](https://github.com/JuggyMcNutty/deusex-launcher/tree/linux-aarch64/ports/linux-aarch64) | aarch64 devices with a standard desktop, DXLauncher, as linux-x86_64 has it; glibc 2.28 or newer | builds but not yet run on a device |
+| `windows-x86_64` | Windows 10 (1903) or newer on x86_64: DXLauncher, as linux-x86_64 has it, on Windows' own calls, with the engine; cross-built by llvm-mingw | builds; the game plays under Proton's wine, on Vulkan or OpenGL; untried on Windows itself |
 | [`trimui-smartpro`](https://github.com/JuggyMcNutty/deusex-launcher/tree/trimui-smartpro/ports/trimui-smartpro) | TrimUI Smart Pro, running spruceOS: DXLauncher, linux-aarch64's, tailored to the handheld, its screen and pad, no desktop | runs; the game plays on Vulkan or OpenGL ES |
 
 ## Quick start
@@ -40,13 +41,13 @@ Clone this repository into an empty folder; `fetch` puts the others beside it.
 mkdir deusex && cd deusex                  # the parent folder: any name
 git clone https://github.com/JuggyMcNutty/port-ex-machina.git && cd port-ex-machina
 scripts/dx.sh fetch                        # once: the engine, the launcher's main and port branches, the RE
-scripts/dx.sh test [<port>]                # unit tests: linux-x86_64's (after its deps), or another port branch's host build
+scripts/dx.sh test [<port>]                # unit tests: linux-x86_64's (after its deps), or another port branch's host build, then the port's own (Windows' under Wine)
 scripts/engine.sh status                   # the pin and the engine's branch
 
 scripts/dx.sh deps   <port>                # toolchains and sysroot, if the port needs them
 scripts/dx.sh build  <port>                # launcher, then engine
 scripts/dx.sh stage  <port>                # build/<port>/app: exactly what ships
-scripts/dx.sh run    <port>                # native ports
+scripts/dx.sh run    <port>                # native ports, and Windows' under Wine
 scripts/dx.sh deploy <port>                # device ports: builds and stages first
 scripts/dx.sh profile <port>               # device ports: a frame-time profile (deploy with the engine's profiling hooks on first)
 
@@ -62,7 +63,8 @@ scripts/recreation.sh uninstall [<GameDir>]  # the four files out again
 The launcher finds the game, or is shown it on its first run: on the Smart Pro, in spruceOS's
 `/mnt/SDCARD/Roms/PORTS/DeusEx`. linux-x86_64's are the `gamefiles/` beside the repositories,
 which its `run` names to the launcher, copying nothing in (`--fresh`: a scratch home for the
-launcher's files); linux-aarch64's `run`, natively, is the same.
+launcher's files); linux-aarch64's `run`, natively, is the same, and windows-x86_64's, under
+Wine, by Wine's name for them (`Z:\...`).
 
 ## Documentation
 
@@ -72,7 +74,7 @@ launcher's files); linux-aarch64's `run`, natively, is the same.
 | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | how to work here: the repositories, dependencies, commits, docs, drift guards, platform gotchas |
 | [`docs/PORTING.md`](docs/PORTING.md) | how ports work -- a branch of the launcher each -- and how to add one |
 | [the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md) | `main`, the default branch: the original recreated |
-| `docs/LAUNCHER.md`, on each port branch: DXLauncher's, the same on linux-x86_64 and linux-aarch64 ([linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md)), a copy with the device's changes on trimui-smartpro ([its](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md)) | that branch's launcher: the files it writes and the settings the engine really reads, the screens, the game and the launcher, what it changes from the original |
+| `docs/LAUNCHER.md`, on each port branch: DXLauncher's, the same on linux-x86_64 and linux-aarch64 ([linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md)), a copy on Windows' own calls on windows-x86_64, a copy with the device's changes on trimui-smartpro ([its](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md)) | that branch's launcher: the files it writes and the settings the engine really reads, the screens, the game and the launcher, what it changes from the original |
 | a port's `ports/<id>/README.md`, on its branch | one device: status, what differs from the branch it started from, measurements, what is verified |
 | DXEngine's [`docs/`](https://github.com/JuggyMcNutty/DXEngine/tree/main/docs) | the engine: how it is kept, run, profiled and what it changes from Surreal Engine ([`ENGINE.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md)); where it differs from the original ([`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md)); working on it, the harness ([`DEVELOPMENT.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md)) |
 | [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info) | the original binaries: `DeusEx.exe`, which `main` recreates, and the game's DLLs -- what they do |
@@ -90,8 +92,8 @@ deusex/                  the parent folder (any name)
     LAUNCHER-PIN.txt       the launcher's: deusex-launcher's repository, and each port's commit
     docs/                  DEVELOPMENT, PORTING
     scripts/               dx.sh (the entry point), engine.sh, launcher.sh, recreation.sh,
-                           check-docs.sh, lib/common.sh (shared with the ports' and the
-                           engine's own scripts)
+                           wine.sh, check-docs.sh, lib/common.sh (shared with the ports'
+                           and the engine's own scripts)
     tools/probes/          device probes (docs/PORTING.md)
   DXEngine/              the engine, a clone (scripts/engine.sh)
   deusex-launcher/       the launcher: main/, and a worktree per port (scripts/launcher.sh)
