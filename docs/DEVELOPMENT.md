@@ -11,7 +11,9 @@ Development happens on
 [linux-x86_64](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md).
 A change is clean when it builds and tests there *and* builds warning-free for each cross port
 that ships: the Smart Pro builds with the same GCC 13.2, but code linux-x86_64 does not (the
-engine's SDL2 backend, the port's own files).
+engine's SDL2 backend, the port's own files); windows-x86_64 with Clang, code linux-x86_64 does
+not either (`src/platform/win32/`, the engine's Win32 window and D3D11), its tests passing under
+Wine.
 
 ## The repositories
 
