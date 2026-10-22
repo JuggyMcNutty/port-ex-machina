@@ -109,7 +109,9 @@ Decided work for later sessions, each deleted when it is done.
 
 Known defects, each in the doc that owns its code: DXLauncher's (linux-x86_64, linux-aarch64)
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects),
-windows-x86_64's copy of it on Windows' own calls, and the Smart Pro's tailored copy of it
+windows-x86_64's copy of it on Windows' own calls
+[`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/windows-x86_64/docs/LAUNCHER.md#known-defects),
+and the Smart Pro's tailored copy of it
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects).
 Where the engine differs from the original: each section's "Differs" in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md).

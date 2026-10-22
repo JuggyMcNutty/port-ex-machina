@@ -2,6 +2,7 @@
 # port's branch out at its commit, check verifies them, pin (after pushing a
 # port branch) moves one. docs/PORTING.md.
 repo    https://github.com/JuggyMcNutty/deusex-launcher.git
-port    linux-x86_64     ce781887d0459d9bfe741efe64010229373b9a4a
-port    trimui-smartpro  a8e0b801c079accc1c5627868188f092d19df612
-port    linux-aarch64    1abd2269708d252f71799ad4a19316513de0a4df
+port    linux-x86_64     5a47a03a0c57aa135a16f82826d52c007202dfc4
+port    trimui-smartpro  2ff4dee2f4a1338b7ff6d9d6987941d9b34fcd31
+port    linux-aarch64    fcf95eb22c22cdcdfe283756ba1e046c96001f85
+port    windows-x86_64   74f3f1bea7495121f137177b9a2e791d6bbaf030

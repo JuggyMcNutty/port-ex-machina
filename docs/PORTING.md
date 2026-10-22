@@ -6,8 +6,9 @@ engine, [DXEngine](https://github.com/JuggyMcNutty/DXEngine), built for it.
 Each port branch's launcher is DXLauncher, its `docs/LAUNCHER.md` its own:
 the same on linux-x86_64 and linux-aarch64
 ([linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md)),
-on windows-x86_64 a copy on Windows' own calls, and on a device branch a copy
-with the device's changes
+on windows-x86_64 a copy on Windows' own calls
+([windows-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/windows-x86_64/docs/LAUNCHER.md)),
+and on a device branch a copy with the device's changes
 ([trimui-smartpro's](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md));
 the ports that exist are [the root README's](../README.md#engine-ports).
 
