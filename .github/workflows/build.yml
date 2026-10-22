@@ -55,17 +55,25 @@ jobs:
           path: port-ex-machina
           persist-credentials: false
 
+      # As uploaded: the Windows and Smart Pro zips are files to publish, which
+      # the action would otherwise unpack.
       - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
+          skip-decompress: true
 
+      # What it publishes, and gh's complaint if any, as annotations: the
+      # run's page shows them to anyone, its log only to the signed-in.
       - name: publish
         env:
           GH_TOKEN: ${{ github.token }}
           SHA: ${{ needs.ports.outputs.workspace }}
         run: |
           tag="$(date -u +%Y.%m.%d)-${SHA::8}"
+          files=(dist/*)
+          echo "::notice::$tag: ${files[*]##*/}"
           port-ex-machina/scripts/ci.sh notes > notes.md
-          gh release create "$tag" dist/* --repo "$GITHUB_REPOSITORY" --target "$SHA" \
-              --title "$tag" --notes-file notes.md
+          gh release create "$tag" "${files[@]}" --repo "$GITHUB_REPOSITORY" --target "$SHA" \
+              --title "$tag" --notes-file notes.md 2> gh.err ||
+              { echo "::error::$(tr '\n' ' ' < gh.err)"; exit 1; }
