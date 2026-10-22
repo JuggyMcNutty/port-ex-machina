@@ -21,6 +21,17 @@ dx_ports() {
     awk '$1 == "port" { print $2 }' "$DX_WORKSPACE/LAUNCHER-PIN.txt"
 }
 
+# dx_link_workspace <launcher checkout>
+#
+# A port's toolchain files find deps/ beside its sources, and test_gamefiles
+# finds gamefiles/ there: both are the ones beside the repositories, two levels
+# up. Each checkout's build/ is its own (a device's host build and the
+# desktop's would otherwise share one).
+dx_link_workspace() {
+    ln -sfn ../../deps "$1/deps"
+    ln -sfn ../../gamefiles "$1/gamefiles"
+}
+
 # ---- devices over SSH -------------------------------------------------------
 # A port sets DEVICE, DEVICE_USER, DEVICE_PASS (defaults in its port.sh, all
 # overridable from the environment). sshpass -e reads the password from

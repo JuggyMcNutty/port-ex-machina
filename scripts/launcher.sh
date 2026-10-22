@@ -26,15 +26,6 @@ pinned() { awk -v k="$1" '$1 == "port" && $2 == k { print $3 }' "$PIN_FILE"; }
 usage() { sed -n '2,14p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 need_clone() { [ -d "$MAIN/.git" ] || die "no launcher clone -- scripts/launcher.sh fetch"; }
 
-# A port's toolchain files find deps/ beside its sources, and test_gamefiles
-# finds gamefiles/ there: both are the ones beside the repositories, two levels
-# up. Each checkout's build/ is its own (a device's host build and the
-# desktop's would otherwise share one).
-link_workspace() {
-    ln -sfn ../../deps "$1/deps"
-    ln -sfn ../../gamefiles "$1/gamefiles"
-}
-
 cmd_fetch() {
     if [ -d "$MAIN/.git" ]; then
         say "launcher clone present: $MAIN"
@@ -47,7 +38,7 @@ cmd_fetch() {
         # (git 2.48 and later; an older git ignores it).
         git -C "$MAIN" config worktree.useRelativePaths true
     fi
-    link_workspace "$MAIN"
+    dx_link_workspace "$MAIN"
     local p wt
     for p in $(dx_ports); do
         wt="$LAUNCHER_DIR/$p"
@@ -59,7 +50,7 @@ cmd_fetch() {
             git -C "$wt" branch -q --set-upstream-to "origin/$p"
             say "deusex-launcher/$p ready ($(git -C "$wt" rev-parse --short HEAD))"
         fi
-        link_workspace "$wt"
+        dx_link_workspace "$wt"
     done
 }
 

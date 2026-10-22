@@ -1,0 +1,71 @@
+name: build
+
+# The workspace's CI (docs/DEVELOPMENT.md#ci). A push to main builds every
+# port at the commits the pins name, when code changed -- here, or in the
+# engine or a launcher branch between the old pins and the new -- and then
+# publishes a release of them all. A pull request builds the same, and
+# publishes nothing. The jobs are ports.yml's.
+
+on:
+  push:
+    branches: [main]
+    paths: &code
+      - '**'
+      - '!**.md'
+      - '!docs/**'
+      - '!LICENSE'
+      - '!tools/probes/**'
+      - '!scripts/check-docs.sh'
+  pull_request:
+    branches: [main]
+    paths: *code
+  workflow_dispatch:
+
+# One run per ref at a time: a pull request's newer push cancels its older
+# run; main's queue, so a release is never cut short.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  ports:
+    uses: ./.github/workflows/ports.yml
+    with:
+      ports: pins
+
+  # Tagged <date>-<sha8>, so the releases are a history of the builds, the
+  # newest the latest.
+  release:
+    needs: ports
+    if: needs.ports.outputs.release == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      # The whole history and the tags: the notes compare with the previous
+      # release.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.ports.outputs.workspace }}
+          fetch-depth: 0
+          path: port-ex-machina
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v8
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ needs.ports.outputs.workspace }}
+        run: |
+          tag="$(date -u +%Y.%m.%d)-${SHA::8}"
+          port-ex-machina/scripts/ci.sh notes > notes.md
+          gh release create "$tag" dist/* --repo "$GITHUB_REPOSITORY" --target "$SHA" \
+              --title "$tag" --notes-file notes.md

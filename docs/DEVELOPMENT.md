@@ -142,6 +142,49 @@ loudly instead of leaving stale instructions:
   programs import), and checks that a port's list of the game's builds (`src/core/gamedb.c`,
   DXLauncher's) is the engine's (`UE1GameDatabase.h`).
 
+## CI
+
+GitHub's CI builds the ports where the pins move: a push to this repository's `main` builds
+every port at the commits its pins name, when code changed, and publishes them as a release.
+DXEngine and the launcher's branches run the same jobs on a pull request, or by hand from their
+Actions tab, never on a push: a round pushes them before the pins, and a run of theirs would
+build against the old ones.
+
+| Workflow | Runs on | Builds |
+|---|---|---|
+| this repository's `.github/workflows/build.yml` | a push to `main`, a pull request into it, by hand | every pinned port, then the release |
+| DXEngine's `.github/workflows/build.yml` | a pull request into `main`, by hand | every pinned port, the engine at the pull request's commit |
+| each launcher branch's `.github/workflows/build.yml`, the same file on every branch | a pull request into the branch, by hand | the branch's port; on `main`, the recreation |
+
+Each calls this repository's `.github/workflows/ports.yml`, every step of which is a script
+here, so a run can be repeated on this machine:
+
+- `scripts/ci.sh plan` decides once what a run builds, and at which commits: the caller's own
+  repository at the event's, the others at the pins.
+- A port's job checks the repositories out as the [layout](../README.md#layout) has them,
+  installs what the runner lacks (`scripts/ci-apt-install.sh`, apt bounded in time), runs
+  `scripts/dx.sh deps`, `build`, `stage` and `test`, and packs the staged app
+  (`scripts/ci.sh package`). Windows' tests run under the Proton build this machine's Steam
+  has, pinned in `scripts/ci.sh`, on an Xvfb display; the Smart Pro's libraries come from
+  TrimUI's SDK
+  ([the toolchains](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#the-toolchains)).
+- A port's job fails on a compiler or linker warning in our own code, third-party code exempt
+  (`scripts/ci.sh warnings`), and on a skipped test but `test_gamefiles` and `test_ui_scripts`,
+  which need the game (`scripts/ci.sh skips`).
+- The recreation's job is `scripts/recreation.sh test`: its build, with the runner's compiler
+  and SDL2, and its tests.
+
+**What builds nothing**: a change to docs alone -- `*.md` and `docs/`, but not the notices an
+app carries, the launcher's `THIRD-PARTY.md` and the engine's `LICENSE.md` -- or to what no
+build reads (the engine's harness, `tools/probes/`, `scripts/check-docs.sh`) starts no run, and
+a push of pins whose commits change only those builds nothing. The list is `scripts/ci.sh`'s
+`is_code`; each workflow's `paths` filter says the same.
+
+**A release** is tagged `<date>-<sha8>`, this repository's commit, and holds every port's file
+-- `DXLauncher-<port>.tar.gz`, the Windows port's zip, the Smart Pro's zip of its app folder --
+with notes naming the commits built and linking what changed since the previous release. A
+run's files are its artifacts too, a pull request's among them.
+
 ## Gotchas that cost time
 
 Device-specific ones are in each port's README, the engine's in its

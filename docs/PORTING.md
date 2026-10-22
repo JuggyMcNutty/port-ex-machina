@@ -146,7 +146,11 @@ The launcher's own files are in its home, never in the app.
    `scripts/launcher.sh fetch`, which links `deps/` and `gamefiles/` into its
    worktree. Before the pin, `scripts/dx.sh` takes the port by its worktree
    alone, with a warning, its links made by hand, and `scripts/dx.sh check`
-   passes it over.
+   passes it over. The branch has the launcher's CI file from its base,
+   `.github/workflows/build.yml`, the same on every branch; once pinned, the
+   pins' push builds the port on GitHub's CI
+   ([CI](DEVELOPMENT.md#ci)), its `deps` with no device to reach: a vendor
+   sysroot needs another source there, as the Smart Pro's takes TrimUI's SDK.
 9. **`scripts/dx.sh build`, `stage` and `deploy`**, write the port's
    `README.md` (below), and pin it again; `scripts/dx.sh check` and
    `scripts/dx.sh test <id>` must pass

@@ -82,6 +82,10 @@ one); `scripts/recreation.sh` builds, installs, checks and runs it. The RE,
   distributions (to 2029), so that every one runs it, linux-x86_64's too, not the build
   system's own; built with a buildroot toolchain, a GCC 13 on glibc 2.28, as Godot's Linux
   builds are ([the glibc ceiling](docs/DEVELOPMENT.md#gotchas-that-cost-time)).
+- **CI builds at the pins**: the workspace's push of pins that change code builds every port
+  on GitHub's CI and publishes a release of them; DXEngine and the launcher run the same jobs
+  on pull requests and by hand, never on a push, which would build against the old pins
+  ([CI](docs/DEVELOPMENT.md#ci)).
 - **Windows at 10 1903 or newer, x86_64**: the UCRT and a UTF-8 code page; built here by
   llvm-mingw (Clang), pinned as the SDKs are, the C++ runtime and SDL3 linked in, OpenAL Soft
   beside the engine as `OpenAL32.dll` (LGPL); proven under Proton's wine alone, there being no
@@ -101,10 +105,6 @@ Decided work for later sessions, each deleted when it is done.
 - **D3D11 to parity**: windows-x86_64's D3D11 device brought to the Vulkan device's picture
   and features, then offered by its launcher, its GPU probe naming the D3D11 adapter
   ([where it stands](https://github.com/JuggyMcNutty/DXEngine/blob/main/README.md#for-advanced-users)).
-- **CI**: the ports built on GitHub's CI, aarch64's always cross-built: linux-aarch64's engine
-  too, which builds only natively
-  ([the port](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-aarch64/ports/linux-aarch64/README.md#build-and-run));
-  windows-x86_64's with its tests under Wine.
 
 ## Open items
 

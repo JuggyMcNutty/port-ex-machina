@@ -4,6 +4,7 @@
 # System folder beside DeusEx.exe and run from there.
 #
 #   scripts/recreation.sh build                  main into build/main/launcher, and the engine
+#   scripts/recreation.sh test                   main into build/main/launcher, and its tests
 #   scripts/recreation.sh install [<GameDir>]    into <GameDir>/System (gamefiles/ by default)
 #   scripts/recreation.sh run [<args>]           gamefiles/System/DeusEx <args>, as a player starts it
 #   scripts/recreation.sh check [<GameDir>]      main's tools/livecheck.py on a copy of the install,
@@ -29,7 +30,7 @@ ENGINE_FILES=(DXEngine DXEngine.pk3)
 INSTALLED=(DeusEx run-game.sh "${ENGINE_FILES[@]}")
 RETIRED=(SurrealEngine SurrealEngine.pk3 libSurrealVideo.so)   # Surreal Engine's files
 
-usage() { sed -n '2,21p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,22p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 
 # The game's System folder, which must hold the original's DeusEx.exe.
 system_dir() {
@@ -38,11 +39,20 @@ system_dir() {
     (cd "$game/System" && pwd)
 }
 
-cmd_build() {
+build_main() {
     [ -e "$MAIN_DIR/.git" ] || die "no deusex-launcher/main -- scripts/launcher.sh fetch"
     cmake -S "$MAIN_DIR" -B "$BUILD" -DCMAKE_BUILD_TYPE=Release >/dev/null
     cmake --build "$BUILD" -j"$(nproc)"
+}
+
+cmd_build() {
+    build_main
     "$DX_WORKSPACE/scripts/engine.sh" build linux-x86_64
+}
+
+cmd_test() {
+    build_main
+    ctest --test-dir "$BUILD" --output-on-failure
 }
 
 cmd_install() {
@@ -83,6 +93,7 @@ cmd_uninstall() {
 cmd="${1:-}"; [ -n "$cmd" ] || usage; shift
 case "$cmd" in
     build)     cmd_build ;;
+    test)      cmd_test ;;
     install)   cmd_install "$@" ;;
     run)       cmd_run "$@" ;;
     check)     cmd_check "$@" ;;

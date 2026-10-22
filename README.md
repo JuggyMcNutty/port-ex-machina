@@ -4,7 +4,9 @@ Deus Ex (version 1112fm) on modern platforms: a launcher of our own, DXEngine, a
 Surreal Engine, to run the game, and the reverse engineering of the original binaries behind
 both.
 
-**You supply your own game files. None are included.**
+**You supply your own game files. None are included.** Every port's build is in the
+[releases](https://github.com/JuggyMcNutty/port-ex-machina/releases), made by GitHub's CI from the
+commits the pins name ([CI](docs/DEVELOPMENT.md#ci)).
 
 This repository holds no launcher, engine or game code. It is the workspace that ties the
 project's other three repositories together: its scripts fetch them beside it
@@ -54,6 +56,7 @@ scripts/dx.sh profile <port>               # device ports: a frame-time profile 
 scripts/dx.sh check                        # drift guards: every repository's docs, the pins, ports, ABI, game builds
 
 scripts/recreation.sh build                # the original launcher recreated (the launcher's main), and the engine
+scripts/recreation.sh test                 # the recreation alone, and its tests
 scripts/recreation.sh install [<GameDir>]  # into the game's System/, beside DeusEx.exe
 scripts/recreation.sh check [<GameDir>]    # run end to end on a copy, on a private display
 scripts/recreation.sh run [<args>]         # System/DeusEx, as a player starts it
@@ -71,7 +74,7 @@ Wine, by Wine's name for them (`Z:\...`).
 | Doc | Read it for |
 |---|---|
 | [`AGENTS.md`](AGENTS.md) | the rules, where things stand, the decisions, the to-do list, what is open |
-| [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | how to work here: the repositories, dependencies, commits, docs, drift guards, platform gotchas |
+| [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | how to work here: the repositories, dependencies, commits, docs, drift guards, CI, platform gotchas |
 | [`docs/PORTING.md`](docs/PORTING.md) | how ports work -- a branch of the launcher each -- and how to add one |
 | [the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md) | `main`, the default branch: the original recreated |
 | `docs/LAUNCHER.md`, on each port branch: DXLauncher's, the same on linux-x86_64 and linux-aarch64 ([linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md)), a copy on Windows' own calls on windows-x86_64 ([its](https://github.com/JuggyMcNutty/deusex-launcher/blob/windows-x86_64/docs/LAUNCHER.md)), a copy with the device's changes on trimui-smartpro ([its](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md)) | that branch's launcher: the files it writes and the settings the engine really reads, the screens, the game and the launcher, what it changes from the original |
@@ -92,8 +95,11 @@ deusex/                  the parent folder (any name)
     LAUNCHER-PIN.txt       the launcher's: deusex-launcher's repository, and each port's commit
     docs/                  DEVELOPMENT, PORTING
     scripts/               dx.sh (the entry point), engine.sh, launcher.sh, recreation.sh,
-                           wine.sh, check-docs.sh, lib/common.sh (shared with the ports'
-                           and the engine's own scripts)
+                           wine.sh, check-docs.sh, ci.sh and ci-apt-install.sh (the CI's),
+                           lib/common.sh (shared with the ports' and the engine's own
+                           scripts)
+    .github/workflows/     the CI: ports.yml, the jobs every repository's build.yml calls,
+                           and this repository's build.yml
     tools/probes/          device probes (docs/PORTING.md)
   DXEngine/              the engine, a clone (scripts/engine.sh)
   deusex-launcher/       the launcher: main/, and a worktree per port (scripts/launcher.sh)
