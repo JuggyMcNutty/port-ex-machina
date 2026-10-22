@@ -51,6 +51,7 @@ ALLOW=(
     '^System/(Running\.ini|DXE-DeusEx\.ini|DXE-User\.ini|DeusExLauncher\.log)$'  # created at run time
     '^System/(DeusEx|run-game\.sh|DXEngine|DXEngine\.pk3)$'  # main's launcher, while scripts/recreation.sh installs it
     '^build/'                         # build output
+    '^licenses/'                      # the notices a Windows port's staging puts in its app
     '^deps/'                          # fetched toolchains and sysroots
     '^(Window|Launch|Core|Engine|DeusEx|DeusExText|Extension|ConSys|WinDrv)/Inc/' # SDK headers inside reference/ReleaseSDK1112f/Headers/DxHeaders.zip
     '^spruce/'                        # spruceOS on the device (/mnt/SDCARD/spruce/...)

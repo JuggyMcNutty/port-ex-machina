@@ -17,6 +17,7 @@ the ports that exist are [the root README's](../README.md#engine-ports).
 | `main` | the original launcher, recreated almost 1:1: no additions, no ports; the reference the port branches start from |
 | `linux-x86_64` | the default of desktop Linux: DXLauncher, the desktop's own launcher, begun from `main`'s, whose core it keeps, with the desktop's port around it (`ports/linux-x86_64`, its preset, its block in `CMakeLists.txt`) |
 | `linux-aarch64` | the default of aarch64 Linux with an ordinary distro: DXLauncher, as linux-x86_64 has it but for the engine's SDL window it asks for (`src/app/run.c`), each launcher commit cherry-picked from one to the other, with the port around it (`ports/linux-aarch64`, its presets), cross-built or native |
+| `windows-x86_64` | the default of Windows on x86_64: DXLauncher, as linux-x86_64 has it, on Windows' own calls (`src/platform/win32/`, the finder's Windows places in `src/core/finder_places_win32.c`), each launcher commit cherry-picked from linux-x86_64, with the port around it (`ports/windows-x86_64`, its presets), cross-built by llvm-mingw and tested under Wine |
 | `trimui-smartpro` | the TrimUI Smart Pro's: linux-aarch64's DXLauncher, each change for the device a commit of its own on it -- an SDL3 video driver, the spruceOS app, CPU modes, the big screen alone, no desktop -- with the port around it (`ports/trimui-smartpro`). Tag `trimui-smartpro-tabbed` holds the device's tabbed launcher |
 
 A port branch lives while its platform or device is targeted. It holds only
@@ -173,29 +174,35 @@ renderer, and desktop GL -- what the launcher's renderer list is built from.
 Every Linux port is POSIX, and so is Android: bionic has everything below,
 though its app model changes the hand-over (below) and the GPU probe.
 DXLauncher's OS dependencies are few and named: each behind a header in
-`src/platform/`, POSIX's in `src/platform/posix/`, what both C libraries do
-alike (stdio, `stat`, `opendir`) called as it is.
+`src/platform/`, POSIX's in `src/platform/posix/` and Windows' in
+`src/platform/win32/` (windows-x86_64's), what both C libraries do alike
+(stdio, `stat`, `opendir`) called as it is.
 
-| What | Seam | POSIX's |
-|---|---|---|
-| The game as a child it waits for, over a line both ways | `platform/process.h` | `process.c`: `fork`, `execv`, `socketpair` |
-| Crash-isolated GPU detection | `platform/gpu_probe.h` | `gpu_probe.c`: `fork` + `dlopen` of the Vulkan loader and EGL |
-| Single instance, and handing a command line to it | `platform/instance.h` | `instance.c`: `flock` on a pidfile, an abstract unix socket |
-| Waiting on that, and on a signal | `platform/wait.h` | `wait.c`: a pipe each, `poll` |
-| The file system where it differs: the launcher's own path, a path's root, links, atomic writes | `platform/fs.h` | `fs.c`: `/proc/self/exe`, `realpath`, `symlink`, `mkstemp`, `fsync`, `rename` |
-| Its folders | `platform/folders.h` | `folders.c`: the XDG base directories |
-| How a program it started ended; its environment | `platform/os.h` | `os.c`: the signals' names, `setenv` |
-| What ends a start from outside | `platform/startup.h` | `startup.c`: SIGINT, SIGTERM, SIGHUP |
-| The server browser's network | `platform/net.h` | `net.c`: `getaddrinfo`, TCP and UDP sockets, `poll`, and for the local network's servers `SO_BROADCAST` to each interface's broadcast address from `getifaddrs` |
+| What | Seam | POSIX's | Windows' |
+|---|---|---|---|
+| The game as a child it waits for, over a line both ways | `platform/process.h` | `process.c`: `fork`, `execv`, `socketpair` | `process.c`: `CreateProcessW` with the list of handles it inherits, a named pipe, `TerminateProcess` |
+| Crash-isolated GPU detection | `platform/gpu_probe.h` | `gpu_probe.c`: `fork` + `dlopen` of the Vulkan loader and EGL | `gpu_probe.c`: `vulkan-1.dll` and WGL, in `dxl-cli`, on a thread a hung driver is left behind on |
+| Single instance, and handing a command line to it | `platform/instance.h` | `instance.c`: `flock` on a pidfile, an abstract unix socket | `instance.c`: a named mutex, a named pipe of messages |
+| Waiting on that, and on a signal | `platform/wait.h` | `wait.c`: a pipe each, `poll` | `wait.c`: an event each, `WaitForMultipleObjects` |
+| The file system where it differs: the launcher's own path, a path's root, links, atomic writes | `platform/fs.h` | `fs.c`: `/proc/self/exe`, `realpath`, `symlink`, `mkstemp`, `fsync`, `rename` | `fs.c`: the wide calls, `GetFinalPathNameByHandleW`, `CreateSymbolicLinkW`, `CREATE_NEW`, `FlushFileBuffers`, `MoveFileExW` |
+| Its folders | `platform/folders.h` | `folders.c`: the XDG base directories | `folders.c`: the Known Folders |
+| How a program it started ended; its environment | `platform/os.h` | `os.c`: the signals' names, `setenv` | `os.c`: the exception codes' names, `_wputenv_s` |
+| What ends a start from outside | `platform/startup.h` | `startup.c`: SIGINT, SIGTERM, SIGHUP | `startup.c`: the console's Ctrl+C, Ctrl+Break and closing |
+| The server browser's network | `platform/net.h` | `net.c`: `getaddrinfo`, TCP and UDP sockets, `poll`, and for the local network's servers `SO_BROADCAST` to each interface's broadcast address from `getifaddrs` | `net.c`: Winsock 2, `WSAPoll`, each adapter's broadcast address from `GetAdaptersAddresses` |
 
 Where the game is on the platform is the finder's places,
 `core/finder_places.c` (desktop Linux's: Steam's, Heroic's, Lutris',
-Bottles', the Wine prefixes, the drives), made of `core/finder.c`'s looking.
-On the desktop's branches, linux-x86_64 and linux-aarch64, also: a folder
-or page opened by `xdg-open` (`platform/posix/process.c`); its entry in the
-desktop's app menu, which takes the `deusex://` links too
-(`platform/posix/desktop.c`: a freedesktop.org desktop entry); the trash
-(`platform/posix/trash.c`: freedesktop.org's Trash spec, a `rename`). The
+Bottles', the Wine prefixes, the drives) and `core/finder_places_win32.c`
+(Windows': the Steam, GOG and installer keys in the registry, Heroic's, the
+drives), made of `core/finder.c`'s looking. On the desktop's branches,
+linux-x86_64 and linux-aarch64, also: a folder or page opened by `xdg-open`
+(`platform/posix/process.c`); its entry in the desktop's app menu, which
+takes the `deusex://` links too (`platform/posix/desktop.c`: a
+freedesktop.org desktop entry); the trash (`platform/posix/trash.c`:
+freedesktop.org's Trash spec, a `rename`). On windows-x86_64 the same
+three: `ShellExecuteW` (`platform/win32/process.c`); the Start menu's
+shortcuts and `deusex://` in the user's registry
+(`platform/win32/desktop.c`); the Recycle Bin (`platform/win32/trash.c`). The
 Smart Pro has no desktop for them: it deletes for good
 (`platform/posix/delete.c`: `nftw`). `main`'s launcher has its own
 `core/instance.c` and `core/paths.c`, and three more: the game as a child,
@@ -205,8 +212,8 @@ as DXLauncher's; its own start again for safe mode
 
 **Android** needs a different hand-over: the engine has to run inside the
 app's process. **Xbox 360** is not POSIX, so it would need its own version of
-each. **Windows** needs a win32 version of each seam; the original binary's
-own answers to the same questions are
+each, as Windows has; the original binary's own answers to the same
+questions are
 [launch-flow.md's platform seams](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/launch-flow.md#platform-seams).
 
 ## A port's README
