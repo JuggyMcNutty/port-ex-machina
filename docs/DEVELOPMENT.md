@@ -181,10 +181,21 @@ build reads (the engine's harness, `tools/probes/`, `scripts/check-docs.sh`) sta
 a push of pins whose commits change only those builds nothing. The list is `scripts/ci.sh`'s
 `is_code`; each workflow's `paths` filter says the same.
 
-**A release** is tagged `<date>-<sha8>`, this repository's commit, and holds every port's file
--- `DXLauncher-<port>.tar.gz`, the Windows port's zip, the Smart Pro's zip of its app folder --
-with notes naming the commits built and linking what changed since the previous release. A
-run's files are its artifacts too, a pull request's among them.
+**Releases**, each with notes naming the commits built and linking what changed since the one
+before it (`scripts/ci.sh publish`):
+
+| Repository | Tagged | Holds, for each port | When |
+|---|---|---|---|
+| this one | `<date>-<sha8>`, its commit | `DX-<port>`: the app, launcher and engine | every run of the pins that builds |
+| DXEngine | `<date>-<sha8>`, the engine's commit | `DXEngine-<port>`: the engine alone, its notices with it | when its code changed since its last |
+| deusex-launcher, one per port | `<port>-<date>-<sha8>`, the branch's commit | `DXLauncher-<port>`: the launcher alone | when that branch's code changed since its last |
+
+Each file is a tarball, or a zip for the Windows port and the Smart Pro (the Smart Pro's app
+folder `DeusEx`, as spruceOS takes it); `scripts/ci.sh package` makes all three from the staged
+app, and they are each run's artifact too, a pull request's among them. DXEngine's and
+deusex-launcher's releases are made with `RELEASES_TOKEN`, a secret of this repository's: a
+fine-grained token of the owner's with Contents read and write on those two. Without it they
+are left out, with a warning; when it expires, a new one replaces the secret.
 
 ## Gotchas that cost time
 

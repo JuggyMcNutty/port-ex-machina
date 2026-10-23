@@ -55,25 +55,18 @@ jobs:
           path: port-ex-machina
           persist-credentials: false
 
-      # As uploaded: the Windows and Smart Pro zips are files to publish, which
-      # the action would otherwise unpack.
+      # Every port's artifact unpacked into one folder: its three files.
       - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
-          skip-decompress: true
 
-      # What it publishes, and gh's complaint if any, as annotations: the
-      # run's page shows them to anyone, its log only to the signed-in.
+      # This repository's release, and DXEngine's and deusex-launcher's where
+      # their code changed (scripts/ci.sh publish), by RELEASES_TOKEN, a
+      # token that may write to them; what each holds, or gh's complaint, as
+      # annotations, which the run's page shows to anyone.
       - name: publish
         env:
           GH_TOKEN: ${{ github.token }}
-          SHA: ${{ needs.ports.outputs.workspace }}
-        run: |
-          tag="$(date -u +%Y.%m.%d)-${SHA::8}"
-          files=(dist/*)
-          echo "::notice::$tag: ${files[*]##*/}"
-          port-ex-machina/scripts/ci.sh notes > notes.md
-          gh release create "$tag" "${files[@]}" --repo "$GITHUB_REPOSITORY" --target "$SHA" \
-              --title "$tag" --notes-file notes.md 2> gh.err ||
-              { echo "::error::$(tr '\n' ' ' < gh.err)"; exit 1; }
+          RELEASES_TOKEN: ${{ secrets.RELEASES_TOKEN }}
+        run: port-ex-machina/scripts/ci.sh publish dist

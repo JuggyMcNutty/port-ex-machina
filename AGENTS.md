@@ -83,7 +83,8 @@ one); `scripts/recreation.sh` builds, installs, checks and runs it. The RE,
   system's own; built with a buildroot toolchain, a GCC 13 on glibc 2.28, as Godot's Linux
   builds are ([the glibc ceiling](docs/DEVELOPMENT.md#gotchas-that-cost-time)).
 - **CI builds at the pins**: the workspace's push of pins that change code builds every port
-  on GitHub's CI and publishes a release of them; DXEngine and the launcher run the same jobs
+  on GitHub's CI and publishes the apps in a release here, the engine alone in DXEngine's and
+  each port's launcher alone in deusex-launcher's; DXEngine and the launcher run the same jobs
   on pull requests and by hand, never on a push, which would build against the old pins
   ([CI](docs/DEVELOPMENT.md#ci)).
 - **Windows at 10 1903 or newer, x86_64**: the UCRT and a UTF-8 code page; built here by

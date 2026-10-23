@@ -9,8 +9,8 @@
 #   scripts/ci.sh warnings <log>             fails on a compiler or linker warning in our own code
 #   scripts/ci.sh skips <log> [<test>]...    fails on a skipped test not named
 #   scripts/ci.sh failed <log>               the tests that failed, as GitHub annotations
-#   scripts/ci.sh package <port>             a staged port as the release's file; prints its path
-#   scripts/ci.sh notes                      the release's notes, markdown, for the workspace's HEAD
+#   scripts/ci.sh package <port>             a staged port as the releases' files: DX-, DXEngine-, DXLauncher-<port>
+#   scripts/ci.sh publish <dir>              the releases, of the files in <dir> (DX_CI_DRY=1: say what, publish nothing)
 #
 # plan reads the caller's event from CI_PORTS (pins: the workspace's pinned
 # set; all: every pinned port; a port; main: the recreation), CI_REPO,
@@ -184,43 +184,121 @@ cmd_failed() {
     grep -E 'Test +#[0-9]+: .*\*\*\*(Failed|Timeout|Exception)' "$log" | sed 's/^ */::error::/' || true
 }
 
-# The release's file for a port, from its staged app: the Windows port's
-# zip, which its staging makes; the Smart Pro's app folder as spruceOS's
-# App/ takes it; any other's a tarball of DXLauncher/.
+# A port's files for the releases, from its staged app, beside it in
+# build/<port>/: DX-<port>, the app as it ships, launcher and engine;
+# DXEngine-<port>, the engine alone, its files as staging copies them
+# (PORT_ENGINE_FILES), its notices and on Windows its runtime's and OpenAL
+# Soft's; DXLauncher-<port>, the app but the engine. A zip for the Windows
+# port and the Smart Pro (whose app folder is DeusEx, as spruceOS's App/
+# takes it), else a tarball; DXLauncher's folder, DXEngine's, or DeusEx.
 cmd_package() {
-    local p="${1:?which port?}" b="$DX_ROOT/build/${1:-}" out tmp
+    local p="${1:?which port?}" b="$DX_ROOT/build/${1:-}" tmp f files ext dir
     [ -d "$b/app" ] || die "nothing staged -- scripts/dx.sh stage $p"
-    case "$p" in
-        windows-x86_64)
-            out="$b/DXLauncher-$p.zip"
-            [ -f "$out" ] || die "no $out -- scripts/dx.sh stage $p"
-            ;;
-        trimui-smartpro)
-            out="$b/DXLauncher-$p.zip"
-            tmp="$(mktemp -d "$b/.zip.XXXXXX")"
-            cp -a "$b/app" "$tmp/DeusEx"
-            rm -f "$out"
-            (cd "$tmp" && cmake -E tar cf "$out" --format=zip DeusEx)
-            rm -rf "$tmp"
-            ;;
-        *)
-            out="$b/DXLauncher-$p.tar.gz"
-            tar -C "$b" -czf "$out" --transform 's,^app,DXLauncher,' app
-            ;;
-    esac
-    printf '%s\n' "$out"
+    # shellcheck source=/dev/null
+    files="$(PORT_ENGINE_FILES="DXEngine DXEngine.pk3"; . "$DX_LAUNCHER/$p/ports/$p/port.sh"; echo "$PORT_ENGINE_FILES")"
+    case "$p" in windows-x86_64|trimui-smartpro) ext=zip ;; *) ext=tar.gz ;; esac
+    case "$p" in trimui-smartpro) dir=DeusEx ;; *) dir=DXLauncher ;; esac
+    tmp="$(mktemp -d "$b/.package.XXXXXX")"
+    mkdir -p "$tmp/app" "$tmp/engine/DXEngine" "$tmp/launcher"
+    cp -a "$b/app" "$tmp/app/$dir"
+    cp -a "$b/app" "$tmp/launcher/$dir"
+    for f in $files DXEngine-LICENSE.md; do
+        [ ! -f "$b/app/$f" ] || cp -a "$b/app/$f" "$tmp/engine/DXEngine/"
+        rm -f "$tmp/launcher/$dir/$f"
+    done
+    if [ -d "$b/app/licenses" ]; then
+        cp -a "$b/app/licenses" "$tmp/engine/DXEngine/"
+        rm -f "$tmp/launcher/$dir/licenses/OpenAL-Soft-COPYING.txt"
+    fi
+    archive "$tmp/app" "$dir" "$b/DX-$p.$ext"
+    archive "$tmp/engine" DXEngine "$b/DXEngine-$p.$ext"
+    archive "$tmp/launcher" "$dir" "$b/DXLauncher-$p.$ext"
+    rm -rf "$tmp"
+    printf '%s\n' "$b/DX-$p.$ext" "$b/DXEngine-$p.$ext" "$b/DXLauncher-$p.$ext"
 }
 
-# The notes: what the release is built from and what changed since the
-# previous one, by its tag.
-cmd_notes() {
-    local ws="$DX_WORKSPACE" sha prev p old new eng
+archive() {   # <parent folder> <its folder to pack> <file>
+    rm -f "$3"
+    case "$3" in
+        *.zip) (cd "$1" && cmake -E tar cf "$3" --format=zip "$2") ;;
+        *)     tar -C "$1" -czf "$3" "$2" ;;
+    esac
+}
+
+# The releases (docs/DEVELOPMENT.md#ci), of a run's files in <dir>: this
+# repository's, every port's app (DX-*), tagged <date>-<sha8>; DXEngine's,
+# the engine alone (DXEngine-*), tagged <date>-<sha8> on its commit, when its
+# code changed since its last release; and deusex-launcher's, one per port,
+# its launcher alone (DXLauncher-<port>.*), tagged <port>-<date>-<sha8> on
+# its branch's commit, when that branch's code changed since its last. The
+# two others need RELEASES_TOKEN, a token that may write to them; GH_TOKEN is
+# this repository's own. Each is tried, a failure failing the whole at the end.
+cmd_publish() {
+    local dist="${1:?which folder?}" ws="$DX_WORKSPACE" sha date eng p pin last rc=0
+    [ -d "$dist" ] || die "no folder $dist"
+    CI_TMP="$(mktemp -d)"; trap 'rm -rf "$CI_TMP"' EXIT
     sha="$(git -C "$ws" rev-parse HEAD)"
+    date="$(date -u +%Y.%m.%d)"
+    eng="$(engine_pin < "$ws/ENGINE-PIN.txt")"
+    notes_workspace "$sha" > "$CI_TMP/notes-ws.md"
+    release "${GITHUB_REPOSITORY:-JuggyMcNutty/port-ex-machina}" "$date-${sha:0:8}" "$sha" "$CI_TMP/notes-ws.md" \
+        "$dist"/DX-* || rc=1
+    if [ -z "${RELEASES_TOKEN:-}" ] && [ -z "${DX_CI_DRY:-}" ]; then
+        echo "::warning::no RELEASES_TOKEN: neither DXEngine's release nor deusex-launcher's published"
+        return "$rc"
+    fi
+    last="$(last_release DXEngine '20')"
+    if [ -z "$last" ] || code_between DXEngine "$last" "$eng"; then
+        notes_engine "$last" "$eng" "$sha" > "$CI_TMP/notes-engine.md"
+        release JuggyMcNutty/DXEngine "$date-${eng:0:8}" "$eng" "$CI_TMP/notes-engine.md" "$dist"/DXEngine-* || rc=1
+    fi
+    for p in $(dx_ports); do
+        pin="$(launcher_pin "$p" < "$ws/LAUNCHER-PIN.txt")"
+        last="$(last_release deusex-launcher "$p-20")"
+        if [ -z "$last" ] || code_between deusex-launcher "$last" "$pin"; then
+            notes_launcher "$p" "$last" "$pin" "$sha" > "$CI_TMP/notes-$p.md"
+            release JuggyMcNutty/deusex-launcher "$p-$date-${pin:0:8}" "$pin" "$CI_TMP/notes-$p.md" \
+                "$dist"/DXLauncher-"$p".* || rc=1
+        fi
+    done
+    return "$rc"
+}
+
+# last_release <repository> <tag's start>: the commit of its newest release
+# so tagged (the tags start with their date, so sort by it), or nothing.
+last_release() {
+    git ls-remote --tags --refs "$OWNER_URL/$1.git" |
+        awk -v t="refs/tags/$2" 'index($2, t) == 1 { print $2, $1 }' | sort | tail -n 1 | awk '{ print $2 }'
+}
+
+# release <owner/repository> <tag> <commit> <notes file> <file>...
+release() {
+    local repo="$1" tag="$2" target="$3" notes="$4" token; shift 4
+    [ -e "${1:-}" ] || { echo "::error::$repo: no files to publish"; return 1; }
+    if [ -n "${DX_CI_DRY:-}" ]; then
+        say "would publish $repo $tag at ${target:0:8}: ${*##*/}"
+        sed 's/^/    | /' "$notes" >&2
+        return 0
+    fi
+    token="${RELEASES_TOKEN:-}"
+    [ "${repo##*/}" != port-ex-machina ] || token="${GH_TOKEN:-}"
+    if ! GH_TOKEN="$token" gh release create "$tag" "$@" --repo "$repo" --target "$target" \
+            --title "$tag" --notes-file "$notes" 2> "$CI_TMP/gh.err"; then
+        echo "::error::$repo $tag: $(tr '\n' ' ' < "$CI_TMP/gh.err")"
+        return 1
+    fi
+    echo "::notice::$repo $tag: ${*##*/}"
+}
+
+# The notes. Each names what it is built from, links what changed since the
+# release before it, and says where the others are.
+notes_workspace() {   # <commit>
+    local ws="$DX_WORKSPACE" sha="$1" prev p old new eng
     prev="$(git -C "$ws" describe --tags --abbrev=0 --match '20[0-9][0-9].[0-9][0-9].[0-9][0-9]-*' HEAD 2>/dev/null || true)"
     eng="$(engine_pin < "$ws/ENGINE-PIN.txt")"
-    printf 'Every port of [Port Ex Machina](%s/port-ex-machina) built at the commits its pins name, from [`%s`](%s/port-ex-machina/commit/%s).\n\n' \
-        "$OWNER_URL" "${sha:0:8}" "$OWNER_URL" "$sha"
-    printf '**You supply your own game files. None are included.** Each file is named for its port: what each port is and how far along, [the ports](%s/port-ex-machina#engine-ports).\n\n' "$OWNER_URL"
+    printf 'Every port of [Port Ex Machina](%s/port-ex-machina), launcher and engine together, built at the commits its pins name, from [`%s`](%s/port-ex-machina/commit/%s). The engine alone is in [DXEngine'\''s releases](%s/DXEngine/releases), each port'\''s launcher alone in [deusex-launcher'\''s](%s/deusex-launcher/releases).\n\n' \
+        "$OWNER_URL" "${sha:0:8}" "$OWNER_URL" "$sha" "$OWNER_URL" "$OWNER_URL"
+    game_files
     printf '### Built from\n\n| | Commit | Since the previous release |\n|---|---|---|\n'
     old="$( [ -z "$prev" ] || git -C "$ws" show "$prev:ENGINE-PIN.txt" | engine_pin)"
     printf '| DXEngine | [`%s`](%s/DXEngine/commit/%s) | %s |\n' "${eng:0:7}" "$OWNER_URL" "$eng" \
@@ -239,6 +317,43 @@ cmd_notes() {
     fi
 }
 
+notes_engine() {   # <last released commit or nothing> <commit> <workspace commit>
+    printf 'DXEngine alone, at [`%s`](%s/DXEngine/commit/%s), for every port, each built as its launcher branch configures it at the commits [Port Ex Machina](%s/port-ex-machina) pins ([`%s`](%s/port-ex-machina/commit/%s)). With the launcher, each port'\''s app is in [Port Ex Machina'\''s releases](%s/port-ex-machina/releases).\n\n' \
+        "${2:0:8}" "$OWNER_URL" "$2" "$OWNER_URL" "${3:0:8}" "$OWNER_URL" "$3" "$OWNER_URL"
+    game_files
+    changes DXEngine "$1" "$2"
+}
+
+notes_launcher() {   # <port> <last released commit or nothing> <commit> <workspace commit>
+    printf 'DXLauncher for %s alone, at [`%s`](%s/deusex-launcher/commit/%s), the head of branch [`%s`](%s/deusex-launcher/tree/%s) that [Port Ex Machina](%s/port-ex-machina) pins ([`%s`](%s/port-ex-machina/commit/%s)). The engine is in [DXEngine'\''s releases](%s/DXEngine/releases); both together, in [Port Ex Machina'\''s](%s/port-ex-machina/releases).\n\n' \
+        "$1" "${3:0:8}" "$OWNER_URL" "$3" "$1" "$OWNER_URL" "$1" "$OWNER_URL" "${4:0:8}" "$OWNER_URL" "$4" "$OWNER_URL" "$OWNER_URL"
+    game_files
+    changes deusex-launcher "$2" "$3"
+}
+
+game_files() {
+    printf '**You supply your own game files. None are included.** What each port is and how far along: [the ports](%s/port-ex-machina#engine-ports).\n\n' "$OWNER_URL"
+}
+
+# What changed in a repository between two commits: the comparison, and its
+# commits' subjects, cut short (each says it all at the link), fifty at most.
+changes() {   # <repository> <old or nothing> <new>
+    local repo="$1" old="$2" new="$3" dir="$CI_TMP/$1.git" n
+    printf '### What changed\n\n'
+    if [ -z "$old" ]; then
+        printf 'The first release.\n'
+        return 0
+    fi
+    [ -d "$dir" ] || git clone -q --bare --filter=blob:none "$OWNER_URL/$repo.git" "$dir"
+    printf '%s\n\n' "$(compare "$repo" "$old" "$new")"
+    n="$(git -C "$dir" rev-list --no-merges --count "$old..$new")"
+    git -C "$dir" log --no-merges --reverse -n 50 --format='%h%x09%H%x09%s' "$old..$new" |
+        awk -F '\t' -v url="$OWNER_URL/$repo/commit/" '{
+            s = $3; if (length(s) > 200) s = substr(s, 1, 200) "..."
+            printf "- %s ([`%s`](%s%s))\n", s, $1, url, $2 }'
+    [ "$n" -le 50 ] || printf '\nAnd %s more: the comparison has them all.\n' "$((n - 50))"
+}
+
 compare() {   # <repository> <old> <new>
     if [ -z "$2" ]; then echo "--"
     elif [ "$2" = "$3" ]; then echo "unchanged"
@@ -255,7 +370,7 @@ case "$cmd" in
     skips)    cmd_skips "$@" ;;
     failed)   cmd_failed "$@" ;;
     package)  cmd_package "$@" ;;
-    notes)    cmd_notes ;;
+    publish)  cmd_publish "$@" ;;
     -h|--help|help) usage ;;
     *)        die "unknown command '$cmd' (scripts/ci.sh help)" ;;
 esac

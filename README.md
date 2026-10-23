@@ -4,9 +4,12 @@ Deus Ex (version 1112fm) on modern platforms: a launcher of our own, DXEngine, a
 Surreal Engine, to run the game, and the reverse engineering of the original binaries behind
 both.
 
-**You supply your own game files. None are included.** Every port's build is in the
-[releases](https://github.com/JuggyMcNutty/port-ex-machina/releases), made by GitHub's CI from the
-commits the pins name ([CI](docs/DEVELOPMENT.md#ci)).
+**You supply your own game files. None are included.** Every port's app, launcher and engine
+together, is in the [releases](https://github.com/JuggyMcNutty/port-ex-machina/releases), made by
+GitHub's CI from the commits the pins name; the engine alone is in
+[DXEngine's](https://github.com/JuggyMcNutty/DXEngine/releases), each port's launcher alone in
+[deusex-launcher's](https://github.com/JuggyMcNutty/deusex-launcher/releases)
+([CI](docs/DEVELOPMENT.md#ci)).
 
 This repository holds no launcher, engine or game code. It is the workspace that ties the
 project's other three repositories together: its scripts fetch them beside it

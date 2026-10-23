@@ -187,17 +187,18 @@ jobs:
         run: port-ex-machina/scripts/ci.sh skips "build/$PORT/ci-test.log" test_gamefiles test_ui_scripts
 
       - name: package
-        id: package
-        run: |
-          file="$(port-ex-machina/scripts/ci.sh package "$PORT")"
-          echo "file=$file" >> "$GITHUB_OUTPUT"
+        run: port-ex-machina/scripts/ci.sh package "$PORT"
 
-      # As it is: a tarball keeps the programs' modes, which a zipped
-      # artifact loses.
+      # The port's three files, one artifact named for it: the app, the
+      # engine alone, the launcher alone (each a tarball or zip of its own,
+      # the programs' modes kept).
       - uses: actions/upload-artifact@v7
         with:
-          path: ${{ steps.package.outputs.file }}
-          archive: false
+          name: ${{ matrix.port }}
+          path: |
+            build/${{ matrix.port }}/DX-${{ matrix.port }}.*
+            build/${{ matrix.port }}/DXEngine-${{ matrix.port }}.*
+            build/${{ matrix.port }}/DXLauncher-${{ matrix.port }}.*
           if-no-files-found: error
 
       # Last, so a warning still leaves the tests' verdict and the artifact.
