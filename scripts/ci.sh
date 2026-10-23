@@ -15,11 +15,14 @@
 # plan reads the caller's event from CI_PORTS (pins: the workspace's pinned
 # set; all: every pinned port; a port; main: the recreation), CI_REPO,
 # CI_EVENT, CI_REF, CI_SHA and CI_BEFORE (a push's previous commit, a pull
-# request's base).
+# request's base). The repositories are private: plan and publish reach them
+# with RELEASES_TOKEN, or on this machine as DX_OWNER_GIT names them
+# (git@github.com:JuggyMcNutty, over SSH).
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
 OWNER_URL="https://github.com/JuggyMcNutty"
+OWNER_GIT="${DX_OWNER_GIT:-$OWNER_URL}"
 
 usage() { sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 
@@ -38,6 +41,16 @@ is_code() {   # <repository> <path>
     return 0
 }
 
+# Git to one of the owner's repositories, private ones too: as RELEASES_TOKEN's
+# owner, when it is set.
+owner_git() {
+    if [ -n "${RELEASES_TOKEN:-}" ]; then
+        git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $(printf 'x-access-token:%s' "$RELEASES_TOKEN" | base64 | tr -d '\n')" "$@"
+    else
+        git "$@"
+    fi
+}
+
 engine_pin() { awk '$1 == "commit" { print $2 }'; }
 launcher_pin() { awk -v p="$1" '$1 == "port" && $2 == p { print $3 }'; }
 
@@ -45,7 +58,7 @@ launcher_pin() { awk -v p="$1" '$1 == "port" && $2 == p { print $3 }'; }
 # its commits. A blobless bare clone has the trees git diff needs.
 code_between() {
     local repo="$1" old="$2" new="$3" dir="$CI_TMP/$1.git" f
-    [ -d "$dir" ] || git clone -q --bare --filter=blob:none "$OWNER_URL/$repo.git" "$dir"
+    [ -d "$dir" ] || owner_git clone -q --bare --filter=blob:none "$OWNER_GIT/$repo.git" "$dir"
     if ! git -C "$dir" cat-file -e "$old^{commit}" 2>/dev/null; then
         say "$repo: $old is gone from it -- building"
         return 0
@@ -267,7 +280,7 @@ cmd_publish() {
 # last_release <repository> <tag's start>: the commit of its newest release
 # so tagged (the tags start with their date, so sort by it), or nothing.
 last_release() {
-    git ls-remote --tags --refs "$OWNER_URL/$1.git" |
+    owner_git ls-remote --tags --refs "$OWNER_GIT/$1.git" |
         awk -v t="refs/tags/$2" 'index($2, t) == 1 { print $2, $1 }' | sort | tail -n 1 | awk '{ print $2 }'
 }
 
@@ -344,7 +357,7 @@ changes() {   # <repository> <old or nothing> <new>
         printf 'The first release.\n'
         return 0
     fi
-    [ -d "$dir" ] || git clone -q --bare --filter=blob:none "$OWNER_URL/$repo.git" "$dir"
+    [ -d "$dir" ] || owner_git clone -q --bare --filter=blob:none "$OWNER_GIT/$repo.git" "$dir"
     printf '%s\n\n' "$(compare "$repo" "$old" "$new")"
     n="$(git -C "$dir" rev-list --no-merges --count "$old..$new")"
     git -C "$dir" log --no-merges --reverse -n 50 --format='%h%x09%H%x09%s' "$old..$new" |

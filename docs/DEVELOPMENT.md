@@ -75,8 +75,10 @@ Besides:
   profile (`--userdir`), and refuses an engine that has none.
 - **IDA Pro for Linux** with Hex-Rays' MCP plugin `ida-mcp@HexRaysSA`, for the RE
   ([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)).
-- **Write access to the owner's GitHub repositories**, to push. The fetches clone over HTTPS,
-  read-only; pushing takes `git@github.com:` remotes and an SSH key on the owner's account.
+- **Access to the owner's GitHub repositories.** dx-reverse-info is public; port-ex-machina,
+  DXEngine and deusex-launcher are private until the owner releases the work, so the fetches'
+  HTTPS clones of them need the owner's credentials (a credential helper). Pushing takes
+  `git@github.com:` remotes and an SSH key on the owner's account.
 - **The Smart Pro awake on the network**, for its `deps` (the sysroot comes from the device)
   and `deploy`.
 
@@ -192,10 +194,18 @@ before it (`scripts/ci.sh publish`):
 
 Each file is a tarball, or a zip for the Windows port and the Smart Pro (the Smart Pro's app
 folder `DeusEx`, as spruceOS takes it); `scripts/ci.sh package` makes all three from the staged
-app, and they are each run's artifact too, a pull request's among them. DXEngine's and
-deusex-launcher's releases are made with `RELEASES_TOKEN`, a secret of this repository's: a
-fine-grained token of the owner's with Contents read and write on those two. Without it they
-are left out, with a warning; when it expires, a new one replaces the secret.
+app, and they are each run's artifact too, kept two days (a private repository's artifacts
+share a small quota; the releases keep the files), a pull request's among them.
+
+**The repositories being private**, a run reads its own with GitHub's token and the other two
+with `RELEASES_TOKEN`, which also makes DXEngine's and deusex-launcher's releases: a
+fine-grained token of the owner's with Contents read and write on all three, a secret of each
+(this repository's for the pins' runs, the others' for their own), and port-ex-machina's
+Actions open to the owner's other repositories, which call its `ports.yml`. Without the token
+those releases are left out, with a warning; when it expires, a new one replaces the secrets.
+The releases are the owner's alone to see until the repositories are made public. Here,
+`scripts/ci.sh`'s `plan` and `publish` reach them over SSH:
+`DX_OWNER_GIT=git@github.com:JuggyMcNutty`.
 
 ## Gotchas that cost time
 

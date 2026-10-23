@@ -5,7 +5,9 @@ name: ports
 # pins, DXEngine's and each launcher branch's on a pull request or by hand.
 # Every step that builds is a workspace script (scripts/dx.sh,
 # scripts/ci.sh), so a run can be repeated on this machine; adding a build
-# step means editing a script, not this file.
+# step means editing a script, not this file. The repositories are private:
+# each run reads its own with GitHub's token, the others with RELEASES_TOKEN,
+# which every caller passes on (secrets: inherit).
 
 on:
   workflow_call:
@@ -14,6 +16,9 @@ on:
         description: "pins (the workspace's pinned set), all (every pinned port), a port, or main (the recreation)"
         type: string
         required: true
+    secrets:
+      RELEASES_TOKEN:
+        required: false
     outputs:
       release:
         description: "true when the run publishes a release"
@@ -52,6 +57,7 @@ jobs:
         with:
           repository: ${{ github.event.repository.name == 'port-ex-machina' && github.repository || 'JuggyMcNutty/port-ex-machina' }}
           ref: ${{ github.event.repository.name == 'port-ex-machina' && github.sha || 'main' }}
+          token: ${{ (github.event.repository.name == 'port-ex-machina' || !secrets.RELEASES_TOKEN) && github.token || secrets.RELEASES_TOKEN }}
           fetch-depth: 0
           path: port-ex-machina
           persist-credentials: false
@@ -64,6 +70,7 @@ jobs:
           CI_REF: ${{ github.ref }}
           CI_SHA: ${{ github.sha }}
           CI_BEFORE: ${{ github.event.before || github.event.pull_request.base.sha }}
+          RELEASES_TOKEN: ${{ secrets.RELEASES_TOKEN }}
         run: port-ex-machina/scripts/ci.sh plan | tee -a "$GITHUB_OUTPUT"
 
   # One port: its launcher, its engine, staged, tested, packed. The layout is
@@ -89,6 +96,7 @@ jobs:
         with:
           repository: ${{ github.event.repository.name == 'port-ex-machina' && github.repository || 'JuggyMcNutty/port-ex-machina' }}
           ref: ${{ needs.plan.outputs.workspace }}
+          token: ${{ (github.event.repository.name == 'port-ex-machina' || !secrets.RELEASES_TOKEN) && github.token || secrets.RELEASES_TOKEN }}
           path: port-ex-machina
           persist-credentials: false
 
@@ -97,6 +105,7 @@ jobs:
         with:
           repository: ${{ github.event.repository.name == 'DXEngine' && github.repository || 'JuggyMcNutty/DXEngine' }}
           ref: ${{ needs.plan.outputs.engine }}
+          token: ${{ (github.event.repository.name == 'DXEngine' || !secrets.RELEASES_TOKEN) && github.token || secrets.RELEASES_TOKEN }}
           path: DXEngine
           persist-credentials: false
 
@@ -105,6 +114,7 @@ jobs:
         with:
           repository: ${{ github.event.repository.name == 'deusex-launcher' && github.repository || 'JuggyMcNutty/deusex-launcher' }}
           ref: ${{ matrix.launcher }}
+          token: ${{ (github.event.repository.name == 'deusex-launcher' || !secrets.RELEASES_TOKEN) && github.token || secrets.RELEASES_TOKEN }}
           path: deusex-launcher/${{ matrix.port }}
           persist-credentials: false
 
@@ -191,10 +201,12 @@ jobs:
 
       # The port's three files, one artifact named for it: the app, the
       # engine alone, the launcher alone (each a tarball or zip of its own,
-      # the programs' modes kept).
+      # the programs' modes kept). Kept two days: a private repository's
+      # artifacts share a small quota, and the releases keep the files.
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.port }}
+          retention-days: 2
           path: |
             build/${{ matrix.port }}/DX-${{ matrix.port }}.*
             build/${{ matrix.port }}/DXEngine-${{ matrix.port }}.*
@@ -218,6 +230,7 @@ jobs:
         with:
           repository: ${{ github.event.repository.name == 'port-ex-machina' && github.repository || 'JuggyMcNutty/port-ex-machina' }}
           ref: ${{ needs.plan.outputs.workspace }}
+          token: ${{ (github.event.repository.name == 'port-ex-machina' || !secrets.RELEASES_TOKEN) && github.token || secrets.RELEASES_TOKEN }}
           path: port-ex-machina
           persist-credentials: false
 
@@ -226,6 +239,7 @@ jobs:
         with:
           repository: ${{ github.event.repository.name == 'deusex-launcher' && github.repository || 'JuggyMcNutty/deusex-launcher' }}
           ref: ${{ needs.plan.outputs.main }}
+          token: ${{ (github.event.repository.name == 'deusex-launcher' || !secrets.RELEASES_TOKEN) && github.token || secrets.RELEASES_TOKEN }}
           path: deusex-launcher/main
           persist-credentials: false
 

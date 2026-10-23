@@ -35,6 +35,7 @@ jobs:
     uses: ./.github/workflows/ports.yml
     with:
       ports: pins
+    secrets: inherit
 
   # Tagged <date>-<sha8>, so the releases are a history of the builds, the
   # newest the latest.
