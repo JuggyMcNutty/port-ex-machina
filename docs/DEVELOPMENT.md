@@ -122,7 +122,8 @@ written this way:
     game's scenes as JPEG, the launcher's screens as PNG, each a few hundred KB at most, from
     real runs -- DXEngine's `shot` on a harness timeline
     ([timelines](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#timelines)),
-    a launcher's `shot` in a `DXL_UI_SCRIPT` -- and taken again when what they show changes.
+    a launcher's `shot` in a `DXL_UI_SCRIPT` -- and taken again when what they show changes,
+    with every copy: this repository's README shows copies of DXEngine's and the launcher's.
 
 Editing docs with string replacement fails silently when the pattern does not match: prefer full
 rewrites, or scripted replacements that assert the pattern was found.

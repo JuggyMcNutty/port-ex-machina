@@ -27,7 +27,8 @@
 # checkout here: port-ex-machina at main is this one, dx-reverse-info and
 # DXEngine at main are their clones, and deusex-launcher at <branch> is
 # deusex-launcher/<branch>/. A link to a DXEngine commit must name one the
-# clone has; one to a repository itself, or to its releases, is taken as is.
+# clone has; one to a repository itself, to its releases or to a file of its
+# latest release, is taken as is.
 #
 # A link with an #anchor to a markdown file (or to a heading of the doc itself)
 # must name one of that file's headings, as GitHub makes their ids: lower case,
@@ -183,8 +184,8 @@ check_url() {
         git -C "$ENGINE" cat-file -e "${BASH_REMATCH[1]}^{commit}" 2>/dev/null && return 0
         fail "NO COMMIT $doc:$line: $url"; return 1
     fi
-    if [[ "$rest" =~ ^[^/]+(/releases)?/?$ ]]; then
-        return 0                            # the repository itself, or its releases
+    if [[ "$rest" =~ ^[^/]+(/releases(/latest/download/[^/]+)?)?/?$ ]]; then
+        return 0                            # the repository itself, its releases, a latest file
     fi
     [[ "$rest" =~ ^[^/]+/(blob|tree)/([^/]+)/(.+)$ ]] || { fail "BAD LINK $doc:$line: $url"; return 1; }
     ref="${BASH_REMATCH[2]}"; sub="${BASH_REMATCH[3]}"
