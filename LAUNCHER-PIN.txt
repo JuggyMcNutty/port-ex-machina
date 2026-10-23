@@ -5,4 +5,4 @@ repo    https://github.com/JuggyMcNutty/deusex-launcher.git
 port    linux-x86_64     0dc29c5ec5eb2fcf898d1822a82faa98402ab4a8
 port    trimui-smartpro  30df1af2c5317ed1636fd6f7574cd976127cc995
 port    linux-aarch64    5ae699c957d9a453f9118b0b62a47eba9d003d0c
-port    windows-x86_64   65eac38868fb6ef14e11f059c3d7b2de58923d37
+port    windows-x86_64   6e21c5ace5c44e1df06975f5dc1a8e7cf8ec332d
