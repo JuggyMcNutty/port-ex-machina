@@ -117,6 +117,12 @@ written this way:
 9. **A measurement lives in a table that names the engine commit it was taken at**, never in
    prose.
 10. **One wrap width per file, 100 at most**; a bare link may run over.
+11. **A README's screenshots** are in its repository's `docs/screenshots/`, the one exception
+    to the rule against committing the game's files ([the rule](../AGENTS.md#rules)): the
+    game's scenes as JPEG, the launcher's screens as PNG, each a few hundred KB at most, from
+    real runs -- DXEngine's `shot` on a harness timeline
+    ([timelines](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#timelines)),
+    a launcher's `shot` in a `DXL_UI_SCRIPT` -- and taken again when what they show changes.
 
 Editing docs with string replacement fails silently when the pattern does not match: prefer full
 rewrites, or scripted replacements that assert the pattern was found.

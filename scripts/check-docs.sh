@@ -11,7 +11,8 @@
 # in deusex-launcher/<branch>/; and DXEngine's own (its README and docs/,
 # not its libraries' or the third-party code's).
 #
-# In each doc, the `inline code` spans and the link targets that look like
+# In each doc, the `inline code` spans and the link targets -- markdown's, and
+# an HTML tag's src and href, a screenshot's -- that look like
 # relative paths (they contain a "/") must resolve against, in order: the
 # doc's own directory; its checkout's root, src/, ports/*/packaging/ and
 # ports/*/; then the workspace's -- the folder the repositories share (so
@@ -109,6 +110,13 @@ extract() {
             line = $0
             while (match(line, /\]\([^)]+\)/)) {
                 print FILENAME ":" FNR ":L:" substr(line, RSTART + 2, RLENGTH - 3)
+                line = substr(line, RSTART + RLENGTH)
+            }
+            line = $0
+            while (match(line, /(src|href)="[^"]+"/)) {
+                t = substr(line, RSTART, RLENGTH)
+                sub(/^[a-z]+="/, "", t); sub(/"$/, "", t)
+                print FILENAME ":" FNR ":L:" t
                 line = substr(line, RSTART + RLENGTH)
             }
         }' "$@"
