@@ -12,6 +12,8 @@
  *     - required extension VK_KHR_sampler_mirror_clamp_to_edge
  *     - optional: descriptor indexing (Surreal Engine requires it; without
  *       it DXEngine binds a descriptor set per texture combination instead)
+ *     - a device that draws on the CPU (Mesa's lavapipe) only with
+ *       Settings.json's CPUDriver; without it the software device draws
  *
  * Descriptor indexing is checked three ways, because a driver can advertise a
  * high API version without supporting what that version makes mandatory: as the
@@ -27,6 +29,16 @@
 #include <string.h>
 
 #define YN(x) ((x) ? "yes" : "NO")
+
+static const char *device_type(VkPhysicalDeviceType t) {
+    switch (t) {
+    case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU: return "integrated GPU";
+    case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:   return "discrete GPU";
+    case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:    return "virtual GPU";
+    case VK_PHYSICAL_DEVICE_TYPE_CPU:            return "CPU";
+    default:                                     return "other";
+    }
+}
 
 static int has_ext(const VkExtensionProperties *e, uint32_t n, const char *name) {
     for (uint32_t i = 0; i < n; i++)
@@ -61,6 +73,7 @@ int main(int argc, char **argv) {
         VkPhysicalDeviceProperties p;
         vkGetPhysicalDeviceProperties(devs[i], &p);
         printf("device %u: %s\n", i, p.deviceName);
+        printf("  type                     %s\n", device_type(p.deviceType));
         printf("  advertised API           %u.%u.%u\n",
                VK_VERSION_MAJOR(p.apiVersion), VK_VERSION_MINOR(p.apiVersion),
                VK_VERSION_PATCH(p.apiVersion));
@@ -123,9 +136,12 @@ int main(int argc, char **argv) {
 
         int features_ok = f.samplerAnisotropy && f.fragmentStoresAndAtomics &&
                           f.multiDrawIndirect && f.independentBlend;
+        int cpu = p.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU;
         printf("  VERDICT: %s\n",
-               (features_ok && all) ? "meets the engine's requirements"
-                                    : "REJECTED by the engine's device filter");
+               !(features_ok && all) ? "REJECTED by the engine's device filter"
+               : cpu ? "meets the engine's requirements, but draws on the CPU: taken only with "
+                       "Settings.json's CPUDriver, else the software device draws"
+                     : "meets the engine's requirements");
 
         if (verbose) {
             printf("  -- all %u device extensions --\n", en);
