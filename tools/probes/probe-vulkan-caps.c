@@ -13,7 +13,9 @@
  *     - optional: descriptor indexing (Surreal Engine requires it; without
  *       it DXEngine binds a descriptor set per texture combination instead)
  *     - a device that draws on the CPU (Mesa's lavapipe) only with
- *       Settings.json's CPUDriver; without it the software device draws
+ *       Settings.json's CPUDriver, the GPUs passed over; without it the
+ *       GPUs come first, and where a CPU device is all there is, the
+ *       software device draws in its place
  *
  * Descriptor indexing is checked three ways, because a driver can advertise a
  * high API version without supporting what that version makes mandatory: as the
@@ -140,7 +142,8 @@ int main(int argc, char **argv) {
         printf("  VERDICT: %s\n",
                !(features_ok && all) ? "REJECTED by the engine's device filter"
                : cpu ? "meets the engine's requirements, but draws on the CPU: taken only with "
-                       "Settings.json's CPUDriver, else the software device draws"
+                       "Settings.json's CPUDriver, the GPUs passed over; alone, without it, the "
+                       "software device draws"
                      : "meets the engine's requirements");
 
         if (verbose) {
