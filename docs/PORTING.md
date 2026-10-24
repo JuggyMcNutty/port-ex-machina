@@ -235,7 +235,7 @@ that do not apply:
 
 | Section | Holds |
 |---|---|
-| **Status** | one paragraph: what runs, what does not yet |
+| **Status** | one paragraph: what runs, what does not |
 | **Build and run** | the commands, where things live on the device, how to reach it |
 | **What differs from the branch it started from** | the port's files, and why each difference is needed; linux-x86_64, the desktop's default, has **What it is made of** in its place |
 | **The device, as measured** | what is probed, not assumed |

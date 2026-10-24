@@ -71,15 +71,15 @@ and of the launcher in
 
 | Port | Platform | Status |
 |---|---|---|
-| [`linux-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/README.md) | desktop Linux | runs; currently under heavy development |
-| [`linux-aarch64`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-aarch64/README.md) | Linux on aarch64 | builds, not yet run on a device |
+| [`linux-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/README.md) | desktop Linux | runs; under heavy development |
+| [`linux-aarch64`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-aarch64/README.md) | Linux on aarch64 | builds; untried on a device |
 | [`windows-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/blob/windows-x86_64/README.md) | Windows 10 (1903) or newer | runs under Proton's wine; untried on Windows itself |
 | [`trimui-smartpro`](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/README.md) | the TrimUI Smart Pro | runs on the device |
 
 linux-x86_64 is **the development platform**, where the project is developed and tested. The
-game is not yet fully playable on any port:
+game is not fully playable on any port:
 [`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md) lists where
-the engine still differs from the original. Each port is a branch of the launcher, its README
+the engine differs from the original. Each port is a branch of the launcher, its README
 saying what the port offers and how to install and build it ([how ports work](docs/PORTING.md)).
 
 ## Download
