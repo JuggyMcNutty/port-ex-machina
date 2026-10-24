@@ -41,9 +41,9 @@ git is the record. Every session loads it, so keep it small.
   `linux-aarch64`, `windows-x86_64`, `trimui-smartpro`). None merges another: a change crosses
   only by a deliberate cherry-pick ([the branches](docs/PORTING.md#the-branches)).
 - **Done** means `scripts/dx.sh test` and `scripts/dx.sh check` pass, and every cross port that
-  ships (the Smart Pro, windows-x86_64) builds warning-free, Windows' tests passing under Wine
-  (`scripts/dx.sh test windows-x86_64`). An engine change is also proven against the original
-  by a scripted run of both engines
+  ships (the Smart Pro, linux-aarch64, windows-x86_64) builds warning-free, Windows' tests
+  passing under Wine (`scripts/dx.sh test windows-x86_64`). An engine change is also proven
+  against the original by a scripted run of both engines
   ([scripted runs](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
 - **Docs** hold the current state only, each fact in one place
   ([docs](docs/DEVELOPMENT.md#docs)).
@@ -58,7 +58,7 @@ lists. The launcher's `main` is the original `DeusEx.exe` recreated almost 1:1, 
 reference the port branches start from, changed only for a defect found (a missing feature is
 one); `scripts/recreation.sh` builds, installs, checks and runs it. The RE,
 [dx-reverse-info](https://github.com/JuggyMcNutty/dx-reverse-info), documents every binary read
-([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)).
+([the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#the-binaries)).
 
 ## Decided
 

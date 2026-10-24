@@ -10,10 +10,10 @@ temporary debug hooks, its gotchas -- is DXEngine's
 Development happens on
 [linux-x86_64](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md).
 A change is clean when it builds and tests there *and* builds warning-free for each cross port
-that ships: the Smart Pro builds with the same GCC 13.2, but code linux-x86_64 does not (the
-engine's SDL2 backend, the port's own files); windows-x86_64 with Clang, code linux-x86_64 does
-not either (`src/platform/win32/`, the engine's Win32 window and D3D11), its tests passing under
-Wine.
+that ships: the Smart Pro and linux-aarch64 build with the same GCC 13.2, but code linux-x86_64
+does not (the engine's SDL2 backend, each port's own files); windows-x86_64 with Clang, code
+linux-x86_64 does not either (`src/platform/win32/`, the engine's Win32 window and D3D11), its
+tests passing under Wine.
 
 ## The repositories
 
@@ -123,7 +123,8 @@ written this way:
     real runs -- DXEngine's `shot` on a harness timeline
     ([timelines](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#timelines)),
     a launcher's `shot` in a `DXL_UI_SCRIPT` -- and taken again when what they show changes,
-    with every copy: this repository's README shows copies of DXEngine's and the launcher's.
+    with every copy: this repository's README shows copies of DXEngine's and the launcher's,
+    and a shot of its own.
 
 Editing docs with string replacement fails silently when the pattern does not match: prefer full
 rewrites, or scripted replacements that assert the pattern was found.
@@ -208,8 +209,9 @@ share a small quota; the releases keep the files), a pull request's among them.
 with `RELEASES_TOKEN`, which also makes DXEngine's and deusex-launcher's releases: a
 fine-grained token of the owner's with Contents read and write on all three, a secret of each
 (this repository's for the pins' runs, the others' for their own), and port-ex-machina's
-Actions open to the owner's other repositories, which call its `ports.yml`. Without the token
-those releases are left out, with a warning; when it expires, a new one replaces the secrets.
+Actions open to the owner's other repositories, which call its `ports.yml`. Without the token a
+run cannot read the other two and fails at their checkout; when it expires, a new one replaces
+the secrets.
 The releases are the owner's alone to see until the repositories are made public. Here,
 `scripts/ci.sh`'s `plan` and `publish` reach them over SSH:
 `DX_OWNER_GIT=git@github.com:JuggyMcNutty`.
