@@ -11,9 +11,9 @@ Development happens on
 [linux-x86_64](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/ports/linux-x86_64/README.md).
 A change is clean when it builds and tests there *and* builds warning-free for each cross port
 that ships: the Smart Pro and linux-aarch64 build with the same GCC 13.2, but code linux-x86_64
-does not (the engine's SDL2 backend, each port's own files); windows-x86_64 with Clang, code
-linux-x86_64 does not either (`src/platform/win32/`, the engine's Win32 window and D3D11), its
-tests passing under Wine.
+does not (the engine's SDL2 backend and the software device's NEON lanes, each port's own
+files); windows-x86_64 with Clang, code linux-x86_64 does not either (`src/platform/win32/`, the
+engine's Win32 window and D3D11), its tests passing under Wine.
 
 ## The repositories
 
@@ -69,8 +69,10 @@ Besides:
 
 - **Proton**, to run the original and a Windows port's programs and tests (`scripts/wine.sh`),
   and **`~/.config/DXEngine/Settings.json`**, which the harness's dxe runs take their renderer
-  from
-  ([scripted runs](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)).
+  from where `DXCAP_SETTINGS` names no other
+  ([scripted runs](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#scripted-runs-of-both-engines)),
+  as the recreation's runs do, its `Type` before the Renderer page's choice
+  ([which device draws](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#rendering)).
   The desktop launcher never writes it: it gives the engine a folder of its own for each
   profile (`--userdir`), and refuses an engine that has none.
 - **IDA Pro for Linux** with Hex-Rays' MCP plugin `ida-mcp@HexRaysSA`, for the RE
