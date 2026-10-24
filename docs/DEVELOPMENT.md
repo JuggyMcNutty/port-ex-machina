@@ -211,9 +211,8 @@ fine-grained token of the owner's with Contents read and write on all three, a s
 (this repository's for the pins' runs, the others' for their own), and port-ex-machina's
 Actions open to the owner's other repositories, which call its `ports.yml`. Without the token a
 run cannot read the other two and fails at their checkout; when it expires, a new one replaces
-the secrets.
-The releases are the owner's alone to see until the repositories are made public. Here,
-`scripts/ci.sh`'s `plan` and `publish` reach them over SSH:
+the secrets. The releases are the owner's alone to see until the repositories are made public.
+Here, `scripts/ci.sh`'s `plan` and `publish` reach them over SSH:
 `DX_OWNER_GIT=git@github.com:JuggyMcNutty`.
 
 ## Gotchas that cost time
