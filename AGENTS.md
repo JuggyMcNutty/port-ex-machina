@@ -108,13 +108,6 @@ Decided work for later sessions, each deleted when it is done.
 - **D3D11 to parity**: windows-x86_64's D3D11 device brought to the Vulkan device's picture
   and features, then offered by its launcher, its GPU probe naming the D3D11 adapter
   ([where it stands](https://github.com/JuggyMcNutty/DXEngine/blob/main/README.md#for-advanced-users)).
-- **The software device**: DXEngine's device that draws on the CPU, the look `D3DDrv`'s as the
-  GPU devices draw it, tuned on linux-x86_64 (every core, SSE2) to a steady 60 fps at 640x480,
-  faster than llvmpipe and lavapipe; then offered by every launcher's renderer setting, the
-  fallback when no GPU device starts, and chosen by `-nohard` and
-  `GameRenderDevice=SoftDrv.SoftwareRenderDevice` as in the original, lavapipe and llvmpipe
-  DXLauncher's choices of their own
-  ([where it stands](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#rendering)).
 
 ## Open items
 

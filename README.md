@@ -18,8 +18,8 @@ Made with AI assistance.
 
 - **Deus Ex as the original plays it.** The game's own scripts run on DXEngine, a hard fork of
   [Surreal Engine](https://github.com/dpjudas/SurrealEngine), each feature checked against the
-  original by scripted runs of both engines; on Vulkan, OpenGL or OpenGL ES, with a gamepad or
-  a keyboard and mouse.
+  original by scripted runs of both engines; on Vulkan, OpenGL or OpenGL ES, or on the CPU alone
+  where the GPU has no driver, with a gamepad or a keyboard and mouse.
 - **A launcher made for it.** DXLauncher finds the game and keeps each way of playing in a
   profile, with its own settings, saves and screenshots; multiplayer, mods, recovery after a
   crash and a big screen for the television, all in the game's own look and sound.

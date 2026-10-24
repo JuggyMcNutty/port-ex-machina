@@ -131,7 +131,8 @@ The launcher's own files are in its home, never in the app.
    (`sdl3/`, trimui-smartpro's), and nothing else to draw with. `main`'s
    launcher needs SDL 2.0.16 and SDL_ttf 2.0.18 or later.
 5. **Write the device's data and `engine.cmake`**: `data/renderers.ini` for
-   what this engine build can run on the device's GPU APIs,
+   what this engine build can run on the device's GPU APIs, and Software,
+   which draws on the CPU and needs none,
    `data/engine-settings.json.default` for its defaults, and `engine.cmake`
    for the display backends the device has.
 6. **Tailor the launcher to the device**, where it needs it -- its screen,
@@ -175,8 +176,10 @@ it (the Smart Pro's README has the exact command line).
 
 `dxl-cli --probe` (any DXLauncher build: the host's, linux-aarch64's, the
 Smart Pro's, windows-x86_64's) reports the Vulkan device and API, the OpenGL
-ES version and renderer where there is OpenGL ES (Windows has none), and
-desktop GL -- what the launcher's renderer list is built from.
+ES version and renderer where there is OpenGL ES (Windows has none) and
+desktop GL; on linux-x86_64 and linux-aarch64, Mesa's CPU drivers too,
+lavapipe and llvmpipe, apart from the GPU's -- what the launcher's renderer
+list is built from.
 
 ## Other operating systems
 

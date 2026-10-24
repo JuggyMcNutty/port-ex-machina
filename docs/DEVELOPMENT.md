@@ -61,7 +61,7 @@ multilib repository enabled:
 |---|---|
 | building | `base-devel`, CMake, Ninja, `pkgconf`, `sdl2-compat` (with `sdl3` under it), `sdl2_ttf`, `sdl3_ttf` and `libxmp` (the desktop launcher's window), OpenAL, `waylandpp`, `vulkan-headers`, `vulkan-tools` |
 | running | Mesa with the GPU's Vulkan driver, `libpulse` and `libpipewire` (the desktop's audio), `ttf-dejavu` |
-| the harness and `recreation.sh check` | `xdotool`, ImageMagick, gdb, Python 3; MangoHud (`mangohud`, `lib32-mangohud`) for the harness's `DXCAP_FPS`; `xorg-server-xvfb` for the recreation's private display |
+| the harness and `recreation.sh check` | `xdotool`, ImageMagick, gdb, Python 3; MangoHud (`mangohud`, `lib32-mangohud`) for the harness's `DXCAP_FPS`; `vulkan-swrast` (Mesa's lavapipe) for the software device against Mesa's CPU drivers ([the software device](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#the-software-device)); `xorg-server-xvfb` for the recreation's private display |
 | deploying | `sshpass` |
 | the original under Proton | the 32-bit X11, Mesa, Vulkan, PulseAudio, FreeType, fontconfig, GLib and GnuTLS libraries |
 
