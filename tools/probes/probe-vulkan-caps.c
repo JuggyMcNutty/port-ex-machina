@@ -5,8 +5,8 @@
  *
  *   DXGPU  VulkanDeviceBuilder::FindDevices
  *     - required extension VK_KHR_swapchain
- *     - features samplerAnisotropy and independentBlend (fragmentStoresAndAtomics and
- *       multiDrawIndirect are listed, not required: nothing in the engine uses them)
+ *     - feature samplerAnisotropy (fragmentStoresAndAtomics, multiDrawIndirect and
+ *       independentBlend are listed, not required: nothing in the engine uses them)
  *     - a graphics queue family that can present to the surface
  *   DXEngine  VulkanRenderDevice.cpp
  *     - required extension VK_KHR_sampler_mirror_clamp_to_edge
@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
         VkPhysicalDeviceFeatures f;
         vkGetPhysicalDeviceFeatures(devs[i], &f);
 
-        printf("  -- required features --\n");
+        printf("  -- features (samplerAnisotropy required) --\n");
         printf("    samplerAnisotropy        %s\n", YN(f.samplerAnisotropy));
         printf("    fragmentStoresAndAtomics %s\n", YN(f.fragmentStoresAndAtomics));
         printf("    multiDrawIndirect        %s\n", YN(f.multiDrawIndirect));
@@ -136,7 +136,7 @@ int main(int argc, char **argv) {
             printf("    (vkGetPhysicalDeviceFeatures2 unavailable)\n");
         }
 
-        int features_ok = f.samplerAnisotropy && f.independentBlend;
+        int features_ok = f.samplerAnisotropy;
         int cpu = p.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU;
         printf("  VERDICT: %s\n",
                !(features_ok && all) ? "REJECTED by the engine's device filter"
