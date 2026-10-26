@@ -24,7 +24,7 @@ set -euo pipefail
 OWNER_URL="https://github.com/JuggyMcNutty"
 OWNER_GIT="${DX_OWNER_GIT:-$OWNER_URL}"
 
-usage() { sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,20p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 
 # What no build reads: the docs, and what is never built. Not the notices
 # the apps carry (the engine's LICENSE.md, the launcher's THIRD-PARTY.md).

@@ -189,7 +189,9 @@ here, so a run can be repeated on this machine:
 
 **What builds nothing**: a change to docs alone -- `*.md` and `docs/`, but not the notices an
 app carries, the launcher's `THIRD-PARTY.md` and the engine's `LICENSE.md` -- or to what no
-build reads (the engine's harness, `tools/probes/`, `scripts/check-docs.sh`) starts no run, and
+build reads (the engine's harness, its `tools/perf/`, `tools/host-tools.sh` and
+`tools/natives_audit.py`; the workspace's `LICENSE`, `tools/probes/` and `scripts/check-docs.sh`)
+starts no run, and
 a push of pins whose commits change only those builds nothing. The list is `scripts/ci.sh`'s
 `is_code`; each workflow's `paths` filter says the same.
 

@@ -2,7 +2,7 @@
 
 Deus Ex (UE1) on modern platforms:
 + our own launcher
-+ our hard fork of Surreal Engine, now called DXEngine
++ our own engine, DXEngine, a hard fork of Surreal Engine
 + reverse engineering docs
 
 All in four repositories side by side
