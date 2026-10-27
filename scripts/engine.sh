@@ -23,7 +23,7 @@ pinned() { awk -v k="$1" '$1 == k { print $2 }' "$PIN_FILE"; }
 REPO_URL="$(pinned repo)"
 BRANCH="$(pinned branch)"
 
-usage() { sed -n '2,11p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
+usage() { sed -n '2,14p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 2; }
 eng() { git -C "$ENGINE_DIR" "$@"; }
 
 need_clone() { [ -d "$ENGINE_DIR/.git" ] || die "no engine clone -- scripts/engine.sh fetch"; }

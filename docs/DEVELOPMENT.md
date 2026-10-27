@@ -137,11 +137,11 @@ Docs and scripts that describe the tree are checked against it, so a move or a r
 loudly instead of leaving stale instructions:
 
 - `scripts/check-docs.sh`: across the workspace's repositories, every path a doc names in
-  backticks or links must exist, every link to a heading (`#anchor`) must find one, and every
-  link into another of the repositories must name a branch the workspace has (the launcher's
-  `main` and the ports `LAUNCHER-PIN.txt` pins, `main` elsewhere) and
-  resolve in that repository's checkout here. A checkout git cannot read fails rather than
-  going unchecked, and so does a missing `AGENTS.md`.
+  backticks or links, a name with a `/`, must exist (a bare file name goes unchecked), every
+  link to a heading (`#anchor`) must find one, and every link into another of the repositories
+  must name a branch the workspace has (the launcher's `main` and the ports `LAUNCHER-PIN.txt`
+  pins, `main` elsewhere) and resolve in that repository's checkout here. A checkout git cannot
+  read fails rather than going unchecked, and so does a missing `AGENTS.md`.
 - `scripts/engine.sh check`: the engine clone is at the commit `ENGINE-PIN.txt` names, on its
   branch.
 - `scripts/launcher.sh check`: each port's worktree is at the commit `LAUNCHER-PIN.txt` names,
@@ -182,18 +182,18 @@ here, so a run can be repeated on this machine:
   ([the toolchains](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#the-toolchains)).
 - A port's job fails on a compiler or linker warning in our own code, third-party code exempt
   (`scripts/ci.sh warnings`), and on a skipped test but `test_gamefiles` and `test_ui_scripts`,
-  which need the game (`scripts/ci.sh skips`). A failed test is named on the run's page, which
-  anyone can read, where its log needs a GitHub account (`scripts/ci.sh failed`).
+  which need the game (`scripts/ci.sh skips`). A failed test is named on the run's page, an
+  annotation, without its log opened (`scripts/ci.sh failed`).
 - The recreation's job is `scripts/recreation.sh test`: its build, with the runner's compiler
   and SDL2, and its tests.
 
 **What builds nothing**: a change to docs alone -- `*.md` and `docs/`, but not the notices an
 app carries, the launcher's `THIRD-PARTY.md` and the engine's `LICENSE.md` -- or to what no
 build reads (the engine's harness, its `tools/perf/`, `tools/host-tools.sh` and
-`tools/natives_audit.py`; the workspace's `LICENSE`, `tools/probes/` and `scripts/check-docs.sh`)
-starts no run, and
-a push of pins whose commits change only those builds nothing. The list is `scripts/ci.sh`'s
-`is_code`; each workflow's `paths` filter says the same.
+`tools/natives_audit.py`; the workspace's `LICENSE`, `tools/probes/` and
+`scripts/check-docs.sh`) starts no run, and a push of pins whose commits change only those
+builds nothing. The list is `scripts/ci.sh`'s `is_code`; each workflow's `paths` filter says the
+same.
 
 **Releases**, each with notes naming the commits built and linking what changed since the one
 before it (`scripts/ci.sh publish`):
@@ -237,7 +237,8 @@ These apply everywhere:
 - **Started without `--ini`, as an engine run by hand is, DXEngine
   reads `DXE-DeusEx.ini`/`DXE-User.ini` in the game's `System` after its first clean exit**,
   not `DeusEx.ini`/`User.ini`, and of the keys the original launcher writes it reads few; a stub
-  `DeusEx.ini` kills it. The launchers start it with `--ini` and `--userini`, the profile's
+  `DeusEx.ini` kills it. The launchers start it with `--ini` and `--userini`: DXLauncher the
+  profile's, `main` the game's `<Package>.ini` and `User.ini`
   ([running it](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#running-it)).
 - **Never `pkill -f` or `pgrep -f <pattern>`** in a command whose own text contains the pattern:
   it matches the shell running it. Use `pidof`, `pgrep -x`, or bracket a letter

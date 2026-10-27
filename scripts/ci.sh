@@ -189,8 +189,8 @@ cmd_skips() {
     say "no test skipped but: ${*:-none}"
 }
 
-# Each failed test named where the run's page shows it to anyone (its log
-# only to the signed-in): ctest's line for it, an error annotation.
+# Each failed test named on the run's page without its log opened: ctest's
+# line for it, an error annotation.
 cmd_failed() {
     local log="${1:?which log?}"
     [ -f "$log" ] || die "no log $log"

@@ -1,7 +1,7 @@
-# Shared by scripts/dx.sh, engine.sh, launcher.sh, recreation.sh, wine.sh
-# and check-docs.sh; by the ports' port.sh files (on their launcher branches,
-# sourced by dx.sh) and the Smart Pro's fetch-sysroot.sh; and by the engine's
-# tools/host-tools.sh. Sourced, never run; expects bash with
+# Shared by scripts/dx.sh, engine.sh, launcher.sh, recreation.sh, wine.sh,
+# check-docs.sh and ci.sh; by the ports' port.sh files (on their launcher
+# branches, sourced by dx.sh, engine.sh and ci.sh) and the Smart Pro's
+# fetch-sysroot.sh; and by the engine's tools/host-tools.sh. Sourced, never run; expects bash with
 # set -euo pipefail.
 
 # The layout (docs/DEVELOPMENT.md#the-repositories): each repository in its
