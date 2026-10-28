@@ -53,17 +53,18 @@ under Wine or Proton
 
 ## Dependencies
 
-Development runs in an Arch Linux container (a distrobox) that holds all of these; the original
-game and the harness run inside it, never on the host outside it. Its packages, with pacman's
-multilib repository enabled:
+Development runs in an Arch Linux container (a distrobox, with a home of its own) that holds all
+of these; the original game, the harness and IDA run inside it, never on the host outside it.
+Its packages, with pacman's multilib repository enabled:
 
 | For | Packages |
 |---|---|
 | building | `base-devel`, CMake, Ninja, `pkgconf`, `sdl2-compat` (with `sdl3` under it), `sdl2_ttf`, `sdl3_ttf` and `libxmp` (the desktop launcher's window), OpenAL, `waylandpp`, `vulkan-headers`, `vulkan-tools` |
 | running | Mesa with the GPU's Vulkan driver, `libpulse` and `libpipewire` (the desktop's audio), `ttf-dejavu` |
-| the harness and `recreation.sh check` | `xdotool`, ImageMagick, gdb, Python 3; MangoHud (`mangohud`, `lib32-mangohud`) for the harness's `DXCAP_FPS`; `vulkan-swrast` (Mesa's lavapipe) for the software device against Mesa's CPU drivers ([the software device](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#the-software-device)); `xorg-server-xvfb` for the recreation's private display |
+| the harness and `recreation.sh check` | `xdotool`, ImageMagick, gdb, Python 3 (pyenv's, below); MangoHud (`mangohud`, `lib32-mangohud`) for the harness's `DXCAP_FPS`; `vulkan-swrast` (Mesa's lavapipe) for the software device against Mesa's CPU drivers ([the software device](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#the-software-device)); `xorg-server-xvfb` for the recreation's private display |
 | deploying | `sshpass` |
 | the original under Proton | the 32-bit X11, Mesa, Vulkan, PulseAudio, FreeType, fontconfig, GLib and GnuTLS libraries |
+| the RE | `uv`, which runs Hex-Rays' IDA MCP server ([the tools](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#the-tools)) |
 
 Besides:
 
@@ -75,8 +76,12 @@ Besides:
   ([which device draws](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#rendering)).
   The desktop launcher never writes it: it gives the engine a folder of its own for each
   profile (`--userdir`), and refuses an engine that has none.
+- **pyenv's Python** (`~/.pyenv`), the `python3` on the path, for every Python need: the
+  harness's, the tools', IDA's
+  ([the tools](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#the-tools)).
+  Never the container's own `/usr/bin/python3`, which is there for its packages.
 - **IDA Pro for Linux** with Hex-Rays' MCP plugin `ida-mcp@HexRaysSA`, for the RE
-  ([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)).
+  ([setting it up](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#the-tools)).
 - **Access to the owner's GitHub repositories.** dx-reverse-info is public; port-ex-machina,
   DXEngine and deusex-launcher are private until the owner releases the work, so the fetches'
   HTTPS clones of them need the owner's credentials (a credential helper). Pushing takes
