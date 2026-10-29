@@ -208,9 +208,9 @@ deusex/                  the parent folder (any name)
   dx-reverse-info/       the RE, a clone (scripts/dx.sh fetch)
   gamefiles/             your Deus Ex install: for running on this machine, test_gamefiles
                          and the IDA databases
-  reference/             the 1112f SDK, the DeusExe launcher source, IDA and ini backups,
-                         the original's saves and its wizard's captures, DXD3D9 2.0
-                         (docs/DEVELOPMENT.md)
+  reference/             the 1112f SDK, the IDA databases' backups, DXD3D9 2.0
+                         (docs/DEVELOPMENT.md), and the wizard's captures once
+                         dx-reverse-info's tools/wine/wizard-capture.sh takes them
   deps/                  fetched toolchains and sysroots
   build/                 build/<port>/{engine,app,profile}, build/main/ (the recreation's
                          launcher and its live check), build/host-tools (the engine's

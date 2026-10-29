@@ -51,6 +51,8 @@ OWNER_URL="https://github.com/JuggyMcNutty"
 ALLOW=(
     '^home/'                          # the Smart Pro's DXL_HOME in the app's folder, launch.sh's
     '^System/(Running\.ini|DXE-DeusEx\.ini|DXE-User\.ini|DeusExLauncher\.log)$'  # created at run time
+    '^Save/Current$'                  # the game's travel state, created at run time
+    '^reference/original-wizard/$'    # the wizard's captures, made when dx-reverse-info's wizard-capture.sh runs
     '^System/(DeusEx|run-game\.sh|DXEngine|DXEngine\.pk3)$'  # main's launcher, while scripts/recreation.sh installs it
     '^build/'                         # build output
     '^licenses/'                      # the notices a Windows port's staging puts in its app
