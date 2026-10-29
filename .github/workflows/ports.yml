@@ -192,8 +192,11 @@ jobs:
           port-ex-machina/scripts/dx.sh test "$PORT" 2>&1 | tee "build/$PORT/ci-test.log" ||
               { port-ex-machina/scripts/ci.sh failed "build/$PORT/ci-test.log"; exit 1; }
 
+      # The tests that need what a runner lacks: the game (test_gamefiles,
+      # test_ui_scripts) and a GPU's Mesa driver (test_gpu_probe, which takes
+      # no CPU driver for one, and a runner has only llvmpipe).
       - name: skipped tests
-        run: port-ex-machina/scripts/ci.sh skips "build/$PORT/ci-test.log" test_gamefiles test_ui_scripts
+        run: port-ex-machina/scripts/ci.sh skips "build/$PORT/ci-test.log" test_gamefiles test_ui_scripts test_gpu_probe
 
       - name: package
         run: port-ex-machina/scripts/ci.sh package "$PORT"
