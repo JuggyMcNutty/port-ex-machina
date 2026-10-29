@@ -17,12 +17,11 @@ them. A commit that fixes an item cites it, `(bugs.md VM.1)`, and takes it off t
 | [VK](#vk-the-vulkan-device-and-dxgpu) | the Vulkan device and DXGPU | 1 |
 | [AUD](#aud-the-audio) | the audio | 1 |
 | [WIN](#win-the-window-system-dxwidgets-and-the-game-window) | the window system: DXWidgets and the game window | 1 |
-| [LCORE](#lcore-the-desktop-launchers-core-dxlauncher) | the desktop launcher's core (DXLauncher) | 5 |
+| [LCORE](#lcore-the-desktop-launchers-core-dxlauncher) | the desktop launcher's core (DXLauncher) | 4 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 5 |
 | [LUI](#lui-the-desktop-launchers-ui) | the desktop launcher's UI | 5 |
-| [LPORT](#lport-the-windows-and-smart-pro-ports-own-code) | the Windows and Smart Pro ports' own code | 4 |
-| [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 5 |
-| [X](#x-across-the-repositories-the-launcher-engine-contract-the-scripts-ci-the-harness) | across the repositories: the launcher-engine contract, the scripts, CI, the harness | 1 |
+| [LPORT](#lport-the-windows-and-smart-pro-ports-own-code) | the Windows and Smart Pro ports' own code | 5 |
+| [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 4 |
 
 ## VM: the script VM, the object system and the garbage collector
 
@@ -257,33 +256,6 @@ at its next start
 - **Proof:** SDL_gamepad.c:2392-2402: strncasecmp(platform, SDL_GetPlatform(), len). Line 2441: the
   mapping is added only if that matches. grep finds no other 'platform:' in windows-x86_64/src.
 
-### LCORE.2 An install is accepted with System in any case, but the engine only finds the exact name
-System
-
-- **State:** confirmed, low (contract)
-- **Where:** `deusex-launcher/linux-x86_64/src/core/install.c:28-33`,
-  `deusex-launcher/linux-x86_64/src/core/finder.c:77-85`, `DXEngine/DXEngine/UE1GameDatabase.cpp:14`
-- **What:** dxl_install_check and dxl_finder_has_game look up the System folder with
-  dxl_path_resolve_ci, so a copy whose folder is `system` (an innoextract --lowercase install, for
-  one) is found, marked ok and played. The engine passes the root to FindUE1GameInPath, which opens
-  root/"System"/DeusEx.exe exactly with fopen. On a case-sensitive filesystem (ext4) the engine
-  reports "No UE1 game found", even though the launcher showed the install as playable. install.h
-  says the check is how the engine finds it.
-- **Evidence:** install.c:28 `char *sys = dxl_path_resolve_ci(out->root, "System");`, then the exe
-  is joined to it. finder.c:76 has the comment "in a System of any case". UE1GameDatabase.cpp:14 has
-  `fs::path(root) / "System"`, and SHA1Sum::of_file uses File::open_existing, which is plain fopen
-  (Utils/File.cpp:230-236). install.h:4-5 says "System/DeusEx.exe is there by that exact name, which
-  is how the engine finds it". run.c:276 passes install.root as the engine's game folder.
-- **Verified:** install.c:28 resolves System with dxl_path_resolve_ci (paths.c:95-104 matches any
-  case when the exact name is missing), and it sets ok from that. run.c:276 passes install.root to
-  the engine. GameFolder.cpp:87 calls FindUE1GameInPath, which opens root/"System"/DeusEx.exe by
-  that exact name (UE1GameDatabase.cpp:14-20). On ext4, a root/system tree is accepted by the
-  launcher and not found by the engine. install.h:4-5 and LAUNCHER.md:69 say the exact name is how
-  the engine finds it, so the code contradicts its own docs.
-- **Proof:** Code path: dxl_install_check -> resolve_ci('system') -> exe found -> ok=1. Then
-  engine_argv .game=root -> FindUE1GameInPath(root) -> SHA1Sum::of_file(root/System/DeusEx.exe) is
-  empty -> UE1_GAME_NOT_FOUND.
-
 ### LCORE.3 The launcher still seeds [Engine.DXEngineWindowSystem] WindowSystem=SDL2, a key the
 engine no longer reads or writes
 
@@ -331,7 +303,7 @@ engine no longer reads or writes
   place. So the repeated keys of a stub with no Paths each overwrite Default.ini's last line of that
   key. Only the stub's last value survives, beside the base's other lines. Both callers are
   affected: profile.c:402-409 (the mod's) and profile.c:458-464 (the import). The original has no
-  overlay, so this is the launcher's own behaviour falling short of what LAUNCHER.md:112 describes.
+  overlay, so this is the launcher's own behaviour falling short of what LAUNCHER.md:113 describes.
 - **Proof:** Base [S] K=1,K=2 with overlay K=a,K=b: set(K,a) replaces line K=2 with a, then set(K,b)
   replaces the same last line with b. The result is {1,b}.
 
@@ -378,7 +350,7 @@ Running.ini
   :697-718), the same value as a quit; :877 turns *stop into ui.in.quit, so shell.c:933 sets result
   0. run.c:892-897 takes any 0 from view() as the player's quit: session saved, end_without_game
   removes Running.ini, rc stays 0. After an unclean run (stopped by signal), run.c:960-966 opens
-  Recovery, which quits at once on *stop, then calls end_without_game. LAUNCHER.md:331 says a run
+  Recovery, which quits at once on *stop, then calls end_without_game. LAUNCHER.md:332 says a run
   that is not clean leaves Running.ini; only a player's quit on a screen should take it away.
 - **Proof:** Code path: Running.ini present -> decide sets view Recovery -> ui->view -> open_window
   returns -1 -> view returns 0 -> run.c:895-897 dxl_session_save, end_without_game (r->instance
@@ -428,7 +400,7 @@ Running.ini
   spent. A wake can be cut short: poll gets EINTR because the handlers have no SA_RESTART
   (startup.c:21), and dxl_game_wait then returns 0. A forwarded datagram returns DXL_GAME_EXTRA
   early, since the instance still listens while the game stops. Each such wake still counts 250 ms.
-  So 20 quick wakes reach DXL_PLAY_KILL_AFTER_MS long before 5 s, against LAUNCHER.md:672-674
+  So 20 quick wakes reach DXL_PLAY_KILL_AFTER_MS long before 5 s, against LAUNCHER.md:673-675
   ('SIGKILL 5 s later'). This needs repeated signals or forwarded starts during the stop.
 - **Proof:** Code path: stopped=1, poll returns -1 EINTR -> r<0, seen=0, reap 0 -> ev=0 ->
   play.c:191 since_term+=250. The same holds for ev==DXL_GAME_EXTRA.
@@ -542,9 +514,9 @@ press
   dxl_key_from_mouse(1) and either binds it or opens the conflict confirm.
 - **Verified:** kit.c:460-466: while capture_id is set, a button down sets in.captured=MOUSE and
   breaks before pressed/released are set, so dxl_hints' dxl_ui_clickable (glyphs.c:236) never
-  activates. shell.c:820-822 still draws a clickable 'Cancel' hint, and LAUNCHER.md:413-414 says 'a
+  activates. shell.c:820-822 still draws a clickable 'Cancel' hint, and LAUNCHER.md:414-415 says 'a
   hint clicked does what its key does'. A click there reaches dxl_key_slot as DXL_SLOT_CAPTURED and
-  captured() maps it to dxl_key_from_mouse(1). LAUNCHER.md:524 says a slot takes the next mouse
+  captured() maps it to dxl_key_from_mouse(1). LAUNCHER.md:525 says a slot takes the next mouse
   button, so the clash is between the hint and that rule.
 - **Proof:** Code path: kit.c:460 capture branch, controls.c:511-514 CAPTURED, settings.c:387
   DXL_CAPTURED_MOUSE, then a bind or the 'keys conflict' confirm.
@@ -587,7 +559,7 @@ press
   included.
 - **Verified:** settings.c:544 tests s->view, which only dxl_shell_enter sets (shell.c:298). In the
   Graphics view, Back goes Home (settings.c:576-577). Settings opened from Home then still labels
-  Done 'Play' (547) and sets result=1 (564-566). LAUNCHER.md:360-361 and 865 give Play only to the
+  Done 'Play' (547) and sets result=1 (564-566). LAUNCHER.md:361-362 and 866 give Play only to the
   Graphics tab that -changevideo opens; elsewhere Done goes Home. The game starting from Home anyway
   makes this a small inconsistency.
 
@@ -696,19 +668,35 @@ reported as 'no answer'
 - **State:** confirmed, medium (test)
 - **Where:** `deusex-launcher/windows-x86_64/src/platform/win32/trash.c`,
   `deusex-launcher/windows-x86_64/ports/windows-x86_64/port.sh` (`port_test`)
-- **What:** Under `scripts/dx.sh test windows-x86_64` the other 49 tests pass and
-  `test_trash_win32` never ends: Wine's shell puts up "Confirm file deletion", "The item
-  'C:\users\steamuser\AppData\Local\Temp\dxl-trash-256\stuff\Save0001' can't be sent to
-  Trash. Do you want to delete it instead?", which no one answers. The test's trash folder
-  (`XDG_DATA_HOME`, `build/windows-x86_64/wine-xdg`) holds that test's earlier moves, the last
-  on 2026-10-28; an empty folder in its place waits the same, so the cause is in this machine's
-  Wine since then, not the folder's state. The launcher's code did not change in between.
+- **What:** Under `scripts/dx.sh test windows-x86_64` `test_trash_win32` most often never ends
+  (two runs of three on 2026-10-29, the third passing): Wine's shell puts up "Confirm file
+  deletion", "The item 'C:\users\steamuser\AppData\Local\Temp\dxl-trash-256\stuff\Save0001'
+  can't be sent to Trash. Do you want to delete it instead?", which no one answers. The test's
+  trash folder (`XDG_DATA_HOME`, `build/windows-x86_64/wine-xdg`) holds that test's earlier moves,
+  the last on 2026-10-28; an empty folder in its place waits the same, so the cause is in this
+  machine's Wine since then, not the folder's state. The launcher's code did not change in between.
 - **Evidence:** the dialog captured on the desktop while the test runs alone (`ctest -R
   '^test_trash_win32$'`, bounded at 60 s and 120 s, both timing out); the prefix's `Temp` and the
   trash folder on one file system; the trash's `files` with `Save0001` and
   `Save0001-3973dd20`, no newer entry, its `info` folder touched by each try and left without a
   new file.
 - **Proof:** the run's log and the captured dialog.
+
+### LPORT.5 test_profile and test_ui_shots_1920x1080big fail or hang at times in Wine's parallel runs
+
+- **State:** confirmed, low (test)
+- **Where:** `deusex-launcher/windows-x86_64/ports/windows-x86_64/port.sh` (`port_test`),
+  `deusex-launcher/windows-x86_64/tests/CMakeLists.txt`
+- **What:** Of three runs of the Wine suite on 2026-10-29, the launcher's code unchanged between
+  them, one had `test_profile` fail after 0.03 s and another had `test_ui_shots_1920x1080big` never
+  end, each passing in the other runs. Alone, both pass. So a test started beside others under
+  this machine's Wine can fail or hang, which LPORT.4's dialog does not explain. A failure that
+  fast looks like the program not starting rather than a check failing; its output was not kept.
+- **Evidence:** run 1 (`scripts/dx.sh test windows-x86_64`): `test_profile` Failed in 0.03 s, the
+  other 50 passed. Run 2 (`port_test`'s steps, ctest bounded at 900 s): `test_trash_win32` alone
+  never ended. Run 3 (the same): `test_trash_win32` and `test_ui_shots_1920x1080big` never ended.
+  Alone (`ctest -R`): `test_profile` passed in 0.47 s, `test_ui_shots_1920x1080big` in 24.63 s.
+- **Proof:** the three runs' logs; the next one to fail with `--output-on-failure` should say why.
 
 ## MAIN: the recreation: deusex-launcher's main
 
@@ -719,7 +707,7 @@ named Detected.log"
 - **Where:** `deusex-launcher/main/src/wizard/wizard.c:27`,
   `deusex-launcher/main/src/wizard/wizard.c:305`, `deusex-launcher/main/src/core/argv.c:5`,
   `deusex-launcher/main/src/core/cmdline.c:28`, `deusex-launcher/main/src/core/policy.c:47`,
-  `deusex-launcher/main/src/launch/launch.c:89`, `deusex-launcher/main/src/core/renderdev.c:182`
+  `deusex-launcher/main/src/launch/launch.c:88`, `deusex-launcher/main/src/core/renderdev.c:182`
 - **What:** The detection run starts the launcher with DETECT_FLAGS as one argv word. The child's
   dxl_cmdline_join quotes that word after its first '=', so the child's test device becomes
   "D3DDrv.D3DRenderDevice log=Detected.log" and its log becomes `Detected.log"`. DescFlags=2 then
@@ -733,13 +721,13 @@ named Detected.log"
   `testrendev="D3DDrv.D3DRenderDevice log=Detected.log"`, test_rendev=`D3DDrv.D3DRenderDevice
   log=Detected.log`, LOG=`Detected.log"`. The original's ShellExecute gives two tokens (wizard.md
   Renderer; ini-keys.md DescFlags). renderdev.h says every device tested stays incompatible.
-  test_launch.c:290 passes two argv words, so the tests miss this.
+  test_launch.c:289 passes two argv words, so the tests miss this.
 - **Verified:** wizard.c:305 passes DETECT_FLAGS to dxl_child_start. posix/process.c:71
-  dxl_argv_line makes it argv[1], one word. The child's launch.c:309 dxl_cmdline_join runs it
+  dxl_argv_line makes it argv[1], one word. The child's launch.c:308 dxl_cmdline_join runs it
   through quoted_word (cmdline.c:28): the word holds a space, no quote and no leading blank, so it
   is quoted after its '='. policy.c:47 then takes the device as the whole quoted text,
   renderdev.c:182 writes DescFlags=2 under that junk section, and log_path_of gets
-  LOG=`Detected.log"`. test_launch.c:290 passes two argv words, so the tests never take this path.
+  LOG=`Detected.log"`. test_launch.c:289 passes two argv words, so the tests never take this path.
 - **Proof:** A scratch build of cmdline.c with argv {DeusEx, DETECT_FLAGS} printed: joined
   [testrendev="D3DDrv.D3DRenderDevice log=Detected.log"], testrendev [D3DDrv.D3DRenderDevice
   log=Detected.log], LOG [Detected.log"].
@@ -749,7 +737,7 @@ forever
 
 - **State:** confirmed, low (wrong-result)
 - **Where:** `deusex-launcher/main/src/core/install.c:14`,
-  `deusex-launcher/main/src/launch/launch.c:190`
+  `deusex-launcher/main/src/launch/launch.c:189`
 - **What:** cd_check passes dirname(base) and dxl_install_cd_ok joins "System" back on, instead of
   using the launcher's own folder. If that folder is not spelled 'System' (for example an
   innoextract --lowercase GOG install, with 'system'), the path <game>/System/..\ does not exist and
@@ -787,92 +775,39 @@ case is on disk
   launcher' says run-game.sh starts the engine with the launcher's package's ini.
 - **Verified:** config.c:21-30 leaf_path resolves <Package>.ini and User.ini in any case.
   run-game.sh:32 passes --ini="$here/$pkg.ini" --userini="$here/User.ini" in exact case. DXEngine
-  PackageManager.cpp:1137-1146 and 1162-1168 test with fs::exists, which is exact on Linux. When the
+  PackageManager.cpp:1128-1136 and 1151-1159 test with fs::exists, which is exact on Linux. When the
   file is missing the engine seeds it from Default.ini or DefUser.ini and writes it at that
   exact-case name. So on an install holding only deusex.ini or user.ini, the engine plays a fresh
   file and never sees the wizard's choices.
 - **Proof:** Read path: dxl_config_path gives .../deusex.ini, while run-game.sh passes
   .../DeusEx.ini. The engine's fs::exists(.../DeusEx.ini) is false, so it takes the Default.ini
-  branch (PackageManager.cpp:1143-1146).
+  branch (PackageManager.cpp:1132-1136).
 
 ### MAIN.4 'Another instance' is probed then released before the lock is taken; a failed acquire is
 ignored
 
 - **State:** confirmed, low (race)
-- **Where:** `deusex-launcher/main/src/launch/launch.c:335`,
-  `deusex-launcher/main/src/launch/launch.c:369`, `deusex-launcher/main/src/launch/launch.c:376`
-- **What:** other is taken from a flock that is tried and released at line 335. The lock itself is
-  taken only at line 369, after the config, the strings and the splash (SDL start-up) are done. Two
+- **Where:** `deusex-launcher/main/src/launch/launch.c:332`,
+  `deusex-launcher/main/src/launch/launch.c:366`, `deusex-launcher/main/src/launch/launch.c:373`
+- **What:** other is taken from a flock that is tried and released at line 332. The lock itself is
+  taken only at line 366, after the config, the strings and the splash (SDL start-up) are done. Two
   launches started close together can both see other=0. Both then empty the log (dxl_log_open_new),
   and with a stale Running.ini both open RecoveryMode. The second's dxl_instance_acquire returns
   NULL, but that result is never folded into other_instance. The original's CreateMutex check is
   atomic (ERROR_ALREADY_EXISTS).
-- **Evidence:** launch.c:335 int other = dxl_instance_other_running(r.id); instance.c:150-152 takes
-  and releases the lock. Line 369 r.inst = ... acquire, and its NULL result is not used for other.
-  Line 376 .other_instance = other. launch-flow.md §5.3: the mutex is made, and finding it there
+- **Evidence:** launch.c:332 int other = dxl_instance_other_running(); instance.c:137-138 takes
+  and releases the lock. Line 366 r.inst = ... acquire, and its NULL result is not used for other.
+  Line 373 .other_instance = other. launch-flow.md §5.3: the mutex is made, and finding it there
   already records another live instance.
-- **Verified:** launch.c:335 sets other from dxl_instance_other_running, which takes the flock and
-  releases it at once (instance.c:150-155). The lock is taken only at launch.c:369, after the config
+- **Verified:** launch.c:332 sets other from dxl_instance_other_running, which takes the flock and
+  releases it at once (instance.c:137-140). The lock is taken only at launch.c:366, after the config
   load and the splash. A NULL result from dxl_instance_acquire is never folded into other, and line
-  376 passes other unchanged. In the original, CreateMutex at InitEngine step 3 is atomic: the
+  373 passes other unchanged. In the original, CreateMutex at InitEngine step 3 is atomic: the
   second process sees ERROR_ALREADY_EXISTS (launch-flow.md §5.3). Two launches inside that window
   both get other=0. Both then empty the log, and with a stale Running.ini both take the crash path.
   The window is narrow, so low.
-- **Proof:** launch.c: nothing after line 369 reads !r.inst to set other or in.other_instance. other
-  is assigned only at line 335.
-
-### MAIN.5 Single-instance lock and handoff are per install; the original's are global
-
-- **State:** confirmed, low (differs-from-original)
-- **Where:** `deusex-launcher/main/src/core/instance.c:23`,
-  `deusex-launcher/main/src/core/instance.c:62`, `deusex-launcher/main/src/core/instance.c:72`,
-  `deusex-launcher/main/src/launch/launch.c:321`
-- **What:** The lock and the socket are named by a hash of the install's real path. A second launch
-  of another install, a copy or a mod folder, does not forward to the running game, and its stale
-  Running.ini opens RecoveryMode even while a game runs. In the original, the named mutex
-  DeusExIsRunning and the IsBrowser WLog window are found whatever the install. README's 'Where it
-  differs from the original' does not list this.
-- **Evidence:** instance.c:23-31 id_hash(id) is used in both the socket path (line 62) and the lock
-  path (line 72), with id = realpath(base) (launch.c:313-314). launch-flow.md §1: it enumerates
-  every top-level WLog window with IsBrowser. §5.3 and platform seam 3: one named mutex. The
-  README's differences list has no entry for this.
-- **Verified:** instance.c:62 and :72 name the socket and the lock by id_hash(id), and
-  launch.c:313-314 sets id to realpath(base). The original's mutex DeusExIsRunning and its
-  WLog/IsBrowser lookup carry no path (launch-flow.md §1, §5 step 3, seam 2-3). So a second install
-  neither forwards to a running game nor sees it as another instance. instance.c's comment shows the
-  per-install naming is deliberate (commit 5ded611), but README's 'Where it differs from the
-  original' does not list it, so it is an undocumented difference from main's 1:1 recreation.
-- **Proof:** instance.c:62 "%s/deusex-launcher.%08lx.sock" and :72 "%s/deusex-launcher.%08lx.lock"
-  both use id_hash(id). README.md:104-145 has no entry on instance scope.
-
-## X: across the repositories: the launcher-engine contract, the scripts, CI, the harness
-
-### X.2 Launcher accepts a game whose System folder is in another case; the engine looks only for
-exact "System" and refuses it
-
-- **State:** confirmed, low (contract)
-- **Where:** `deusex-launcher/linux-x86_64/src/core/install.c:28-33`,
-  `DXEngine/DXEngine/UE1GameDatabase.cpp:15-19`,
-  `deusex-launcher/linux-x86_64/src/core/install.h:4-6`
-- **What:** dxl_install_check finds the System folder case-insensitively ("system", "SYSTEM") and
-  accepts the install once DeusEx.exe's SHA1 matches. The engine builds root/"System"/"DeusEx.exe"
-  exactly. On a case-sensitive Linux file system it finds no game, throws "No UE1 game found in the
-  given folder" and exits 1. So the launcher offers a game the engine will not start. install.h says
-  the opposite: System/DeusEx.exe is there "by that exact name, which is how the engine finds it".
-- **Evidence:** install.c:28 `char *sys = dxl_path_resolve_ci(out->root, "System");` and :32
-  `dxl_path_join(out->system_dir, "DeusEx.exe")`. paths.c:95-104 matches folder entries with
-  dxl_stricmp. UE1GameDatabase.cpp:15 `fs::path(root) / "System"`, then SHA1Sum::of_file, which is
-  empty when the file is missing, so not found. GameApp.cpp throws when Games is empty. The same
-  code is on every port branch.
-- **Verified:** deusex-launcher/linux-x86_64/src/core/install.c:28-32 finds the System folder with
-  dxl_path_resolve_ci, in any case, then joins DeusEx.exe to it. So 'system/DeusEx.exe' is found and
-  its SHA1 is checked. DXEngine/DXEngine/UE1GameDatabase.cpp:15 builds root/"System" exactly. On a
-  case-sensitive file system SHA1Sum::of_file returns empty and the result is UE1_GAME_NOT_FOUND.
-  ExamineFolder (GameFolder.cpp:87) then gives no game. The launcher accepts an install the engine
-  refuses. This contradicts install.h:4-5 ('by that exact name, which is how the engine finds it')
-  and the comment at install.c:31. LAUNCHER.md's Known defects do not list it.
-- **Proof:** Path: install.c:28 resolve_ci(root,"System") -> system_dir=root/system -> exists ->
-  found. Engine: fs::path(root)/"System"/"DeusEx.exe" -> missing -> continue -> NOT_FOUND.
+- **Proof:** launch.c: nothing after line 366 reads !r.inst to set other or in.other_instance. other
+  is assigned only at line 332.
 
 ## Refuted
 
