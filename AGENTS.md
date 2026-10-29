@@ -111,6 +111,7 @@ Decided work for later sessions, each deleted when it is done.
 
 ## Open items
 
+Bugs found and not yet fixed: [`docs/bugs.md`](docs/bugs.md), each fix citing its ID.
 Known defects, each in the doc that owns its code: DXLauncher's (linux-x86_64, linux-aarch64)
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects),
 windows-x86_64's copy of it on Windows' own calls

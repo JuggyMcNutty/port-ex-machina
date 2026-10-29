@@ -178,6 +178,7 @@ scripts/recreation.sh uninstall [<GameDir>]  # the four files out again
 | [`AGENTS.md`](AGENTS.md) | the rules, where things stand, the decisions, the to-do list, what is open |
 | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | how to work here: the repositories, dependencies, commits, docs, drift guards, CI, platform gotchas |
 | [`docs/PORTING.md`](docs/PORTING.md) | how ports work -- a branch of the launcher each -- and how to add one |
+| [`docs/bugs.md`](docs/bugs.md) | the bugs found and not yet fixed, in the engine, the launchers and the workspace, each with its proof |
 | [the launcher's README](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md) | `main`, the default branch: the original recreated |
 | `docs/LAUNCHER.md` on each port branch: [linux-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md), linux-aarch64's the same; [windows-x86_64's](https://github.com/JuggyMcNutty/deusex-launcher/blob/windows-x86_64/docs/LAUNCHER.md), on Windows' own calls; [trimui-smartpro's](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md), with the device's changes | that branch's launcher: the files it writes and the settings the engine really reads, the screens, the game and the launcher, what it changes from the original |
 | a port's `ports/<id>/README.md`, on its branch | one device: status, what differs from the branch it started from, measurements, what is verified |
