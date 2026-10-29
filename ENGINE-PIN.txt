@@ -2,4 +2,4 @@
 # verifies it, pin (after pushing an engine commit) moves it. The engine's docs/ENGINE.md.
 repo    https://github.com/JuggyMcNutty/DXEngine.git
 branch  main
-commit  b6e8d76376c0d817825fb3963ecf8caf00e477c3
+commit  0308337f7be66f0fcaec77823d7ce95d344f078f
