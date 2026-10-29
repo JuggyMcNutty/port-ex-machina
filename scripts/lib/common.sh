@@ -316,7 +316,9 @@ dx_abi_args() {
 #
 # Downloads each package (resolved through the suite's Packages index, so no
 # version numbers are hardcoded) and unpacks its data into <dest>, the way
-# dpkg would lay it out. Downloads are cached in deps/cache/. A suite gone to
+# dpkg would lay it out. Downloads are cached in deps/cache/, each kept only
+# once it is whole (a .part file until then: a cut transfer is fetched again,
+# where the next run found it cached and failed unpacking it). A suite gone to
 # Debian's archive (buster) is fetched from there.
 dx_fetch_debs() {
     local dest="$1" suite="$2" arch="$3"; shift 3
@@ -326,7 +328,9 @@ dx_fetch_debs() {
     mkdir -p "$cache" "$dest"
     if [ ! -s "$cache/Packages" ]; then
         say "fetching the $suite/$arch package index ..."
-        curl -fsSL --retry 3 "$mirror/dists/$suite/main/binary-$arch/Packages.xz" | xz -d > "$cache/Packages"
+        curl -fsSL --retry 3 "$mirror/dists/$suite/main/binary-$arch/Packages.xz" | xz -d > "$cache/Packages.part" ||
+            die "could not fetch the $suite/$arch package index"
+        mv "$cache/Packages.part" "$cache/Packages"
     fi
     local pkg file deb tmp
     for pkg in "$@"; do
@@ -335,7 +339,8 @@ dx_fetch_debs() {
         deb="$cache/$(basename "$file")"
         if [ ! -s "$deb" ]; then
             say "  $pkg <- $(basename "$file")"
-            curl -fsSL --retry 3 -o "$deb" "$mirror/$file"
+            curl -fsSL --retry 3 -o "$deb.part" "$mirror/$file" || die "could not fetch $pkg"
+            mv "$deb.part" "$deb"
         fi
         tmp="$(mktemp -d)"
         (cd "$tmp" && ar x "$deb")
@@ -351,7 +356,7 @@ dx_fetch_debs() {
 # Unpacks one exact package version from archive.archlinux.org, which keeps
 # every version ever published -- so a header set pinned by version comes back
 # byte for byte. Only the paths given are unpacked (usr/include by default).
-# Downloads are cached in deps/cache/.
+# Downloads are cached in deps/cache/, kept once whole, as dx_fetch_debs's.
 dx_fetch_arch_pkg() {
     local dest="$1" name="$2" ver="$3" arch="$4"; shift 4
     local file="$name-$ver-$arch.pkg.tar.zst"
@@ -359,8 +364,9 @@ dx_fetch_arch_pkg() {
     mkdir -p "$cache" "$dest"
     if [ ! -s "$cache/$file" ]; then
         say "  $name $ver"
-        curl -fsSL --retry 3 -o "$cache/$file" \
-            "https://archive.archlinux.org/packages/${name:0:1}/$name/${file//:/%3A}"
+        curl -fsSL --retry 3 -o "$cache/$file.part" \
+            "https://archive.archlinux.org/packages/${name:0:1}/$name/${file//:/%3A}" || die "could not fetch $name $ver"
+        mv "$cache/$file.part" "$cache/$file"
     fi
     tar -C "$dest" --zstd -xf "$cache/$file" "${@:-usr/include}"
 }
