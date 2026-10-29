@@ -208,6 +208,8 @@ deusex/                  the parent folder (any name)
   dx-reverse-info/       the RE, a clone (scripts/dx.sh fetch)
   gamefiles/             your Deus Ex install: for running on this machine, test_gamefiles
                          and the IDA databases
+  goggamefiles/          GOG's install, for the RE: DeusEx.exe, which Steam's packs, and
+                         its IDA database
   reference/             the 1112f SDK, the IDA databases' backups, DXD3D9 2.0
                          (docs/DEVELOPMENT.md), and the wizard's captures once
                          dx-reverse-info's tools/wine/wizard-capture.sh takes them

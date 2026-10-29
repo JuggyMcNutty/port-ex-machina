@@ -36,7 +36,8 @@ committed with whatever depends on it.
 Beside the repositories, in no repository ([the layout](../README.md#layout)): `gamefiles/`
 holds the IDA databases beside the game's binaries (`System/*.i64`), never committed, a fresh
 one given its types, strings and names by dx-reverse-info's scripts
-([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries));
+([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)),
+and `goggamefiles/`, GOG's install, `DeusEx.exe`'s, which Steam's packs;
 `reference/DXD3D9_2.0` is a third-party Direct3D 9 renderer for the original, a closed DLL built
 on Chris Dohnal's UTD3D9 1.3, whose source carries Epic's copyright and no licence: its ideas
 may be taken, never its code; `deps/` and `build/` the scripts remake, and for engine work
