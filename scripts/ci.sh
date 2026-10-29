@@ -278,10 +278,28 @@ cmd_publish() {
 }
 
 # last_release <repository> <tag's start>: the commit of its newest release
-# so tagged (the tags start with their date, so sort by it), or nothing.
+# so tagged, or nothing. The tags start with their date, and of the latest
+# day's the newest is the one whose commit is the latest (a day's sha8s sort
+# anyhow: a day of three releases took its second, made the third's tag
+# again and failed), read in the bare clone code_between keeps.
 last_release() {
-    owner_git ls-remote --tags --refs "$OWNER_GIT/$1.git" |
-        awk -v t="refs/tags/$2" 'index($2, t) == 1 { print $2, $1 }' | sort | tail -n 1 | awk '{ print $2 }'
+    local dir="$CI_TMP/$1.git" tag sha day latest="" best="" bestwhen=0 when
+    [ -d "$dir" ] || owner_git clone -q --bare --filter=blob:none "$OWNER_GIT/$1.git" "$dir"
+    while read -r tag sha; do
+        day="${tag%-*}"
+        if [[ "$day" > "$latest" ]]; then
+            latest="$day"
+            best=""
+        fi
+        [ "$day" = "$latest" ] || continue
+        when="$(git -C "$dir" log -1 --format=%ct "$sha" 2>/dev/null || echo 0)"
+        if [ -z "$best" ] || [ "$when" -gt "$bestwhen" ]; then
+            best="$sha"
+            bestwhen="$when"
+        fi
+    done < <(owner_git ls-remote --tags --refs "$OWNER_GIT/$1.git" |
+             awk -v t="refs/tags/$2" 'index($2, t) == 1 { print $2, $1 }' | sort)
+    printf '%s\n' "$best"
 }
 
 # release <owner/repository> <tag> <commit> <notes file> <file>...
