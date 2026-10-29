@@ -20,7 +20,7 @@ them. A commit that fixes an item cites it, `(bugs.md VM.1)`, and takes it off t
 | [LCORE](#lcore-the-desktop-launchers-core-dxlauncher) | the desktop launcher's core (DXLauncher) | 4 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 5 |
 | [LUI](#lui-the-desktop-launchers-ui) | the desktop launcher's UI | 5 |
-| [LPORT](#lport-the-windows-and-smart-pro-ports-own-code) | the Windows and Smart Pro ports' own code | 5 |
+| [LPORT](#lport-the-windows-and-smart-pro-ports-own-code) | the Windows and Smart Pro ports' own code | 4 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 4 |
 
 ## VM: the script VM, the object system and the garbage collector
@@ -663,40 +663,23 @@ reported as 'no answer'
 - **Proof:** grep across src/docs: ConsoleOutputCP appears only at startup.c:79. No
   GetConsoleOutputCP or restore anywhere.
 
-### LPORT.4 test_trash_win32 waits for ever under this machine's Wine: its file "can't be sent to Trash"
-
-- **State:** confirmed, medium (test)
-- **Where:** `deusex-launcher/windows-x86_64/src/platform/win32/trash.c`,
-  `deusex-launcher/windows-x86_64/ports/windows-x86_64/port.sh` (`port_test`)
-- **What:** Under `scripts/dx.sh test windows-x86_64` `test_trash_win32` most often never ends
-  (two runs of three on 2026-10-29, the third passing): Wine's shell puts up "Confirm file
-  deletion", "The item 'C:\users\steamuser\AppData\Local\Temp\dxl-trash-256\stuff\Save0001'
-  can't be sent to Trash. Do you want to delete it instead?", which no one answers. The test's
-  trash folder (`XDG_DATA_HOME`, `build/windows-x86_64/wine-xdg`) holds that test's earlier moves,
-  the last on 2026-10-28; an empty folder in its place waits the same, so the cause is in this
-  machine's Wine since then, not the folder's state. The launcher's code did not change in between.
-- **Evidence:** the dialog captured on the desktop while the test runs alone (`ctest -R
-  '^test_trash_win32$'`, bounded at 60 s and 120 s, both timing out); the prefix's `Temp` and the
-  trash folder on one file system; the trash's `files` with `Save0001` and
-  `Save0001-3973dd20`, no newer entry, its `info` folder touched by each try and left without a
-  new file.
-- **Proof:** the run's log and the captured dialog.
-
-### LPORT.5 test_profile and test_ui_shots_1920x1080big fail or hang at times in Wine's parallel runs
+### LPORT.5 test_profile failed once in a host run, test_ui_shots_1920x1080big hung once under Wine
 
 - **State:** confirmed, low (test)
-- **Where:** `deusex-launcher/windows-x86_64/ports/windows-x86_64/port.sh` (`port_test`),
-  `deusex-launcher/windows-x86_64/tests/CMakeLists.txt`
-- **What:** Of three runs of the Wine suite on 2026-10-29, the launcher's code unchanged between
-  them, one had `test_profile` fail after 0.03 s and another had `test_ui_shots_1920x1080big` never
-  end, each passing in the other runs. Alone, both pass. So a test started beside others under
-  this machine's Wine can fail or hang, which LPORT.4's dialog does not explain. A failure that
-  fast looks like the program not starting rather than a check failing; its output was not kept.
-- **Evidence:** run 1 (`scripts/dx.sh test windows-x86_64`): `test_profile` Failed in 0.03 s, the
-  other 50 passed. Run 2 (`port_test`'s steps, ctest bounded at 900 s): `test_trash_win32` alone
-  never ended. Run 3 (the same): `test_trash_win32` and `test_ui_shots_1920x1080big` never ended.
-  Alone (`ctest -R`): `test_profile` passed in 0.47 s, `test_ui_shots_1920x1080big` in 24.63 s.
-- **Proof:** the three runs' logs; the next one to fail with `--output-on-failure` should say why.
+- **Where:** `deusex-launcher/windows-x86_64/tests/test_profile.c`,
+  `deusex-launcher/windows-x86_64/tests/CMakeLists.txt` (the UI shots)
+- **What:** Each happened once on 2026-10-29 and in no run since, the launcher's code unchanged
+  between them. `test_profile` failed in the branch's host build (Linux), after
+  0.03 s, its time when it passes there, so a check failing rather than a program not starting;
+  its output was not kept. `test_ui_shots_1920x1080big` never ended in one run of the Wine suite.
+- **Evidence:** `scripts/dx.sh test windows-x86_64`: the host run's `test_profile` Failed in
+  0.03 s, 50 of 51 passing, the Wine suite not reached. A run of `port_test`'s steps, ctest bounded
+  at 900 s: `test_ui_shots_1920x1080big` never ended. Since, `test_profile` passed alone under
+  Wine (0.47 s) and in a full run (0.03 s on the host, 0.67 s under Wine);
+  `test_ui_shots_1920x1080big` alone (24.63 s) and in that run (17.24 s, 29.17 s). Nothing is
+  under `/tmp/dxl-home`, the fixed home whose default profile `test_profile` checks is absent
+  (test_profile.c:62-75).
+- **Proof:** the two runs' logs; the next failure with `--output-on-failure` should say why.
 
 ## MAIN: the recreation: deusex-launcher's main
 
