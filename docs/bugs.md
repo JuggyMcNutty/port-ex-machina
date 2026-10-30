@@ -27,7 +27,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [AUD](#aud-the-audio) | the audio | 5 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 7 |
 | [WIN](#win-the-game-window) | the game window | 2 |
-| [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 3 |
+| [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
 
 ## D: for the owner
 
@@ -193,8 +193,6 @@ as any other. Nothing here changes before the owner rules.
 
 | ID | What | Said in | Proof |
 |---|---|---|---|
-| MAIN.6 | Safe mode's eight boxes are all wired, where the shipped original's three do nothing and one does four boxes' work; the owner's decision: as the original ships | main's README, where it differs; dx-reverse-info's wizard.md, the shipped bug | `test_wizard`; the live check |
-| MAIN.7 | A launch beside a running one appends to the log, where the original's second writer fails to open the file the first holds and that launch runs without a log; the owner's decision: as the original | main's README, where it differs | a test of two launches at once |
 | MAIN.8 | Unverified in the original: a second launch handing a running game its command line, and the splash staying up through a real start of the engine | dx-reverse-info's wizard.md | the original under Proton, launched twice |
 
 ## Refuted
