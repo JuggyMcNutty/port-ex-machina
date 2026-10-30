@@ -23,7 +23,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 7 |
 | [NET](#net-the-network) | the network | 4 |
 | [REN](#ren-the-renderer) | the renderer | 15 |
-| [AUD](#aud-the-audio) | the audio | 5 |
+| [AUD](#aud-the-audio) | the audio | 4 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 6 |
 | [WIN](#win-the-game-window) | the game window | 2 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
@@ -153,7 +153,6 @@ as any other. Nothing here changes before the owner rules.
 |---|---|---|---|
 | AUD.4 | A change to Effects Channels: the sounds on channels past a lowered count stop, where the original's play on out of its reach; a raised count's channels are voices of their own, where the original's are its music's | sound | `SoundConsole` changing the count under a sound, recorded |
 | AUD.5 | The original's MP3 voice can play on, silent, past its sound: `LipConsole`'s third line works out shapes to 2.9 s there, three more `X`s; the cause is unfound | sound | `LipConsole` |
-| AUD.6 | The holds a `SET` puts on `DopplerSpeed` and `AmbientFactor` are not carried | sound | `SET` past them, `GET` alike |
 | AUD.7 | A WAV's ping-pong loop plays forward, where Galaxy's plays back and forth | sound | a sound with such a loop, recorded |
 | AUD.8 | An 8-bit sample's lip sync is not read from its start wherever it plays, as the original's is | sound | `LipConsole` with an 8-bit WAV line |
 
