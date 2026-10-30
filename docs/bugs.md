@@ -20,7 +20,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 8 |
 | [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 1 |
-| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 7 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 6 |
 | [NET](#net-the-network) | the network | 4 |
 | [REN](#ren-the-renderer) | the renderer | 11 |
 | [AUD](#aud-the-audio) | the audio | 4 |
@@ -114,7 +114,6 @@ as any other. Nothing here changes before the owner rules.
 | EXT.9 | The first keyboard focus is seeded in DXEngine's layout pass, after the level's tick, where the original seeds it at its windows' next tick: a conversation's first choice has the focus a frame sooner there | the UI | `ChoiceConsole` |
 | EXT.10 | The focus tables pass over no window as clipped away, DXEngine keeping no clip rectangles | the UI | `FocusConsole` with a window clipped out of view |
 | EXT.11 | The keyboard counts as grabbed while a modal shows, where the original counts its grabs | the UI (keys) | both codes read; `KeypadConsole` |
-| EXT.13 | `GC.DrawActor` ignores `bConstrain`: the vision augmentation's calls cover the whole view | the UI | `AugVisionConsole`'s shots |
 | EXT.14 | Viewport windows, none of it reached by the game: no `CalcView` event; an origin or watch actor gone leaves the view at the window's fields, not at its last place and turn; a window turned off draws nothing, where the original tiles its default texture; `SetRotation` keeps the watch actor; `SetDefaultTexture` takes no defaults; `bShowWeapons` draws no overlays; `SetViewportActor` adds no network view (`AdditionalViews`); `ConvertVectorToCoordinates` in one, or in a window inside one, projects through the main view; the frame takes the window's whole rectangle, not its clip rectangle | viewport windows | `CameraConsole` with each |
 | EXT.15 | A border window's resizing by its border (`bResizeable`: `CursorRequested`, `MouseButtonPressed` and the rest) is unread in the original, DXEngine's unproven; no script of the game turns it on | (dx-reverse-info's extension-dll.md, border windows) | Extension.dll read; a timeline dragging a tool window's border |
 
