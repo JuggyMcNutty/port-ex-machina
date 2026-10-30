@@ -25,7 +25,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [REN](#ren-the-renderer) | the renderer | 17 |
 | [VK](#vk-the-vulkan-device) | the Vulkan device | 1 |
 | [AUD](#aud-the-audio) | the audio | 5 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 7 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 6 |
 | [WIN](#win-the-game-window) | the game window | 2 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
 
@@ -174,7 +174,6 @@ as any other. Nothing here changes before the owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| ENG.7 | `INI=` and `USERINI=` are opened as given, where the original's file system finds them in any case, as the launchers find them (the first sweep's `L7.5`, its engine half) | the command line | a run whose `INI=` is in another case than the disk's |
 | ENG.8 | An axis a console command sets is used as it is; the original's input scales it | small (input axes) | `StandConsole` setting an axis by command |
 | ENG.9 | The original takes its viewport's own command words (`SHOT` among them) before the exec functions | small (a key's binding) | a binding whose word an exec function shares |
 | ENG.10 | `Toggle` and `Pulse` do nothing, and a command after `OnRelease` never runs | small (a key's binding) | a timeline as `bad-keys.txt` with each |
