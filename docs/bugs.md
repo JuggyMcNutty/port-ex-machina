@@ -17,7 +17,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 26 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 5 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 7 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 8 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 9 |
 | [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 1 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 8 |
@@ -99,6 +99,7 @@ as any other. Nothing here changes before the owner rules.
 | PHYS.10 | The movers filed under one filed again are not filed again, and a mover's polygons are filed whole, where the original's tree drops what lands in solid | implemented, not as the original (the movers in a line's way) | `MoverConsole` with two movers filed in turn |
 | PHYS.11 | Liberty Island's auto turret and crossbow pickup get the level for their base at the map's start, where the original's have none | implemented, not as the original | `BaseConsole` |
 | PHYS.12 | A line straight down meets the floor half a unit higher than the original's | small | `StandConsole`, `TraceConsole` |
+| PHYS.13 | What is based on a mover that turns is carried and turned by DXEngine's `TurnBasedActors`, never run against the original's (`UActor.h` asks for the comparison) | (DXEngine's `UActor.h`) | a door turned with an actor based on it, both engines |
 
 ## AI: the NPCs
 
