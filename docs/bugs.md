@@ -17,12 +17,12 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 26 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 5 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 9 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 8 |
 | [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 1 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 7 |
 | [NET](#net-the-network) | the network | 4 |
-| [REN](#ren-the-renderer) | the renderer | 15 |
+| [REN](#ren-the-renderer) | the renderer | 12 |
 | [AUD](#aud-the-audio) | the audio | 4 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 6 |
 | [WIN](#win-the-game-window) | the game window | 2 |
@@ -39,7 +39,7 @@ as any other. Nothing here changes before the owner rules.
 | D.1 | on a screen wider than 4:3 keeps its field of view across the width and loses height | keeps the height a 4:3 screen shows and sees more at the sides (Hor+), a viewport window too | the view's width; viewport windows | keep: with the original's angle the intro's "Deus Ex" falls off the bottom at 16:9 |
 | D.2 | a mesh's level of detail from its own angle | from the Hor+ angle, so on a wide screen a mesh keeps less detail at the same distance | the view's width; mesh detail | take it from the 4:3 angle, keeping Hor+ |
 | D.3 | the root window is the whole viewport, where the stock code gives a cutscene's subtitles no height at 16:9 or wider | the root 4:3, a cutscene letterboxed at 16:9 | the UI | keep |
-| D.4 | no multisampling, bloom or HDR | each a setting: 4x multisampling on by default, bloom and HDR off | the software device; ENGINE.md, rendering | keep, the defaults as they are |
+| D.4 | no multisampling, bloom or HDR | each a setting: 4x multisampling on by default (a laser beam's edge rows partly lit), bloom and HDR off | the software device; ENGINE.md, rendering | keep, the defaults as they are |
 | D.5 | an 8-bit frame | the GPU devices' scene buffers of 10 bits a channel | ENGINE.md, rendering | keep |
 | D.6 | bilinear sampling from one mip | the GPU devices trilinear, with 8x anisotropy | the software device | keep |
 | D.7 | no render scale | `Performance.RenderScale`, 1 by default (0.667 on the Smart Pro) | ENGINE.md, settings and environment | keep |
@@ -84,7 +84,6 @@ as any other. Nothing here changes before the owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PHYS.5 | The engine's own rotations (the view, movement) take exact angles, where the original's take its sine table: at 20 frames a second `FlightConsole`'s gull, flown level into the pier's wall, slides some 18 units along it in the original and stays put in DXEngine | implemented, not as the original | `FlightConsole` at 20 frames; then every physics console |
 | PHYS.6 | Swimming out from under water at some 1,000 frames a second: the original's player gains one float's step a frame and is six times as far out by 0.75 s | implemented, not as the original | `SwimConsole`'s d, both engines uncapped |
 | PHYS.7 | A hinged door crushes a crate 0.2 s into its close, where the original's does at 0.3 s, the crate coming to rest 10 units from the original's | implemented, not as the original (a mover's move) | `DoorConsole` on UNATCO HQ |
 | PHYS.8 | A tie between a mover's own hit and the level's at one plane falls to the mover, where the original's two times, rounded apart, fall either way (`DeusExMover19`'s, `25`'s and `8`'s reversed lines on DXMP_Silo are the level's) | implemented, not as the original | `VisibleConsole` on DXMP_Silo: all 110 lines alike |
@@ -132,8 +131,6 @@ as any other. Nothing here changes before the owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | REN.10 | The Matrix cheat's `Sprite` stands in for the textures of meshes and sprites alone; the original's draws the level's surfaces in it too, by a rule unread | sprites | Render.dll read; `MatrixConsole` |
-| REN.11 | The laser fence's middle beam is a fraction of a pixel thinner, missing the top row `D3DDrv` draws | particles and lasers | `LaserConsole` |
-| REN.12 | A mesh in a fog zone is unfogged; the original fogs it from its leaf's own volumetric lights by a vertex model of its own, unread: 02_NYC_Underground's crate 220 units into the fog at 0.09 of the wall beside it in `D3DDrv`'s frame, 0.25 in DXEngine's (the first sweep's `E10b.15`) | lighting | Render.dll's model read; `FogConsole` |
 | REN.14 | Where two opaque surfaces overlap at one depth, which shows can differ: the gaps between Liberty Island pier's planks, a few hundred pixels of `MeshConsole`'s frame | draw order and movers | `MeshConsole` |
 | REN.15 | A mesh's translucent faces are drawn after all its opaque ones, where the original draws them in face order, losing one drawn before an opaque face behind it (`GM_Jumpsuit`, `GM_Suit`, `GFM_TShirtPants` and their carcasses, `ComputerPublic`) | draw order and movers | `FaceConsole` on those meshes |
 | REN.16 | A mover hidden after it is filed stops drawing, where the original's stays drawn there | draw order and movers | `GlassConsole` hiding a mover |
@@ -144,7 +141,6 @@ as any other. Nothing here changes before the owner rules.
 | REN.21 | A sprite animated once (`DT_SpriteAnimOnce`) showing the frame its life has reached and holding the last: no run | sprites | a console spawning one, both engines' shots |
 | REN.22 | An animated or fractal corona skin showing its current frame: no run | coronas | `CoronaConsole` with such a skin |
 | REN.23 | The light effects no stock view shows, the searchlight, non-incidence and the rotor among them, and fast wave, shock, shell and interference, which no stock light has: the reading's alone, no run | lighting | `LightConsole` with a light of each spawned |
-| REN.25 | An actor spawned 3 s into a level is darker in DXEngine while the level's time is young: `GlowConsole`'s crate at a hundredth of the time, 0.08 to 0.13 of white against the original's 0.24; at full speed, 4.8 s on, the two alike (0.195, 0.197) | lighting | `GlowConsole` at `Dilation` 0.01, and spawned at once and later |
 | REN.24 | Liberty Island's pier 1.7% under `D3DDrv`'s frames with the detail textures on and 0.7% over with them off, Paul Denton a level over, `LaserConsole`'s corridor 2% under: measured again once D.8 is ruled | brightness | `MeshConsole`, `LaserConsole` |
 
 ## AUD: the audio
@@ -185,7 +181,7 @@ as any other. Nothing here changes before the owner rules.
 | Area | Finding | Why refuted |
 |---|---|---|
 | VM | RadiusActors(None, 300) on the menu map finds one actor more than the original's, 99 against 98 (`DXEngine/DXEngine/VM/Iterator.cpp`, `DXEngine/tools/dxcap/Classes/OpsConsole.uc`) | DX.dx's player rides the menu's flyby, so a count from it is the moment's: 2 s in, the original's player stood at 2769, 308, -98 and DXEngine's at 2752, 299, -92, InterpolationPoint14 (a collision radius of 10) 327 units from the one and 307 from the other, outside 300 plus its radius and inside it, as the original's test has it (engine-dll.md, traces). OpsConsole counts round the level's first PlayerStart (DXEngine cbc56edd): both engines, twice each, give 96, every `DXOPS:` line alike. |
-| REN | The `AmbientGlow` pulse runs on the level's time, the original's on the viewport's (NATIVES.md, lighting; render-dll.md's "of the viewport's time") | DXEngine's `GlowConsole` on the original: a crate, its `AmbientGlow` 255, shot five times 1.5 s apart with the level's `TimeDilation` at 0.01 barely changes (0.230 to 0.241 of white), and at 1 pulses (0.180 to 0.218): the original's pulse is on the level's time, as DXEngine's. On the viewport's time DXEngine's pulsed at a hundredth, unlike it (DXEngine 8a01cce4, render-dll.md 69b5c53). |
+| REN | The laser fence's middle beam a fraction of a pixel thinner, missing the top row `D3DDrv` draws (`DXEngine/docs/NATIVES.md`, particles and lasers) | The multisampling's: with DXEngine's default 4x the beams' edge rows are partly lit, and with it off (`DXEngine/tools/dxcap/vulkan-settings.json`) `LaserConsole`'s three beams have `D3DDrv`'s rows, each within 11 levels of 256 of its red. Multisampling by default is D.4 |
 | DX | ConBindEvents makes every ConListItem with the name None, and a save writes them all as exports of one class, name and outer (`DXEngine/DXEngine/Packages/Engine/Actors/UActor_Conversation.cpp:66`, `DXEngine/DXEngine/Packages/Engine/Actors/UActor_Conversation.cpp:68`) | These items never get into a save. Actor's ConListItems is declared `var transient Object ConListItems;` (gamefiles/System/Engine.u script). PropertyDataBlock::Save (DXEngine/DXEngine/Packages/Core/UObject.cpp:859) skips Transient properties. PackageWriter::WriteObjects (Package/PackageWriter.cpp:116-135) exports only Standalone objects and what they reference. No non-transient script var holds a ConListItem; the only other one is ConListItem.next, which is reached only from the list itself. So no ConListItem export named None is ever written, and nothing gets folded on load. |
 | EXT | A text log drops only its oldest expired lines, so a shorter timeout waits behind them (`DXEngine/DXEngine/Packages/Extension/Windows/Text/UTextLogWindow.cpp:73`) | The original's tick (0x10047c30) first subtracts deltaTime from every line's time. It then counts the leading lines whose time is <= 0, stopping at the first that is still positive, and removes that leading run (TArray Remove(0, n)). DXEngine's leading-run erase matches it, as extension-dll.md's text logs say. |
 | LPORT | dxl_game_close frees a pending overlapped read's buffer and OVERLAPPED before the read is cancelled (`deusex-launcher/windows-x86_64/src/platform/win32/process.c:225`, `deusex-launcher/windows-x86_64/src/platform/win32/process.c:226`) | The order is wrong (free(g->pending) at process.c:226, then CancelIo at :231, with no wait for completion), but the bad case cannot occur. It needs a read still pending after the process is signalled, which needs another process to hold the line's client end. The launcher passes the client only through a PROC_THREAD_ATTRIBUTE_HANDLE_LIST and closes its own copy (process.c:208). DXEngine's LauncherLine::Open (LauncherLine.cpp:50-54, called from Hello at GameApp.cpp:72) clears HANDLE_FLAG_INHERIT. Its relaunch passes a handle list of the stdio alone (GameApp.cpp:228-249), and the crash uploader inherits nothing (CrashReporter.cpp:187). Windows closes a process's handles before it signals the process object, so the read has completed, with its buffer and status written, before ENDED. |
