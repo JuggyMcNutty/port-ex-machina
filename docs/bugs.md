@@ -24,7 +24,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [NET](#net-the-network) | the network | 4 |
 | [REN](#ren-the-renderer) | the renderer | 11 |
 | [AUD](#aud-the-audio) | the audio | 3 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 2 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 1 |
 | [WIN](#win-the-game-window) | the game window | 0 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
 
@@ -151,7 +151,6 @@ None open.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| ENG.12 | `ResetConfig` does not tell the class of it (`PostEditChange`), as the original's does | mods | `ModConsole` |
 | ENG.13 | A `SpawnNotify` is not asked about an actor spawned while a notification runs, DXEngine's guard against one spawning without end; the original's `SpawnActor` is unread there | mods (spawn notifications) | Engine.dll's `SpawnActor` read; `CensusConsole`'s `CensusNotify` spawning |
 
 ## WIN: the game window
