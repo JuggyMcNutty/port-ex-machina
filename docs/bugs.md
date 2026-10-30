@@ -16,7 +16,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 28 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
-| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 4 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 2 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 7 |
 | [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
@@ -76,8 +76,6 @@ as any other. Nothing here changes before the owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | PKG.8 | No frame shows `PRECACHING`, which the original's shows with its driver's precache on | saving, loading and travel | `LoadingConsole` with the render device's precache on |
-| PKG.9 | A bare `?loadgame` loads nothing, where the original's browse takes it for no load and opens its menu map again | saving, loading and travel | `SlotConsole` with a bare `?loadgame` |
-| PKG.11 | A travel to a missing map is found so before the pre-travel, the level playing on; the original's browse has pruned the player's augmentations, skills and flag base by then for a map numbered within the mission, and for any other empties `Current` and loads the level again from `Maps` | saving, loading and travel | `BrowseConsole` with a missing map of the mission and one of another |
 | PKG.13 | The Entry level is loaded with the player's options from the ini, its game's `InitGame` given `?Name=Player?Class=DeusEx.JCDentonMale`, where the original's loads `entry.dx` with none; a return to it (a lost server, `?failed`, `?entry`) logs the player in with Entry's URL, where the original's logs in with the browse's own (`UGameEngine::Browse`, `0x1038ad30`) | multiplayer | the two logs' first `InitGame` line; a lost server's login on Entry in both engines |
 
 ## PHYS: physics, traces and movers
