@@ -25,7 +25,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [REN](#ren-the-renderer) | the renderer | 11 |
 | [AUD](#aud-the-audio) | the audio | 3 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 6 |
-| [WIN](#win-the-game-window) | the game window | 2 |
+| [WIN](#win-the-game-window) | the game window | 0 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
 
 ## D: for the owner
@@ -160,10 +160,7 @@ None open.
 
 ## WIN: the game window
 
-| ID | What | Said in NATIVES.md | Proof |
-|---|---|---|---|
-| WIN.6 | A key is named by its place on a US keyboard, where the original's name follows the layout; the keypad's digits are always `NumPad0` to `NumPad9`, where with Num Lock off the original's are the arrows, Home and the rest | small (a key's name) | WinDrv.dll read; `keys.txt` under another layout and with Num Lock off |
-| WIN.7 | With Alt down a letter or digit comes from the key's press, not from the characters the platform sends, and the keys held are forgotten as the window loses the keyboard | the UI (keys) | `ClickConsole`'s Alt under another layout; a timeline that takes the focus away with a key held |
+None open.
 
 ## MAIN: the recreation (deusex-launcher's main)
 
