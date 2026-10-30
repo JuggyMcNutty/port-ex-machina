@@ -15,12 +15,12 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | Section | Area | Open |
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 28 |
-| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
+| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 2 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 7 |
 | [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
-| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 6 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 5 |
 | [NET](#net-the-network) | the network | 4 |
 | [REN](#ren-the-renderer) | the renderer | 11 |
 | [AUD](#aud-the-audio) | the audio | 3 |
@@ -70,6 +70,7 @@ as any other. Nothing here changes before the owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | VM.5 | Strings are of bytes, Latin-1, where the original's are UTF-16: a typed character past Latin-1 goes nowhere, a wide string loads with `?` for each such character (a note in a save, every conversation comment of `DeusExConText.u`), and `Chr` keeps the low 8 bits | the UI; implemented, not as the original (small ones) | `TypeConsole` typing U+0100 and past; a note of such characters saved and loaded across both engines; `OpsConsole`'s `Chr` and `Asc` |
+| VM.10 | A float's text rounds a tie at its sixth decimal to even, the C library's `%f` (`std::to_string`), where the original's rounds it up: 813.1953125 is `813.195312`, the original's `813.195313`; between 512 and 1024 one float in 128 is such a tie | a property's text | `LoadConsole` with `Via` over the original's save: the player's place |
 
 ## PKG: saving, loading, travel and the loading screen
 
@@ -109,7 +110,6 @@ None open.
 | EXT.10 | The focus tables pass over no window as clipped away, DXEngine keeping no clip rectangles | the UI | `FocusConsole` with a window clipped out of view |
 | EXT.14 | Viewport windows, none of it reached by the game: no `CalcView` event; an origin or watch actor gone leaves the view at the window's fields, not at its last place and turn; a window turned off draws nothing, where the original tiles its default texture; `SetRotation` keeps the watch actor; `SetDefaultTexture` takes no defaults; `bShowWeapons` draws no overlays; `SetViewportActor` adds no network view (`AdditionalViews`); `ConvertVectorToCoordinates` in one, or in a window inside one, projects through the main view; the frame takes the window's whole rectangle, not its clip rectangle | viewport windows | `CameraConsole` with each |
 | EXT.15 | A border window's resizing by its border (`bResizeable`: `CursorRequested`, `MouseButtonPressed` and the rest) is unread in the original, DXEngine's unproven; no script of the game turns it on | (dx-reverse-info's extension-dll.md, border windows) | Extension.dll read; a timeline dragging a tool window's border |
-| EXT.16 | The player's flag base is made after its login, in the level's package and named `FlagBase`, where the original's player makes its own as it is made (`APlayerPawnExt`'s constructor, Extension.dll `0x10037ba0`: `new(Self)`), the player its outer and the name by the class's count: `01_NYC_UNATCOIsland.JCDentonMale1.FlagBase1` | flags | `ReturnConsole`'s flag base lines |
 
 ## NET: the network
 
