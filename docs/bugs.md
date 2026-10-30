@@ -20,7 +20,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 9 |
 | [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 1 |
-| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 8 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 7 |
 | [NET](#net-the-network) | the network | 4 |
 | [REN](#ren-the-renderer) | the renderer | 15 |
 | [AUD](#aud-the-audio) | the audio | 5 |
@@ -114,7 +114,6 @@ as any other. Nothing here changes before the owner rules.
 | EXT.9 | The first keyboard focus is seeded in DXEngine's layout pass, after the level's tick, where the original seeds it at its windows' next tick: a conversation's first choice has the focus a frame sooner there | the UI | `ChoiceConsole` |
 | EXT.10 | The focus tables pass over no window as clipped away, DXEngine keeping no clip rectangles | the UI | `FocusConsole` with a window clipped out of view |
 | EXT.11 | The keyboard counts as grabbed while a modal shows, where the original counts its grabs | the UI (keys) | both codes read; `KeypadConsole` |
-| EXT.12 | A large text window's block of lines ends in one more spacing than the original's rows: in a window taller than its text, lines centred or at the bottom sit up to a pixel higher | the UI | `ScreenConsole`'s shots |
 | EXT.13 | `GC.DrawActor` ignores `bConstrain`: the vision augmentation's calls cover the whole view | the UI | `AugVisionConsole`'s shots |
 | EXT.14 | Viewport windows, none of it reached by the game: no `CalcView` event; an origin or watch actor gone leaves the view at the window's fields, not at its last place and turn; a window turned off draws nothing, where the original tiles its default texture; `SetRotation` keeps the watch actor; `SetDefaultTexture` takes no defaults; `bShowWeapons` draws no overlays; `SetViewportActor` adds no network view (`AdditionalViews`); `ConvertVectorToCoordinates` in one, or in a window inside one, projects through the main view; the frame takes the window's whole rectangle, not its clip rectangle | viewport windows | `CameraConsole` with each |
 | EXT.15 | A border window's resizing by its border (`bResizeable`: `CursorRequested`, `MouseButtonPressed` and the rest) is unread in the original, DXEngine's unproven; no script of the game turns it on | (dx-reverse-info's extension-dll.md, border windows) | Extension.dll read; a timeline dragging a tool window's border |
