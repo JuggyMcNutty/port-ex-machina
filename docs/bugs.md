@@ -24,7 +24,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [NET](#net-the-network) | the network | 4 |
 | [REN](#ren-the-renderer) | the renderer | 11 |
 | [AUD](#aud-the-audio) | the audio | 3 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 1 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
 | [WIN](#win-the-game-window) | the game window | 0 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
 
@@ -149,9 +149,7 @@ None open.
 
 ## ENG: the engine, its input and its config
 
-| ID | What | Said in NATIVES.md | Proof |
-|---|---|---|---|
-| ENG.13 | A `SpawnNotify` is not asked about an actor spawned while a notification runs, DXEngine's guard against one spawning without end; the original's `SpawnActor` is unread there | mods (spawn notifications) | Engine.dll's `SpawnActor` read; `CensusConsole`'s `CensusNotify` spawning |
+None open.
 
 ## WIN: the game window
 
@@ -167,6 +165,7 @@ None open.
 
 | Area | Finding | Why refuted |
 |---|---|---|
+| ENG | A `SpawnNotify` is not asked about an actor spawned while a notification runs, DXEngine's guard against one spawning without end, the original's taken for unread (`DXEngine/DXEngine/Packages/Engine/Actors/UActor.cpp:128`) | The original's has the same guard: `SpawnActor` (`0x10394f60`) holds a flag (`GSpawnNotifying`, `0x10588b48`) over the notifications' walk, and an actor spawned meanwhile hears none (engine-dll.md, spawning) |
 | VM | RadiusActors(None, 300) on the menu map finds one actor more than the original's, 99 against 98 (`DXEngine/DXEngine/VM/Iterator.cpp`, `DXEngine/tools/dxcap/Classes/OpsConsole.uc`) | DX.dx's player rides the menu's flyby, so a count from it is the moment's: 2 s in, the original's player stood at 2769, 308, -98 and DXEngine's at 2752, 299, -92, InterpolationPoint14 (a collision radius of 10) 327 units from the one and 307 from the other, outside 300 plus its radius and inside it, as the original's test has it (engine-dll.md, traces). OpsConsole counts round the level's first PlayerStart (DXEngine cbc56edd): both engines, twice each, give 96, every `DXOPS:` line alike. |
 | REN | The laser fence's middle beam a fraction of a pixel thinner, missing the top row `D3DDrv` draws (`DXEngine/docs/NATIVES.md`, particles and lasers) | The multisampling's: with DXEngine's default 4x the beams' edge rows are partly lit, and with it off (`DXEngine/tools/dxcap/vulkan-settings.json`) `LaserConsole`'s three beams have `D3DDrv`'s rows, each within 11 levels of 256 of its red. Multisampling by default is D.4 |
 | DX | ConBindEvents makes every ConListItem with the name None, and a save writes them all as exports of one class, name and outer (`DXEngine/DXEngine/Packages/Engine/Actors/UActor_Conversation.cpp:66`, `DXEngine/DXEngine/Packages/Engine/Actors/UActor_Conversation.cpp:68`) | These items never get into a save. Actor's ConListItems is declared `var transient Object ConListItems;` (gamefiles/System/Engine.u script). PropertyDataBlock::Save (DXEngine/DXEngine/Packages/Core/UObject.cpp:859) skips Transient properties. PackageWriter::WriteObjects (Package/PackageWriter.cpp:116-135) exports only Standalone objects and what they reference. No non-transient script var holds a ConListItem; the only other one is ConListItem.next, which is reached only from the list itself. So no ConListItem export named None is ever written, and nothing gets folded on load. |
