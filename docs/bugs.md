@@ -1,171 +1,257 @@
 # bugs.md
 
-The bugs found and not yet fixed: the open items of the second sweep, 2026-10-28 (each area of
-DXEngine, DXLauncher's branches, the recreation and the workspace read by one agent, and every
-finding proven or refuted by another, read-only), and those found since, each with its proof.
-The refuted are listed at the end so they are not reported again.
+The bugs found and not yet fixed, each with its proof: the third sweep's (every doc of the four
+repositories read for what is open, each place DXEngine or the launchers are not the original
+that the owner has not chosen, and each check no run has made), and those found since. The
+refuted are listed at the end so they are not reported again.
 
-IDs are this list's own, `<section>.<n>`, an item's kept when those before it are fixed; the
-first sweep's (`E1.1`, `L3.12`, `X2.L9`) are its own list's, named only in the commits that cite
-them. A commit that fixes an item cites it, `(bugs.md VM.1)`, and takes it off this list.
+IDs are this list's own, `<section>.<n>`, an item's kept when those before it are fixed, each
+section's numbers going on from the second sweep's, so no ID names two items; the first
+sweep's (`E1.1`, `E10b.15`, `X2.L9`) are its own list's, named only in the commits that cite
+them. A commit that fixes an item cites it, `(bugs.md VM.5)`, and takes it off this list.
+DXEngine's [`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md)
+cites each open difference by its ID, and says "by choice" of each the owner has agreed to.
 
-None open: the second sweep's items are fixed, each commit citing its ID, or refuted below.
+| Section | Area | Open |
+|---|---|---|
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 26 |
+| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 5 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 7 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 8 |
+| [AI](#ai-the-npcs) | the NPCs | 1 |
+| [DX](#dx-deusexs-natives) | DeusEx's natives | 1 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 8 |
+| [NET](#net-the-network) | the network | 4 |
+| [REN](#ren-the-renderer) | the renderer | 17 |
+| [VK](#vk-the-vulkan-device) | the Vulkan device | 1 |
+| [AUD](#aud-the-audio) | the audio | 5 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 7 |
+| [WIN](#win-the-game-window) | the game window | 2 |
+| [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 3 |
+| [X](#x-across-the-launchers-branches) | across the launcher's branches | 1 |
+
+## D: for the owner
+
+Differences made on purpose that the owner has not yet ruled on. A ruling to keep one marks it
+"by choice" where it is said; one to drop it makes the item the original's, fixed and proven
+as any other. Nothing here changes before the owner rules.
+
+| ID | The original | DXEngine | Said in NATIVES.md | Recommended |
+|---|---|---|---|---|
+| D.1 | on a screen wider than 4:3 keeps its field of view across the width and loses height | keeps the height a 4:3 screen shows and sees more at the sides (Hor+), a viewport window too | the view's width; viewport windows | keep: with the original's angle the intro's "Deus Ex" falls off the bottom at 16:9 |
+| D.2 | a mesh's level of detail from its own angle | from the Hor+ angle, so on a wide screen a mesh keeps less detail at the same distance | the view's width; mesh detail | take it from the 4:3 angle, keeping Hor+ |
+| D.3 | the root window is the whole viewport, where the stock code gives a cutscene's subtitles no height at 16:9 or wider | the root 4:3, a cutscene letterboxed at 16:9 | the UI | keep |
+| D.4 | no multisampling, bloom or HDR | each a setting: 4x multisampling on by default, bloom and HDR off | the software device; ENGINE.md, rendering | keep, the defaults as they are |
+| D.5 | an 8-bit frame | the GPU devices' scene buffers of 10 bits a channel | ENGINE.md, rendering | keep |
+| D.6 | bilinear sampling from one mip | the GPU devices trilinear, with 8x anisotropy | the software device | keep |
+| D.7 | no render scale | `Performance.RenderScale`, 1 by default (0.667 on the Smart Pro) | ENGINE.md, settings and environment | keep |
+| D.8 | `D3DDrv` draws the detail textures on hardware that has `BLENDDIFFUSEALPHA` (Wine's Direct3D 7 has not), in three passes, each faded by its polygon's corners and rounded to 8 bits | drawn in one pass, the fade worked out per pixel, no rounding between the bands | the menus' settings; brightness | keep them drawn, the method made `D3DDrv`'s |
+| D.9 | `D3DDrv`'s detail passes take a depth bias | no depth bias anywhere | ENGINE.md, rendering | keep: a translucent draw biased by its slope shows through the opaque one |
+| D.10 | an edit field's copy, cut and paste in a text buffer of its own | the desktop's clipboard | the UI | keep |
+| D.11 | `GetDeusExVersion` is "Mon Mar 19 12:06:14 2001 v1.112fm" | DXEngine's own version, shown under the main menu | implemented, not as the original | keep: a player can tell which engine they run |
+| D.12 | a net game's player with no chosen name logs in as `Player` | as `DXEnginePlayer` | multiplayer | keep |
+| D.13 | `GetLocalIP` is the first address of the machine's own name, on Linux often a loopback one | the address it reaches the network from | multiplayer | keep |
+| D.14 | a fire, water or ice texture with no `MaxFrameRate` steps every frame, faster at a higher frame rate | at most 60 times a second | fire, water and ice textures | keep: the original's pace at 60 frames |
+| D.15 | blink and strobe lights at the frame rate (a turn count's lowest bit, a turn each frame); an ambient sound on such a light follows them | on DXEngine's own timing | lighting; sound | keep, at the original's pace at 60 frames |
+| D.16 | a flickering light flickers each frame | at most 25 times a second (Surreal Engine's) | lighting | the original's pace at 60 frames |
+| D.17 | at least 5 ms a step, so above 200 frames a second the game runs fast | the frame's real time | small | keep |
+| D.18 | the level's `TimeDilation` not held (the game sets it only through `SetGameSpeed`, 0.1 or more) | held to 0.0025 to 25 | small | keep |
+| D.19 | a listen server runs as fast as it draws, losing unreliable calls at high rates | at most 144 frames a second | multiplayer | keep |
+| D.20 | with the Sound and Speech sliders equal, both kinds of sound scaled by the slider once more | not carried | sound | carry it |
+| D.21 | a 1/256 volume floor | not carried | sound | carry it |
+| D.22 | a comment with no end tag reads past the text's end, so `09_EmailMenu_ShipOps`'s listing depends on the memory after it | stops at the end | what the player reads | keep, unless the original's runs show a listing that holds, then that |
+| D.23 | a start on `?loadgame=N` logs the player in with the travel info the level was saved with | the player saved, as the game's own load gives it | the command line | keep |
+| D.24 | the `.int` files read from `System` alone | from each folder of the paths, then `System` | mods | keep: a mod in its own folders gives its text |
+| D.25 | an ini written back whole, CR LF, its comments gone | a changed value changed in its own line, the rest of the file as it was | mods (config files) | keep |
+| D.26 | `ReceivedBinary` hands the script other bytes, the count right, and `SendBinary` answers False | the bytes that came; False only when nothing went | multiplayer | keep: no mod can have counted on them |
+
+## VM: the script VM and the object system
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| VM.5 | Strings are of bytes, Latin-1, where the original's are UTF-16: a typed character past Latin-1 goes nowhere, a wide string loads with `?` for each such character (a note in a save, every conversation comment of `DeusExConText.u`), and `Chr` keeps the low 8 bits | the UI; implemented, not as the original (small ones) | `TypeConsole` typing U+0100 and past; a note of such characters saved and loaded across both engines; `OpsConsole`'s `Chr` and `Asc` |
+| VM.6 | `-norunaway` is not carried: the original's lets a runaway loop run on | stops the game | `LoopConsole` with `-norunaway` past 10,000,000 jumps |
+| VM.7 | A save's load counts the runaway jumps on from its frame's level tick, where the original's map load starts the count afresh | stops the game | `LoopConsole` across a save's load |
+| VM.8 | A singular call held off gives its type's zero, where the original's leaves a variable assigned from it as it was | small | `CallConsole` with a held-off call's value assigned over a set variable |
+| VM.9 | A property's text takes an element by its index (`N[1]=7`), where the original's import stops there (`ImportText: Illegal array element`) | implemented, not as the original (a property's text) | `TextConsole` with an element by index |
+
+## PKG: saving, loading, travel and the loading screen
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| PKG.6 | The loading screen's word sits a pixel lower: the console centres it at a half pixel for an odd size, which the original's canvas truncates | saving, loading and travel | `LoadingConsole`'s shots: the word on the original's rows |
+| PKG.7 | The painted loading frame does not tick the console, where the original's draw (`UConsole::PreRender`) ticks it once more | saving, loading and travel | `LoadingConsole`, `HopConsole`: the console's ticks alike |
+| PKG.8 | No frame shows `PRECACHING`, which the original's shows with its driver's precache on | saving, loading and travel | `LoadingConsole` with the render device's precache on |
+| PKG.9 | A bare `?loadgame` loads nothing, where the original's browse takes it for no load and opens its menu map again | saving, loading and travel | `SlotConsole` with a bare `?loadgame` |
+| PKG.10 | A level returned to from `Current` keeps the map's name in its URL, where the original's names the saved file, `..\Save\Current\<map>.dxs` | saving, loading and travel | `ReturnConsole`'s `GetLocalURL` |
+| PKG.11 | A travel to a missing map is found so before the pre-travel, the level playing on; the original's browse has pruned the player's augmentations, skills and flag base by then for a map numbered within the mission, and for any other empties `Current` and loads the level again from `Maps` | saving, loading and travel | `BrowseConsole` with a missing map of the mission and one of another |
+| PKG.12 | After a restart `Level.GetLocalURL` names the map, where the original's names `Index` | saving, loading and travel | `ReturnConsole` after `RestartLevel` |
+
+## PHYS: physics, traces and movers
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| PHYS.5 | The engine's own rotations (the view, movement) take exact angles, where the original's take its sine table: at 20 frames a second `FlightConsole`'s gull, flown level into the pier's wall, slides some 18 units along it in the original and stays put in DXEngine | implemented, not as the original | `FlightConsole` at 20 frames; then every physics console |
+| PHYS.6 | Swimming out from under water at some 1,000 frames a second: the original's player gains one float's step a frame and is six times as far out by 0.75 s | implemented, not as the original | `SwimConsole`'s d, both engines uncapped |
+| PHYS.7 | A hinged door crushes a crate 0.2 s into its close, where the original's does at 0.3 s, the crate coming to rest 10 units from the original's | implemented, not as the original (a mover's move) | `DoorConsole` on UNATCO HQ |
+| PHYS.8 | A tie between a mover's own hit and the level's at one plane falls to the mover, where the original's two times, rounded apart, fall either way (`DeusExMover19`'s, `25`'s and `8`'s reversed lines on DXMP_Silo are the level's) | implemented, not as the original | `VisibleConsole` on DXMP_Silo: all 110 lines alike |
+| PHYS.9 | The filed polygons are an overlay on the level's BSP: a start inside a filed mover's solid is not in solid, and `TraceTexture` gives the flags of the polygon crossed (`PF_Invisible \| PF_Semisolid` on `DeusExMover26`'s line) where the original's filed node has 0 | implemented, not as the original | `VisibleConsole`, `TraceConsole` |
+| PHYS.10 | The movers filed under one filed again are not filed again, and a mover's polygons are filed whole, where the original's tree drops what lands in solid | implemented, not as the original (the movers in a line's way) | `MoverConsole` with two movers filed in turn |
+| PHYS.11 | Liberty Island's auto turret and crossbow pickup get the level for their base at the map's start, where the original's have none | implemented, not as the original | `BaseConsole` |
+| PHYS.12 | A line straight down meets the floor half a unit higher than the original's | small | `StandConsole`, `TraceConsole` |
+
+## AI: the NPCs
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| AI.6 | `FindBestInventoryPath` is Surreal Engine's search, not the original's `findPathTowardBestInventory`, which is unread | mods | Engine.dll read; a console asking it of Liberty Island's pawns in both engines |
+
+## DX: DeusEx's natives
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| DX.2 | `DeusExPlayer.UnloadTexture` frees nothing, where the original frees the texture's mips as a menu, the Persona screen, a computer screen or an image closes | implemented, not as the original | a console closing an image screen: the mips freed, the texture drawn again after |
+
+## EXT: the window tree (Extension)
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| EXT.8 | Windows are laid out once a frame, where the original lays each out as it asks: a window made this frame is 10 by 10 until the next; one that shows sits at the margins `SetPos` gives it at once, where a parent placing it again does so the next frame; one a parent placed keeps that place, where the original's goes back to its alignment when the parent's next layout leaves it out | the UI | `MenuConsole`, `ScreenConsole`, `SizeConsole` |
+| EXT.9 | The first keyboard focus is seeded in DXEngine's layout pass, after the level's tick, where the original seeds it at its windows' next tick: a conversation's first choice has the focus a frame sooner there | the UI | `ChoiceConsole` |
+| EXT.10 | The focus tables pass over no window as clipped away, DXEngine keeping no clip rectangles | the UI | `FocusConsole` with a window clipped out of view |
+| EXT.11 | The keyboard counts as grabbed while a modal shows, where the original counts its grabs | the UI (keys) | both codes read; `KeypadConsole` |
+| EXT.12 | A large text window's block of lines ends in one more spacing than the original's rows: in a window taller than its text, lines centred or at the bottom sit up to a pixel higher | the UI | `ScreenConsole`'s shots |
+| EXT.13 | `GC.DrawActor` ignores `bConstrain`: the vision augmentation's calls cover the whole view | the UI | `AugVisionConsole`'s shots |
+| EXT.14 | Viewport windows, none of it reached by the game: no `CalcView` event; an origin or watch actor gone leaves the view at the window's fields, not at its last place and turn; a window turned off draws nothing, where the original tiles its default texture; `SetRotation` keeps the watch actor; `SetDefaultTexture` takes no defaults; `bShowWeapons` draws no overlays; `SetViewportActor` adds no network view (`AdditionalViews`); `ConvertVectorToCoordinates` in one, or in a window inside one, projects through the main view; the frame takes the window's whole rectangle, not its clip rectangle | viewport windows | `CameraConsole` with each |
+| EXT.15 | A border window's resizing by its border (`bResizeable`: `CursorRequested`, `MouseButtonPressed` and the rest) is unread in the original, DXEngine's unproven; no script of the game turns it on | (dx-reverse-info's extension-dll.md, border windows) | Extension.dll read; a timeline dragging a tool window's border |
+
+## NET: the network
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| NET.4 | `PORT=` and `MULTIHOME=` are not taken: a server binds its URL's port or the next free of the 20 from it, where the original's takes the port `PORT=` gives and binds the address `MULTIHOME=` names (the first sweep's `E15b.16`, its half the engine's fix left) | multiplayer | `ServeConsole` with each, the original's client joining |
+| NET.5 | A package downloaded is cached as its GUID with `CacheExt`, where the original writes `.uxx` whatever `CacheExt` says | multiplayer | `JoinConsole` with `CacheExt` changed |
+| NET.6 | A remote player's pawn destroyed by script (`Kick`) closes its connection: no run | multiplayer | `ServeConsole` kicking `JoinConsole`'s player, each engine the server |
+| NET.7 | Entry's actors find their regions in Entry's own model while a map is current: no run | multiplayer | a run through Entry with a map current |
+
+## REN: the renderer
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| REN.8 | Masked particles show their texture's colour 0: 0.7% of `SpriteConsole`'s particles magenta, none in `D3DDrv`'s frame | sprites | `SpriteConsole` |
+| REN.9 | A texture drawn both masked and not shows its colour 0 as each draw is, where the original's single copy keeps the first draw's: `SpriteConsole`'s `STY_Normal` sprite magenta beside the masked ones, black in the original | sprites | `SpriteConsole` |
+| REN.10 | The Matrix cheat's `Sprite` stands in for the textures of meshes and sprites alone; the original's draws the level's surfaces in it too, by a rule unread | sprites | Render.dll read; `MatrixConsole` |
+| REN.11 | The laser fence's middle beam is a fraction of a pixel thinner, missing the top row `D3DDrv` draws | particles and lasers | `LaserConsole` |
+| REN.12 | A mesh in a fog zone is unfogged; the original fogs it from its leaf's own volumetric lights by a vertex model of its own, unread: 02_NYC_Underground's crate 220 units into the fog at 0.09 of the wall beside it in `D3DDrv`'s frame, 0.25 in DXEngine's (the first sweep's `E10b.15`) | lighting | Render.dll's model read; `FogConsole` |
+| REN.13 | The `AmbientGlow` pulse runs on the level's time, the original's on the viewport's | lighting | a glowing actor in view with the game paused, both engines' shots |
+| REN.14 | Where two opaque surfaces overlap at one depth, which shows can differ: the gaps between Liberty Island pier's planks, a few hundred pixels of `MeshConsole`'s frame | draw order and movers | `MeshConsole` |
+| REN.15 | A mesh's translucent faces are drawn after all its opaque ones, where the original draws them in face order, losing one drawn before an opaque face behind it (`GM_Jumpsuit`, `GM_Suit`, `GFM_TShirtPants` and their carcasses, `ComputerPublic`) | draw order and movers | `FaceConsole` on those meshes |
+| REN.16 | A mover hidden after it is filed stops drawing, where the original's stays drawn there | draw order and movers | `GlassConsole` hiding a mover |
+| REN.17 | `Canvas.DrawActor`'s and `DrawClippedActor`'s `WireFrame` draws the actor solid, where the original draws the call with the player's `RendMap` at wire | the UI | `OverlayConsole` with `WireFrame` |
+| REN.18 | A texture in a format past Deus Ex's is drawn white; what the original does with one is unread | mods | Engine.dll's `UTexture` read |
+| REN.19 | The render device's `Translucency` is read, saved and `SET`, and changes nothing; what it does in the original is unread | mods | `D3DDrv.dll` and Render.dll read |
+| REN.20 | `ScriptedTexture.ReplaceTexture`: no run | mods | `ModConsole` with a scripted texture |
+| REN.21 | A sprite animated once (`DT_SpriteAnimOnce`) showing the frame its life has reached and holding the last: no run | sprites | a console spawning one, both engines' shots |
+| REN.22 | An animated or fractal corona skin showing its current frame: no run | coronas | `CoronaConsole` with such a skin |
+| REN.23 | The light effects no stock view shows, the searchlight, non-incidence and the rotor among them, and fast wave, shock, shell and interference, which no stock light has: the reading's alone, no run | lighting | `LightConsole` with a light of each spawned |
+| REN.24 | Liberty Island's pier 1.7% under `D3DDrv`'s frames with the detail textures on and 0.7% over with them off, Paul Denton a level over, `LaserConsole`'s corridor 2% under: measured again once D.8 is ruled | brightness | `MeshConsole`, `LaserConsole` |
+
+## VK: the Vulkan device
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| VK.3 | The Vulkan device draws some of the loading screen's glyphs a row lower than `D3DDrv`, point sampled on a texel's edge | the software device | `LoadingConsole` on Vulkan against `D3DDrv` |
+
+## AUD: the audio
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| AUD.4 | A change to Effects Channels: the sounds on channels past a lowered count stop, where the original's play on out of its reach; a raised count's channels are voices of their own, where the original's are its music's | sound | `SoundConsole` changing the count under a sound, recorded |
+| AUD.5 | The original's MP3 voice can play on, silent, past its sound: `LipConsole`'s third line works out shapes to 2.9 s there, three more `X`s; the cause is unfound | sound | `LipConsole` |
+| AUD.6 | The holds a `SET` puts on `DopplerSpeed` and `AmbientFactor` are not carried | sound | `SET` past them, `GET` alike |
+| AUD.7 | A WAV's ping-pong loop plays forward, where Galaxy's plays back and forth | sound | a sound with such a loop, recorded |
+| AUD.8 | An 8-bit sample's lip sync is not read from its start wherever it plays, as the original's is | sound | `LipConsole` with an 8-bit WAV line |
+
+## ENG: the engine, its input and its config
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| ENG.7 | `INI=` and `USERINI=` are opened as given, where the original's file system finds them in any case, as the launchers find them (the first sweep's `L7.5`, its engine half) | the command line | a run whose `INI=` is in another case than the disk's |
+| ENG.8 | An axis a console command sets is used as it is; the original's input scales it | small (input axes) | `StandConsole` setting an axis by command |
+| ENG.9 | The original takes its viewport's own command words (`SHOT` among them) before the exec functions | small (a key's binding) | a binding whose word an exec function shares |
+| ENG.10 | `Toggle` and `Pulse` do nothing, and a command after `OnRelease` never runs | small (a key's binding) | a timeline as `bad-keys.txt` with each |
+| ENG.11 | A setting read by hand keeps DXEngine's default for an empty value, where the original's is 0 or empty | mods (config files) | `IniConsole` with empty values |
+| ENG.12 | `ResetConfig` does not tell the class of it (`PostEditChange`), as the original's does | mods | `ModConsole` |
+| ENG.13 | A `SpawnNotify` is not asked about an actor spawned while a notification runs, DXEngine's guard against one spawning without end; the original's `SpawnActor` is unread there | mods (spawn notifications) | Engine.dll's `SpawnActor` read; `CensusConsole`'s `CensusNotify` spawning |
+
+## WIN: the game window
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| WIN.6 | A key is named by its place on a US keyboard, where the original's name follows the layout; the keypad's digits are always `NumPad0` to `NumPad9`, where with Num Lock off the original's are the arrows, Home and the rest | small (a key's name) | WinDrv.dll read; `keys.txt` under another layout and with Num Lock off |
+| WIN.7 | With Alt down a letter or digit comes from the key's press, not from the characters the platform sends, and the keys held are forgotten as the window loses the keyboard | the UI (keys) | `ClickConsole`'s Alt under another layout; a timeline that takes the focus away with a key held |
+
+## MAIN: the recreation (deusex-launcher's main)
+
+| ID | What | Said in | Proof |
+|---|---|---|---|
+| MAIN.6 | Safe mode's eight boxes are all wired, where the shipped original's three do nothing and one does four boxes' work; the owner's decision: as the original ships | main's README, where it differs; dx-reverse-info's wizard.md, the shipped bug | `test_wizard`; the live check |
+| MAIN.7 | A launch beside a running one appends to the log, where the original's second writer fails to open the file the first holds and that launch runs without a log; the owner's decision: as the original | main's README, where it differs | a test of two launches at once |
+| MAIN.8 | Unverified in the original: a second launch handing a running game its command line, and the splash staying up through a real start of the engine | dx-reverse-info's wizard.md | the original under Proton, launched twice |
+
+## X: across the launcher's branches
+
+| ID | What | Proof |
+|---|---|---|
+| X.5 | Fixes in code the branches share have not crossed to every branch that has the code: `bd353d8` and `7fe9ff4` (windows-x86_64, trimui-smartpro); `749b708`, `d8094bc` and `532d0ab` (trimui-smartpro); `361037a` (trimui-smartpro, and windows-x86_64 where its check takes it); `a5a2519` and `51f03ae` (windows-x86_64); `3ef8f0f`, from windows-x86_64 (linux-x86_64, linux-aarch64, trimui-smartpro); and the POSIX code's `2e9d9eb`, `a9cf9b0`, `d7b2be4`, `c85a029`, `9b60ee0`, `fe1ac7a`, `41cfc04`, `a572db6` and `5a47a03` (windows-x86_64's host build). `67fa2f8`, Lutris' database, is no Windows place | each branch's tests |
 
 ## Refuted
 
 | Area | Finding | Why refuted |
 |---|---|---|
-| VM | RadiusActors(None, 300) on the menu map finds one actor more than the original's, 99 against 98 (`DXEngine/DXEngine/VM/Iterator.cpp`, `DXEngine/tools/dxcap/Classes/OpsConsole.uc`) | DX.dx's player rides the menu's flyby, so a count from it is the moment's: 2 s in, the original's player stood at 2769, 308, -98 and DXEngine's at 2752, 299, -92, InterpolationPoint14 (a collision radius of 10) 327 units from the one and 307 from the other, outside 300 plus its radius and inside it, as the original's test has it (engine-dll.md, traces). OpsConsole now counts round the level's first PlayerStart (DXEngine cbc56edd): both engines, twice each, give 96, every `DXOPS:` line alike. |
+| VM | RadiusActors(None, 300) on the menu map finds one actor more than the original's, 99 against 98 (`DXEngine/DXEngine/VM/Iterator.cpp`, `DXEngine/tools/dxcap/Classes/OpsConsole.uc`) | DX.dx's player rides the menu's flyby, so a count from it is the moment's: 2 s in, the original's player stood at 2769, 308, -98 and DXEngine's at 2752, 299, -92, InterpolationPoint14 (a collision radius of 10) 327 units from the one and 307 from the other, outside 300 plus its radius and inside it, as the original's test has it (engine-dll.md, traces). OpsConsole counts round the level's first PlayerStart (DXEngine cbc56edd): both engines, twice each, give 96, every `DXOPS:` line alike. |
 | DX | ConBindEvents makes every ConListItem with the name None, and a save writes them all as exports of one class, name and outer (`DXEngine/DXEngine/Packages/Engine/Actors/UActor_Conversation.cpp:66`, `DXEngine/DXEngine/Packages/Engine/Actors/UActor_Conversation.cpp:68`) | These items never get into a save. Actor's ConListItems is declared `var transient Object ConListItems;` (gamefiles/System/Engine.u script). PropertyDataBlock::Save (DXEngine/DXEngine/Packages/Core/UObject.cpp:859) skips Transient properties. PackageWriter::WriteObjects (Package/PackageWriter.cpp:116-135) exports only Standalone objects and what they reference. No non-transient script var holds a ConListItem; the only other one is ConListItem.next, which is reached only from the list itself. So no ConListItem export named None is ever written, and nothing gets folded on load. |
-| EXT | A text log drops only its oldest expired lines, so a shorter timeout waits behind them (`DXEngine/DXEngine/Packages/Extension/Windows/Text/UTextLogWindow.cpp:73`) | The original's tick (0x10047c30) first subtracts deltaTime from every line's time. It then counts the leading lines whose time is <= 0, stopping at the first that is still positive, and removes that leading run (TArray Remove(0, n)). DXEngine's leading-run erase matches it. extension-dll.md's wording "drops the lines whose time is out" is loose, but the binary drops only the leading run. |
+| EXT | A text log drops only its oldest expired lines, so a shorter timeout waits behind them (`DXEngine/DXEngine/Packages/Extension/Windows/Text/UTextLogWindow.cpp:73`) | The original's tick (0x10047c30) first subtracts deltaTime from every line's time. It then counts the leading lines whose time is <= 0, stopping at the first that is still positive, and removes that leading run (TArray Remove(0, n)). DXEngine's leading-run erase matches it, as extension-dll.md's text logs say. |
 | LPORT | dxl_game_close frees a pending overlapped read's buffer and OVERLAPPED before the read is cancelled (`deusex-launcher/windows-x86_64/src/platform/win32/process.c:225`, `deusex-launcher/windows-x86_64/src/platform/win32/process.c:226`) | The order is wrong (free(g->pending) at process.c:226, then CancelIo at :231, with no wait for completion), but the bad case cannot occur. It needs a read still pending after the process is signalled, which needs another process to hold the line's client end. The launcher passes the client only through a PROC_THREAD_ATTRIBUTE_HANDLE_LIST and closes its own copy (process.c:208). DXEngine's LauncherLine::Open (LauncherLine.cpp:50-54, called from Hello at GameApp.cpp:72) clears HANDLE_FLAG_INHERIT. Its relaunch passes a handle list of the stdio alone (GameApp.cpp:228-249), and the crash uploader inherits nothing (CrashReporter.cpp:187). Windows closes a process's handles before it signals the process object, so the read has completed, with its buffer and status written, before ENDED. |
 
-## Coverage
+## Not yet read
 
-What each finder read, in its own words.
+What no sweep has read, by area: the next sweep's ground, beside the first sweep's numbers no
+commit cites ([`bugs-recovered.md`](bugs-recovered.md)).
 
-- **VM:** I read VM/Frame.cpp/.h, ExpressionEvaluator.cpp/.h, ExpressionValue.h, StructValue.h,
-  ArrayValue.h, Bytecode.cpp/.h, Iterator.cpp/.h, NativeFunc.*, ScriptCall.*, GC/GC.*, EngineGC.cpp,
-  Core's UObject.*, UStruct.cpp, UClass.cpp, UState/UFunction/UField/UTextBuffer, NObject.cpp,
-  NGC.cpp and NCommandlet.cpp, and checked how PropertyOffsets is used. I compared them with
-  core-dll.md, NATIVES.md, the SDK's UnNames.h and the game's script text (strings of the .u files).
-  I did not open IDA, because opening it would write into gamefiles/ or reference/, so nothing was
-  checked against the binaries. Not reached: Expression.h visitor details, PrintPrettyExpression,
-  the property classes' Copy/Compare code.
-- **PKG:** Read in full: UnrealURL.cpp, ObjectTravelInfo.cpp, Package.cpp, PackageWriter.cpp,
-  PackageStream.cpp, ObjectStream.h, most of PackageManager.cpp, ULevelBase/ULevel.cpp, UModel load
-  and save, NGameDirectory and UGameDirectory, NDeusExSaveInfo. In Engine.cpp: Run's travel and save
-  loop, ClientTravel, LoadMap, LoadSavedGame/LoadFromSaveFile, SaveGameToSlot, DeusExPreTravel,
-  Prune, SaveCurrentLevel, LoginPlayer and open/disconnect. Compared with deusex-dll.md,
-  engine-dll.md, core-dll.md, network.md and the Engine.u/DeusEx.u script. Only skimmed:
-  IniFile/IniProperty and NameString. Not reached: UBspNodes/UPolys loads, UMesh.
-- **PHYS:** Read in full: UActor_Phys*.cpp (all), Collision/TopLevel (CollisionSystem, TraceTest,
-  OverlapTest, headers), NActor move/trace natives incl. ParabolicTrace, NZoneInfo, NWarpZoneInfo,
-  UWarpZoneInfo, UActor_Base/Touch/Zone, Spawn/Destroy/Move in UActor.cpp, trace iterators in
-  VM/Iterator.cpp, UPawn/UPlayerPawn TickRotating. Compared against engine-dll.md (moving, traces,
-  touches), game scripts, and Engine.dll in a scratch copy of the IDA backup (UPrimitive::LineCheck,
-  execTraceActors, FindBase, IsBasedOn, SingleLineCheck, SetCollision, APawn::performPhysics and
-  physicsRotation, IsOverlapping, the ladder code). Not reached: Collision/BottomLevel
-  (TraceAABBModel, TraceRayModel, OverlapAABBModel), Math beyond rotator.h, UPawn reach and path
-  code.
-- **AI:** Read UEventManager.cpp/.h in full, UPawn_AI.cpp, UPawn_Tick.cpp, UPawn_Path.cpp,
-  NPawn.cpp, NPlayerPawn/Ext, NScriptedPawn, NNavigationPoint, NGameInfo, NLevelInfo,
-  UPlayerPawn.cpp, UActor.cpp, UActor_Animation.cpp, UActor_Touch/Owner, and parts of
-  UPawn_ReachDeusEx.cpp. I checked them against engine-dll.md and the game's script, and
-  disassembled Engine.dll with objdump at AIProcess 0x10384080, ComputeSenseDetection 0x103837b0 and
-  the better-start pass 0x103db0e0 (that pass matches the binary). I did not get to: the
-  walk/fly/swim reach moves in detail, AICanSee against the binary, the blend tween's fields in the
-  binary, UActor_Base/Zone/Render/Conversation.
-- **DX:** I read all of this area's code: NFlagBase plus UFlagBase, NConversation/UConversation,
-  RandomLabel, ConAudioList, UActor_Conversation (ConBindEvents), the DeusExTextParser,
-  DeusExPlayer, GameDirectory, SaveInfo, ScriptedPawn tick and alliances, the particle and laser
-  iterators, and NComputerWindow plus UComputerWindow's queue. I compared them with deusex-dll.md,
-  consys-dll.md, deusextext-dll.md, extension-dll.md's flags section, NATIVES.md and the game script
-  pulled from the .u files with strings. Most of it matches. IDA was denied, so I could not check
-  the binaries for the ConListItem naming, the bleed loop or the laser maths.
-- **EXT:** I read the Extension package code: UWindow, URootWindow, UModal, UTabGroup, URadioBox,
-  UClip, UScrollArea, UScale (first 620 lines), UScaleManager, UTile, UBorder, UViewport, UList,
-  UEdit, UText, ULargeText, UTextLog, UButton, UToggle, UCheckbox, UGC, UExtString and UFlagBase,
-  plus NWindow, NRootWindow, NExtString, NExtensionObject and NTextWindow. I also read
-  RenderWindow.cpp (the GC stack) and checked each finding against extension-dll.md, NATIVES.md and
-  the game's script in DeusEx.u and Extension.u. Not reached: UComputerWindow, the rest of
-  UScaleWindow (geometry and drawing), the other natives' wrappers in detail. I opened no IDA
-  database, so behaviour the RE docs do not cover stays unconfirmed.
-- **NET:** Read all of Network/ (NetBits, NetConnection, NetChannel, NetDriver, NetServer,
-  NetClient, NetPackageMap, NetSerialize, NetRemote), Packages/IpDrv (InternetLink, TcpLink,
-  UdpLink), Native/N*Link.cpp, and Engine.cpp's net parts (main loop, BeginConnect,
-  TickPendingLevel, LoadClientMap, HandleClientPlayer, CloseNetDriver, Listen, PreLogin,
-  SpawnPlayActor, GETPING/NETSPEED). Compared them with network.md, ipdrv-dll.md, NATIVES.md, the
-  SDK's IpDrv headers and the game's script strings (DeusEx.u, IpServer.u, UBrowser.u). Not reached:
-  UnrealURL parsing, the package-cache code (FindPackageFile/UsePackageFile), and anything verified
-  only with IDA.
-- **REN:** Read in full: Render (VisibleFrame, VisibleMesh,
-  VisibleActor/Sprite/Node/Brush/Decal/IteratorItem, RenderCanvas/Scene/Subsystem/Window), Light
-  (LightSystem*, LightmapBuilder setup/merge, LightmapAtlas, Shadowmap, LightActorTree, Fog),
-  Textures (UTexture, fire/water/wet/ice/scripted, most of FireEngine), Mesh load, NCanvas,
-  NScriptedTexture, NDecal, UDecal. Compared against render-dll.md, fire-dll.md, engine-dll.md and
-  NATIVES.md. Only skimmed: BspClipper rasterizer, LightEffect shapes other than NoneEffect,
-  FireEngine spark kinds. IDA not used.
-- **VK:** Read in full: VulkanRenderDevice.cpp/.h, CommandBufferManager, DescriptorSetManager,
-  TextureManager, UploadManager, TextureUploader, RenderPassManager, FramebufferManager,
-  SceneTextures, Buffer/Sampler/ShaderManager, FileResource.cpp (all shaders), RenderDevice.cpp/.h;
-  DXGPU vulkandevice, vulkanswapchain, vulkaninstance, and most of vulkanbuilders (device pick,
-  pipelines, barriers, submit, descriptors, images, samplers). Compared against d3ddrv-dll.md,
-  ENGINE.md and NATIVES.md. Checked the frame-in-flight sync, layouts, bloom chain and uploads; they
-  look sound. Not reached: the vulkanobjects.h command wrappers line by line, GLSLCompiler::Compile,
-  VulkanSurface and the widget surface code.
-- **GL:** I read all of GLRenderDevice.cpp/.h, GLTextureManager, GLUploadManager, GLTextureUploader,
-  GLHandles, GLCachedTexture and GLFileResource (the shaders), plus their callers in
-  RenderSubsystem, URootWindow and Engine::TakeScreenshot. I diffed the scene draws, flash, present
-  and bloom against the Vulkan device, and checked blending and gamma against d3ddrv-dll.md. On Mesa
-  I compiled and linked every shader variant as GLSL 4.20 and ES 3.20 (all clean) and tested
-  glDrawBuffers(GL_BACK) (no error). I did not reach gl_load.c beyond its loader entry, the
-  DXWidgets GL context code, or ES driver behaviour other than Mesa's.
-- **SWD3D:** I read all of Software/ (device, commands, setup, rasterizer, pipelines, SIMD, sampler,
-  reference, present, workers, textures) and D3D11/ (device, texture manager, upload manager,
-  uploaders, HLSL). I compared them with the Vulkan and GL uploaders, Vulkan's SetSceneNode, ClearZ
-  and pipelines, d3ddrv-dll.md, ENGINE.md and NATIVES.md, and the E11b/E13/E14 fixes. I did not
-  reach the widgets' PresentBitmap backends, the D3D11 bloom and present HLSL beyond a skim, and
-  Wine or Windows runtime behaviour. Nothing was run.
-- **AUD:** Read in full: Audio/AudioDevice.cpp, AudioSource.cpp, GalaxyMixer.cpp/.h,
-  UDXEngineAudioDevice.cpp/.h, USound.cpp/.h, UMusic.cpp. Also read their callers in Engine.cpp
-  (init, map load, StopEffects), NActor.cpp (PlaySound and the volume natives), UActor HearSound,
-  UPawn ClientHearSound and UWindow::PlaySound. Compared them with galaxy-dll.md,
-  engine-dll.md#sounds, NATIVES.md#sound, the game's ini and Engine.u's LipSynch, and checked
-  bugs-recovered E15a/E5a. Not run or built. Not checked: OpenAL/OpenMPT render quality against
-  Galaxy's output, or the MSVC/Windows env path for -nosound.
-- **ENG:** Read in full: GameApp.cpp, MainGame.cpp, LauncherSettings.cpp/.h, GamepadInput.cpp,
-  UDXEngineClient.cpp/.h, CommandLine, LauncherLine, OriginalCommandLine, GameFolder, the Native
-  stubs, Engine.cpp's ctor, Run loop, CalcTimeElapsed, ConsoleCommand, the input path and window
-  callbacks, Engine.h, Utils File/Logger/Convert/StrTools/UTF8/UTF16/Random/Exception. Compared
-  against engine-dll.md (key bindings, level tick), windrv-dll.md, launch-flow.md, network.md,
-  NATIVES.md and ENGINE.md. Did not open IDA, which would write next to the game files.
-  CrashReporter (MSVC only), Array.h, JsonValue parse, MD5, SHA1 and PEIcon got only a skim.
-- **WIN:** Read GameWindow.cpp/.h, UI/ErrorWindow and WidgetResourceData, window.cpp, the SDL3 and
-  SDL2 backends in full, the X11 connection and most of its window, Win32's message handler and
-  SetClientFrame, core/widget.cpp's window dispatch and geometry. I followed the callers in
-  Engine.cpp (OpenWindow, TickWindow, OnWindow*, setres, togglefullscreen), GameApp, URootWindow's
-  key routing, GamepadInput, and the vendored SDL3 source. I read Wayland only for its timer fix,
-  and did not reach the dbus or Win32 file dialogs, DXWidgets' widgets beyond the error window's, or
-  the canvas and font code.
-- **LCORE:** I read all of linux-x86_64/src/core: ini, profile, config, sentinel, policy, cmdline,
-  argv, engine_args, engine_sections, settings, engine_settings, json, vdf, upkg, upkg_assets,
-  saves, shotlist, gamespy, servers, mods, finder, finder_places, install, gamedb, lastrun, padmap,
-  bindings, renderers, advice, bigscreen and log, and skimmed keys, theme_colors, padcurve and
-  settings_table. I checked them against the engine (UE1GameDatabase, LauncherSettings,
-  PackageManager, OriginalCommandLine, U*Device headers), SDL3's SDL_gamepad.c, DeusEx.u's script
-  and Default.ini. I did not check sha1.c, keys.c's scancodes against DXWidgets, or the platform/
-  and app/ code beyond the callers.
-- **LAPP:** Read in full: src/app/{run,play,session,browser}.c, src/main.c, src/cli_main.c, and
-  every file in src/platform/posix (process, instance, wait, startup, os, fs, folders, net, trash,
-  desktop, gpu_probe). Checked against LAUNCHER.md, policy.c, cmdline.c, engine_args.c, window.c's
-  view/listener, the engine's LauncherLine/Relaunch, launch-flow.md section 1 and DeusExLocalLink's
-  script. The aarch64 diff is only the SDL2 backend name, which matches ENGINE.md. Not reached:
-  src/screens beyond window.c, src/core beyond the files named, the tests.
-- **LUI:** I read all of src/ui (kit, controls, widgets, focus, text, osk, thumbs, audio, theme,
-  draw, art in part) and src/screens (shell, window, firstrun, home, profiles, mods, saves, shots,
-  servers, dialogs, settings, controller, padwizard, recovery, log, about). I followed the calls
-  into session.c, run.c, install.c, profile.c, bindings.c, engine_settings.c and saves.c, and
-  checked against LAUNCHER.md and bugs-recovered.md. I skimmed uiscript.c, which is test-only, and
-  did not read pad3d.c, padmesh.c, icon.c or the rest of glyphs.c beyond dxl_hints.
-- **LPORT:** I read all of win32/*.c (process, instance, fs, trash, os, wait, startup, desktop,
-  folders, net, gpu_probe), finder_places_win32.c, Windows' shared-code diff (run.c, main.c,
-  settings, renderers, cli), the manifest and toolchain. For the Smart Pro I read gamehook, cpumode,
-  delete.c, the run.c/session/screens/settings/window diffs, posix gpu_probe, SDL_fbvideo.c,
-  launch.sh and port-hooks.sh, with both LAUNCHER.md files and the port READMEs. I checked the
-  engine's LauncherLine.cpp side. I skimmed the tests, fetch-sysroot.sh and profile-map.sh, and did
-  not verify vdf unescaping.
-- **MAIN:** Read all of deusex-launcher/main/src (launch, policy, cmdline, config, ini, instance,
-  sentinel, migrate, safemode, renderdev, detail, install, localize, paths, peicon, log, process,
-  winmain, wizard, msgbox, splash; gui.c and dialog.c skimmed), system/run-game.sh, and the relevant
-  tests and livecheck.py. Compared them with launch-flow.md, wizard.md, cli-flags.md and
-  ini-keys.md, and with DXEngine's LauncherLine, Relaunch and GameFolder. I proved finding 1 by
-  compiling cmdline.c and policy.c in scratch. I did not deeply audit the GUI drawing code (gui.c
-  text rendering, dialog.c layout) or the pixel accuracy.
-- **X:** Read: port-ex-machina scripts (dx.sh, engine.sh, launcher.sh, recreation.sh, ci.sh,
-  ci-apt-install.sh, wine.sh, check-docs.sh, lib/common.sh), both workflows and the callers'
-  build.yml; DXEngine GameApp, MainGame, CommandLine, OriginalCommandLine, GameFolder,
-  UE1GameDatabase, LauncherLine, LauncherSettings, Engine Relaunch/OnLauncherLine, PackageManager
-  ini loading, cmake/version.cmake, CMakeLists zip part, dxcap.sh, host-tools.sh; launcher gamedb,
-  install.c, engine_args, settings tables, play.c, posix process.c, win32 quoting. Skimmed only:
-  natives_audit.py, dxcap/*.py, tools/probes, check-abi.sh.
+- **VM:** nothing checked against the binaries; Expression.h's visitors, PrintPrettyExpression,
+  the property classes' Copy and Compare.
+- **PKG:** IniFile and IniProperty, NameString (skimmed); the loads of UBspNodes and UPolys,
+  UMesh.
+- **PHYS:** Collision/BottomLevel (TraceAABBModel, TraceRayModel, OverlapAABBModel), Math past
+  rotator.h, UPawn's reach and path code.
+- **AI:** the walk, fly and swim reach moves in detail; AICanSee, and the blend tween's fields,
+  against the binary; UActor_Base, Zone, Render and Conversation.
+- **DX:** the binaries for the ConListItems' names, the bleed loop and the laser's maths.
+- **EXT:** UComputerWindow; UScaleWindow past its first 620 lines (its geometry and drawing);
+  the other natives' wrappers in detail; the binary past what the RE docs say.
+- **NET:** UnrealURL's parsing; the package cache (FindPackageFile, UsePackageFile); what only
+  the binary shows.
+- **REN:** BspClipper's rasterizer, the LightEffect shapes but NoneEffect and FireEngine's spark
+  kinds (skimmed); the binaries.
+- **VK:** vulkanobjects.h's command wrappers, GLSLCompiler::Compile, VulkanSurface and the
+  widget surface code.
+- **GL:** gl_load.c past its loader entry, DXWidgets' GL context code, ES drivers but Mesa's.
+- **SWD3D:** the widgets' PresentBitmap backends, D3D11's bloom and present HLSL (skimmed),
+  Wine's and Windows' behaviour at run time; nothing run.
+- **AUD:** OpenAL's and OpenMPT's output against Galaxy's; the MSVC and Windows path of
+  `-nosound`; nothing run.
+- **ENG:** CrashReporter (MSVC's alone), Array.h, JsonValue's parser, MD5, SHA1 and PEIcon
+  (skimmed); the binaries.
+- **WIN:** Wayland past its timer, the dbus and Win32 file dialogs, DXWidgets' widgets past the
+  error window's, the canvas and font code.
+- **LCORE:** keys, theme_colors, padcurve and settings_table (skimmed); sha1.c, keys.c's
+  scancodes against DXWidgets', platform/ and app/ past their callers.
+- **LAPP:** src/screens past window.c, src/core past the files the core's reading named, the
+  tests.
+- **LUI:** uiscript.c, test-only (skimmed); pad3d.c, padmesh.c, icon.c, glyphs.c past
+  dxl_hints.
+- **LPORT:** the tests, fetch-sysroot.sh and profile-map.sh (skimmed); the vdf unescaping.
+- **MAIN:** the drawing of gui.c's text and dialog.c's layout, the pixels against the
+  original's.
+- **X:** natives_audit.py, dxcap's Python, tools/probes and check-abi.sh (skimmed).

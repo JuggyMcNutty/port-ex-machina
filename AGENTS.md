@@ -108,6 +108,15 @@ Decided work for later sessions, each deleted when it is done.
 - **D3D11 to parity**: windows-x86_64's D3D11 device brought to the Vulkan device's picture
   and features, then offered by its launcher, its GPU probe naming the D3D11 adapter
   ([where it stands](https://github.com/JuggyMcNutty/DXEngine/blob/main/README.md#for-advanced-users)).
+- **Mods with native DLLs of their own**, in a plan of its own: Revision's (`Revision`, `DXOgg`,
+  `EngineI`, `RenderExt`, `RF`, with its own `Engine.u`, `Extension.u` and `DeusEx.u`) and
+  The Nameless Mod's (`TNMNative`, `TNMFU`, `TNMSaveBugHotfix`, on its own build of the
+  engine's DLLs), both in `gamefiles/Revision`, their DLLs read for what they do and their
+  natives made DXEngine's, so that each mod runs.
+- **The third sweep**, once [`docs/bugs.md`](docs/bugs.md)'s items are through: what its
+  "Not yet read" names and the first sweep's numbers no commit cites
+  ([`docs/bugs-recovered.md`](docs/bugs-recovered.md)) read area by area, each finding proven
+  or refuted, into bugs.md.
 
 ## Open items
 
@@ -119,4 +128,5 @@ windows-x86_64's copy of it on Windows' own calls
 and the Smart Pro's tailored copy of it
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects).
 Where the engine differs from the original: each section's "Differs" in
-[`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md).
+[`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md), the
+owner's "by choice" or open by its bugs.md ID.

@@ -8,15 +8,15 @@ a commit that did not cite it: that is what has to be rediscovered. A section's 
 items may be missing altogether when no commit cites them. Sub-items: `.S` and `.N` as
 the commits use them (`E12.S1`, `E11b.N2`), `X2.L` the launcher's side of `X2`.
 
-## Open, as the commits leave them
+## Left open by their commits
 
-| Item | What the commits say |
-|---|---|
-| `E10b.15` | left open by DXEngine `244c8aaf` (`FogConsole`, new: meshes in a fog zone shot in both engines) |
-| `E6.14` | its HitWall half fixed by DXEngine `35a73209`: "its 2-unit hold-off stays open"; `c1d0cab2` (the projectile's frame) cites it again later and may have closed it |
-| `X2.15` | its engine half fixed by DXEngine `f1c670ad`; no launcher commit cites it |
-| `E15b.16` | its engine half fixed by DXEngine `c7951ab4`; no other commit cites it |
-| `L7.5` | the launcher's half by deusex-launcher `f2c4a588` (main): "the engine's half, which opens INI= as given, is an engine item" |
+| Item | What the commits say | Where it stands |
+|---|---|---|
+| `E10b.15` | left open by DXEngine `244c8aaf` (`FogConsole`, new: meshes in a fog zone shot in both engines) | open: bugs.md REN.12 |
+| `E6.14` | its HitWall half fixed by DXEngine `35a73209`: "its 2-unit hold-off stays open"; `c1d0cab2` (the projectile's frame) cites it again | closed by `c1d0cab2`: the projectile's frame is one held-off move (`TickProjectile`'s `TryMoveHeldOff`) |
+| `X2.15` | its engine half fixed by DXEngine `f1c670ad`; no launcher commit cites it | closed: no branch of the launcher asks for a GL error (`git grep glGetError` on each) |
+| `E15b.16` | its engine half fixed by DXEngine `c7951ab4`, which leaves `PORT=` not taken; no other commit cites it | open: bugs.md NET.4 |
+| `L7.5` | the launcher's half by deusex-launcher `f2c4a588` (main): "the engine's half, which opens INI= as given, is an engine item" | open: bugs.md ENG.7 |
 
 `E15b.N2`, marked open by `e75caa7d`, was closed by `c5392c00` 37 minutes later.
 
@@ -26,9 +26,11 @@ Items moved out of the lists before the loss live in the docs that own their cod
 kept. They carry no IDs, so they cannot be matched to the numbers below:
 
 - each launcher branch's `docs/LAUNCHER.md`, Known defects: linux-x86_64's, linux-aarch64's
-  and trimui-smartpro's, the finder reading no Lutris database; windows-x86_64's, none;
-- DXEngine's `docs/NATIVES.md`, each section's "Differs" (about 30 passages);
-- port-ex-machina's `AGENTS.md`, To do (two items).
+  and trimui-smartpro's, the finder reading no Lutris database, which deusex-launcher
+  `67fa2f8` fixed and its picks carried; windows-x86_64's, none;
+- DXEngine's `docs/NATIVES.md`, each section's "Differs", each now the owner's choice or an
+  item of bugs.md;
+- port-ex-machina's `AGENTS.md`, To do.
 
 ## bugs.md (574 items cited)
 
@@ -216,7 +218,7 @@ In DXEngine; its fixes touched `DXEngine/Packages`, `tools/dxcap`, `DXEngine/Ren
 | `E5b.12` | DXEngine `0bc09462` 2026-10-25 | A font's glyph is found by the character's byte, whatever char's sign |
 | `E5b.14` | DXEngine `a4c591f6` 2026-10-25 | A palette has 256 colours whatever the package says |
 | `E5b.15` | DXEngine `15ee04d2` 2026-10-25 | PackageFormat.md: a palette's colour bytes are red, green, blue, alpha, red the low byte |
-| `E5b.18` | DXEngine `103181d6` 2026-10-25 | A fire texture's sparks and drops stay within it |
+| `E5b.18` | DXEngine `103181d6` 2026-10-25; the water texture's drops by `f0c13a16` | A fire texture's sparks and drops stay within it |
 | `E5b.19` | DXEngine `aea1187d` 2026-10-25 | A mip's data is held to its size |
 | `E5b.24` | DXEngine `59a2120f` 2026-10-25 | The AI event ring resumes at the right receiver after a deletion, and a new receiver's first turn comes after every other's |
 | `E5b.25` | DXEngine `4d006597` 2026-10-25 | The event manager walks a copy of the senders while scores run |
@@ -457,7 +459,7 @@ E11b.17, E11b.18, E11b.20, E11b.23, E11b.24, E11b.25
 | `E11b.1` | DXEngine `3e2ddf2b` 2026-10-26 | A Vulkan texture's levels are those that fit, zeros where a mip does not, each band aligned to its texel, and a top mip without bytes the white texel |
 | `E11b.2` | DXEngine `3e2ddf2b` 2026-10-26 | A Vulkan texture's levels are those that fit, zeros where a mip does not, each band aligned to its texel, and a top mip without bytes the white texel |
 | `E11b.5` | DXEngine `3e2ddf2b` 2026-10-26 | A Vulkan texture's levels are those that fit, zeros where a mip does not, each band aligned to its texel, and a top mip without bytes the white texel |
-| `E11b.7` | DXEngine `5d77968e` 2026-10-26 | A P8 texture without a palette draws as its grey levels on the Vulkan and GL devices |
+| `E11b.7` | DXEngine `5d77968e` 2026-10-26; D3D11's by `629a32d3` | A P8 texture without a palette draws as its grey levels on the Vulkan and GL devices |
 | `E11b.15` | DXEngine `4e575aeb` 2026-10-26 | The editor's hit test is gone from every device |
 | `E11b.16` | DXEngine `05ea3049` 2026-10-26 (+1) | The Vulkan scene buffers are ten bits a channel, A2B10G10R10, as the GL device's RGB10_A2 |
 | `E11b.19` | DXEngine `9a05003d` 2026-10-26 | A Vulkan device without shaderClipDistance clips a mirror's plane by a discard |
@@ -532,7 +534,7 @@ In DXEngine; its fixes touched `DXEngine/RenderDevice`, `DXEngine/Render`, `DXGP
 
 ### E15a
 
-In DXEngine; its fixes touched `DXEngine/Audio`, `DXEngine/Utils`, Thirdparty/resample (since deleted),
+In DXEngine; its fixes touched `DXEngine/Audio`, `DXEngine/Utils`, Thirdparty/resample (gone from the tree),
 `DXEngine/Packages`.
 
 **Not cited:** E15a.8, E15a.10, E15a.11, E15a.12, E15a.18, E15a.19, E15a.20, E15a.26, E15a.27,
@@ -542,7 +544,7 @@ E15a.29, E15a.30, E15a.32, E15a.37, E15a.41
 |---|---|---|
 | `E15a.1` | DXEngine `4afce6d2` 2026-10-25 | The music thread's checks see its own calls' errors, and a stop unqueues what is queued |
 | `E15a.2` | DXEngine `4afce6d2` 2026-10-25 | The music thread's checks see its own calls' errors, and a stop unqueues what is queued |
-| `E15a.3` | DXEngine `2134e729` 2026-10-25 | A music source that ends or reads short leaves silence, not the chunk's stale tail |
+| `E15a.3` | DXEngine `2134e729` 2026-10-25; its fill's halving of the music undone by `e63437c2` | A music source that ends or reads short leaves silence, not the chunk's stale tail |
 | `E15a.4` | DXEngine `b6c5f465` 2026-10-25 | A pitch or volume that is no number plays plain, as Galaxy plays on |
 | `E15a.5` | DXEngine `4eb94747` 2026-10-25 | The music's order is the jump's at once, and a new song's never the old song's |
 | `E15a.6` | DXEngine `a56e753b` 2026-10-25 | The OpenAL context takes the attributes built for it |
