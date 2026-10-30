@@ -19,7 +19,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 5 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 7 |
 | [AI](#ai-the-npcs) | the NPCs | 1 |
-| [DX](#dx-deusexs-natives) | DeusEx's natives | 1 |
+| [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 6 |
 | [NET](#net-the-network) | the network | 4 |
 | [REN](#ren-the-renderer) | the renderer | 11 |
@@ -102,9 +102,7 @@ as any other. Nothing here changes before the owner rules.
 
 ## DX: DeusEx's natives
 
-| ID | What | Said in NATIVES.md | Proof |
-|---|---|---|---|
-| DX.2 | `DeusExPlayer.UnloadTexture` frees nothing, where the original frees the texture's mips as a menu, the Persona screen, a computer screen or an image closes | implemented, not as the original | a console closing an image screen: the mips freed, the texture drawn again after |
+None open.
 
 ## EXT: the window tree (Extension)
 
