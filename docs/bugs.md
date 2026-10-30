@@ -15,7 +15,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | Section | Area | Open |
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 28 |
-| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
+| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 2 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 7 |
 | [AI](#ai-the-npcs) | the NPCs | 1 |
@@ -70,7 +70,6 @@ as any other. Nothing here changes before the owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | VM.5 | Strings are of bytes, Latin-1, where the original's are UTF-16: a typed character past Latin-1 goes nowhere, a wide string loads with `?` for each such character (a note in a save, every conversation comment of `DeusExConText.u`), and `Chr` keeps the low 8 bits | the UI; implemented, not as the original (small ones) | `TypeConsole` typing U+0100 and past; a note of such characters saved and loaded across both engines; `OpsConsole`'s `Chr` and `Asc` |
-| VM.10 | A float's text rounds a tie at its sixth decimal to even, the C library's `%f` (`std::to_string`), where the original's rounds it up: 813.1953125 is `813.195312`, the original's `813.195313`; between 512 and 1024 one float in 128 is such a tie | a property's text | `LoadConsole` with `Via` over the original's save: the player's place |
 
 ## PKG: saving, loading, travel and the loading screen
 
