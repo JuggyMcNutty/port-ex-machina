@@ -24,7 +24,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [NET](#net-the-network) | the network | 4 |
 | [REN](#ren-the-renderer) | the renderer | 11 |
 | [AUD](#aud-the-audio) | the audio | 3 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 1 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
 | [WIN](#win-the-game-window) | the game window | 0 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
 
@@ -146,9 +146,7 @@ None open.
 
 ## ENG: the engine, its input and its config
 
-| ID | What | Said in NATIVES.md | Proof |
-|---|---|---|---|
-| ENG.14 | A level's game is named `<class>0`, `DeusExGameInfo0`, where the original spawns it as any actor, named by the class's count: `DeusExGameInfo2` on Liberty Island opened from the menu map, the third made after Entry's and the menu's | names | `ReturnConsole`'s and `SaveConsole`'s game lines |
+None open.
 
 ## WIN: the game window
 
