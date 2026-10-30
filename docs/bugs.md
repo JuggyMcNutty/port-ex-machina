@@ -22,7 +22,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 1 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 8 |
 | [NET](#net-the-network) | the network | 4 |
-| [REN](#ren-the-renderer) | the renderer | 17 |
+| [REN](#ren-the-renderer) | the renderer | 15 |
 | [VK](#vk-the-vulkan-device) | the Vulkan device | 1 |
 | [AUD](#aud-the-audio) | the audio | 5 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 6 |
@@ -133,8 +133,6 @@ as any other. Nothing here changes before the owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| REN.8 | Masked particles show their texture's colour 0: 0.7% of `SpriteConsole`'s particles magenta, none in `D3DDrv`'s frame | sprites | `SpriteConsole` |
-| REN.9 | A texture drawn both masked and not shows its colour 0 as each draw is, where the original's single copy keeps the first draw's: `SpriteConsole`'s `STY_Normal` sprite magenta beside the masked ones, black in the original | sprites | `SpriteConsole` |
 | REN.10 | The Matrix cheat's `Sprite` stands in for the textures of meshes and sprites alone; the original's draws the level's surfaces in it too, by a rule unread | sprites | Render.dll read; `MatrixConsole` |
 | REN.11 | The laser fence's middle beam is a fraction of a pixel thinner, missing the top row `D3DDrv` draws | particles and lasers | `LaserConsole` |
 | REN.12 | A mesh in a fog zone is unfogged; the original fogs it from its leaf's own volumetric lights by a vertex model of its own, unread: 02_NYC_Underground's crate 220 units into the fog at 0.09 of the wall beside it in `D3DDrv`'s frame, 0.25 in DXEngine's (the first sweep's `E10b.15`) | lighting | Render.dll's model read; `FogConsole` |
