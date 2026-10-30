@@ -17,7 +17,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 28 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 5 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 8 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 7 |
 | [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 1 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 6 |
@@ -91,8 +91,7 @@ as any other. Nothing here changes before the owner rules.
 | PHYS.8 | A tie between a mover's own hit and the level's at one plane falls to the mover, where the original's two times, rounded apart, fall either way (`DeusExMover19`'s, `25`'s and `8`'s reversed lines on DXMP_Silo are the level's) | implemented, not as the original | `VisibleConsole` on DXMP_Silo: all 110 lines alike |
 | PHYS.9 | The filed polygons are an overlay on the level's BSP: a start inside a filed mover's solid is not in solid, and `TraceTexture` gives the flags of the polygon crossed (`PF_Invisible \| PF_Semisolid` on `DeusExMover26`'s line) where the original's filed node has 0 | implemented, not as the original | `VisibleConsole`, `TraceConsole` |
 | PHYS.10 | The movers filed under one filed again are not filed again, and a mover's polygons are filed whole, where the original's tree drops what lands in solid | implemented, not as the original (the movers in a line's way) | `MoverConsole` with two movers filed in turn |
-| PHYS.11 | Liberty Island's auto turret and crossbow pickup get the level for their base at the map's start, where the original's have none | implemented, not as the original | `BaseConsole` |
-| PHYS.12 | A line straight down meets the floor half a unit higher than the original's | small | `StandConsole`, `TraceConsole` |
+| PHYS.12 | A walking player rests 4.8 over the floor at Liberty Island's start, where the original's rests 4.75: it lands lower, the last step of its fall from the start shorter (the first frame after a load shorter than the original's), and the walk's floor check lifts it; a line straight down meets the floor alike | small | `StandConsole`, with the load's first frame as long as the original's |
 | PHYS.13 | What is based on a mover that turns is carried and turned by DXEngine's `TurnBasedActors`, never run against the original's (`UActor.h` asks for the comparison) | (DXEngine's `UActor.h`) | a door turned with an actor based on it, both engines |
 
 ## AI: the NPCs
