@@ -28,7 +28,6 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 7 |
 | [WIN](#win-the-game-window) | the game window | 2 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 3 |
-| [X](#x-across-the-launchers-branches) | across the launcher's branches | 1 |
 
 ## D: for the owner
 
@@ -199,12 +198,6 @@ as any other. Nothing here changes before the owner rules.
 | MAIN.6 | Safe mode's eight boxes are all wired, where the shipped original's three do nothing and one does four boxes' work; the owner's decision: as the original ships | main's README, where it differs; dx-reverse-info's wizard.md, the shipped bug | `test_wizard`; the live check |
 | MAIN.7 | A launch beside a running one appends to the log, where the original's second writer fails to open the file the first holds and that launch runs without a log; the owner's decision: as the original | main's README, where it differs | a test of two launches at once |
 | MAIN.8 | Unverified in the original: a second launch handing a running game its command line, and the splash staying up through a real start of the engine | dx-reverse-info's wizard.md | the original under Proton, launched twice |
-
-## X: across the launcher's branches
-
-| ID | What | Proof |
-|---|---|---|
-| X.5 | Fixes in code the branches share have not crossed to every branch that has the code: `bd353d8` and `7fe9ff4` (windows-x86_64, trimui-smartpro); `749b708`, `d8094bc` and `532d0ab` (trimui-smartpro); `361037a` (trimui-smartpro, and windows-x86_64 where its check takes it); `a5a2519` and `51f03ae` (windows-x86_64); `3ef8f0f`, from windows-x86_64 (linux-x86_64, linux-aarch64, trimui-smartpro); and the POSIX code's `2e9d9eb`, `a9cf9b0`, `d7b2be4`, `c85a029`, `9b60ee0`, `fe1ac7a`, `41cfc04`, `a572db6` and `5a47a03` (windows-x86_64's host build). `67fa2f8`, Lutris' database, is no Windows place | each branch's tests |
 
 ## Refuted
 
