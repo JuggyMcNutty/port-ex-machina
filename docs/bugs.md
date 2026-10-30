@@ -16,15 +16,15 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 28 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
-| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 5 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 4 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 7 |
 | [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
-| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 5 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 6 |
 | [NET](#net-the-network) | the network | 4 |
 | [REN](#ren-the-renderer) | the renderer | 11 |
 | [AUD](#aud-the-audio) | the audio | 3 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 1 |
 | [WIN](#win-the-game-window) | the game window | 0 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
 
@@ -77,9 +77,8 @@ as any other. Nothing here changes before the owner rules.
 |---|---|---|---|
 | PKG.8 | No frame shows `PRECACHING`, which the original's shows with its driver's precache on | saving, loading and travel | `LoadingConsole` with the render device's precache on |
 | PKG.9 | A bare `?loadgame` loads nothing, where the original's browse takes it for no load and opens its menu map again | saving, loading and travel | `SlotConsole` with a bare `?loadgame` |
-| PKG.10 | A level returned to from `Current` keeps the map's name in its URL, where the original's names the saved file, `..\Save\Current\<map>.dxs` | saving, loading and travel | `ReturnConsole`'s `GetLocalURL` |
 | PKG.11 | A travel to a missing map is found so before the pre-travel, the level playing on; the original's browse has pruned the player's augmentations, skills and flag base by then for a map numbered within the mission, and for any other empties `Current` and loads the level again from `Maps` | saving, loading and travel | `BrowseConsole` with a missing map of the mission and one of another |
-| PKG.12 | After a restart `Level.GetLocalURL` names the map, where the original's names `Index` | saving, loading and travel | `ReturnConsole` after `RestartLevel` |
+| PKG.13 | The Entry level is loaded with the player's options from the ini, its game's `InitGame` given `?Name=Player?Class=DeusEx.JCDentonMale`, where the original's loads `entry.dx` with none; a return to it (a lost server, `?failed`, `?entry`) logs the player in with Entry's URL, where the original's logs in with the browse's own (`UGameEngine::Browse`, `0x1038ad30`) | multiplayer | the two logs' first `InitGame` line; a lost server's login on Entry in both engines |
 
 ## PHYS: physics, traces and movers
 
@@ -112,6 +111,7 @@ None open.
 | EXT.10 | The focus tables pass over no window as clipped away, DXEngine keeping no clip rectangles | the UI | `FocusConsole` with a window clipped out of view |
 | EXT.14 | Viewport windows, none of it reached by the game: no `CalcView` event; an origin or watch actor gone leaves the view at the window's fields, not at its last place and turn; a window turned off draws nothing, where the original tiles its default texture; `SetRotation` keeps the watch actor; `SetDefaultTexture` takes no defaults; `bShowWeapons` draws no overlays; `SetViewportActor` adds no network view (`AdditionalViews`); `ConvertVectorToCoordinates` in one, or in a window inside one, projects through the main view; the frame takes the window's whole rectangle, not its clip rectangle | viewport windows | `CameraConsole` with each |
 | EXT.15 | A border window's resizing by its border (`bResizeable`: `CursorRequested`, `MouseButtonPressed` and the rest) is unread in the original, DXEngine's unproven; no script of the game turns it on | (dx-reverse-info's extension-dll.md, border windows) | Extension.dll read; a timeline dragging a tool window's border |
+| EXT.16 | The player's flag base is made after its login, in the level's package and named `FlagBase`, where the original's player makes its own as it is made (`APlayerPawnExt`'s constructor, Extension.dll `0x10037ba0`: `new(Self)`), the player its outer and the name by the class's count: `01_NYC_UNATCOIsland.JCDentonMale1.FlagBase1` | flags | `ReturnConsole`'s flag base lines |
 
 ## NET: the network
 
@@ -148,7 +148,9 @@ None open.
 
 ## ENG: the engine, its input and its config
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| ENG.14 | A level's game is named `<class>0`, `DeusExGameInfo0`, where the original spawns it as any actor, named by the class's count: `DeusExGameInfo2` on Liberty Island opened from the menu map, the third made after Entry's and the menu's | names | `ReturnConsole`'s and `SaveConsole`'s game lines |
 
 ## WIN: the game window
 
