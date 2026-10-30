@@ -15,7 +15,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | Section | Area | Open |
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 26 |
-| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 5 |
+| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 5 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 9 |
 | [AI](#ai-the-npcs) | the NPCs | 1 |
@@ -69,9 +69,6 @@ as any other. Nothing here changes before the owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | VM.5 | Strings are of bytes, Latin-1, where the original's are UTF-16: a typed character past Latin-1 goes nowhere, a wide string loads with `?` for each such character (a note in a save, every conversation comment of `DeusExConText.u`), and `Chr` keeps the low 8 bits | the UI; implemented, not as the original (small ones) | `TypeConsole` typing U+0100 and past; a note of such characters saved and loaded across both engines; `OpsConsole`'s `Chr` and `Asc` |
-| VM.6 | `-norunaway` is not carried: the original's lets a runaway loop run on | stops the game | `LoopConsole` with `-norunaway` past 10,000,000 jumps |
-| VM.7 | A save's load counts the runaway jumps on from its frame's level tick, where the original's map load starts the count afresh | stops the game | `LoopConsole` across a save's load |
-| VM.8 | A singular call held off gives its type's zero, where the original's leaves a variable assigned from it as it was | small | `CallConsole` with a held-off call's value assigned over a set variable |
 | VM.9 | A property's text takes an element by its index (`N[1]=7`), where the original's import stops there (`ImportText: Illegal array element`) | implemented, not as the original (a property's text) | `TextConsole` with an element by index |
 
 ## PKG: saving, loading, travel and the loading screen
