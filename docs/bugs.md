@@ -24,7 +24,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [NET](#net-the-network) | the network | 4 |
 | [REN](#ren-the-renderer) | the renderer | 11 |
 | [AUD](#aud-the-audio) | the audio | 3 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 6 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 3 |
 | [WIN](#win-the-game-window) | the game window | 0 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
 
@@ -151,9 +151,6 @@ None open.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| ENG.8 | An axis a console command sets is used as it is; the original's input scales it | small (input axes) | `StandConsole` setting an axis by command |
-| ENG.9 | The original takes its viewport's own command words (`SHOT` among them) before the exec functions | small (a key's binding) | a binding whose word an exec function shares |
-| ENG.10 | `Toggle` and `Pulse` do nothing, and a command after `OnRelease` never runs | small (a key's binding) | a timeline as `bad-keys.txt` with each |
 | ENG.11 | A setting read by hand keeps DXEngine's default for an empty value, where the original's is 0 or empty | mods (config files) | `IniConsole` with empty values |
 | ENG.12 | `ResetConfig` does not tell the class of it (`PostEditChange`), as the original's does | mods | `ModConsole` |
 | ENG.13 | A `SpawnNotify` is not asked about an actor spawned while a notification runs, DXEngine's guard against one spawning without end; the original's `SpawnActor` is unread there | mods (spawn notifications) | Engine.dll's `SpawnActor` read; `CensusConsole`'s `CensusNotify` spawning |
