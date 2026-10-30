@@ -14,7 +14,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 26 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 27 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 5 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 8 |
@@ -22,7 +22,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 1 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 7 |
 | [NET](#net-the-network) | the network | 4 |
-| [REN](#ren-the-renderer) | the renderer | 12 |
+| [REN](#ren-the-renderer) | the renderer | 11 |
 | [AUD](#aud-the-audio) | the audio | 4 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 6 |
 | [WIN](#win-the-game-window) | the game window | 2 |
@@ -62,6 +62,7 @@ as any other. Nothing here changes before the owner rules.
 | D.24 | the `.int` files read from `System` alone | from each folder of the paths, then `System` | mods | keep: a mod in its own folders gives its text |
 | D.25 | an ini written back whole, CR LF, its comments gone | a changed value changed in its own line, the rest of the file as it was | mods (config files) | keep |
 | D.26 | `ReceivedBinary` hands the script other bytes, the count right, and `SendBinary` answers False | the bytes that came; False only when nothing went | multiplayer | keep: no mod can have counted on them |
+| D.27 | draws a mesh's faces in face order where its walk of the BSP meets the mesh, after the translucent surfaces behind it | a mesh with an opaque face after a translucent one (`GM_Jumpsuit`, `GM_Suit`, `GFM_TShirtPants`, their carcasses, `ComputerPublic`) drawn whole in face order with the solid actors, so a translucent surface behind it is drawn after its few translucent faces (a troop's 4 modulated ones) | draw order and movers | keep: drawn among the translucent parts by one point's distance, a troop in water could be drawn over the water |
 
 ## VM: the script VM and the object system
 
@@ -132,7 +133,6 @@ as any other. Nothing here changes before the owner rules.
 |---|---|---|---|
 | REN.10 | The Matrix cheat's `Sprite` stands in for the textures of meshes and sprites alone; the original's draws the level's surfaces in it too, by a rule unread | sprites | Render.dll read; `MatrixConsole` |
 | REN.14 | Where two opaque surfaces overlap at one depth, which shows can differ: the gaps between Liberty Island pier's planks, a few hundred pixels of `MeshConsole`'s frame | draw order and movers | `MeshConsole` |
-| REN.15 | A mesh's translucent faces are drawn after all its opaque ones, where the original draws them in face order, losing one drawn before an opaque face behind it (`GM_Jumpsuit`, `GM_Suit`, `GFM_TShirtPants` and their carcasses, `ComputerPublic`) | draw order and movers | `FaceConsole` on those meshes |
 | REN.16 | A mover hidden after it is filed stops drawing, where the original's stays drawn there | draw order and movers | `GlassConsole` hiding a mover |
 | REN.17 | `Canvas.DrawActor`'s and `DrawClippedActor`'s `WireFrame` draws the actor solid, where the original draws the call with the player's `RendMap` at wire | the UI | `OverlayConsole` with `WireFrame` |
 | REN.18 | A texture in a format past Deus Ex's is drawn white; what the original does with one is unread | mods | Engine.dll's `UTexture` read |
