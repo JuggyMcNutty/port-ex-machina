@@ -20,7 +20,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 7 |
 | [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
-| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 6 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 5 |
 | [NET](#net-the-network) | the network | 4 |
 | [REN](#ren-the-renderer) | the renderer | 11 |
 | [AUD](#aud-the-audio) | the audio | 3 |
@@ -52,7 +52,7 @@ as any other. Nothing here changes before the owner rules.
 | D.14 | a fire, water or ice texture with no `MaxFrameRate` steps every frame, faster at a higher frame rate | at most 60 times a second | fire, water and ice textures | keep: the original's pace at 60 frames |
 | D.15 | blink and strobe lights at the frame rate (a turn count's lowest bit, a turn each frame); an ambient sound on such a light follows them | on DXEngine's own timing | lighting; sound | keep, at the original's pace at 60 frames |
 | D.16 | a flickering light flickers each frame | at most 25 times a second (Surreal Engine's) | lighting | the original's pace at 60 frames |
-| D.17 | at least 5 ms a step, so above 200 frames a second the game runs fast | the frame's real time | small | keep |
+| D.17 | at least 5 ms a step for the actors (the level's own time takes the frame's), so above 200 frames a second the game runs fast: uncapped, the original drew the dark stretch of the menu map's flyby between the Eidos and Ion Storm logos at some 5,000 frames a second and swept through it in a tenth of a second, some 2 s at 60 frames, where held to 60 the original's flyby and DXEngine's keep within 0.02 s of each other (`IntroConsole`) | the frame's real time | small | keep |
 | D.18 | the level's `TimeDilation` not held (the game sets it only through `SetGameSpeed`, 0.1 or more) | held to 0.0025 to 25 | small | keep |
 | D.19 | a listen server runs as fast as it draws, losing unreliable calls at high rates | at most 144 frames a second | multiplayer | keep |
 | D.20 | with the Sound and Speech sliders equal, both kinds of sound scaled by the slider once more | not carried | sound | carry it |
@@ -111,7 +111,6 @@ None open.
 | EXT.8 | Windows are laid out once a frame, where the original lays each out as it asks: a window made this frame is 10 by 10 until the next; one that shows sits at the margins `SetPos` gives it at once, where a parent placing it again does so the next frame; one a parent placed keeps that place, where the original's goes back to its alignment when the parent's next layout leaves it out | the UI | `MenuConsole`, `ScreenConsole`, `SizeConsole` |
 | EXT.9 | The first keyboard focus is seeded in DXEngine's layout pass, after the level's tick, where the original seeds it at its windows' next tick: a conversation's first choice has the focus a frame sooner there | the UI | `ChoiceConsole` |
 | EXT.10 | The focus tables pass over no window as clipped away, DXEngine keeping no clip rectangles | the UI | `FocusConsole` with a window clipped out of view |
-| EXT.11 | The keyboard counts as grabbed while a modal shows, where the original counts its grabs | the UI (keys) | both codes read; `KeypadConsole` |
 | EXT.14 | Viewport windows, none of it reached by the game: no `CalcView` event; an origin or watch actor gone leaves the view at the window's fields, not at its last place and turn; a window turned off draws nothing, where the original tiles its default texture; `SetRotation` keeps the watch actor; `SetDefaultTexture` takes no defaults; `bShowWeapons` draws no overlays; `SetViewportActor` adds no network view (`AdditionalViews`); `ConvertVectorToCoordinates` in one, or in a window inside one, projects through the main view; the frame takes the window's whole rectangle, not its clip rectangle | viewport windows | `CameraConsole` with each |
 | EXT.15 | A border window's resizing by its border (`bResizeable`: `CursorRequested`, `MouseButtonPressed` and the rest) is unread in the original, DXEngine's unproven; no script of the game turns it on | (dx-reverse-info's extension-dll.md, border windows) | Extension.dll read; a timeline dragging a tool window's border |
 
