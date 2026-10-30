@@ -23,7 +23,6 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 8 |
 | [NET](#net-the-network) | the network | 4 |
 | [REN](#ren-the-renderer) | the renderer | 15 |
-| [VK](#vk-the-vulkan-device) | the Vulkan device | 1 |
 | [AUD](#aud-the-audio) | the audio | 5 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 6 |
 | [WIN](#win-the-game-window) | the game window | 2 |
@@ -148,12 +147,6 @@ as any other. Nothing here changes before the owner rules.
 | REN.23 | The light effects no stock view shows, the searchlight, non-incidence and the rotor among them, and fast wave, shock, shell and interference, which no stock light has: the reading's alone, no run | lighting | `LightConsole` with a light of each spawned |
 | REN.25 | An actor spawned 3 s into a level is darker in DXEngine while the level's time is young: `GlowConsole`'s crate at a hundredth of the time, 0.08 to 0.13 of white against the original's 0.24; at full speed, 4.8 s on, the two alike (0.195, 0.197) | lighting | `GlowConsole` at `Dilation` 0.01, and spawned at once and later |
 | REN.24 | Liberty Island's pier 1.7% under `D3DDrv`'s frames with the detail textures on and 0.7% over with them off, Paul Denton a level over, `LaserConsole`'s corridor 2% under: measured again once D.8 is ruled | brightness | `MeshConsole`, `LaserConsole` |
-
-## VK: the Vulkan device
-
-| ID | What | Said in NATIVES.md | Proof |
-|---|---|---|---|
-| VK.3 | The Vulkan device draws some of the loading screen's glyphs a row lower than `D3DDrv`, point sampled on a texel's edge | the software device | `LoadingConsole` on Vulkan against `D3DDrv` |
 
 ## AUD: the audio
 
