@@ -17,7 +17,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 30 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 6 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 5 |
 | [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 4 |
@@ -86,7 +86,6 @@ None open.
 | PHYS.8 | A tie between a mover's own hit and the level's at one plane falls to the mover, where the original's two times, rounded apart, fall either way (`DeusExMover19`'s, `25`'s and `8`'s reversed lines on DXMP_Silo are the level's) | implemented, not as the original | `VisibleConsole` on DXMP_Silo: all 110 lines alike |
 | PHYS.9 | The filed polygons are an overlay on the level's BSP: a start inside a filed mover's solid is not in solid, and `TraceTexture` gives the flags of the polygon crossed (`PF_Invisible \| PF_Semisolid` on `DeusExMover26`'s line) where the original's filed node has 0 | implemented, not as the original | `VisibleConsole`, `TraceConsole` |
 | PHYS.10 | The movers filed under one filed again are not filed again, and a mover's polygons are filed whole, where the original's tree drops what lands in solid | implemented, not as the original (the movers in a line's way) | `MoverConsole` with two movers filed in turn |
-| PHYS.12 | A walking player rests 4.8 over the floor at Liberty Island's start, where the original's rests 4.75: it lands lower, the last step of its fall from the start shorter (the first frame after a load shorter than the original's), and the walk's floor check lifts it; a line straight down meets the floor alike | small | `StandConsole`, with the load's first frame as long as the original's |
 
 ## AI: the NPCs
 
@@ -151,6 +150,7 @@ None open.
 
 | Area | Finding | Why refuted |
 |---|---|---|
+| PHYS | A walking player rests 4.8 over the floor at Liberty Island's start, where the original's rests 4.75, its landing lower, the first frame after the load shorter (`DXEngine/docs/NATIVES.md`, small) | Where it rests follows its landing, so the first frame's length after the load, which is the load's real time on the machine: run again, both engines rest it at 4.25 at the start and after the first walk, 12.2 after the second, 1.70 from the wall (`StandConsole`, two runs of each, every line alike but the moment's places) |
 | ENG | A `SpawnNotify` is not asked about an actor spawned while a notification runs, DXEngine's guard against one spawning without end, the original's taken for unread (`DXEngine/DXEngine/Packages/Engine/Actors/UActor.cpp:128`) | The original's has the same guard: `SpawnActor` (`0x10394f60`) holds a flag (`GSpawnNotifying`, `0x10588b48`) over the notifications' walk, and an actor spawned meanwhile hears none (engine-dll.md, spawning) |
 | VM | RadiusActors(None, 300) on the menu map finds one actor more than the original's, 99 against 98 (`DXEngine/DXEngine/VM/Iterator.cpp`, `DXEngine/tools/dxcap/Classes/OpsConsole.uc`) | DX.dx's player rides the menu's flyby, so a count from it is the moment's: 2 s in, the original's player stood at 2769, 308, -98 and DXEngine's at 2752, 299, -92, InterpolationPoint14 (a collision radius of 10) 327 units from the one and 307 from the other, outside 300 plus its radius and inside it, as the original's test has it (engine-dll.md, traces). OpsConsole counts round the level's first PlayerStart (DXEngine cbc56edd): both engines, twice each, give 96, every `DXOPS:` line alike. |
 | REN | The laser fence's middle beam a fraction of a pixel thinner, missing the top row `D3DDrv` draws (`DXEngine/docs/NATIVES.md`, particles and lasers) | The multisampling's: with DXEngine's default 4x the beams' edge rows are partly lit, and with it off (`DXEngine/tools/dxcap/vulkan-settings.json`) `LaserConsole`'s three beams have `D3DDrv`'s rows, each within 11 levels of 256 of its red. Multisampling by default is D.4 |
