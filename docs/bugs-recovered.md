@@ -12,11 +12,11 @@ the commits use them (`E12.S1`, `E11b.N2`), `X2.L` the launcher's side of `X2`.
 
 | Item | What the commits say | Where it stands |
 |---|---|---|
-| `E10b.15` | left open by DXEngine `244c8aaf` (`FogConsole`, new: meshes in a fog zone shot in both engines) | open: bugs.md REN.12 |
+| `E10b.15` | left open by DXEngine `244c8aaf` (`FogConsole`, new: meshes in a fog zone shot in both engines) | closed by DXEngine `8b5804a9`: a mesh takes no vertex fog, as Render.dll's |
 | `E6.14` | its HitWall half fixed by DXEngine `35a73209`: "its 2-unit hold-off stays open"; `c1d0cab2` (the projectile's frame) cites it again | closed by `c1d0cab2`: the projectile's frame is one held-off move (`TickProjectile`'s `TryMoveHeldOff`) |
 | `X2.15` | its engine half fixed by DXEngine `f1c670ad`; no launcher commit cites it | closed: no branch of the launcher asks for a GL error (`git grep glGetError` on each) |
-| `E15b.16` | its engine half fixed by DXEngine `c7951ab4`, which leaves `PORT=` not taken; no other commit cites it | open: bugs.md NET.4 |
-| `L7.5` | the launcher's half by deusex-launcher `f2c4a588` (main): "the engine's half, which opens INI= as given, is an engine item" | open: bugs.md ENG.7 |
+| `E15b.16` | its engine half fixed by DXEngine `c7951ab4`, which leaves `PORT=` not taken; no other commit cites it | closed by DXEngine `51baf70c`: `PORT=`, `MULTIHOME=` and `-PRIMARYNET` taken as the original's net driver takes them |
+| `L7.5` | the launcher's half by deusex-launcher `f2c4a588` (main): "the engine's half, which opens INI= as given, is an engine item" | closed by DXEngine `d6f13c4f`: `INI=` and `USERINI=` found in any case, from `System` |
 
 `E15b.N2`, marked open by `e75caa7d`, was closed by `c5392c00` 37 minutes later.
 
