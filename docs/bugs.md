@@ -16,7 +16,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 28 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
-| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 2 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 7 |
 | [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
@@ -76,7 +76,6 @@ as any other. Nothing here changes before the owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | PKG.8 | No frame shows `PRECACHING`, which the original's shows with its driver's precache on | saving, loading and travel | `LoadingConsole` with the render device's precache on |
-| PKG.13 | The Entry level is loaded with the player's options from the ini, its game's `InitGame` given `?Name=Player?Class=DeusEx.JCDentonMale`, where the original's loads `entry.dx` with none; a return to it (a lost server, `?failed`, `?entry`) logs the player in with Entry's URL, where the original's logs in with the browse's own (`UGameEngine::Browse`, `0x1038ad30`) | multiplayer | the two logs' first `InitGame` line; a lost server's login on Entry in both engines |
 
 ## PHYS: physics, traces and movers
 
