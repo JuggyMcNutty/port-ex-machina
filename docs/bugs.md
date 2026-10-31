@@ -14,7 +14,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 28 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 29 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 5 |
@@ -23,7 +23,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 4 |
 | [NET](#net-the-network) | the network | 1 |
 | [REN](#ren-the-renderer) | the renderer | 4 |
-| [AUD](#aud-the-audio) | the audio | 3 |
+| [AUD](#aud-the-audio) | the audio | 2 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
 | [WIN](#win-the-game-window) | the game window | 0 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
@@ -64,6 +64,7 @@ as any other. Nothing here changes before the owner rules.
 | D.26 | `ReceivedBinary` hands the script other bytes, the count right, and `SendBinary` answers False | the bytes that came; False only when nothing went | multiplayer | keep: no mod can have counted on them |
 | D.27 | draws a mesh's faces in face order where its walk of the BSP meets the mesh, after the translucent surfaces behind it | a mesh with an opaque face after a translucent one (`GM_Jumpsuit`, `GM_Suit`, `GFM_TShirtPants`, their carcasses, `ComputerPublic`) drawn whole in face order with the solid actors, so a translucent surface behind it is drawn after its few translucent faces (a troop's 4 modulated ones) | draw order and movers | keep: drawn among the translucent parts by one point's distance, a troop in water could be drawn over the water |
 | D.28 | a change to Effects Channels (the Sound menu's) takes the channels at once: lowered, the sounds on channels past it play on out of the driver's reach, a looping one for good; raised, the channels past the start's count play on the music's voices | the sounds past a lowered count stop; a raised count's channels are voices of their own | sound | keep: the original's leaves a stuck sound or breaks the music |
+| D.32 | plays a stereo MP3 as two voices, its channel's and the next channel's, the line's first 32,768 frames, 0.74 s, over and over, its ring never filled again, its lip sync with them, until a sound on its slot stops it; a beep its speaker played with each later line went unheard (`LipConsole` with `Speech` on `ConAudioMission01_450`, two runs; galaxy-dll.md, playing a sound). The stock game has four: `ConAudioHK_Shared_681`, `_1531` and `_1532`, and `ConAudioMission01_450` | plays it once, as a mono one's ring has it, both its channels at the sound's pan | sound | keep: a defect of Galaxy's, which cuts each of the four lines to its first 0.74 s, repeated |
 
 ## VM: the script VM and the object system
 
@@ -123,7 +124,6 @@ None open.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| AUD.5 | The original's MP3 voice can play on, silent, past its sound: `LipConsole`'s third line works out shapes to 2.9 s there, three more `X`s. The cause read: the decoder sets a voice's end at its data's end only while the voice's place lies before the fill's in the 64 KB ring, else at a later call past the zeros it wrote meanwhile (galaxy-dll.md, playing a sound) | sound | `LipConsole`, once DXEngine ends an MP3 voice as the ring's fill does |
 | AUD.7 | A WAV's ping-pong loop plays forward, where Galaxy's plays back and forth | sound | a sound with such a loop, recorded |
 | AUD.8 | An 8-bit sample's lip sync is not read from its start wherever it plays, as the original's is | sound | `LipConsole` with an 8-bit WAV line |
 
