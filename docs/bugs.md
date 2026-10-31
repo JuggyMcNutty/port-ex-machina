@@ -17,7 +17,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 29 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 4 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 3 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 5 |
@@ -83,7 +83,6 @@ None open.
 |---|---|---|---|
 | PHYS.7 | A hinged door crushes a crate later into its close than the original's: the original's crate is gone by the door's yaw 14,680, 0.3 s in, in six runs, DXEngine's still there at 14,601 and gone 0.1 s later, the crate placed where the original's is (-875.4, 362.6). The door's encroachment asks whether the crate's box overlaps its brush, the box in the brush's own axes in both: the original's box check (`UModel::PointCheck` 0x103f1570, its walk 0x103f19b0) tries a hull only at a solid leaf of its walk, the leaf's node's, and against the hull's box faces pushed 0.1 out and the box's extent, its planes and the bevels their signs call for, keeping the shallowest separation; DXEngine's (`OverlapAABBModel`) tries every hull its walk passes, the hull's box as it is, with no bevels | implemented, not as the original (a mover's move) | `DoorConsole` on UNATCO HQ; the box check made the original's, then every console that spawns, fits or encroaches run again, the box check being theirs too |
 | PHYS.8 | A tie between a mover's own hit and the level's at one plane falls to the mover, where the original's two times, rounded apart, fall either way (`DeusExMover19`'s, `25`'s and `8`'s reversed lines on DXMP_Silo and `DeusExMover15`'s on UNATCO HQ are the level's) | implemented, not as the original | `VisibleConsole` on DXMP_Silo: all 110 lines alike |
-| PHYS.14 | On 02_NYC_BatteryPark, under Castle Clinton by the vending machine near the start, an invisible box stops the player beside a grate that slides up, where the original's player walks on | implemented, not as the original (a mover's move) | the spot's movers, any `BlockPlayer` there and the events that switch it; a console that walks the player there in both engines, logging its moves and what stops it |
 | PHYS.15 | A spawn of debris is refused, `Could not find usable location when trying to spawn`: a broken window's `GlassFragment` on Liberty Island (`DeusExMover.BlowItUp`), a destroyed container's `TrashPaper` on 02_NYC_BatteryPark (`Containers.Destroyed`), one each. `FindSpot` tests the world alone, which holds the filed movers, the breaking glass among them; whether the original's fits them is the proof's | not yet | the pieces a broken window and a destroyed container leave, counted in both engines (`GlassConsole` with `Destroy`) |
 
 ## AI: the NPCs
