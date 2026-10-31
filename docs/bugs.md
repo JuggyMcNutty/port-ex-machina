@@ -21,7 +21,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 4 |
-| [NET](#net-the-network) | the network | 1 |
+| [NET](#net-the-network) | the network | 0 |
 | [REN](#ren-the-renderer) | the renderer | 4 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
@@ -107,9 +107,7 @@ None open.
 
 ## NET: the network
 
-| ID | What | Said in NATIVES.md | Proof |
-|---|---|---|---|
-| NET.7 | Entry's actors find their regions in Entry's own model while a map is current: no run | multiplayer | a run through Entry with a map current |
+None open.
 
 ## REN: the renderer
 
