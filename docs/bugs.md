@@ -22,7 +22,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 4 |
 | [NET](#net-the-network) | the network | 1 |
-| [REN](#ren-the-renderer) | the renderer | 5 |
+| [REN](#ren-the-renderer) | the renderer | 4 |
 | [AUD](#aud-the-audio) | the audio | 3 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
 | [WIN](#win-the-game-window) | the game window | 0 |
@@ -116,7 +116,6 @@ None open.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| REN.10 | The Matrix cheat's `Sprite` stands in for the textures of meshes and sprites alone; the original's draws the level's surfaces in it too, by a rule unread | sprites | Render.dll read; `MatrixConsole` |
 | REN.14 | Where two opaque surfaces overlap at one depth, which shows can differ: the gaps between Liberty Island pier's planks, a few hundred pixels of `MeshConsole`'s frame | draw order and movers | `MeshConsole` |
 | REN.17 | `Canvas.DrawActor`'s and `DrawClippedActor`'s `WireFrame` draws the actor solid, where the original draws the call with the player's `RendMap` at wire | the UI | `OverlayConsole` with `WireFrame` |
 | REN.20 | `ScriptedTexture.ReplaceTexture`: no run | mods | `ModConsole` with a scripted texture |
