@@ -26,7 +26,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
 | [WIN](#win-the-game-window) | the game window | 0 |
-| [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
+| [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
 
 ## D: for the owner
 
@@ -130,9 +130,7 @@ None open.
 
 ## MAIN: the recreation (deusex-launcher's main)
 
-| ID | What | Said in | Proof |
-|---|---|---|---|
-| MAIN.8 | Unverified in the original: a second launch handing a running game its command line, and the splash staying up through a real start of the engine | dx-reverse-info's wizard.md | the original under Proton, launched twice |
+None open.
 
 ## Refuted
 
