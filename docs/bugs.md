@@ -21,7 +21,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 5 |
-| [NET](#net-the-network) | the network | 2 |
+| [NET](#net-the-network) | the network | 1 |
 | [REN](#ren-the-renderer) | the renderer | 11 |
 | [AUD](#aud-the-audio) | the audio | 3 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
@@ -113,7 +113,6 @@ None open.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| NET.6 | A remote player's pawn destroyed by script (`Kick`) closes its connection: no run | multiplayer | `ServeConsole` kicking `JoinConsole`'s player, each engine the server |
 | NET.7 | Entry's actors find their regions in Entry's own model while a map is current: no run | multiplayer | a run through Entry with a map current |
 
 ## REN: the renderer
