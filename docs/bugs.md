@@ -20,7 +20,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 3 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
-| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 5 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 4 |
 | [NET](#net-the-network) | the network | 2 |
 | [REN](#ren-the-renderer) | the renderer | 3 |
 | [AUD](#aud-the-audio) | the audio | 0 |
@@ -82,7 +82,7 @@ None open.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | PHYS.8 | A tie between a mover's own hit and the level's at one plane falls to the mover, where the original's two times, rounded apart, fall either way (`DeusExMover19`'s, `25`'s and `8`'s reversed lines on DXMP_Silo and `DeusExMover15`'s on UNATCO HQ are the level's) | implemented, not as the original | `VisibleConsole` on DXMP_Silo: all 110 lines alike |
-| PHYS.16 | A buoyant crate in the water by Liberty Island's pier (`CrateBreakableMedGeneral2`) rises and bobs at the surface as the original's does, then comes to rest there some 6 s in: `PHYS_None` at z -352.08, its pitch and roll put flat as `Landed` puts them, its velocity -16.6 kept, where the original's bobs on through the 8 s. A fall that lands it finds a floor under its bottom (z -375.3) that the original's does not; at 454221fa too, and with the box trace's bevels at the original's threshold | the physics (water) | `FloatConsole`: the crate's physics each quarter second in both engines; then the falling move's hit that lands it, logged in DXEngine, against the original's walk at that place |
+| PHYS.16 | A buoyant crate in the water by Liberty Island's pier (`CrateBreakableMedGeneral2`) rises and bobs at the surface as the original's does, then comes to rest there some 6 s in: `PHYS_None` at z -352.08, its pitch and roll put flat as `Landed` puts them, its velocity -16.6 kept, where the original's bobs on through the 8 s. A fall that lands it finds a floor under its bottom (z -375.3) that the original's does not; with the collision code of a5aa4641 too, and with the box trace's bevels at the original's threshold | the physics (water) | `FloatConsole`: the crate's physics each quarter second in both engines; then the falling move's hit that lands it, logged in DXEngine, against the original's walk at that place |
 | PHYS.17 | A box traced from a place partly inside the level's solid is stopped at its start by the original's trace (time 0, the hit's normal along the trace) where DXEngine's passes on or meets the level further along: 94 and 14 of `GrateConsole`'s 1,916 places round the grates under Castle Clinton on 02_NYC_BatteryPark, such as the player's box from -592, -1712, -388 along +X, its top in a duct's ceiling | the traces (a box) | `GrateConsole`'s sweeps, cell by cell; the original's box walk at a start in solid (`0x103f42f0`) read against `TraceAABBModel`'s, the hull and plane that decide one such cell |
 
 ## AI: the NPCs
@@ -101,7 +101,6 @@ None open.
 | EXT.9 | The first keyboard focus is seeded in DXEngine's layout pass, after the level's tick, where the original seeds it at its windows' next tick: a conversation's first choice has the focus a frame sooner there | the UI | `ChoiceConsole` |
 | EXT.10 | The focus tables pass over no window as clipped away, DXEngine keeping no clip rectangles | the UI | `FocusConsole` with a window clipped out of view |
 | EXT.14 | Viewport windows, none of it reached by the game: no `CalcView` event; an origin or watch actor gone leaves the view at the window's fields, not at its last place and turn; a window turned off draws nothing, where the original tiles its default texture; `SetRotation` keeps the watch actor; `SetDefaultTexture` takes no defaults; `bShowWeapons` draws no overlays; `SetViewportActor` adds no network view (`AdditionalViews`); `ConvertVectorToCoordinates` in one, or in a window inside one, projects through the main view; the frame takes the window's whole rectangle, not its clip rectangle | viewport windows | `CameraConsole` with each |
-| EXT.19 | A window's tiles (`DrawIcon`, `DrawTexture`, `DrawPattern`, `DrawStretchedTexture`, `DrawIconPattern`, and so `DrawBox` and `DrawBorders`) are drawn at their unrounded place and clipped in pixels, where the original's `XGC::DrawTile` (`0x1002a820`, its clip `ClipTile` `0x1002a4f0`) clips in the window's units and then truncates the place, the size and the source: at a window placed at half a unit, as a computer's screen is, a login field's frame lies a pixel right of and below the original's at 1280x960 (its outline at 515, 369 against 514, 368) | the UI (tiles) | `LoginConsole`: the fields' frames' outlines in both engines; `TileConsole`, `ToolConsole`, `MenuConsole` for the tiles of whole-unit windows |
 
 ## NET: the network
 
