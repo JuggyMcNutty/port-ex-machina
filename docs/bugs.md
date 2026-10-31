@@ -125,7 +125,7 @@ None open.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| AUD.5 | The original's MP3 voice can play on, silent, past its sound: `LipConsole`'s third line works out shapes to 2.9 s there, three more `X`s; the cause is unfound | sound | `LipConsole` |
+| AUD.5 | The original's MP3 voice can play on, silent, past its sound: `LipConsole`'s third line works out shapes to 2.9 s there, three more `X`s. The cause read: the decoder sets a voice's end at its data's end only while the voice's place lies before the fill's in the 64 KB ring, else at a later call past the zeros it wrote meanwhile (galaxy-dll.md, playing a sound) | sound | `LipConsole`, once DXEngine ends an MP3 voice as the ring's fill does |
 | AUD.7 | A WAV's ping-pong loop plays forward, where Galaxy's plays back and forth | sound | a sound with such a loop, recorded |
 | AUD.8 | An 8-bit sample's lip sync is not read from its start wherever it plays, as the original's is | sound | `LipConsole` with an 8-bit WAV line |
 
