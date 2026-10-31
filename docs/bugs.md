@@ -17,7 +17,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 29 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 4 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 2 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 4 |
@@ -80,10 +80,8 @@ None open.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PHYS.7 | A hinged door crushes a crate 0.2 s into its close, where the original's does at 0.3 s: the crate's spawn fits it 8 units nearer the door, the fit's line toward the door meeting DeusExMover26's invisible semisolid polygon inside the door, which DXEngine files whole and the original's filing drops (PHYS.10) | implemented, not as the original (a mover's move) | `DoorConsole` on UNATCO HQ, with PHYS.10 |
-| PHYS.8 | A tie between a mover's own hit and the level's at one plane falls to the mover, where the original's two times, rounded apart, fall either way (`DeusExMover19`'s, `25`'s and `8`'s reversed lines on DXMP_Silo are the level's) | implemented, not as the original | `VisibleConsole` on DXMP_Silo: all 110 lines alike |
-| PHYS.9 | The filed polygons are an overlay on the level's BSP: a start inside a filed mover's solid is not in solid, and `TraceTexture` gives the flags of the polygon crossed (`PF_Invisible \| PF_Semisolid` on `DeusExMover26`'s line) where the original's filed node has 0 | implemented, not as the original | `VisibleConsole`, `TraceConsole` |
-| PHYS.10 | The movers filed under one filed again are not filed again, and a mover's polygons are filed whole, where the original's tree drops what lands in solid | implemented, not as the original (the movers in a line's way) | `MoverConsole` with two movers filed in turn |
+| PHYS.7 | A hinged door crushes a crate later into its close than the original's: the original's crate is gone by the door's yaw 14,680, 0.3 s in, in six runs, DXEngine's still there at 14,601 and gone 0.1 s later, the crate placed where the original's is (-875.4, 362.6) now that the movers are filed as the original's | implemented, not as the original (a mover's move) | `DoorConsole` on UNATCO HQ; the door's encroachment test read against the original's (`AMover`'s, the brush's point check against the crate's box) |
+| PHYS.8 | A tie between a mover's own hit and the level's at one plane falls to the mover, where the original's two times, rounded apart, fall either way (`DeusExMover19`'s, `25`'s and `8`'s reversed lines on DXMP_Silo and `DeusExMover15`'s on UNATCO HQ are the level's) | implemented, not as the original | `VisibleConsole` on DXMP_Silo: all 110 lines alike |
 
 ## AI: the NPCs
 
