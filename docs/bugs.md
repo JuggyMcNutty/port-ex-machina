@@ -20,7 +20,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 4 |
 | [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
-| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 6 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 5 |
 | [NET](#net-the-network) | the network | 2 |
 | [REN](#ren-the-renderer) | the renderer | 3 |
 | [AUD](#aud-the-audio) | the audio | 0 |
@@ -104,7 +104,6 @@ None open.
 | EXT.9 | The first keyboard focus is seeded in DXEngine's layout pass, after the level's tick, where the original seeds it at its windows' next tick: a conversation's first choice has the focus a frame sooner there | the UI | `ChoiceConsole` |
 | EXT.10 | The focus tables pass over no window as clipped away, DXEngine keeping no clip rectangles | the UI | `FocusConsole` with a window clipped out of view |
 | EXT.14 | Viewport windows, none of it reached by the game: no `CalcView` event; an origin or watch actor gone leaves the view at the window's fields, not at its last place and turn; a window turned off draws nothing, where the original tiles its default texture; `SetRotation` keeps the watch actor; `SetDefaultTexture` takes no defaults; `bShowWeapons` draws no overlays; `SetViewportActor` adds no network view (`AdditionalViews`); `ConvertVectorToCoordinates` in one, or in a window inside one, projects through the main view; the frame takes the window's whole rectangle, not its clip rectangle | viewport windows | `CameraConsole` with each |
-| EXT.17 | No pointer is drawn over a window with a `CursorRequested` event -- the inventory's items, the object belt's -- and `Script error: Not a color value` is logged each frame there. The event's `out color` goes by `engine->colorprop` (`URootWindow.cpp`), a struct property made by hand (`Engine.cpp`) and so typed a plain struct, where one of a `Color` read from a package is typed a colour (`UStructProperty::Load`); the copy into the event's own throws, `ToColor` taking no plain struct, where `ToVector` takes one | the UI (the pointer) | `LootConsole` with `loot-drags.txt`: no `Not a color value` in its log, and the pointer in its shots over the items |
 | EXT.18 | A computer's login fields (`ComputerScreenLogin`'s two `MenuUIEditWindow`s) cut off the left of their text's first letter, where the original's shows it whole | the UI (edit fields) | a shot of a login screen with a name typed in each engine, the field's first columns compared (`shots.py --region`) |
 
 ## NET: the network
