@@ -16,9 +16,9 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 29 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
-| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 5 |
-| [AI](#ai-the-npcs) | the NPCs | 1 |
+| [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 4 |
 | [NET](#net-the-network) | the network | 0 |
@@ -74,7 +74,9 @@ as any other. Nothing here changes before the owner rules.
 
 ## PKG: saving, loading, travel and the loading screen
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| PKG.14 | The level's time after a save is loaded: at the first tick after the load the original's `Level.TimeSeconds` stood 2.85 s past the save's and 1.85 s past the time the load was asked at, its sleepers' `LatentFloat` 0.40 s less than saved; DXEngine's 0.17 s past the save's, its sleepers' 0.17 less (`SleepConsole`: the original's 10.57 against a save at 7.72 and a load asked at 8.72, DXEngine's 6.19 against 6.02 and 7.03). The original seems to run the old level's clock on through the load, with the first tick clamped; unread | saving, loading and travel | `SleepConsole`, the level's time and the tick's logged each tick around the load in both engines, `ULevel::Serialize`'s time and the game engine's first tick after a load read |
 
 ## PHYS: physics, traces and movers
 
@@ -88,9 +90,7 @@ None open.
 
 ## AI: the NPCs
 
-| ID | What | Said in NATIVES.md | Proof |
-|---|---|---|---|
-| AI.6 | `FindBestInventoryPath` is Surreal Engine's search, not the original's `findPathTowardBestInventory`, which is unread | mods | Engine.dll read; a console asking it of Liberty Island's pawns in both engines |
+None open.
 
 ## DX: DeusEx's natives
 
