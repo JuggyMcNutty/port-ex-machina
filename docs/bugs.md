@@ -17,7 +17,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 29 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 2 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 3 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 5 |
@@ -81,8 +81,9 @@ None open.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PHYS.7 | A hinged door crushes a crate later into its close than the original's: the original's crate is gone by the door's yaw 14,680, 0.3 s in, in six runs, DXEngine's still there at 14,601 and gone 0.1 s later, the crate placed where the original's is (-875.4, 362.6). The door's encroachment asks whether the crate's box overlaps its brush, the box in the brush's own axes in both: the original's box check (`UModel::PointCheck` 0x103f1570, its walk 0x103f19b0) tries a hull only at a solid leaf of its walk, the leaf's node's, and against the hull's box faces pushed 0.1 out and the box's extent, its planes and the bevels their signs call for, keeping the shallowest separation; DXEngine's (`OverlapAABBModel`) tries every hull its walk passes, the hull's box as it is, with no bevels | implemented, not as the original (a mover's move) | `DoorConsole` on UNATCO HQ; the box check made the original's, then every console that spawns, fits or encroaches run again, the box check being theirs too |
 | PHYS.8 | A tie between a mover's own hit and the level's at one plane falls to the mover, where the original's two times, rounded apart, fall either way (`DeusExMover19`'s, `25`'s and `8`'s reversed lines on DXMP_Silo and `DeusExMover15`'s on UNATCO HQ are the level's) | implemented, not as the original | `VisibleConsole` on DXMP_Silo: all 110 lines alike |
+| PHYS.16 | A buoyant crate in the water by Liberty Island's pier (`CrateBreakableMedGeneral2`) rises and bobs at the surface as the original's does, then comes to rest there some 6 s in: `PHYS_None` at z -352.08, its pitch and roll put flat as `Landed` puts them, its velocity -16.6 kept, where the original's bobs on through the 8 s. A fall that lands it finds a floor under its bottom (z -375.3) that the original's does not; at 454221fa too, and with the box trace's bevels at the original's threshold | the physics (water) | `FloatConsole`: the crate's physics each quarter second in both engines; then the falling move's hit that lands it, logged in DXEngine, against the original's walk at that place |
+| PHYS.17 | A box traced from a place partly inside the level's solid is stopped at its start by the original's trace (time 0, the hit's normal along the trace) where DXEngine's passes on or meets the level further along: 94 and 14 of `GrateConsole`'s 1,916 places round the grates under Castle Clinton on 02_NYC_BatteryPark, such as the player's box from -592, -1712, -388 along +X, its top in a duct's ceiling | the traces (a box) | `GrateConsole`'s sweeps, cell by cell; the original's box walk at a start in solid (`0x103f42f0`) read against `TraceAABBModel`'s, the hull and plane that decide one such cell |
 
 ## AI: the NPCs
 
