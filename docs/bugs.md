@@ -16,12 +16,12 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 29 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
-| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 5 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 4 |
-| [NET](#net-the-network) | the network | 0 |
+| [NET](#net-the-network) | the network | 1 |
 | [REN](#ren-the-renderer) | the renderer | 2 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
@@ -74,9 +74,7 @@ as any other. Nothing here changes before the owner rules.
 
 ## PKG: saving, loading, travel and the loading screen
 
-| ID | What | Said in NATIVES.md | Proof |
-|---|---|---|---|
-| PKG.14 | The level's time after a save is loaded: at the first tick after the load the original's `Level.TimeSeconds` stood 2.85 s past the save's and 1.85 s past the time the load was asked at, its sleepers' `LatentFloat` 0.40 s less than saved; DXEngine's 0.17 s past the save's, its sleepers' 0.17 less (`SleepConsole`: the original's 10.57 against a save at 7.72 and a load asked at 8.72, DXEngine's 6.19 against 6.02 and 7.03). The original seems to run the old level's clock on through the load, with the first tick clamped; unread | saving, loading and travel | `SleepConsole`, the level's time and the tick's logged each tick around the load in both engines, `ULevel::Serialize`'s time and the game engine's first tick after a load read |
+None open.
 
 ## PHYS: physics, traces and movers
 
@@ -107,7 +105,9 @@ None open.
 
 ## NET: the network
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| NET.8 | A joining client's player while it waits for its pawn: once the server's map is loaded, the original's viewport has a player in the Entry level, and its game engine ticks the Entry level a second time each frame meanwhile, that player's level not being the game's ([the game engine's frame](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#a-levels-tick)); DXEngine's viewport has no player until the pawn arrives (`Engine::LoadClientMap`), draws no world, and ticks the Entry level once | multiplayer ("until its pawn arrives, a joining DXEngine client draws no world") | `TravelJoinConsole` already shows the player's place: the original's `in entry.dx` at its fourth second, DXEngine's logging nothing between `DX.dx` and `DXMP_Cathedral`; the Entry level's time each tick of the wait, and a shot of it, in each |
 
 ## REN: the renderer
 
@@ -145,6 +145,7 @@ None open.
 | DX | ConBindEvents makes every ConListItem with the name None, and a save writes them all as exports of one class, name and outer (`DXEngine/DXEngine/Packages/Engine/Actors/UActor_Conversation.cpp:66`, `DXEngine/DXEngine/Packages/Engine/Actors/UActor_Conversation.cpp:68`) | These items never get into a save. Actor's ConListItems is declared `var transient Object ConListItems;` (gamefiles/System/Engine.u script). PropertyDataBlock::Save (DXEngine/DXEngine/Packages/Core/UObject.cpp:859) skips Transient properties. PackageWriter::WriteObjects (Package/PackageWriter.cpp:116-135) exports only Standalone objects and what they reference. No non-transient script var holds a ConListItem; the only other one is ConListItem.next, which is reached only from the list itself. So no ConListItem export named None is ever written, and nothing gets folded on load. |
 | EXT | A text log drops only its oldest expired lines, so a shorter timeout waits behind them (`DXEngine/DXEngine/Packages/Extension/Windows/Text/UTextLogWindow.cpp:73`) | The original's tick (0x10047c30) first subtracts deltaTime from every line's time. It then counts the leading lines whose time is <= 0, stopping at the first that is still positive, and removes that leading run (TArray Remove(0, n)). DXEngine's leading-run erase matches it, as extension-dll.md's text logs say. |
 | LPORT | dxl_game_close frees a pending overlapped read's buffer and OVERLAPPED before the read is cancelled (`deusex-launcher/windows-x86_64/src/platform/win32/process.c:225`, `deusex-launcher/windows-x86_64/src/platform/win32/process.c:226`) | The order is wrong (free(g->pending) at process.c:226, then CancelIo at :231, with no wait for completion), but the bad case cannot occur. It needs a read still pending after the process is signalled, which needs another process to hold the line's client end. The launcher passes the client only through a PROC_THREAD_ATTRIBUTE_HANDLE_LIST and closes its own copy (process.c:208). DXEngine's LauncherLine::Open (LauncherLine.cpp:50-54, called from Hello at GameApp.cpp:72) clears HANDLE_FLAG_INHERIT. Its relaunch passes a handle list of the stdio alone (GameApp.cpp:228-249), and the crash uploader inherits nothing (CrashReporter.cpp:187). Windows closes a process's handles before it signals the process object, so the read has completed, with its buffer and status written, before ENDED. |
+| PKG | The level's time after a save is loaded: at the first tick after the load the original's `Level.TimeSeconds` stood 2.85 s past the time saved, its sleepers' `LatentFloat` 0.40 s less, and DXEngine's 0.17 s past and 0.17 s less, as though the original ran the old level's clock on through the load (`SleepConsole`) | Both engines add the load's frame whole to the level's time and give the actors at most 0.4 s of it ([a level's tick](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#a-levels-tick)): the original's load took 2.87 s under Proton, DXEngine's 0.15 s. `SleepConsole` with the wall clock: the level's time after the load past the time saved by the clock's step over the load, within a millisecond, in both engines (2.865 s against 2.866; 0.149 against 0.148) |
 
 ## Not yet read
 
