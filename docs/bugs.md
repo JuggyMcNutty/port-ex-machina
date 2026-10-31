@@ -22,7 +22,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 4 |
 | [NET](#net-the-network) | the network | 0 |
-| [REN](#ren-the-renderer) | the renderer | 3 |
+| [REN](#ren-the-renderer) | the renderer | 2 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
 | [WIN](#win-the-game-window) | the game window | 0 |
@@ -114,7 +114,6 @@ None open.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | REN.14 | Where two opaque surfaces overlap at one depth, which shows can differ: the gaps between Liberty Island pier's planks, a few hundred pixels of `MeshConsole`'s frame | draw order and movers | `MeshConsole` |
-| REN.17 | `Canvas.DrawActor`'s and `DrawClippedActor`'s `WireFrame` draws the actor solid, where the original draws the call with the player's `RendMap` at wire | the UI | `OverlayConsole` with `WireFrame` |
 | REN.24 | Liberty Island's pier 1.7% under `D3DDrv`'s frames with the detail textures on and 0.7% over with them off, Paul Denton a level over, `LaserConsole`'s corridor 2% under: measured again once D.8 is ruled | brightness | `MeshConsole`, `LaserConsole` |
 
 ## AUD: the audio
