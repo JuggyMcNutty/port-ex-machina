@@ -14,7 +14,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 29 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 30 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 6 |
@@ -22,7 +22,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 4 |
 | [NET](#net-the-network) | the network | 1 |
-| [REN](#ren-the-renderer) | the renderer | 10 |
+| [REN](#ren-the-renderer) | the renderer | 9 |
 | [AUD](#aud-the-audio) | the audio | 3 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
 | [WIN](#win-the-game-window) | the game window | 0 |
@@ -65,6 +65,7 @@ as any other. Nothing here changes before the owner rules.
 | D.27 | draws a mesh's faces in face order where its walk of the BSP meets the mesh, after the translucent surfaces behind it | a mesh with an opaque face after a translucent one (`GM_Jumpsuit`, `GM_Suit`, `GFM_TShirtPants`, their carcasses, `ComputerPublic`) drawn whole in face order with the solid actors, so a translucent surface behind it is drawn after its few translucent faces (a troop's 4 modulated ones) | draw order and movers | keep: drawn among the translucent parts by one point's distance, a troop in water could be drawn over the water |
 | D.28 | a change to Effects Channels (the Sound menu's) takes the channels at once: lowered, the sounds on channels past it play on out of the driver's reach, a looping one for good; raised, the channels past the start's count play on the music's voices | the sounds past a lowered count stop; a raised count's channels are voices of their own | sound | keep: the original's leaves a stuck sound or breaks the music |
 | D.30 | a destroyed mover, of a class not `bNoDelete` (a mod's: the game's are, and refuse), stays drawn where its tracker last filed it until the next load or save, its surfaces naming it, a freed actor once 128 destroyed actors are cleaned up (the reading's: no run reaches one) | draws it no more; a line meets it there until the next load or save, as the original's | draw order and movers | keep: the original's drawing reads the destroyed actor, and once 128 are destroyed a freed one |
+| D.31 | `D3DDrv` keeps the first copy of a light map that stays on its stage from one frame to the next, the change `Render.dll` marks passed over (d3ddrv-dll.md, textures): a surface alone in the view, lit by a changing light, holds still -- `OpenGLDrv` shows it changing | changing as `Render.dll` builds it, every frame | lighting | keep: a defect of `D3DDrv`'s cache, the original's other renderer showing the change |
 
 ## VM: the script VM and the object system
 
@@ -124,7 +125,6 @@ None open.
 | REN.20 | `ScriptedTexture.ReplaceTexture`: no run | mods | `ModConsole` with a scripted texture |
 | REN.21 | A sprite animated once (`DT_SpriteAnimOnce`) showing the frame its life has reached and holding the last: no run | sprites | a console spawning one, both engines' shots |
 | REN.22 | An animated or fractal corona skin showing its current frame: no run | coronas | `CoronaConsole` with such a skin |
-| REN.23 | The light effects no stock view shows, the searchlight, non-incidence and the rotor among them, and fast wave, shock, shell and interference, which no stock light has: the reading's alone, no run | lighting | `LightConsole` with a light of each spawned |
 | REN.24 | Liberty Island's pier 1.7% under `D3DDrv`'s frames with the detail textures on and 0.7% over with them off, Paul Denton a level over, `LaserConsole`'s corridor 2% under: measured again once D.8 is ruled | brightness | `MeshConsole`, `LaserConsole` |
 
 ## AUD: the audio
