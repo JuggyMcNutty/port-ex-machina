@@ -17,16 +17,17 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 29 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 2 |
-| [AI](#ai-the-npcs) | the NPCs | 0 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 4 |
+| [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
-| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 4 |
-| [NET](#net-the-network) | the network | 1 |
-| [REN](#ren-the-renderer) | the renderer | 2 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 6 |
+| [NET](#net-the-network) | the network | 2 |
+| [REN](#ren-the-renderer) | the renderer | 3 |
 | [AUD](#aud-the-audio) | the audio | 0 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
-| [WIN](#win-the-game-window) | the game window | 0 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 1 |
+| [WIN](#win-the-game-window) | the game window | 1 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
+| [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 1 |
 
 ## D: for the owner
 
@@ -82,10 +83,14 @@ None open.
 |---|---|---|---|
 | PHYS.7 | A hinged door crushes a crate later into its close than the original's: the original's crate is gone by the door's yaw 14,680, 0.3 s in, in six runs, DXEngine's still there at 14,601 and gone 0.1 s later, the crate placed where the original's is (-875.4, 362.6). The door's encroachment asks whether the crate's box overlaps its brush, the box in the brush's own axes in both: the original's box check (`UModel::PointCheck` 0x103f1570, its walk 0x103f19b0) tries a hull only at a solid leaf of its walk, the leaf's node's, and against the hull's box faces pushed 0.1 out and the box's extent, its planes and the bevels their signs call for, keeping the shallowest separation; DXEngine's (`OverlapAABBModel`) tries every hull its walk passes, the hull's box as it is, with no bevels | implemented, not as the original (a mover's move) | `DoorConsole` on UNATCO HQ; the box check made the original's, then every console that spawns, fits or encroaches run again, the box check being theirs too |
 | PHYS.8 | A tie between a mover's own hit and the level's at one plane falls to the mover, where the original's two times, rounded apart, fall either way (`DeusExMover19`'s, `25`'s and `8`'s reversed lines on DXMP_Silo and `DeusExMover15`'s on UNATCO HQ are the level's) | implemented, not as the original | `VisibleConsole` on DXMP_Silo: all 110 lines alike |
+| PHYS.14 | On 02_NYC_BatteryPark, under Castle Clinton by the vending machine near the start, an invisible box stops the player beside a grate that slides up, where the original's player walks on | implemented, not as the original (a mover's move) | the spot's movers, any `BlockPlayer` there and the events that switch it; a console that walks the player there in both engines, logging its moves and what stops it |
+| PHYS.15 | A spawn of debris is refused, `Could not find usable location when trying to spawn`: a broken window's `GlassFragment` on Liberty Island (`DeusExMover.BlowItUp`), a destroyed container's `TrashPaper` on 02_NYC_BatteryPark (`Containers.Destroyed`), one each. `FindSpot` tests the world alone, which holds the filed movers, the breaking glass among them; whether the original's fits them is the proof's | not yet | the pieces a broken window and a destroyed container leave, counted in both engines (`GlassConsole` with `Destroy`) |
 
 ## AI: the NPCs
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| AI.7 | The terrorists Liberty Island's script kills as the statue's mission ends (`Mission01.Timer` once `StatueMissionComplete` is set: each living one but the commander given `TakeDamage` at no health, then its inventory deleted) leave carcasses that hold their inventory, where the original's are empty: its carcass comes at the end of the `Dying` state's latent code (`SpawnCarcass` after `FinishAnim`), after the deletion. Those the player killed keep theirs in both | every NPC (changing state) | a console on 01_NYC_UNATCOIsland that sets `StatueMissionComplete`, then logs each terrorist's state and each `TerroristCarcass`'s inventory tick by tick, in both engines |
 
 ## DX: DeusEx's natives
 
@@ -99,18 +104,22 @@ None open.
 | EXT.9 | The first keyboard focus is seeded in DXEngine's layout pass, after the level's tick, where the original seeds it at its windows' next tick: a conversation's first choice has the focus a frame sooner there | the UI | `ChoiceConsole` |
 | EXT.10 | The focus tables pass over no window as clipped away, DXEngine keeping no clip rectangles | the UI | `FocusConsole` with a window clipped out of view |
 | EXT.14 | Viewport windows, none of it reached by the game: no `CalcView` event; an origin or watch actor gone leaves the view at the window's fields, not at its last place and turn; a window turned off draws nothing, where the original tiles its default texture; `SetRotation` keeps the watch actor; `SetDefaultTexture` takes no defaults; `bShowWeapons` draws no overlays; `SetViewportActor` adds no network view (`AdditionalViews`); `ConvertVectorToCoordinates` in one, or in a window inside one, projects through the main view; the frame takes the window's whole rectangle, not its clip rectangle | viewport windows | `CameraConsole` with each |
+| EXT.17 | No pointer is drawn over a window with a `CursorRequested` event -- the inventory's items, the object belt's -- and `Script error: Not a color value` is logged each frame there. The event's `out color` goes by `engine->colorprop` (`URootWindow.cpp`), a struct property made by hand (`Engine.cpp`) and so typed a plain struct, where one of a `Color` read from a package is typed a colour (`UStructProperty::Load`); the copy into the event's own throws, `ToColor` taking no plain struct, where `ToVector` takes one | the UI (the pointer) | `LootConsole` with `loot-drags.txt`: no `Not a color value` in its log, and the pointer in its shots over the items |
+| EXT.18 | A computer's login fields (`ComputerScreenLogin`'s two `MenuUIEditWindow`s) cut off the left of their text's first letter, where the original's shows it whole | the UI (edit fields) | a shot of a login screen with a name typed in each engine, the field's first columns compared (`shots.py --region`) |
 
 ## NET: the network
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | NET.8 | A joining client's player while it waits for its pawn: once the server's map is loaded, the original's viewport has a player in the Entry level, and its game engine ticks the Entry level a second time each frame meanwhile, that player's level not being the game's ([the game engine's frame](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#a-levels-tick)); DXEngine's viewport has no player until the pawn arrives (`Engine::LoadClientMap`), draws no world, and ticks the Entry level once | multiplayer ("until its pawn arrives, a joining DXEngine client draws no world") | `TravelJoinConsole` already shows the player's place: the original's `in entry.dx` at its fourth second, DXEngine's logging nothing between `DX.dx` and `DXMP_Cathedral`; the Entry level's time each tick of the wait, and a shot of it, in each |
+| NET.9 | On a live server (MTL and ANNA), the player's movement is jittery. The client runs at the original's cap, its net speed over 64 (`Engine::CalcTimeElapsed`): 40 frames a second at the game's 2,600, three 120 Hz refreshes a frame, where a few tenths of a millisecond either way can hold a frame two refreshes or four; the server's corrections go uncounted | not yet | `netspeed 20000` on the same server, the cap past the display's rate: the jitter gone or not; `tools/dxcap.sh live <address>` there, its `ClientAdjustPosition` lines counted |
 
 ## REN: the renderer
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | REN.14 | Where two opaque surfaces overlap at one depth, which shows can differ: the gaps between Liberty Island pier's planks, a few hundred pixels of `MeshConsole`'s frame | draw order and movers | `MeshConsole` |
+| REN.26 | 00_Intro's door under the two pawns is lit another colour than the original's. Likely: a mover keeps a light only where `TraceAnyHit` from the light to the mover's drawn place meets no world (`LightSystem::UpdateLightList`), and the world's walk holds the filed movers (`LineNodes`), the lit mover's own polygons among them, which can stand between; a dynamic-lit mover's map is built from that list (`LightSystem_Light.cpp`) | lighting | the intro's frame there, DXEngine before 90b05871 and after, then against the original's (`shots.py --region` of the door) |
 | REN.24 | Liberty Island's pier 1.7% under `D3DDrv`'s frames with the detail textures on and 0.7% over with them off, Paul Denton a level over, `LaserConsole`'s corridor 2% under: measured again once D.8 is ruled | brightness | `MeshConsole`, `LaserConsole` |
 
 ## AUD: the audio
@@ -119,15 +128,25 @@ None open.
 
 ## ENG: the engine, its input and its config
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| ENG.15 | In a rootless container (distrobox, toolbox: podman's), a pad plugged in after the engine starts is never seen. SDL3 enumerates by libudev, whose monitor drops each message from a sender other than uid 0, and the host's root is the container's `nobody`; SDL watches `/dev/input` itself only in a Flatpak, a Snap or with `/run/host/container-manager`. A pad there at the start is found | ENGINE.md, settings and environment (`Gamepad`) | a pad plugged in beside a listener of the input devices' uevents (each sender's uid), the engine's open devices after; again with `SDL_JOYSTICK_DISABLE_UDEV=1` |
 
 ## WIN: the game window
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| WIN.8 | Full screen in a Wayland session, a Screen Resolution chosen does not switch the display: SDL3 emulates the mode (`SDL_SetWindowFullscreenMode`), the frame drawn at its size and scaled to the display's by the compositor, where the original's switches the display's mode | the menus' settings | `getcurrentres` after a choice, against the display's mode (`kscreen-doctor -o`) |
 
 ## MAIN: the recreation (deusex-launcher's main)
 
 None open.
+
+## LAPP: the desktop launcher's app, processes and POSIX platform
+
+| ID | What | Said in LAUNCHER.md | Proof |
+|---|---|---|---|
+| LAPP.6 | In a rootless container, a pad plugged in while DXLauncher runs is never seen: its SDL3 enumerates by libudev too (ENG.15) | not yet | ENG.15's, with the launcher's window open |
 
 ## Refuted
 
