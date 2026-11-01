@@ -45,7 +45,7 @@ as any other. Nothing here changes before the owner rules.
 | D.6 | bilinear sampling from one mip | the GPU devices trilinear, with 8x anisotropy | the software device | keep |
 | D.7 | no render scale | `Performance.RenderScale`, 1 by default (0.667 on the Smart Pro) | ENGINE.md, settings and environment | keep |
 | D.8 | `D3DDrv` draws the detail textures on hardware that has `BLENDDIFFUSEALPHA` (Wine's Direct3D 7 has not), in three passes, each faded by its polygon's corners and rounded to 8 bits | drawn in one pass, the fade worked out per pixel, no rounding between the bands | the menus' settings; brightness | keep them drawn, the method made `D3DDrv`'s |
-| D.9 | `D3DDrv`'s detail passes take a depth bias | no depth bias anywhere | ENGINE.md, rendering | keep: a translucent draw biased by its slope shows through the opaque one |
+| D.9 | `D3DDrv`'s detail passes take a depth bias | none on the detail textures, nor on any draw but a mover's polygons' step | ENGINE.md, rendering | keep: a translucent draw biased by its slope shows through the opaque one |
 | D.10 | an edit field's copy, cut and paste in a text buffer of its own | the desktop's clipboard | the UI | keep |
 | D.11 | `GetDeusExVersion` is "Mon Mar 19 12:06:14 2001 v1.112fm" | DXEngine's own version, shown under the main menu | implemented, not as the original | keep: a player can tell which engine they run |
 | D.12 | a net game's player with no chosen name logs in as `Player` | as `DXEnginePlayer` | multiplayer | keep |
@@ -81,8 +81,8 @@ None open.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PHYS.18 | A box trace that meets both the level and a mover's brush at its start, or a mover beyond the level's hit, meets the mover where the original's meets the level: the original's multi-hit check (`ULevel::MultiLineCheck`, `0x1039b220`) asks the movers along the line cut 5 units past the level's hit, a brush's hit backed off a tenth of the cut line, and a cut to nothing meets none; DXEngine's asks each mover's brush along the whole line. `GrateConsole`: 58 of its 1,916 places round the grates under Castle Clinton on 02_NYC_BatteryPark, the original's the level at the start, DXEngine's the grate or `BreakableGlass0` at the same place; 13 where a grate is met 0.06 units nearer (-2519.60 against the original's -2519.54) | the traces (a box) | `GrateConsole`'s sweeps, cell by cell, by the actor hit; then MoveConsole, DoorConsole and the other box consoles |
-| PHYS.19 | A line's hit lies a float step from the original's where its start is off the float grid: DXEngine's walk takes the exact crossing of the plane, rounded, where the original's line walk (`0x103f3560`) reports the float midpoint where the line crosses it, and the time and place follow from it. `VisibleConsole`: DXMP_Silo's `BreakableGlass8` and `9`, hit at x 178.5 from 148.000015, the original's 178.500015; UNATCO HQ's `DeusExMover21` and `22` reversed, at z -61.499996, the original's -61.5; and on Liberty Island a cylinder's normal in its last digit (`DeusExMover18`'s line at `DataLinkTrigger21`, `UPrimitive::LineCheck`) | the traces (a line) | `VisibleConsole` on the three maps, the `mover` lines diffed; the line walk's point read (`0x103f3560`) |
+| PHYS.18 | A box trace that meets both the level and a mover's brush at its start, or a mover beyond the level's hit, meets the mover where the original's meets the level: the original's multi-hit check (`ULevel::MultiLineCheck`, `0x1039b220`) asks the movers along the line cut 5 units past the level's hit, a brush's hit backed off a tenth of the cut line, and a cut to nothing meets none; DXEngine's asks each mover's brush along the whole line. `GrateConsole`, round the grates under Castle Clinton on 02_NYC_BatteryPark: 58 of the 1,842 places a terrorist walking through does not reach, the original's the level at the start, DXEngine's the grate or `BreakableGlass0` at the same place; 13 where a grate is met 0.06 units nearer (-2519.60 against the original's -2519.54) | the traces (a box) | `GrateConsole`'s sweeps, cell by cell, by the actor hit; then MoveConsole, DoorConsole and the other box consoles |
+| PHYS.19 | A line's hit lies a float step from the original's where its start is off the float grid: DXEngine's walk takes the exact crossing of the plane, rounded, where the original's line walk (`0x103f3560`) works the crossing out in floats, the start plus the line times the start's distance over the two ends' difference, each step rounded, and the time and place follow from it. `VisibleConsole`: DXMP_Silo's `BreakableGlass8` and `9`, hit at x 178.5 from 148.000015, the original's 178.500015; UNATCO HQ's `DeusExMover21` and `22` reversed, at z -61.499996, the original's -61.5; and a cylinder's normal in its last digit, a line's on Liberty Island (`DeusExMover18`'s line at `DataLinkTrigger21`, `UPrimitive::LineCheck`) and a box's on 02_NYC_BatteryPark (`GrateConsole`'s four hits on `CageLight12`) | the traces (a line; a box) | `VisibleConsole` on the three maps, the `mover` lines diffed; `GrateConsole`'s `CageLight12` hits; the line walk's point read (`0x103f3560`) |
 
 ## AI: the NPCs
 
@@ -167,8 +167,8 @@ commit cites ([`bugs-recovered.md`](bugs-recovered.md)).
   the property classes' Copy and Compare.
 - **PKG:** IniFile and IniProperty, NameString (skimmed); the loads of UBspNodes and UPolys,
   UMesh.
-- **PHYS:** Collision/BottomLevel (TraceAABBModel, TraceRayModel, OverlapAABBModel), Math past
-  rotator.h, UPawn's reach and path code.
+- **PHYS:** Collision/BottomLevel's TraceRayModel, Math past rotator.h, UPawn's reach and path
+  code.
 - **AI:** the walk, fly and swim reach moves in detail; AICanSee, and the blend tween's fields,
   against the binary; UActor_Base, Zone, Render and Conversation.
 - **DX:** the binaries for the ConListItems' names, the bleed loop and the laser's maths.
