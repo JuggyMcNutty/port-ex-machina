@@ -14,12 +14,12 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 3 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 2 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 2 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 2 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
-| [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
+| [DX](#dx-deusexs-natives) | DeusEx's natives | 1 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 5 |
 | [NET](#net-the-network) | the network | 2 |
 | [REN](#ren-the-renderer) | the renderer | 3 |
@@ -40,7 +40,6 @@ owner rules.
 |---|---|---|---|---|
 | D.15 | blink and strobe lights at the frame rate: a blink out when its turn count, in 65536ths, is odd, in effect a fresh state each frame; a strobe out every other frame; an ambient sound on such a light follows them | DXEngine's own: an even blink, 40 ÷ `LightPeriod` changes a second, and a 5 Hz strobe | lighting; sound | the original's pace at 60 frames, at any frame rate: a strobe out every other 60th of a second, a blink by its turn count's lowest bit taken 60 times a second |
 | D.16 | a flickering light flickers each frame | at most 25 times a second (Surreal Engine's) | lighting | the original's pace at 60 frames: at most 60 times a second |
-| D.22 | a comment with no end tag reads past the text's end, so `09_EmailMenu_ShipOps`'s listing depends on the memory after it | stops at the end | what the player reads | the original run first: a listing that holds from run to run shown, one that varies DXEngine's stop at the end, by choice |
 
 ## VM: the script VM and the object system
 
@@ -69,7 +68,9 @@ None open.
 
 ## DX: DeusEx's natives
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| DX.3 | A text whose first paragraph never starts and that ends after its last tag gives DXEngine no last token, where the original's `ParseTextBlock` (DeusExText.dll `0x10001a20`) gives one more, empty, with no tag (`TT_None`): 15 email lists and `03_BulletinMenu` end so, in a line break; their one reader, the computer screens, passes over a token with no tag (read) | what the player reads | `ShipOpsConsole` with `04_EmailMenu_klloyd` among its controls, the two logs' tokens |
 
 ## EXT: the window tree (Extension)
 
@@ -157,7 +158,9 @@ commit cites ([`bugs-recovered.md`](bugs-recovered.md)).
   code.
 - **AI:** the walk, fly and swim reach moves in detail; AICanSee, and the blend tween's fields,
   against the binary; UActor_Base, Zone, Render and Conversation.
-- **DX:** the binaries for the ConListItems' names, the bleed loop and the laser's maths.
+- **DX:** the binaries for the ConListItems' names, the bleed loop and the laser's maths;
+  DeusExText's `ParseToken` past `NOTE` and `COMMENT` (`GOAL`'s case, the string `FindEndTag`
+  gives back).
 - **EXT:** UComputerWindow; UScaleWindow past its first 620 lines (its geometry and drawing);
   the other natives' wrappers in detail; the binary past what the RE docs say.
 - **NET:** UnrealURL's parsing; the package cache (FindPackageFile, UsePackageFile); what only
