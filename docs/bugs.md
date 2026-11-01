@@ -14,7 +14,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 6 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 5 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 2 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 2 |
@@ -43,7 +43,6 @@ owner rules.
 | D.16 | a flickering light flickers each frame | at most 25 times a second (Surreal Engine's) | lighting | the original's pace at 60 frames: at most 60 times a second |
 | D.21 | a 1/256 volume floor | not carried | sound | carry it |
 | D.22 | a comment with no end tag reads past the text's end, so `09_EmailMenu_ShipOps`'s listing depends on the memory after it | stops at the end | what the player reads | the original run first: a listing that holds from run to run shown, one that varies DXEngine's stop at the end, by choice |
-| D.33 | a new game begun from inside a game with a weapon drawn (the main menu's New Game, through the intro) brings that weapon back on the island beside the new game's: the player's `LastinHand`, a travel property the intro's `Paralyzed` state never updates, still names the old game's weapon after `StartNewGame`'s `ResetPlayer` has destroyed it, and the travel's export (`0x10391740`) writes a destroyed actor as any; the belt's slot holds the new pistol, the 1 key draws the old (`SwitchWeapon` finds it first), and `UpdateInHand` never puts down an `inHand` in `Idle2`, so no weapon can be drawn or put away, a conversation's too, until the old one is dropped; it travels and is saved so | the same (`NewGameConsole`: 9 items, two pistols, two 10mm ammo, two key rings, the 1 key then the 2 leaving `bInHandTransition` set, in both engines); a fix drafted: a destroyed actor not written by the travel's export (`DXEngine/DXEngine/ObjectTravelInfo.cpp:81`, `IsPendingKill`) | saving, loading and travel | depart, the original's bug fixed: a destroyed actor not written by the travel's export |
 
 ## VM: the script VM and the object system
 
@@ -56,7 +55,7 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PKG.17 | A travelled item whose belt slot is taken arrives off the belt, where the original's goes to the belt's first free slot: the old game's pistol a new game brings back (bugs.md D.33), slot 1 the new pistol's, is in the original's slot 4 and off DXEngine's belt (`bInObjectBelt` False, `beltPos` -1); the order of the HUD belt's placing against the travel's events not yet read | saving, loading and travel | `NewGameConsole`: the two logs' `game 2 carries WeaponPistol` lines |
+| PKG.17 | A travelled item whose belt slot is taken arrives off the belt (`bInObjectBelt` False, `beltPos` -1), where the original's goes to the belt's first free slot: the old game's pistol a new game begun with it drawn brings back in the original, slot 1 the new pistol's, is in its slot 4; DXEngine's travel leaves that destroyed pistol behind (DXEngine 282e084f), so the case needs making another way; the order of the HUD belt's placing against the travel's events not yet read | saving, loading and travel | a console travelling the player with an item whose belt slot another holds, logged in both engines; `NewGameConsole` shows the original's alone |
 | PKG.18 | The travel's export writes every actor a travel property names, where the original's writes one only with `bTravel` set (`0x10391740`, read): an actor of a class without it, named by a travel property, would travel in DXEngine alone (`DXEngine/DXEngine/ObjectTravelInfo.cpp`, `ActorTravelInfo::Create`) | not yet | a console giving the player a travel property that names such an actor, then a map exit, logged in both engines |
 
 ## PHYS: physics, traces and movers
