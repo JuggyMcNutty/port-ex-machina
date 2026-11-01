@@ -135,8 +135,7 @@ cmd_fetch() {
         say "RE clone present: $DX_RE"
     else
         git clone "$RE_URL" "$DX_RE"
-        git -C "$DX_RE" config user.name JuggyMcNutty
-        git -C "$DX_RE" config user.email 11588877+JuggyMcNutty@users.noreply.github.com
+        dx_git_identity "$DX_RE"
     fi
 }
 

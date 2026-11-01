@@ -36,8 +36,7 @@ cmd_fetch() {
     mkdir -p "$(dirname "$ENGINE_DIR")"
     git clone --branch "$BRANCH" "$REPO_URL" "$ENGINE_DIR"
     eng checkout -q -B "$BRANCH" "$(pinned commit)"
-    eng config user.name JuggyMcNutty
-    eng config user.email 11588877+JuggyMcNutty@users.noreply.github.com
+    dx_git_identity "$ENGINE_DIR"
     say "engine ready: $ENGINE_DIR ($BRANCH at $(eng rev-parse --short HEAD))"
 }
 

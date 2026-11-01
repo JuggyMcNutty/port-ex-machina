@@ -32,6 +32,19 @@ dx_link_workspace() {
     ln -sfn ../../gamefiles "$1/gamefiles"
 }
 
+# dx_git_identity <fresh clone>
+#
+# A fresh clone commits as this repository's clone does: its own local
+# user.name and user.email, where it has them (docs/DEVELOPMENT.md#commits),
+# and otherwise git's, so a clone of anyone else's keeps their identity.
+dx_git_identity() {
+    local key value
+    for key in user.name user.email; do
+        value="$(git -C "$DX_WORKSPACE" config --local --get "$key" || true)"
+        [ -z "$value" ] || git -C "$1" config "$key" "$value"
+    done
+}
+
 # ---- devices over SSH -------------------------------------------------------
 # A port sets DEVICE, DEVICE_USER, DEVICE_PASS (defaults in its port.sh, all
 # overridable from the environment). sshpass -e reads the password from

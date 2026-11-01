@@ -83,19 +83,19 @@ Besides:
   Never the container's own `/usr/bin/python3`, which is there for its packages.
 - **IDA Pro for Linux** with Hex-Rays' MCP plugin `ida-mcp@HexRaysSA`, for the RE
   ([setting it up](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#the-tools)).
-- **Access to the owner's GitHub repositories.** dx-reverse-info is public; port-ex-machina,
-  DXEngine and deusex-launcher are private until the owner releases the work, so the fetches'
-  HTTPS clones of them need the owner's credentials (a credential helper). Pushing takes
-  `git@github.com:` remotes and an SSH key on the owner's account.
+- **The owner's SSH key, for pushing**: pushing takes `git@github.com:` remotes and an SSH key
+  on the owner's account. The fetches' HTTPS clones need no credentials: all four repositories
+  are public.
 - **The Smart Pro awake on the network**, for its `deps` (the sysroot comes from the device)
   and `deploy`.
 
 ## Commits
 
 - **As JuggyMcNutty** ([the rule](../AGENTS.md#rules)), never the machine's global git identity,
-  which is a personal address: every checkout here sets it in its local git config, and the
-  fetches set it in a fresh clone (`dx.sh fetch`, `engine.sh fetch`, `launcher.sh fetch`); a
-  clone made any other way needs it before its first commit.
+  which is a personal address: every checkout here sets it in its local git config. The fetches
+  copy this repository's local identity into a fresh clone (`dx.sh fetch`, `engine.sh fetch`,
+  `launcher.sh fetch`) and set none where it has none, so anyone else's clones keep their own;
+  this clone, and a clone made any other way, needs it before its first commit.
 - **No game files** ([the rule](../AGENTS.md#rules)): the launcher's `tests/fixtures` are
   written stand-ins, and `test_gamefiles` reads the real ones from `gamefiles/` in place.
 - A change and the docs it affects go in the same commit, in the repository the change is in;
@@ -213,18 +213,16 @@ before it (`scripts/ci.sh publish`):
 
 Each file is a tarball, or a zip for the Windows port and the Smart Pro (the Smart Pro's app
 folder `DeusEx`, as spruceOS takes it); `scripts/ci.sh package` makes all three from the staged
-app, and they are each run's artifact too, kept two days (a private repository's artifacts
-share a small quota; the releases keep the files), a pull request's among them.
+app, and they are each run's artifact too, kept two days (the releases keep the files), a pull
+request's among them.
 
-**The repositories being private**, a run reads its own with GitHub's token and the other two
-with `RELEASES_TOKEN`, which also makes DXEngine's and deusex-launcher's releases: a
-fine-grained token of the owner's with Contents read and write on all three, a secret of each
-(this repository's for the pins' runs, the others' for their own), and port-ex-machina's
-Actions open to the owner's other repositories, which call its `ports.yml`. Without the token a
-run cannot read the other two and fails at their checkout; when it expires, a new one replaces
-the secrets. The releases are the owner's alone to see until the repositories are made public.
-Here, `scripts/ci.sh`'s `plan` and `publish` reach them over SSH:
-`DX_OWNER_GIT=git@github.com:JuggyMcNutty`.
+**`RELEASES_TOKEN`** makes DXEngine's and deusex-launcher's releases from this repository's runs,
+which GitHub's own token cannot: a fine-grained token of the owner's with Contents read and
+write on both, a secret of this repository alone, which its runs also read the others with.
+Without it a run publishes this repository's release alone, with a warning; when it expires, a
+new one replaces the secret. The repositories being public, everything else reads them without
+a token: DXEngine's and the launcher's own runs, and here `scripts/ci.sh`'s `plan` and
+`publish`, over HTTPS, or over SSH as `DX_OWNER_GIT=git@github.com:JuggyMcNutty` names them.
 
 ## Gotchas that cost time
 

@@ -27,9 +27,8 @@ git is the record. Every session loads it, so keep it small.
 - **Commit as JuggyMcNutty** (`11588877+JuggyMcNutty@users.noreply.github.com`), never the
   machine's global identity ([commits](docs/DEVELOPMENT.md#commits)).
 - **Never commit the game's files**: no ini, `.int`, package, IDA database or capture, but for
-  a README's screenshots ([docs](docs/DEVELOPMENT.md#docs)). All four repositories are public,
-  or will be: dx-reverse-info is, the other three are private until the owner releases the
-  work. The RE is behaviour in our own words, never decompiled code.
+  a README's screenshots ([docs](docs/DEVELOPMENT.md#docs)). All four repositories are public.
+  The RE is behaviour in our own words, never decompiled code.
 - **Push or move a pin only with the owner's go-ahead.** A change is committed in its own
   repository with the docs it affects, pushed, then pinned here (`scripts/engine.sh pin`,
   `scripts/launcher.sh pin <port>`) and the pin committed.
@@ -120,7 +119,8 @@ Decided work for later sessions, each deleted when it is done.
 
 ## Open items
 
-Bugs found and not yet fixed: [`docs/bugs.md`](docs/bugs.md), each fix citing its ID.
+Bugs found and not yet fixed: [`docs/bugs.md`](docs/bugs.md), each fix citing its ID. Players'
+reports: each repository's GitHub issues ([which takes what](README.md#reporting-bugs)).
 Known defects, each in the doc that owns its code: DXLauncher's (linux-x86_64, linux-aarch64)
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects),
 windows-x86_64's copy of it on Windows' own calls

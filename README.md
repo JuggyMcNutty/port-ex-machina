@@ -11,8 +11,13 @@ launcher made for it, on Linux, Windows and the TrimUI Smart Pro.
        alt="Hong Kong's Lucky Money club: neon calligraphy, a glass pillar, the patrons">
 </p>
 
-**You need your own copy of Deus Ex, version 1112fm.** None of the game's files are included.
-Made with AI assistance.
+**An alpha.** The opening missions are played by hand, every map loads and an ending plays to
+the credits, but the game is not yet played through end to end on DXEngine: expect bugs, and
+[report them](#reporting-bugs).
+
+**You need your own copy of Deus Ex, version 1112fm**, GOG's or Steam's
+([which copies play](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#an-install)).
+None of the game's files are included. Made with AI assistance.
 
 ## Features
 
@@ -23,8 +28,8 @@ Made with AI assistance.
 - **A launcher made for it.** DXLauncher finds the game and keeps each way of playing in a
   profile, with its own settings, saves and screenshots; multiplayer, mods, recovery after a
   crash and a big screen for the television, all in the game's own look and sound.
-- **Linux, Windows and a handheld.** Desktop Linux on x86_64, Linux on aarch64, Windows 10 or
-  newer, and the TrimUI Smart Pro, each port's launcher tailored to it
+- **Linux, Windows and a handheld.** Desktop Linux on x86_64, Linux on aarch64, Windows 10
+  (1903) or newer, and the TrimUI Smart Pro, each port's launcher tailored to it
   ([the ports](#engine-ports)).
 - **The original launcher, recreated.** `DeusEx.exe`, its first-run wizard, safe mode and
   recovery, recreated almost 1:1 for desktop Linux
@@ -105,6 +110,24 @@ is in [DXEngine's](https://github.com/JuggyMcNutty/DXEngine/releases) and each p
 alone in [deusex-launcher's](https://github.com/JuggyMcNutty/deusex-launcher/releases). GitHub's
 CI builds them all from the exact engine and launcher commits this repository pins
 ([CI](docs/DEVELOPMENT.md#ci)).
+
+## Reporting bugs
+
+Each repository takes the bugs in its own code, in its GitHub issues:
+
+| What goes wrong | Where to report it |
+|---|---|
+| the game: what it draws, plays or does, or a crash in it | [DXEngine's issues](https://github.com/JuggyMcNutty/DXEngine/issues) |
+| DXLauncher: finding the game, profiles, settings, saves, its screens; or the recreated original launcher | [deusex-launcher's issues](https://github.com/JuggyMcNutty/deusex-launcher/issues), naming the port |
+| building, the workspace's scripts, the CI | [this repository's issues](https://github.com/JuggyMcNutty/port-ex-machina/issues) |
+| what the original binaries are said to do | [dx-reverse-info's issues](https://github.com/JuggyMcNutty/dx-reverse-info/issues) |
+
+Say which port and release (the line under the game's main menu names the engine's commit), the
+GPU and the renderer, what you did and what happened, and attach the last run's log,
+`last-run.log`, which the launcher's log page opens: where it lives on
+[Linux](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#where-everything-lives),
+[Windows](https://github.com/JuggyMcNutty/deusex-launcher/blob/windows-x86_64/docs/LAUNCHER.md#where-everything-lives) and
+[the Smart Pro](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#where-everything-lives).
 
 ## The repositories
 

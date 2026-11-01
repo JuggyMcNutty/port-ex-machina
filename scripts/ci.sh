@@ -15,9 +15,9 @@
 # plan reads the caller's event from CI_PORTS (pins: the workspace's pinned
 # set; all: every pinned port; a port; main: the recreation), CI_REPO,
 # CI_EVENT, CI_REF, CI_SHA and CI_BEFORE (a push's previous commit, a pull
-# request's base). The repositories are private: plan and publish reach them
-# with RELEASES_TOKEN, or on this machine as DX_OWNER_GIT names them
-# (git@github.com:JuggyMcNutty, over SSH).
+# request's base). The repositories are public: plan and publish read them
+# over HTTPS, as RELEASES_TOKEN's owner where it is set, or on this machine
+# as DX_OWNER_GIT names them (git@github.com:JuggyMcNutty, over SSH).
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib/common.sh"
 
@@ -41,8 +41,8 @@ is_code() {   # <repository> <path>
     return 0
 }
 
-# Git to one of the owner's repositories, private ones too: as RELEASES_TOKEN's
-# owner, when it is set.
+# Git to one of the owner's repositories: as RELEASES_TOKEN's owner, when it
+# is set.
 owner_git() {
     if [ -n "${RELEASES_TOKEN:-}" ]; then
         git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $(printf 'x-access-token:%s' "$RELEASES_TOKEN" | base64 | tr -d '\n')" "$@"

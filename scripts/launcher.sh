@@ -32,8 +32,7 @@ cmd_fetch() {
     else
         mkdir -p "$LAUNCHER_DIR"
         git clone --branch main "$(repo_url)" "$MAIN"
-        git -C "$MAIN" config user.name JuggyMcNutty
-        git -C "$MAIN" config user.email 11588877+JuggyMcNutty@users.noreply.github.com
+        dx_git_identity "$MAIN"
         # Worktrees linked by relative paths, so the parent folder can move
         # (git 2.48 and later; an older git ignores it).
         git -C "$MAIN" config worktree.useRelativePaths true

@@ -5,9 +5,10 @@ name: ports
 # pins, DXEngine's and each launcher branch's on a pull request or by hand.
 # Every step that builds is a workspace script (scripts/dx.sh,
 # scripts/ci.sh), so a run can be repeated on this machine; adding a build
-# step means editing a script, not this file. The repositories are private:
-# each run reads its own with GitHub's token, the others with RELEASES_TOKEN,
-# which every caller passes on (secrets: inherit).
+# step means editing a script, not this file. Each run reads its own
+# repository with GitHub's token, and the others, which are public, with
+# RELEASES_TOKEN where its caller passes it on (this repository's build.yml,
+# secrets: inherit), or else with GitHub's token too.
 
 on:
   workflow_call:
@@ -203,8 +204,7 @@ jobs:
 
       # The port's three files, one artifact named for it: the app, the
       # engine alone, the launcher alone (each a tarball or zip of its own,
-      # the programs' modes kept). Kept two days: a private repository's
-      # artifacts share a small quota, and the releases keep the files.
+      # the programs' modes kept). Kept two days: the releases keep the files.
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.port }}
