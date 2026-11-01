@@ -14,7 +14,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on | 30 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 6 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 2 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 2 |
@@ -31,42 +31,19 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 ## D: for the owner
 
-Differences made on purpose that the owner has not yet ruled on. A ruling to keep one marks it
-"by choice" where it is said; one to drop it makes the item the original's, fixed and proven
-as any other. Nothing here changes before the owner rules.
+Differences made on purpose, each the owner's to rule on. A ruling to keep one marks it "by
+choice" where it is said and takes it off this list; one to change it stays here, the ruling
+said, until the change is made and proven as any other fix. Nothing here changes before the
+owner rules.
 
-| ID | The original | DXEngine | Said in NATIVES.md | Recommended |
+| ID | The original | DXEngine | Said in NATIVES.md | Ruled |
 |---|---|---|---|---|
-| D.1 | on a screen wider than 4:3 keeps its field of view across the width and loses height | keeps the height a 4:3 screen shows and sees more at the sides (Hor+), a viewport window too, and a conversation's letterboxed view, wider than 4:3 on any screen: the intro's scenes at 1024x768 some 92 degrees across, the original's 75, its figures three quarters the size | the view's width; viewport windows | keep: with the original's angle the intro's "Deus Ex" falls off the bottom at 16:9 |
-| D.2 | a mesh's level of detail from its own angle | from the Hor+ angle, so on a wide screen a mesh keeps less detail at the same distance | the view's width; mesh detail | take it from the 4:3 angle, keeping Hor+ |
-| D.3 | the root window is the whole viewport, where the stock code gives a cutscene's subtitles no height at 16:9 or wider | the root 4:3, a cutscene letterboxed at 16:9 | the UI | keep |
-| D.4 | no multisampling, bloom or HDR | each a setting: 4x multisampling on by default (a laser beam's edge rows partly lit), bloom and HDR off | the software device; ENGINE.md, rendering | keep, the defaults as they are |
-| D.5 | an 8-bit frame | the GPU devices' scene buffers of 10 bits a channel | ENGINE.md, rendering | keep |
-| D.6 | bilinear sampling from one mip | the GPU devices trilinear, with 8x anisotropy | the software device | keep |
-| D.7 | no render scale | `Performance.RenderScale`, 1 by default (0.667 on the Smart Pro) | ENGINE.md, settings and environment | keep |
-| D.8 | `D3DDrv` draws the detail textures on hardware that has `BLENDDIFFUSEALPHA` (Wine's Direct3D 7 has not), in three passes, each faded by its polygon's corners and rounded to 8 bits | drawn in one pass, the fade worked out per pixel, no rounding between the bands | the menus' settings; brightness | keep them drawn, the method made `D3DDrv`'s |
-| D.9 | `D3DDrv`'s detail passes take a depth bias | none on the detail textures, nor on any draw but a mover's polygons' step | ENGINE.md, rendering | keep: a translucent draw biased by its slope shows through the opaque one |
-| D.10 | an edit field's copy, cut and paste in a text buffer of its own | the desktop's clipboard | the UI | keep |
-| D.11 | `GetDeusExVersion` is "Mon Mar 19 12:06:14 2001 v1.112fm" | DXEngine's own version, shown under the main menu | implemented, not as the original | keep: a player can tell which engine they run |
-| D.12 | a net game's player with no chosen name logs in as `Player` | as `DXEnginePlayer` | multiplayer | keep |
-| D.13 | `GetLocalIP` is the first address of the machine's own name, on Linux often a loopback one | the address it reaches the network from | multiplayer | keep |
-| D.14 | a fire, water or ice texture with no `MaxFrameRate` steps every frame, faster at a higher frame rate | at most 60 times a second | fire, water and ice textures | keep: the original's pace at 60 frames |
-| D.15 | blink and strobe lights at the frame rate (a turn count's lowest bit, a turn each frame); an ambient sound on such a light follows them | on DXEngine's own timing | lighting; sound | keep, at the original's pace at 60 frames |
-| D.16 | a flickering light flickers each frame | at most 25 times a second (Surreal Engine's) | lighting | the original's pace at 60 frames |
-| D.17 | at least 5 ms a step for the actors (the level's own time takes the frame's), so above 200 frames a second the game runs fast: uncapped, the original drew the dark stretch of the menu map's flyby between the Eidos and Ion Storm logos at some 5,000 frames a second and swept through it in a tenth of a second, some 2 s at 60 frames, where held to 60 the original's flyby and DXEngine's keep within 0.02 s of each other (`IntroConsole`); and a swimmer goes as far in 0.23 s as at 60 frames in over a second (`SwimConsole`'s d uncapped: the original's 134 units out at 0.23 s, DXEngine's 3.4 at 0.2 s; DXEngine with the floor, a test build, swam alike tick for tick) | the frame's real time | small; swimming out from under the water | keep |
-| D.18 | the level's `TimeDilation` not held (the game sets it only through `SetGameSpeed`, 0.1 or more) | held to 0.0025 to 25 | small | keep |
-| D.19 | a listen server runs as fast as it draws, losing unreliable calls at high rates | at most 144 frames a second | multiplayer | keep |
-| D.20 | with the Sound and Speech sliders equal, both kinds of sound scaled by the slider once more | not carried | sound | carry it |
+| D.2 | a mesh's level of detail from its own angle | from the Hor+ angle, so on a wide screen a mesh keeps less detail at the same distance | the view's width; mesh detail | from the 4:3 angle, the view staying Hor+ |
+| D.15 | blink and strobe lights at the frame rate: a blink out when its turn count, in 65536ths, is odd, in effect a fresh state each frame; a strobe out every other frame; an ambient sound on such a light follows them | DXEngine's own: an even blink, 40 ÷ `LightPeriod` changes a second, and a 5 Hz strobe | lighting; sound | the original's pace at 60 frames, at any frame rate: a strobe out every other 60th of a second, a blink by its turn count's lowest bit taken 60 times a second |
+| D.16 | a flickering light flickers each frame | at most 25 times a second (Surreal Engine's) | lighting | the original's pace at 60 frames: at most 60 times a second |
 | D.21 | a 1/256 volume floor | not carried | sound | carry it |
-| D.22 | a comment with no end tag reads past the text's end, so `09_EmailMenu_ShipOps`'s listing depends on the memory after it | stops at the end | what the player reads | keep, unless the original's runs show a listing that holds, then that |
-| D.23 | a start on `?loadgame=N` logs the player in with the travel info the level was saved with | the player saved, as the game's own load gives it | the command line | keep |
-| D.24 | the `.int` files read from `System` alone | from each folder of the paths, then `System` | mods | keep: a mod in its own folders gives its text |
-| D.25 | an ini written back whole, CR LF, its comments gone | a changed value changed in its own line, the rest of the file as it was | mods (config files) | keep |
-| D.26 | `ReceivedBinary` hands the script other bytes, the count right, and `SendBinary` answers False | the bytes that came; False only when nothing went | multiplayer | keep: no mod can have counted on them |
-| D.27 | draws a mesh's faces in face order where its walk of the BSP meets the mesh, after the translucent surfaces behind it | a mesh with an opaque face after a translucent one (`GM_Jumpsuit`, `GM_Suit`, `GFM_TShirtPants`, their carcasses, `ComputerPublic`) drawn whole in face order with the solid actors, so a translucent surface behind it is drawn after its few translucent faces (a troop's 4 modulated ones) | draw order and movers | keep: drawn among the translucent parts by one point's distance, a troop in water could be drawn over the water |
-| D.28 | a change to Effects Channels (the Sound menu's) takes the channels at once: lowered, the sounds on channels past it play on out of the driver's reach, a looping one for good; raised, the channels past the start's count play on the music's voices | the sounds past a lowered count stop; a raised count's channels are voices of their own | sound | keep: the original's leaves a stuck sound or breaks the music |
-| D.32 | plays a stereo sound, an MP3 or a WAV, as two voices, its channel's and the next channel's, the first 32,768 frames of its ring (0.74 s of a 44,100 Hz one) over and over, its ring never filled again, its lip sync with them, until a sound on its slot stops it; a beep its speaker played with each later line went unheard, and the game crashed at its exit unloading a sound, every run that played one (`LipConsole` with `Speech` on `ConAudioMission01_450`, twice, and on the harness's `CapStereo`; galaxy-dll.md, playing a sound). The stock game has four, all MP3s: `ConAudioHK_Shared_681`, `_1531` and `_1532`, and `ConAudioMission01_450` | plays it once, as a mono MP3's ring has it, a 16-bit WAV too (its 4,096 frames of silence the original's first turn's), an 8-bit one from its start, both its channels at the sound's pan | sound | keep: a defect of Galaxy's, which cuts each of the four lines to its first 0.74 s, repeated, and ends in a crash |
-| D.33 | a new game begun from inside a game with a weapon drawn (the main menu's New Game, through the intro) brings that weapon back on the island beside the new game's: the player's `LastinHand`, a travel property the intro's `Paralyzed` state never updates, still names the old game's weapon after `StartNewGame`'s `ResetPlayer` has destroyed it, and the travel's export (`0x10391740`) writes a destroyed actor as any; the belt's slot holds the new pistol, the 1 key draws the old (`SwitchWeapon` finds it first), and `UpdateInHand` never puts down an `inHand` in `Idle2`, so no weapon can be drawn or put away, a conversation's too, until the old one is dropped; it travels and is saved so | the same (`NewGameConsole`: 9 items, two pistols, two 10mm ammo, two key rings, the 1 key then the 2 leaving `bInHandTransition` set, in both engines); a fix drafted: a destroyed actor not written by the travel's export (`DXEngine/DXEngine/ObjectTravelInfo.cpp:81`, `IsPendingKill`) | saving, loading and travel | depart, the fix drafted: the original's bug, met in a playthrough by starting a new game from the game's own menu, which leaves the weapons stuck until the old one is dropped |
+| D.22 | a comment with no end tag reads past the text's end, so `09_EmailMenu_ShipOps`'s listing depends on the memory after it | stops at the end | what the player reads | the original run first: a listing that holds from run to run shown, one that varies DXEngine's stop at the end, by choice |
+| D.33 | a new game begun from inside a game with a weapon drawn (the main menu's New Game, through the intro) brings that weapon back on the island beside the new game's: the player's `LastinHand`, a travel property the intro's `Paralyzed` state never updates, still names the old game's weapon after `StartNewGame`'s `ResetPlayer` has destroyed it, and the travel's export (`0x10391740`) writes a destroyed actor as any; the belt's slot holds the new pistol, the 1 key draws the old (`SwitchWeapon` finds it first), and `UpdateInHand` never puts down an `inHand` in `Idle2`, so no weapon can be drawn or put away, a conversation's too, until the old one is dropped; it travels and is saved so | the same (`NewGameConsole`: 9 items, two pistols, two 10mm ammo, two key rings, the 1 key then the 2 leaving `bInHandTransition` set, in both engines); a fix drafted: a destroyed actor not written by the travel's export (`DXEngine/DXEngine/ObjectTravelInfo.cpp:81`, `IsPendingKill`) | saving, loading and travel | depart, the original's bug fixed: a destroyed actor not written by the travel's export |
 
 ## VM: the script VM and the object system
 
@@ -119,7 +96,7 @@ None open.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | REN.14 | Where two opaque surfaces overlap at one depth, which shows can differ: the gaps between Liberty Island pier's planks, a few hundred pixels of `MeshConsole`'s frame | draw order and movers | `MeshConsole` |
-| REN.24 | Liberty Island's pier 1.7% under `D3DDrv`'s frames with the detail textures on and 0.7% over with them off, Paul Denton a level over, `LaserConsole`'s corridor 2% under: measured again once D.8 is ruled | brightness | `MeshConsole`, `LaserConsole` |
+| REN.24 | Liberty Island's pier 1.7% under `D3DDrv`'s frames with the detail textures on and 0.7% over with them off, Paul Denton a level over, `LaserConsole`'s corridor 2% under | brightness | `MeshConsole`, `LaserConsole` |
 | REN.28 | A level surface's back-face test takes its texture's own flags, where the original's (`OccludeBsp`, `0x10b17fc9`) takes the surface's and the viewport's alone, the texture's ORed in after (`0x10b181b2`) (`DXEngine/DXEngine/Render/VisibleFrame.cpp:869`): a texture whose flags hold `PF_TwoSided` would draw a one-sided surface from behind in DXEngine alone; no stock texture found so (read) | not yet | none on the stock maps: a test texture made so |
 
 ## AUD: the audio
