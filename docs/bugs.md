@@ -14,7 +14,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 2 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 2 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 2 |
@@ -36,10 +36,7 @@ choice" where it is said and takes it off this list; one to change it stays here
 said, until the change is made and proven as any other fix. Nothing here changes before the
 owner rules.
 
-| ID | The original | DXEngine | Said in NATIVES.md | Ruled |
-|---|---|---|---|---|
-| D.15 | blink and strobe lights at the frame rate: a blink out when its turn count, in 65536ths, is odd, in effect a fresh state each frame; a strobe out every other frame; an ambient sound on such a light follows them | DXEngine's own: an even blink, 40 ÷ `LightPeriod` changes a second, and a 5 Hz strobe | lighting; sound | the original's pace at 60 frames, at any frame rate: a strobe out every other 60th of a second, a blink by its turn count's lowest bit taken 60 times a second |
-| D.16 | a flickering light flickers each frame | at most 25 times a second (Surreal Engine's) | lighting | the original's pace at 60 frames: at most 60 times a second |
+None open.
 
 ## VM: the script VM and the object system
 
