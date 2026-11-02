@@ -83,7 +83,7 @@ None open.
 |---|---|---|---|
 | REN.14 | Where two opaque surfaces overlap at one depth, which shows can differ: the gaps between Liberty Island pier's planks, a few hundred pixels of `MeshConsole`'s frame | draw order and movers | `MeshConsole` |
 | REN.24 | Liberty Island's pier 1.7% under `D3DDrv`'s frames with the detail textures on and 0.7% over with them off, Paul Denton a level over, `LaserConsole`'s corridor 2% under | brightness | `MeshConsole`, `LaserConsole` |
-| REN.29 | A first-person weapon's hand drawn small, in a 320x240 frame or a 200-pixel viewport window with `bShowWeapons`, is dark red where the original's is skin, and the Dragon's Tooth's hilt keeps its yellow marks where the original's is plain, as if the meshes' textures were sampled at their larger mips; not the near plane (the same clipped at 1), the mesh's detail (whole) or the eye, place and turn (the same in both frames) | not yet | `ViewConsole` at `DXCAP_WINDOW=320x240` against `D3DDrv`'s frames; `CameraConsole`'s shot 8 |
+| REN.29 | A first-person weapon's hand drawn small, in a 320x240 frame or a 200-pixel viewport window with `bShowWeapons`, is dark red where the original's is skin, and the Dragon's Tooth's hilt keeps its yellow marks where the original's is plain: the original samples these mesh textures about two mips smaller, its look coming back in DXEngine at a mip bias of +2 (the device's `LODBias`, -0.5 by default, `D3DDrv`'s for the world), both engines at `SkinDetail` High; not the near plane (the same clipped at 1), the mesh's detail (whole) or the eye, place and turn (the same in both frames) | not yet | `ViewConsole` at `DXCAP_WINDOW=320x240` against `D3DDrv`'s frames; `CameraConsole`'s shot 8 |
 
 ## AUD: the audio
 
