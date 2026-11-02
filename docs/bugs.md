@@ -14,7 +14,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 4 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
@@ -22,10 +22,10 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 2 |
-| [REN](#ren-the-renderer) | the renderer | 1 |
+| [REN](#ren-the-renderer) | the renderer | 0 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 1 |
-| [WIN](#win-the-game-window) | the game window | 1 |
+| [WIN](#win-the-game-window) | the game window | 0 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 1 |
 
@@ -36,12 +36,9 @@ choice" where it is said and takes it off this list; one to change it stays here
 said, until the change is made and proven as any other fix. Nothing here changes before the
 owner rules.
 
-| ID | The original | DXEngine | Said in NATIVES.md | Recommended |
+| ID | The original | DXEngine | Said in NATIVES.md | Recommended, or ruled |
 |---|---|---|---|---|
-| D.34 | the root is the whole viewport, so the HUD lies across the screen's whole width at any shape: 1366 units wide at 1366x768 | the root's children lie across the screen up to 16:9 (`UWindow::GetExtendedVirtualWidth`): on a screen wider, the HUD keeps to the middle 16:9, its left and right parts in from the edges (by 320 pixels a side at 2560x1080, 440 at 3440x1440); at 1366x768, a hair wider than 16:9, the HUD is 1365.33 units wide, so the accuracy marks lie a pixel left of the original's beside the crosshair (`CrosshairConsole`: 80 of the HUD's pixels apart, 26 still at a pixel's move) | the UI (layout) | the original's: the root's children across the whole screen, the 4:3 root itself kept (by choice, for the cutscenes' subtitles), unless a HUD in the middle 16:9 of an ultrawide screen is wanted |
-| D.35 | a native's vector or struct parameter given a result that writes nothing, a call held off or ended without a value, reads what the stack held, the parameter not set before the argument is stepped into it (Core.dll `VSize` `0x10138d10`, a vector's `==` `0x10138430`, a vector's and a rotator's conversion to a string, `Trace`'s end); so does a `switch` on a struct past its first 12 bytes (`0x1012f850`) | the type's zero | implemented, not as the original (a function that ends without a value) | DXEngine's zero, by choice: the original's is whatever its stack last held there, which no run can match, and no stock script gives one such a result |
-| D.36 | `ConvertVectorToCoordinates` asked of a viewport window, or of a window inside one, outside the window's draw or while it draws no frame (turned off) fails an assertion, which stops the game (`Extension.dll` `0x1004afc0`: the frame lasts from its `Draw` to the end of its `PostDraw`) | it answers through the frame the window last drew, or as a plain window's, through the main view, before it draws one | viewport windows | DXEngine's, by choice: an assertion stops the game, and no stock script asks one so (every caller lies outside the viewport windows) |
-| D.37 | the opaque surfaces sorted by a key of the zone actor's object index × 2^26, the texture's and its palette's × 2^12 (`Render.dll` `0x10b1976b`), through its own quicksort, which keeps no order among equal keys (`0x10b20570`), the depth test at less-equal: where two of them overlap at one depth, which shows follows the indices the game's loads and frees gave its objects (the gaps between Liberty Island pier's planks, a few hundred pixels of `MeshConsole`'s frame) | by zone, the material's address and the light map, a stable sort over its own walk, at less-equal too | draw order and movers | DXEngine's, by choice: no run can give the original's object indices |
+| D.34 | the root is the whole viewport, so the HUD lies across the screen's whole width at any shape: 1366 units wide at 1366x768 | the root's children lie across the screen up to 16:9 (`UWindow::GetExtendedVirtualWidth`): on a screen wider, the HUD keeps to the middle 16:9, its left and right parts in from the edges (by 320 pixels a side at 2560x1080, 440 at 3440x1440); at 1366x768, a hair wider than 16:9, the HUD is 1365.33 units wide, so the accuracy marks lie a pixel left of the original's beside the crosshair (`CrosshairConsole`: 80 of the HUD's pixels apart, 26 still at a pixel's move) | the UI (layout) | ruled: the original's, the root's children across the whole screen, the 4:3 root itself kept (by choice, for the cutscenes' subtitles) |
 
 ## VM: the script VM and the object system
 
@@ -78,9 +75,7 @@ None open.
 
 ## REN: the renderer
 
-| ID | What | Said in NATIVES.md | Proof |
-|---|---|---|---|
-| REN.24 | Liberty Island's pier at 1.006 of `D3DDrv`'s frames with the detail textures off in both (`NoDetail`), a quarter of a level on its dark floor, in DXEngine's window grabbed as in its shot: not the shots' gamma (the original's dark values are its ramp's, rounded, over 8-bit levels), the mip (alike at LOD biases of 0 to 2) nor the light maps' format (alike sent as bytes); 1.7% under with them on, DXEngine drawing the pier's detail texture, which the original under Wine never draws. Paul Denton, held at one pose, at a median 1.01, correlated at 0.984; `LaserConsole`'s corridor 2% under, within 0.5% with them off | brightness | `MeshConsole` with `NoDetail` and `Hold`, its floor's bands against a grab of DXEngine's window; `LaserConsole` |
+None open.
 
 ## AUD: the audio
 
@@ -94,9 +89,7 @@ None open.
 
 ## WIN: the game window
 
-| ID | What | Said in NATIVES.md | Proof |
-|---|---|---|---|
-| WIN.8 | Full screen in a Wayland session, a Screen Resolution chosen does not switch the display: SDL3 emulates the mode (`SDL_SetWindowFullscreenMode`), the frame drawn at its size and scaled to the display's by the compositor, where the original's switches the display's mode | the menus' settings | `getcurrentres` after a choice, against the display's mode (`kscreen-doctor -o`) |
+None open.
 
 ## MAIN: the recreation (deusex-launcher's main)
 
