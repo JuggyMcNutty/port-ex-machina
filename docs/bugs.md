@@ -16,7 +16,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 2 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
-| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
@@ -50,9 +50,7 @@ owner rules.
 
 ## PKG: saving, loading, travel and the loading screen
 
-| ID | What | Said in NATIVES.md | Proof |
-|---|---|---|---|
-| PKG.19 | The travel's export writes every travel property's value, where the original's writes one only where it differs from its class's default (Engine.dll `0x10391894`): a property the arriving object's spawn or events set away from its default keeps that in the original and takes the default back in DXEngine, whose import comes after (`DXEngine/DXEngine/ObjectTravelInfo.cpp`, `CreateObject`); no stock case found (read) | not yet | a console travelling an item at a travel property's default that the item's own spawn changes, logged in both engines |
+None open.
 
 ## PHYS: physics, traces and movers
 
