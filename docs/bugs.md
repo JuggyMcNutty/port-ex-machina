@@ -14,13 +14,13 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 2 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 2 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
-| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 5 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 4 |
 | [NET](#net-the-network) | the network | 2 |
 | [REN](#ren-the-renderer) | the renderer | 3 |
 | [AUD](#aud-the-audio) | the audio | 0 |
@@ -36,7 +36,9 @@ choice" where it is said and takes it off this list; one to change it stays here
 said, until the change is made and proven as any other fix. Nothing here changes before the
 owner rules.
 
-None open.
+| ID | The original | DXEngine | Said in NATIVES.md | Recommended |
+|---|---|---|---|---|
+| D.34 | the root is the whole viewport, so the HUD lies across the screen's whole width at any shape: 1366 units wide at 1366x768 | the root's children lie across the screen up to 16:9 (`UWindow::GetExtendedVirtualWidth`): on a screen wider, the HUD keeps to the middle 16:9, its left and right parts in from the edges (by 320 pixels a side at 2560x1080, 440 at 3440x1440); at 1366x768, a hair wider than 16:9, the HUD is 1365.33 units wide, so the accuracy marks lie a pixel left of the original's beside the crosshair (`CrosshairConsole`: 80 of the HUD's pixels apart, 26 still at a pixel's move) | the UI (layout) | the original's: the root's children across the whole screen, the 4:3 root itself kept (by choice, for the cutscenes' subtitles), unless a HUD in the middle 16:9 of an ultrawide screen is wanted |
 
 ## VM: the script VM and the object system
 
@@ -75,7 +77,6 @@ None open.
 | EXT.9 | The first keyboard focus is seeded in DXEngine's layout pass, after the level's tick, where the original seeds it at its windows' next tick: a conversation's first choice has the focus a frame sooner there | the UI | `ChoiceConsole` |
 | EXT.14 | Viewport windows, none of it reached by the game: no `CalcView` event; an origin or watch actor gone leaves the view at the window's fields, not at its last place and turn; a window turned off draws nothing, where the original tiles its default texture; `SetRotation` keeps the watch actor; `SetDefaultTexture` takes no defaults; `bShowWeapons` draws no overlays; `SetViewportActor` adds no network view (`AdditionalViews`); `ConvertVectorToCoordinates` in one, or in a window inside one, projects through the main view; the frame takes the window's whole rectangle, not its clip rectangle | viewport windows | `CameraConsole` with each |
 | EXT.20 | What else reads a window's clip rectangle in the original: its draw (`XWindow::DrawTree`, `0x10051490`) draws nothing of a window none of which shows -- no background, no `DrawWindow` or `PostDrawWindow` event, none of its children -- where DXEngine's `RenderSubsystem::DrawWindow` sends the events for every shown window; and a list's page size and rows in view (`XListWindow::GetPageSize` `0x100311f0`, `PlayListSound` `0x10031370`, `Draw` `0x10033350`), an edit field's (`0x1001d250`, `0x10020d00`) and a large text window's (`XLargeTextWindow::Draw` `0x1002e500`), which DXEngine works out from the parent's height or its own clip | the UI | a console counting a window's `DrawWindow` events while its clip window scrolls it out of view, in both engines; a list's page size in a clip window shorter than its parent |
-| EXT.21 | At a resolution whose 4:3 root is a fraction of a unit wide of a whole, the HUD sits a unit off the original's: the root is centred to a pixel (`DXEngine/DXEngine/Packages/Extension/UWindow.cpp:109`), its children taken back a whole unit (`round(106.67)`, `UWindow.cpp:159`), so at 2560x1440 (853.33 units at 3x) every whole-unit tile is drawn one unit left, the crosshair 3 px left of the original's (its T's stems at 1272, the original's 1275, measured from a playthrough's shot and simulated); likewise 2048x1536, 2560x1600, 5120x2880, and at 3200x1800 a third of a unit right. A fix drafted (the root centred to a whole unit). The T's stems a unit beside the cross's arms at 2560x1440 are the original's own arithmetic (`DrawTargetAugmentation`'s `int(width*0.5)-1` against the cross window's truncated place), read and not yet run | not yet | a console drawing a weapon's crosshair over a friendly pawn, at 2560x1440 and at 1920x1080 for a control, the middle's columns compared |
 
 ## NET: the network
 
