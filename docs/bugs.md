@@ -16,7 +16,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 2 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
-| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 2 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 2 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
@@ -52,8 +52,7 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PKG.17 | A travelled item whose belt slot is taken arrives off the belt (`bInObjectBelt` False, `beltPos` -1), where the original's goes to the belt's first free slot: the old game's pistol a new game begun with it drawn brings back in the original, slot 1 the new pistol's, is in its slot 4; DXEngine's travel leaves that destroyed pistol behind (DXEngine 282e084f), so the case needs making another way; the order of the HUD belt's placing against the travel's events not yet read | saving, loading and travel | a console travelling the player with an item whose belt slot another holds, logged in both engines; `NewGameConsole` shows the original's alone |
-| PKG.18 | The travel's export writes every actor a travel property names, where the original's writes one only with `bTravel` set (`0x10391740`, read): an actor of a class without it, named by a travel property, would travel in DXEngine alone (`DXEngine/DXEngine/ObjectTravelInfo.cpp`, `ActorTravelInfo::Create`) | not yet | a console giving the player a travel property that names such an actor, then a map exit, logged in both engines |
+| PKG.19 | The travel's export writes every travel property's value, where the original's writes one only where it differs from its class's default (Engine.dll `0x10391894`): a property the arriving object's spawn or events set away from its default keeps that in the original and takes the default back in DXEngine, whose import comes after (`DXEngine/DXEngine/ObjectTravelInfo.cpp`, `CreateObject`); no stock case found (read) | not yet | a console travelling an item at a travel property's default that the item's own spawn changes, logged in both engines |
 
 ## PHYS: physics, traces and movers
 
