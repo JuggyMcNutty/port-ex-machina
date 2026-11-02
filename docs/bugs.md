@@ -21,7 +21,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 1 |
-| [NET](#net-the-network) | the network | 3 |
+| [NET](#net-the-network) | the network | 2 |
 | [REN](#ren-the-renderer) | the renderer | 3 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 1 |
@@ -76,7 +76,6 @@ None open.
 |---|---|---|---|
 | NET.8 | A joining client's player while it waits for its pawn: once the server's map is loaded, the original's viewport has a player in the Entry level, and its game engine ticks the Entry level a second time each frame meanwhile, that player's level not being the game's ([the game engine's frame](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#a-levels-tick)); DXEngine's viewport has no player until the pawn arrives (`Engine::LoadClientMap`), draws no world, and ticks the Entry level once | multiplayer ("until its pawn arrives, a joining DXEngine client draws no world") | `TravelJoinConsole` already shows the player's place: the original's `in entry.dx` at its fourth second, DXEngine's logging nothing between `DX.dx` and `DXMP_Cathedral`; the Entry level's time each tick of the wait, and a shot of it, in each |
 | NET.9 | On a live server (MTL and ANNA), the player's movement is jittery. The client runs at the original's cap, its net speed over 64 (`Engine::CalcTimeElapsed`): 40 frames a second at the game's 2,600, three 120 Hz refreshes a frame, where a few tenths of a millisecond either way can hold a frame two refreshes or four; the server's corrections go uncounted | not yet | `netspeed 20000` on the same server, the cap past the display's rate: the jitter gone or not; `tools/dxcap.sh live <address>` there, its `ClientAdjustPosition` lines counted |
-| NET.10 | A call of a replicated function sent to the other side of a net game gives its return type's default in DXEngine (`DXEngine/DXEngine/VM/Frame.cpp`, `Frame::Call`), where the original's is held off and writes nothing (Core.dll `ProcessInternal`, `0x1013f690`), so a variable assigned from it keeps its value there; the game's replicated functions with a return value are called so (`DeusExPlayer.DropItem`, `Skill.Use`), their results seen only in the variables' values (read) | not yet | a client console assigning a set variable from a server function with a return value, logged in both engines ([net tests](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#net-tests)) |
 
 ## REN: the renderer
 
