@@ -22,7 +22,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 2 |
-| [REN](#ren-the-renderer) | the renderer | 3 |
+| [REN](#ren-the-renderer) | the renderer | 2 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 1 |
 | [WIN](#win-the-game-window) | the game window | 1 |
@@ -81,7 +81,6 @@ None open.
 |---|---|---|---|
 | REN.14 | Where two opaque surfaces overlap at one depth, which shows can differ: the gaps between Liberty Island pier's planks, a few hundred pixels of `MeshConsole`'s frame | draw order and movers | `MeshConsole` |
 | REN.24 | Liberty Island's pier 1.7% under `D3DDrv`'s frames with the detail textures on and 0.7% over with them off, Paul Denton a level over, `LaserConsole`'s corridor 2% under | brightness | `MeshConsole`, `LaserConsole` |
-| REN.29 | The Dragon's Tooth's hand sits lower on its red grip in DXEngine, the grip showing where the original's fingers cover it: in a viewport window with `bShowWeapons`, at 320x240 and at a 90-degree field of view, every run, the weapon's animation, place and turn logged alike in both engines (`Idle1` at frame 0.875, rate 0); not the light (one list a frame for both draws), the mip (alike at a bias of -2 and +2), the near plane (alike clipped at 1) or the mesh's detail (whole). The hilt's yellow marks, which DXEngine keeps drawn small where the original's block is plain, are its 8x anisotropy's (D.6, by choice): gone without it | not yet | `ViewConsole` with `FovAngle=90` against `D3DDrv`'s frames, the grip below the hand; `CameraConsole`'s shot 8 |
 
 ## AUD: the audio
 
