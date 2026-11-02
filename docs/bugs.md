@@ -20,7 +20,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 2 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
-| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 3 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 2 |
 | [NET](#net-the-network) | the network | 3 |
 | [REN](#ren-the-renderer) | the renderer | 3 |
 | [AUD](#aud-the-audio) | the audio | 0 |
@@ -74,7 +74,6 @@ None open.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | EXT.8 | Windows are laid out once a frame, where the original lays each out as it asks: a window made this frame is 10 by 10 until the next; one that shows sits at the margins `SetPos` gives it at once, where a parent placing it again does so the next frame; one a parent placed keeps that place, where the original's goes back to its alignment when the parent's next layout leaves it out | the UI | `MenuConsole`, `ScreenConsole`, `SizeConsole` |
-| EXT.9 | The first keyboard focus is seeded in DXEngine's layout pass, after the level's tick, where the original seeds it at its windows' next tick: a conversation's first choice has the focus a frame sooner there | the UI | `ChoiceConsole` |
 | EXT.14 | Viewport windows, none of it reached by the game: no `CalcView` event; an origin or watch actor gone leaves the view at the window's fields, not at its last place and turn; a window turned off draws nothing, where the original tiles its default texture; `SetRotation` keeps the watch actor; `SetDefaultTexture` takes no defaults; `bShowWeapons` draws no overlays; `SetViewportActor` adds no network view (`AdditionalViews`); `ConvertVectorToCoordinates` in one, or in a window inside one, projects through the main view; the frame takes the window's whole rectangle, not its clip rectangle | viewport windows | `CameraConsole` with each |
 
 ## NET: the network
