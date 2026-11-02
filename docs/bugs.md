@@ -14,7 +14,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
@@ -36,9 +36,7 @@ choice" where it is said and takes it off this list; one to change it stays here
 said, until the change is made and proven as any other fix. Nothing here changes before the
 owner rules.
 
-| ID | The original | DXEngine | Said in NATIVES.md | Recommended |
-|---|---|---|---|---|
-| D.38 | a net client runs at most its connection's speed / 64 frames a second (`UGameEngine::GetMaxTickRate`, [network.md](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/network.md#packets)): 40 at the game's default 2,600, so on a live server the world moves at 40 frames a second whatever the display, which reads as jitter on a 120 Hz one (bugs.md's NET.9, a playthrough on MTL and ANNA) | the same: `tools/dxcap.sh live` on an MTL server (46.142.84.124:17577) with MangoHud's frame log, at 2,600 every second of the game 40 frames, each 25 ms, three 120 Hz refreshes (1,279 frames, none held two or four), and at `netspeed 20000` 120 a second, one refresh each (2,436 of 2,438); the server's corrections none at either | not yet (multiplayer) | DXEngine's default internet speed 20,000 where the player has set none, the cap kept the original's: a server limits a client's rate itself (`MaxClientRate`), and the original's players set that speed by hand; or the original's, by choice |
+None open.
 
 ## VM: the script VM and the object system
 

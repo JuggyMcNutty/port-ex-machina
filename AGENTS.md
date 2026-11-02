@@ -112,6 +112,9 @@ Decided work for later sessions, each deleted when it is done.
   The Nameless Mod's (`TNMNative`, `TNMFU`, `TNMSaveBugHotfix`, on its own build of the
   engine's DLLs), both in `gamefiles/Revision`, their DLLs read for what they do and their
   natives made DXEngine's, so that each mod runs.
+- **A net speed option in DXLauncher**: the rate a profile's game asks of servers
+  (`[Engine.Player]`'s `ConfiguredInternetSpeed`), chosen in the launcher, where DXEngine
+  takes the game's stock 2,600 for 20,000.
 - **The next sweep**, once [`docs/bugs.md`](docs/bugs.md)'s items are through: what its
   "Not yet read" names and the first sweep's numbers no commit cites
   ([`docs/bugs-recovered.md`](docs/bugs-recovered.md)) read area by area, each finding proven
