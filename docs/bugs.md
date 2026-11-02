@@ -14,14 +14,14 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 2 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 2 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 2 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 3 |
-| [NET](#net-the-network) | the network | 2 |
+| [NET](#net-the-network) | the network | 3 |
 | [REN](#ren-the-renderer) | the renderer | 3 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 1 |
@@ -39,13 +39,14 @@ owner rules.
 | ID | The original | DXEngine | Said in NATIVES.md | Recommended |
 |---|---|---|---|---|
 | D.34 | the root is the whole viewport, so the HUD lies across the screen's whole width at any shape: 1366 units wide at 1366x768 | the root's children lie across the screen up to 16:9 (`UWindow::GetExtendedVirtualWidth`): on a screen wider, the HUD keeps to the middle 16:9, its left and right parts in from the edges (by 320 pixels a side at 2560x1080, 440 at 3440x1440); at 1366x768, a hair wider than 16:9, the HUD is 1365.33 units wide, so the accuracy marks lie a pixel left of the original's beside the crosshair (`CrosshairConsole`: 80 of the HUD's pixels apart, 26 still at a pixel's move) | the UI (layout) | the original's: the root's children across the whole screen, the 4:3 root itself kept (by choice, for the cutscenes' subtitles), unless a HUD in the middle 16:9 of an ultrawide screen is wanted |
+| D.35 | a native's vector or struct parameter given a result that writes nothing, a call held off or ended without a value, reads what the stack held, the parameter not set before the argument is stepped into it (Core.dll `VSize` `0x10138d10`, a vector's `==` `0x10138430`, a vector's and a rotator's conversion to a string, `Trace`'s end); so does a `switch` on a struct past its first 12 bytes (`0x1012f850`) | the type's zero | implemented, not as the original (a function that ends without a value) | DXEngine's zero, by choice: the original's is whatever its stack last held there, which no run can match, and no stock script gives one such a result |
 
 ## VM: the script VM and the object system
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | VM.5 | Strings are of bytes, Latin-1, where the original's are UTF-16: a typed character past Latin-1 goes nowhere, a wide string loads with `?` for each such character (a note in a save, every conversation comment of `DeusExConText.u`), and `Chr` keeps the low 8 bits | the UI; implemented, not as the original (small ones) | `TypeConsole` typing U+0100 and past; a note of such characters saved and loaded across both engines; `OpsConsole`'s `Chr` and `Asc` |
-| VM.12 | A variable assigned from a function that ends without a `return` is made None or zero, where the original's is left as it was: `CallScript` fills an empty result with the return type's default (`DXEngine/DXEngine/VM/Frame.cpp:324`) and the assignment stores it, where the original's `execLet` (Core.dll `0x1012fe40`) hands the call the variable itself as its result and a bare `Return` (`execNothing`, `0x10102095`) writes nothing (read; `AugmentationCannister.SpawnCopy` returns nothing, its caller's `Copy` None in both) | not yet | a console assigning a set variable from such a function, logged in both engines |
+| VM.13 | An `out` parameter that is also the variable the call is assigned to (`I = F(I)`) ends with the value returned in DXEngine, the parameter's in the original: the original's call copies its `out` parameters back after the return value is written (Core.dll `CallFunction`, `0x1013f4e0`), where DXEngine's `CallScript` copies them back first and the Let stores the value after (`DXEngine/DXEngine/VM/Frame.cpp`); no stock script does it (read) | implemented, not as the original (a function that ends without a value) | `ResultConsole`'s `out 3 and return 8` line, 3 in the original and 8 in DXEngine |
 
 ## PKG: saving, loading, travel and the loading screen
 
@@ -83,6 +84,7 @@ None open.
 |---|---|---|---|
 | NET.8 | A joining client's player while it waits for its pawn: once the server's map is loaded, the original's viewport has a player in the Entry level, and its game engine ticks the Entry level a second time each frame meanwhile, that player's level not being the game's ([the game engine's frame](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#a-levels-tick)); DXEngine's viewport has no player until the pawn arrives (`Engine::LoadClientMap`), draws no world, and ticks the Entry level once | multiplayer ("until its pawn arrives, a joining DXEngine client draws no world") | `TravelJoinConsole` already shows the player's place: the original's `in entry.dx` at its fourth second, DXEngine's logging nothing between `DX.dx` and `DXMP_Cathedral`; the Entry level's time each tick of the wait, and a shot of it, in each |
 | NET.9 | On a live server (MTL and ANNA), the player's movement is jittery. The client runs at the original's cap, its net speed over 64 (`Engine::CalcTimeElapsed`): 40 frames a second at the game's 2,600, three 120 Hz refreshes a frame, where a few tenths of a millisecond either way can hold a frame two refreshes or four; the server's corrections go uncounted | not yet | `netspeed 20000` on the same server, the cap past the display's rate: the jitter gone or not; `tools/dxcap.sh live <address>` there, its `ClientAdjustPosition` lines counted |
+| NET.10 | A call of a replicated function sent to the other side of a net game gives its return type's default in DXEngine (`DXEngine/DXEngine/VM/Frame.cpp`, `Frame::Call`), where the original's is held off and writes nothing (Core.dll `ProcessInternal`, `0x1013f690`), so a variable assigned from it keeps its value there; the game's replicated functions with a return value are called so (`DeusExPlayer.DropItem`, `Skill.Use`), their results seen only in the variables' values (read) | not yet | a client console assigning a set variable from a server function with a return value, logged in both engines ([net tests](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#net-tests)) |
 
 ## REN: the renderer
 
