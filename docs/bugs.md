@@ -19,7 +19,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 2 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 2 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
-| [DX](#dx-deusexs-natives) | DeusEx's natives | 1 |
+| [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 5 |
 | [NET](#net-the-network) | the network | 2 |
 | [REN](#ren-the-renderer) | the renderer | 3 |
@@ -65,9 +65,7 @@ None open.
 
 ## DX: DeusEx's natives
 
-| ID | What | Said in NATIVES.md | Proof |
-|---|---|---|---|
-| DX.3 | A text whose first paragraph never starts and that ends after its last tag gives DXEngine no last token, where the original's `ParseTextBlock` (DeusExText.dll `0x10001a20`) gives one more, empty, with no tag (`TT_None`): 15 email lists and `03_BulletinMenu` end so, in a line break; their one reader, the computer screens, passes over a token with no tag (read) | what the player reads | `ShipOpsConsole` with `04_EmailMenu_klloyd` among its controls, the two logs' tokens |
+None open.
 
 ## EXT: the window tree (Extension)
 
