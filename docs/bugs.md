@@ -15,7 +15,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | Section | Area | Open |
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 3 |
-| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
+| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
@@ -47,7 +47,6 @@ owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | VM.5 | Strings are of bytes, Latin-1, where the original's are UTF-16: a typed character past Latin-1 goes nowhere, a wide string loads with `?` for each such character (a note in a save, every conversation comment of `DeusExConText.u`), and `Chr` keeps the low 8 bits | the UI; implemented, not as the original (small ones) | `TypeConsole` typing U+0100 and past; a note of such characters saved and loaded across both engines; `OpsConsole`'s `Chr` and `Asc` |
-| VM.15 | A native's `out` parameter that is also the variable its result is assigned to keeps the value returned in DXEngine, where the original's post-increment and post-decrement natives (Core.dll `0x101347e0`, `0x101348a0`, the byte ones `0x10133290`, `0x10133350`) write their result into the Let's variable before they step it: `I = I++` ends at I+1 in the original, I in DXEngine, whose handler returns the old value and the Let stores it after (`DXEngine/DXEngine/Native/NObject.cpp`, `AddAdd_Int`; the typed fast path too); no stock script does it | implemented, not as the original (a function that ends without a value) | `ResultConsole`'s native `out` parameter line: `int ++ 6, -- 4, byte ++ 10, -- 8` in the original, `5, 5, 9, 9` in DXEngine |
 
 ## PKG: saving, loading, travel and the loading screen
 
