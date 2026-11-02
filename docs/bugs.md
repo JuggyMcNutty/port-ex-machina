@@ -14,14 +14,14 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
-| [NET](#net-the-network) | the network | 2 |
+| [NET](#net-the-network) | the network | 1 |
 | [REN](#ren-the-renderer) | the renderer | 0 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
@@ -36,7 +36,9 @@ choice" where it is said and takes it off this list; one to change it stays here
 said, until the change is made and proven as any other fix. Nothing here changes before the
 owner rules.
 
-None open.
+| ID | The original | DXEngine | Said in NATIVES.md | Recommended |
+|---|---|---|---|---|
+| D.38 | a net client runs at most its connection's speed / 64 frames a second (`UGameEngine::GetMaxTickRate`, [network.md](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/network.md#packets)): 40 at the game's default 2,600, so on a live server the world moves at 40 frames a second whatever the display, which reads as jitter on a 120 Hz one (bugs.md's NET.9, a playthrough on MTL and ANNA) | the same: `tools/dxcap.sh live` on an MTL server (46.142.84.124:17577) with MangoHud's frame log, at 2,600 every second of the game 40 frames, each 25 ms, three 120 Hz refreshes (1,279 frames, none held two or four), and at `netspeed 20000` 120 a second, one refresh each (2,436 of 2,438); the server's corrections none at either | not yet (multiplayer) | DXEngine's default internet speed 20,000 where the player has set none, the cap kept the original's: a server limits a client's rate itself (`MaxClientRate`), and the original's players set that speed by hand; or the original's, by choice |
 
 ## VM: the script VM and the object system
 
@@ -69,7 +71,6 @@ None open.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | NET.8 | A joining client's player while it waits for its pawn: once the server's map is loaded, the original's viewport has a player in the Entry level, and its game engine ticks the Entry level a second time each frame meanwhile, that player's level not being the game's ([the game engine's frame](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#a-levels-tick)); DXEngine's viewport has no player until the pawn arrives (`Engine::LoadClientMap`), draws no world, and ticks the Entry level once | multiplayer ("until its pawn arrives, a joining DXEngine client draws no world") | `TravelJoinConsole` already shows the player's place: the original's `in entry.dx` at its fourth second, DXEngine's logging nothing between `DX.dx` and `DXMP_Cathedral`; the Entry level's time each tick of the wait, and a shot of it, in each |
-| NET.9 | On a live server (MTL and ANNA), the player's movement is jittery. The client runs at the original's cap, its net speed over 64 (`Engine::CalcTimeElapsed`): 40 frames a second at the game's 2,600, three 120 Hz refreshes a frame, where a few tenths of a millisecond either way can hold a frame two refreshes or four; the server's corrections go uncounted | not yet | `netspeed 20000` on the same server, the cap past the display's rate: the jitter gone or not; `tools/dxcap.sh live <address>` there, its `ClientAdjustPosition` lines counted |
 
 ## REN: the renderer
 
