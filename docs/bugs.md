@@ -14,7 +14,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
@@ -24,10 +24,10 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [NET](#net-the-network) | the network | 2 |
 | [REN](#ren-the-renderer) | the renderer | 0 |
 | [AUD](#aud-the-audio) | the audio | 0 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 1 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
 | [WIN](#win-the-game-window) | the game window | 0 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
-| [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 1 |
+| [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
 
 ## D: for the owner
 
@@ -36,9 +36,7 @@ choice" where it is said and takes it off this list; one to change it stays here
 said, until the change is made and proven as any other fix. Nothing here changes before the
 owner rules.
 
-| ID | The original | DXEngine | Said in NATIVES.md | Recommended, or ruled |
-|---|---|---|---|---|
-| D.34 | the root is the whole viewport, so the HUD lies across the screen's whole width at any shape: 1366 units wide at 1366x768 | the root's children lie across the screen up to 16:9 (`UWindow::GetExtendedVirtualWidth`): on a screen wider, the HUD keeps to the middle 16:9, its left and right parts in from the edges (by 320 pixels a side at 2560x1080, 440 at 3440x1440); at 1366x768, a hair wider than 16:9, the HUD is 1365.33 units wide, so the accuracy marks lie a pixel left of the original's beside the crosshair (`CrosshairConsole`: 80 of the HUD's pixels apart, 26 still at a pixel's move) | the UI (layout) | ruled: the original's, the root's children across the whole screen, the 4:3 root itself kept (by choice, for the cutscenes' subtitles) |
+None open.
 
 ## VM: the script VM and the object system
 
@@ -83,9 +81,7 @@ None open.
 
 ## ENG: the engine, its input and its config
 
-| ID | What | Said in NATIVES.md | Proof |
-|---|---|---|---|
-| ENG.15 | In a rootless container (distrobox, toolbox: podman's), a pad plugged in after the engine starts is never seen. SDL3 enumerates by libudev, whose monitor drops each message from a sender other than uid 0, and the host's root is the container's `nobody`; SDL watches `/dev/input` itself only in a Flatpak, a Snap or with `/run/host/container-manager`. A pad there at the start is found | ENGINE.md, settings and environment (`Gamepad`) | a pad plugged in beside a listener of the input devices' uevents (each sender's uid), the engine's open devices after; again with `SDL_JOYSTICK_DISABLE_UDEV=1` |
+None open.
 
 ## WIN: the game window
 
@@ -97,9 +93,7 @@ None open.
 
 ## LAPP: the desktop launcher's app, processes and POSIX platform
 
-| ID | What | Said in LAUNCHER.md | Proof |
-|---|---|---|---|
-| LAPP.6 | In a rootless container, a pad plugged in while DXLauncher runs is never seen: its SDL3 enumerates by libudev too (ENG.15) | not yet | ENG.15's, with the launcher's window open |
+None open.
 
 ## Refuted
 
