@@ -22,7 +22,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 1 |
 | [NET](#net-the-network) | the network | 2 |
-| [REN](#ren-the-renderer) | the renderer | 3 |
+| [REN](#ren-the-renderer) | the renderer | 2 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 1 |
 | [WIN](#win-the-game-window) | the game window | 1 |
@@ -83,7 +83,6 @@ None open.
 |---|---|---|---|
 | REN.14 | Where two opaque surfaces overlap at one depth, which shows can differ: the gaps between Liberty Island pier's planks, a few hundred pixels of `MeshConsole`'s frame | draw order and movers | `MeshConsole` |
 | REN.24 | Liberty Island's pier 1.7% under `D3DDrv`'s frames with the detail textures on and 0.7% over with them off, Paul Denton a level over, `LaserConsole`'s corridor 2% under | brightness | `MeshConsole`, `LaserConsole` |
-| REN.28 | A level surface's back-face test takes its texture's own flags, where the original's (`OccludeBsp`, `0x10b17fc9`) takes the surface's and the viewport's alone, the texture's ORed in after (`0x10b181b2`) (`DXEngine/DXEngine/Render/VisibleFrame.cpp:869`): a texture whose flags hold `PF_TwoSided` would draw a one-sided surface from behind in DXEngine alone; no stock texture found so (read) | not yet | none on the stock maps: a test texture made so |
 
 ## AUD: the audio
 
