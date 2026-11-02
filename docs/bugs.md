@@ -17,7 +17,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 2 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 1 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 1 |
@@ -56,9 +56,7 @@ owner rules.
 
 ## PHYS: physics, traces and movers
 
-| ID | What | Said in NATIVES.md | Proof |
-|---|---|---|---|
-| PHYS.19 | A cylinder's hit lies a float step from the original's, or its normal a last digit apart: the original's cylinder check (`UPrimitive::LineCheck`, `0x103d8af0`) works in floats, its normals made units in floats, at the x87's 24 bits in a console's tick (Render.dll's `PreRender`, `0x10b14560`, to its `PostRender`), where DXEngine's works in doubles (`DXEngine/DXEngine/Collision/TopLevel/TraceTest.cpp`, `TraceActor`): UNATCO HQ's `DeusExMover24` at `SkillAwardTrigger0` (y -9.699425, the original's -9.699432), `DeusExMover18`'s line at Liberty Island's `DataLinkTrigger21` and `GrateConsole`'s four normals on `CageLight12` (read; simulated to the printed digit). The line walk's float crossing (`0x103f3560`) gives none of them | the traces (a line; a box) | `VisibleConsole` on UNATCO HQ and Liberty Island, the `mover` lines diffed; `GrateConsole`'s `CageLight12` hits (`tools/dxcap/grate.py`) |
+None open.
 
 ## AI: the NPCs
 
