@@ -22,7 +22,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 2 |
-| [REN](#ren-the-renderer) | the renderer | 2 |
+| [REN](#ren-the-renderer) | the renderer | 1 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 1 |
 | [WIN](#win-the-game-window) | the game window | 1 |
@@ -81,7 +81,6 @@ None open.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | REN.24 | Liberty Island's pier at 1.006 of `D3DDrv`'s frames with the detail textures off in both (`NoDetail`), a quarter of a level on its dark floor, in DXEngine's window grabbed as in its shot: not the shots' gamma (the original's dark values are its ramp's, rounded, over 8-bit levels), the mip (alike at LOD biases of 0 to 2) nor the light maps' format (alike sent as bytes); 1.7% under with them on, DXEngine drawing the pier's detail texture, which the original under Wine never draws. Paul Denton, held at one pose, at a median 1.01, correlated at 0.984; `LaserConsole`'s corridor 2% under, within 0.5% with them off | brightness | `MeshConsole` with `NoDetail` and `Hold`, its floor's bands against a grab of DXEngine's window; `LaserConsole` |
-| REN.30 | A two-sided face's vertex is lit by the cosine's size (`VertexLight::GetVertexLight`), a light behind its normal as one before it, where the original's `Light` (`Render.dll` `0x10b027f0`) lights each vertex once, by its normal alone, whatever its faces' flags: such a face turned from a light is lit in DXEngine and not in the original. `MeshConsole`'s `Extra=DeusEx.Plant1` and `Extra=DeusEx.FlagPole` came out alike either way (the leaves at an RMSE of 6.83 against 6.91, the flag correlated at 0.994 both ways), each lit from the side it faces | lighting | a two-sided mesh lit from behind its normals, both engines, DXEngine with the cosine's size and without |
 
 ## AUD: the audio
 
