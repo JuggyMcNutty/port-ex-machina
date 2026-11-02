@@ -70,7 +70,7 @@ None open.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| NET.8 | A joining client's player while it waits for its pawn: once the server's map is loaded, the original's viewport has a player in the Entry level, and its game engine ticks the Entry level a second time each frame meanwhile, that player's level not being the game's ([the game engine's frame](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#a-levels-tick)); DXEngine's viewport has no player until the pawn arrives (`Engine::LoadClientMap`), draws no world, and ticks the Entry level once | multiplayer ("until its pawn arrives, a joining DXEngine client draws no world") | `TravelJoinConsole` already shows the player's place: the original's `in entry.dx` at its fourth second, DXEngine's logging nothing between `DX.dx` and `DXMP_Cathedral`; the Entry level's time each tick of the wait, and a shot of it, in each |
+| NET.8 | A joining client's wait for its pawn, its player in the Entry level, drawn and ticked twice a frame as the original's (DXEngine 914de0e6), but for the join's lines: the original's wait frame shows `Connecting (F10 Cancels):` and `deusex://<host>/<map>` over its CONNECTING, which its `UpdateConnectingMessage` (Engine.dll `0x10388900`) sets only while the join is pending and its game engine's tick deletes that pending level right after the map's load (`0x1038fe90`), so what puts them on the new Entry player is not yet read; DXEngine's wait frame shows the HUD and CONNECTING alone | multiplayer ("Connecting (F10 Cancels)") | `TravelJoinConsole`, each engine joining the other: the shot at the second wait tick, the original's (`build/dxcap/game/System/Shot0000.bmp`) against DXEngine's |
 
 ## REN: the renderer
 
