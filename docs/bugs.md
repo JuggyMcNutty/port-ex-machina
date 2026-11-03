@@ -21,7 +21,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
-| [NET](#net-the-network) | the network | 1 |
+| [NET](#net-the-network) | the network | 0 |
 | [REN](#ren-the-renderer) | the renderer | 0 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
@@ -64,9 +64,7 @@ None open.
 
 ## NET: the network
 
-| ID | What | Said in NATIVES.md | Proof |
-|---|---|---|---|
-| NET.8 | A joining client's wait for its pawn, its player in the Entry level, drawn and ticked twice a frame as the original's (DXEngine 914de0e6), but for the join's lines: the original's wait frame shows `Connecting (F10 Cancels):` and `deusex://<host>/<map>` over its CONNECTING, which its `UpdateConnectingMessage` (Engine.dll `0x10388900`) sets only while the join is pending and its game engine's tick deletes that pending level right after the map's load (`0x1038fe90`), so what puts them on the new Entry player is not yet read; DXEngine's wait frame shows the HUD and CONNECTING alone | multiplayer ("Connecting (F10 Cancels)") | `TravelJoinConsole`, each engine joining the other: the shot at the second wait tick, the original's (`build/dxcap/game/System/Shot0000.bmp`) against DXEngine's |
+None open.
 
 ## REN: the renderer
 
