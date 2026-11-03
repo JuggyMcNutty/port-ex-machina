@@ -15,7 +15,7 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | Section | Area | Open |
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
-| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
+| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
@@ -42,7 +42,6 @@ None open.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| VM.5 | Strings are 16-bit, the string natives take them so, and packages and saves read and write them as the original's (DXEngine d7c1954a, a8adca72, a6383a58; the launchers' save reader too), but typing, the fonts, the network and ini files are still 8-bit: a typed character past Latin-1 goes nowhere | the UI; implemented, not as the original (small ones) | `TypeConsole` typing U+0100 and past |
 | VM.16 | `VisibleActors(None, 300)` round the menu map's first PlayerStart finds one actor in DXEngine and none in the original, two runs of each, before and after VM.5's stages (`OpsConsole`), every other iterator's count alike | not yet | `OpsConsole` with `ListRadius`-like logging of what `VisibleActors` gives, against the original's line of sight (engine-dll.md, the iterators) |
 
 ## PKG: saving, loading, travel and the loading screen
