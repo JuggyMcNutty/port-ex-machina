@@ -220,7 +220,7 @@ deusex/                  the parent folder (any name)
     AGENTS.md              rules, status, decisions, to do, open items (CLAUDE.md imports it)
     ENGINE-PIN.txt         the engine's version: DXEngine's repository, branch and commit
     LAUNCHER-PIN.txt       the launcher's: deusex-launcher's repository, and each port's commit
-    docs/                  DEVELOPMENT, PORTING, and the README's screenshots
+    docs/                  DEVELOPMENT, PORTING, bugs, bugs-recovered, the README's screenshots
     scripts/               dx.sh (the entry point), engine.sh, launcher.sh, recreation.sh,
                            wine.sh, check-docs.sh, ci.sh and ci-apt-install.sh (the CI's),
                            lib/common.sh (shared with the ports' and the engine's own
