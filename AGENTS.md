@@ -116,9 +116,7 @@ Decided work for later sessions, each deleted when it is done.
   (`[Engine.Player]`'s `ConfiguredInternetSpeed`), chosen in the launcher, where DXEngine
   takes the game's stock 2,600 for 20,000.
 - **The next sweep**, once [`docs/bugs.md`](docs/bugs.md)'s items are through: what its
-  "Not yet read" names and the first sweep's numbers no commit cites
-  ([`docs/bugs-recovered.md`](docs/bugs-recovered.md)) read area by area, each finding proven
-  or refuted, into bugs.md.
+  "Not yet read" names, read area by area, each finding proven or refuted, into bugs.md.
 
 ## Open items
 

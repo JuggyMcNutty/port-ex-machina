@@ -17,9 +17,9 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 4 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 8 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 9 |
-| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 4 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 5 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 3 |
 | [AI](#ai-the-npcs) | the NPCs | 7 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 4 |
@@ -27,10 +27,14 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 | [NET](#net-the-network) | the network | 4 |
 | [REN](#ren-the-renderer) | the renderer | 9 |
 | [AUD](#aud-the-audio) | the audio | 6 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 2 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 4 |
 | [WIN](#win-the-game-window) | the game window | 4 |
-| [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
-| [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
+| [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 5 |
+| [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 4 |
+| [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 6 |
+| [LUI](#lui-the-launchers-screens-and-ui-kit) | the launchers' screens and UI kit | 3 |
+| [LPORT](#lport-the-launchers-ports-win32-the-smart-pro-the-sysroots) | the launchers' ports (Win32, the Smart Pro, the sysroots) | 3 |
+| [X](#x-the-harness-the-scripts-and-ci) | the harness, the scripts and CI | 7 |
 
 ## D: for the owner
 
@@ -45,6 +49,10 @@ owner rules.
 | D.40 | The NoSmooth samplers keep 8x anisotropy on Vulkan and GL (`Vulkan/SamplerManager.cpp:32,37`, `GLRenderDevice.cpp:620-623`), so a point-sampled texture at a slant is blended where `D3DDrv`'s is pixel-exact; D3D11 points them. The anisotropy by choice covers smooth filtering. Recommendation: point-sample NoSmooth without anisotropy | The scene's pixels | Read: d3ddrv-dll.md's blending table; RADV averages nearest plus anisotropy (ENGINE.md:463, a glyph). Run due: a NoSmooth surface at a grazing angle, RADV against `D3DDrv` |
 | D.41 | GL ES draws with no mip bias (`GLRenderDevice.cpp:632` sets -0.5 on desktop GL alone), so the Smart Pro takes mips half a level coarser than `D3DDrv`'s fit. Recommendation: the bias through the ES shader's `texture()` | The scene's pixels | Read; ENGINE.md states it as a fact, not by choice |
 | D.42 | A full-screen game losing the focus stays full screen, where the original leaves full screen and minimises (WinDrv `0x1110a0a3`); SDL3 minimises a real exclusive mode alone, never on Wayland or Xwayland or in desktop full screen. Recommendation: keep, by choice | The UI | Read (the sweep's) |
+| D.43 | Under `-firstrun` DXLauncher keeps a stored FirstRun above 1100 (`config.h:56-61`, `run.c:706`), where the original writes 1100 and so does main (`launch.c:416`); LAUNCHER.md calls it the original's. Nothing writes more. Recommendation: take the original's |  | Read |
+| D.44 | The recreation forwards a second start's command line without the program's path (`main/src/launch/launch.c:315-325`), where the original sends the raw line cut at its first space, so a path with a space (Steam's `Deus Ex`, GOG's `GOG Games`) is cut inside itself and its receiver opens a piece of it (launch-flow.md). Not in main's README. Recommendation: keep, by choice, and say so there |  | Read |
+| D.45 | The engine builds with no warning flags of its own (`DXEngine/CMakeLists.txt`, the ports' engine.cmake), so CI's warning-free gate checks it at the compilers' defaults, blind to code only a cross port compiles (Win32, D3D11, SDL2, NEON); the launcher builds with `-Wall -Wextra -Wshadow -Wvla`. Recommendation: `-Wall` on DXCommon, DXEngine, DXWidgets and DXGPU, measured first |  | Read |
+| D.46 | The recreation on a CPU without MMX (any not x86) takes the Detail page's low sound settings, 11025 Hz among them (`main/src/core/machine.c:145`, `detail.c:278`), as the original on such a machine would. Recommendation: keep |  | Read |
 
 ## VM: the script VM and the object system
 
@@ -68,6 +76,7 @@ owner rules.
 | PKG.21 | The ini reader keeps a value's quotes and trims a key's and a value's whitespace (`Package/IniFile.cpp:99-109`, `ReadLine` `:149-175`; quotes taken off `.int` values alone, `PackageManager.cpp:1343`), where the original splits at `=` and trims nothing, taking the quotes off as it reads (DeusEx.exe `FConfigFile::Read` `0x10916780`): `ServerName="My Server"` keeps its quotes, `Key = 5` is read where the original misses it. No stock or Revision ini has one | Small | Read. Run due: `ConfigConsole` with `Runs = 5` and `Words[0]="quoted"` written into `DXCapConfig.ini` |
 | PKG.22 | A struct extending another is serialized base first (`UStruct.cpp:59-65`, `:128`; `UStructProperty.cpp:47-63`, `:79-94`), the original's own members first, then its super's (`SerializeBin` `0x10126610`, no Plane case in `SerializeItem` `0x101691b0`): a Plane goes W, X, Y, Z there, so `Actor.SimAnim` and `SimBlendAnim[4]` are permuted between the engines' saves (seen in TNM2's). Nothing reads SimAnim in single player | Saving, loading and travel | Read (the sweep's) |
 | PKG.23 | Load and save edges no stock data reaches: NodeFlags not masked to `0x1F` and `PF_Highlighted` not cleared at a load (`UModel.cpp:97`, `:118`, `UPolys.cpp:44`; the original `0x103aa780`, `0x103aa3a0`, `0x103aa510`; 00_Intro, 03_NYC_Hangar and 10_Paris_Metro carry NF_IsFront and NF_IsBack bits, refreshed before they are read); a tag of a native or transient property loaded where the original refuses it (`UObject.cpp:812-866`, `0x10126730`); an object `new` made Transient by its flags saved (`PackageWriter.cpp:219-233`); a tag's array index of 16,384 to 32,767 written in 2 bytes, read back as 4 (`PackageStream.cpp:399-404`) |  | Read (the sweep's) |
+| PKG.24 | An ini made anew is written with LF line ends (`Package/IniFile.cpp:239-276`, from `:297-300` and `:486-492`), its comment saying as the original makes it, where the original writes CR LF (NATIVES.md too): `gamefiles/System/Mutators.ini` was written with LF by a run of 11-02 | Small | Read; seen. Run due: `ConfigConsole` with `DXCapConfig.ini` deleted, both engines, `cat -A` |
 
 ## PHYS: physics, traces and movers
 
@@ -146,6 +155,8 @@ owner rules.
 |---|---|---|---|
 | ENG.17 | An exec function's parameters are not taken as the original's (`Engine::ExecCommand`): a class or object parameter fails, `Unsupported value type`, and the command is unknown; a bool is true for `1` and `true` alone, with case; a parameter left out that is not optional passes 0 and the call is made. The original imports each by its property's ImportText, a failure logging Core's `BadProperty` and making no call (`ScriptConsoleExec` `0x10150860`; bools `0x10166380`, objects `0x10166e20`, classes `0x10167110`): with cheats on, `killall`, `augadd`, `viewclass`, `cheatview`, `showclass` and `getweapon` do nothing, `behindview True` and `invisible True` turn the setting off, a bare `behindview` calls it with False | Small | Run: `ExecParmConsole` with cheats on: `killall Terrorist` 0 terrorists after in the original, 29 in DXEngine; `behindview True` True against False; a bare `behindview` True (refused) against False; `augadd AugSpeed` had against not |
 | ENG.18 | Latent: `Array::at` checks no bound, and `Logger::LoadLog` reads each item's entries 0 to 2 unchecked (`Logger.cpp:145-157`), so a malformed log given to `--showcrashreport` reads past an empty array; `CheckCrashReporter` is compiled on every build |  | Read |
+| ENG.19 | An unquoted `X=` value on the command line is cut at white space alone (`DXEngine/DXEngine/OriginalCommandLine.cpp:98`; the launchers' `src/core/cmdline.c:90` on the four port branches, `:93` on main), where the original's `Parse` also cuts it at a comma and at its buffer's length (Core.dll `0x10146bc0`, `0x10146c96`): `INI=`, `USERINI=`, `EXEC=`, `LOG=` or `MULTIHOME=` with a comma open another file; cli-flags.md's Parse row and NATIVES.md say neither | The command line | Read. Run due: `DXCAP_FLAGS="EXEC=<file>,x"`, both engines |
+| ENG.20 | `DXEngine --help` lists fewer options than the engine takes (`GameApp.cpp:103`): `--ini`, `--userini`, `--timeline`, `-n`/`--no-launcher`, `-v`, `-u` left out |  | Read |
 
 ## WIN: the game window
 
@@ -158,11 +169,61 @@ owner rules.
 
 ## MAIN: the recreation (deusex-launcher's main)
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| MAIN.9 | The recreation reads a UTF-16 ini as bytes (`main/src/core/ini.c:119-151`, no byte-order mark handled; its `.int` reader the same), where the original reads UTF-16 (`appLoadFileToString` `0x101488c0`): FirstRun not found, the wizard opens, and its Run! writes DeusEx.ini back as each line's first character, `[Core.System]` and the rest gone. The engine or the original writes UTF-16 once a value needs it, as Notepad's Unicode does. The ports' 4c5547d (L1.4) not carried |  | Read; the sweep's `main_test_ini_original.c`. Run due: DeusEx.ini made UTF-16LE with its mark, `recreation.sh run` |
+| MAIN.10 | The recreation reads and writes the first of a key given twice and the first block of a section given twice (`main/src/core/ini.c:255-289`, `:368`; `main/tests/test_ini.c:140` asserting it), where the original reads the last and merges the sections (core-dll.md), as the engine does: with `[Engine.Engine]` twice the wizard writes the renderer where the engine never reads it, with FirstRun twice it opens at every start. The ports' d61d78c (L1.2) not carried |  | Read; the sweep's `test_repeated_key_reads_last` |
+| MAIN.11 | The recreation cuts the engine's line at 1,023 bytes and drops the 1,024th, the rest a line of its own (`main/src/platform/process.h:28`, `posix/process.c:201-219`): a RELAUNCH line past 1,014 characters relaunches cut. The game's own are short. The ports' L3.22 not carried; likely the lost L7.30 |  | Read; the sweep's `main_test_long_relaunch.c` |
+| MAIN.12 | The wizard's logo band was never compared with the original: both installs here have `Help/LogoSmall.bmp` (500x77, GOG's of 2021-11-26), where wizard.md says GOG's has none, so every wizard page shows it in both programs and main's screenshots and its 14 of 15 to the pixel were made without it; main draws the logo whole in a 2-pixel raised edge (`dialog.c:215-224`, `:285-291`), where Wine's modal frame is 3 pixels and its bitmap static likely stretched |  | Read. Run due: `dx-reverse-info/tools/wine/wizard-capture.sh` on goggamefiles against `build/pageshots` |
+| MAIN.13 | Small: a client started beside a running `-server` takes no channel (`main/src/launch/launch.c:369-370`, the ports' `run.c:680` alike), so a third start cannot forward to it and starts another game, where every client's log window of the original receives the forward; a static's text never clipped to its control (`dialog.c:267-269`, `gui.c:561-586`), so with the fallback fonts or another language's Startup the Driver page's text runs onto the controls below; the device list cannot scroll past 8 (`dialog.c:353-370`, `:664`); `gui.c:395` taking F5 to F7, overlong and surrogate leads as UTF-8 (the ports' L1.23 not carried) |  | Read |
 
 ## LAPP: the desktop launcher's app, processes and POSIX platform
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| LAPP.7 | A forwarded command line of 4,096 bytes loses its last (`src/app/play.c:84`, `src/screens/window.c:187`, `:186` on windows-x86_64, `:170` on trimui-smartpro: buffers of `DXL_HANDOFF_MAX` where the senders send up to it and `dxl_instance_poll` takes size - 1); main's L7.18 not carried. Every port branch |  | Read; the sweep's draft test |
+| LAPP.8 | xdg-open, and every helper run for its output, start with SIGPIPE ignored (`src/platform/posix/process.c:292-296`, `dxl_run_capture` `:380-397`), only the game's spawn resetting it (`:137`): the file manager or browser opened from About, Screenshots, the log or Mods inherits it, as do `port-hooks.sh` and update-desktop-database; main's L7.29 not carried. linux-x86_64, linux-aarch64, trimui-smartpro (its capture) |  | Read |
+| LAPP.9 | Tests that prove less than they say: `test_gamefiles.c:260` checks the game folder around `test_headless_run` alone, the seven runs after unchecked (LAUNCHER.md says checked); a UI script stopping early passes (`uiscript.c:225-318` no end mark, `window.c:972-979` not checking it ran out, `test_ui_scripts.c:94-101` looking for FAILED alone, test_recovery ignoring `launch()`'s exit, `:304`); `test_saves.c:93`'s snapshot check cannot fail; `test_keys.c:17-18` pins LCORE.6's names; `test_upkg.c:234` names ASan builds there are none of; test_desktop covers no `deusex://` (LAUNCHER.md says it does); `test_gamefiles.c:237-239` checks the engine's log exists alone; the stub engine takes a lower-case `quit` (`stub_engine.c:326`); a failed `test_gpu_probe` becomes a skip (`:13`); `upkg_writer.h:99-103` writes size codes neither engine does; `test_gamefiles.c:561-563` races SIGTERM on the Linux branches |  | Read (the sweep's `proofs.diff`) |
+| LAPP.10 | Small: after a first run whose name change called `dxl_run_use_profile`, `run.c:873` makes the sentinel again without freeing it (`:892` on trimui-smartpro); `dxl_window_free` (`window.c:969`) waits up to 10 s for the probe thread at a stop, the ports' side of main's L7.31 |  | Read |
+
+## LCORE: the launchers' core (ini, config, keys, profiles)
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| LCORE.6 | Keyboard & mouse binds a key by its US place: the capture takes the scancode alone (`src/ui/kit.c:305`) and names it by keys.c's table (`src/core/keys.c:11-49`, `:50`; `src/screens/settings.c:387`, `:384` windows-x86_64, `:375` trimui-smartpro), where the engine names a key by the layout and Num Lock since WIN.6 and WIN.7 (DXEngine bf10b196; `DXWidgets/src/window/sdl3/sdl3_display_window.cpp:763`, `:807`): on AZERTY Move forward bound by the key marked Z writes `W=MoveForward`, which the engine fires on the key marked W; QWERTZ's Y and Z crossed; keypad bindings made with Num Lock off never fire; the ISO key cannot be bound; `keys.h` and LAUNCHER.md say the engine's names. Every port branch |  | Read. Run due: `setxkbmap fr`, Move forward bound by the key marked Z, User.ini read; or the engine's `DXEngine/tools/dxcap/timelines/keys.txt` under AZERTY against `dxl_key_from_scancode` |
+| LCORE.7 | The launcher writes its paths into the inis as UTF-8 (`src/core/profile.c` SavePath and CachePath, `:503-504` and `:221-222` on linux-x86_64, the other branches alike; `src/core/mods.c:341-381` a mod's Paths), where the engine reads an ini's bytes as Latin-1, as the original's `appLoadFileToString` (`Package/IniFile.cpp:26-45`, `PackageManager.cpp:730-734`): a non-ASCII profile path, `C:\Users\Jürgen\Saved Games\DXLauncher\...` or a non-ASCII `$HOME`, names another folder, which the engine makes or fails to (`Engine.cpp:1886-1888`), so the saves go elsewhere or fail and the Saves page and Continue stay empty; a mod in such a folder is not found. Every port branch |  | Read. Run due: an import with `DXL_HOME=<scratch>/hé`, then a save-using console on its profile: Save0009 under `hÃ©` |
+| LCORE.8 | A UTF-16 ini is narrowed to 8 bits, each character past U+00FF made `?`, and written back so before every run (`src/core/ini.c:121-137`, `:149-153` marking it dirty, saved by `commit()`, `run.c:707`), where the engine writes an ini as UTF-16 once a value needs it since VM.5's stage 7 (e148247e) and reads it back whole, as the original's `appSaveStringToFile` and `appLoadFileToString`: a name or server name past Latin-1 is gone at the next start. The game's own fields allow ASCII alone (`MenuScreenPlayerSetup`'s filter), so the console's `set`, hand edits, mods and an install's UTF-16 inis reach it. Every port branch |  | Read. Run due: the sweep's `port_test_ini_utf16_kept.c`, or `ConfigConsole`'s Omega string through one launch |
+| LCORE.9 | `INI=` and `USERINI=` resolve the last part of the path in any case alone (`src/core/config.c:55-66`, `given_path`), where main (f2c4a588) and the engine (d6f13c4f, ENG.7) resolve every part: with `INI=..\MyMod\System\MyMod.ini` and the folder `mymod` on disk the engine plays the mod's ini and the launcher seeds an empty one, its Recovery never shown, its Settings the wrong values, its saves failing; main's L7.5 not carried. Every port branch, no effect on Windows |  | Read; the sweep's `test_config_main_fixes.c` |
+| LCORE.10 | A read-only ini is replaced on the POSIX ports (`src/platform/posix/fs.c:77-129`, `dxl_fs_write_atomic`: the rename takes the place of a 0444 file, `keep_mode` keeping 0444), where main refuses it (6df119ba, L7.2) as the original's write in place fails, and the Windows app's `MoveFileExW` refuses it: a player's read-only ini is rewritten at the next save. linux-x86_64, linux-aarch64, trimui-smartpro |  | Read; the sweep's draft test |
+| LCORE.11 | Small: the engine sections' seed lacks `[Engine.DXEngineRenderDevice] UsePrecache` (`src/core/engine_sections.c:59-61`; `engine_sections.h` says all 40 keys, 41 now, PKG.8's), so a retail `UsePrecache=True` is lost; `lastrun.c:185` and `play.h:14-15` still say an exit 0 before the first map means no game found, where the engine exits 1 with `No UE1 game found` (`GameApp.cpp:113`, E15b.28), so Recovery, Home and dxl-cli name the wrong cause; dead code: `dxl_config_user_path` unused, `dxl_config_open`, `_dirty`, `_seeded`, `_render_device`, `_cd_path` and `_game_engine` used by tests alone, `policy.h`'s `caption_key`, `show_splash`, `migrate_saves`, `exec_file`, `DXL_FIRSTRUN_MIGRATE_BELOW` and `DXL_ACTION_FORWARD` dead. Every port branch |  | Read |
+
+## LUI: the launchers' screens and UI kit
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| LUI.6 | The controller-mapping wizard cannot be skipped, stepped back or cancelled from a pad: it turns the pad's buttons off (`src/screens/padwizard.c:266`, kept so by the shell each frame, `shell.c:935`, `:934` windows-x86_64, `:805` trimui-smartpro; `ui/kit.c:512`) and its Skip, Back and Cancel are buttons alone (`padwizard.c:318-335`), so a pad lacking a control runs out of sources and the wizard never ends, and with no keyboard or mouse (the Smart Pro, a pad-only big screen) only killing the launcher leaves it; LAUNCHER.md's Skip for a control the pad lacks cannot be pressed from it. Every port branch |  | Read; the sweep's `padwizard_pad_only.script` |
+| LUI.7 | The Controller page crashes choosing a button's action when the profile has no `User.ini` and there is no DefUser.ini to seed one: `screens/controller.c:424` (`:423` trimui-smartpro) sets bindings on a null store, `bindings.c:200` reading it, `config.c:81` seeding the user ini with no empty one to fall back on, unlike the system ini's. Every port branch |  | Read |
+| LUI.8 | Small UI defects, every port branch: the Log page's buttons unreachable by the d-pad (`log.c:112`); a `deusex://` hand-over during an edit drops the edit (`shell.c:948`); Back to the defaults before the probe has answered ignores no GPU (`settings.c:108`); F5 and Start do nothing on `-changevideo`'s Graphics (`settings.c:564`); `uiscript`'s `find` focuses at once, so a script cannot catch an unreachable control (`uiscript.c:191-196`); a failed repoint save leaves the install in memory (`shell.c:600-605`); the icon PNGs written in place (`icon.c:70-79`); Recovery's foot with no Back hint; a pick answer whose control is gone left pending |  | Read (the sweep's screens scripts) |
+
+## LPORT: the launchers' ports (Win32, the Smart Pro, the sysroots)
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| LPORT.6 | Sysroot downloads are checked against no hash: `trimui-smartpro/ports/trimui-smartpro/fetch-sysroot.sh:118` (SDL2's tarball) and `:134` (Mesa's two headers); the workspace's `scripts/lib/common.sh` `dx_fetch_debs` (`:336-364`, no SHA256 nor Release file, cached files taken on `-s`, bookworm's Packages index cached for good) and `dx_fetch_arch_pkg` (`:373-385`): a changed or corrupt download goes into the linux-x86_64, linux-aarch64 and Smart Pro builds' link unnoticed, where every other fetch is SHA256-pinned |  | Read |
+| LPORT.7 | Windows' hand-over pipe can wedge: a second start that connects, writes and closes between `CreateNamedPipeW` and the first `ConnectNamedPipe` makes it fail `ERROR_NO_DATA`; `arm()` sets the event to be tried again, `poll`'s `GetOverlappedResult` sees `ERROR_IO_INCOMPLETE` and returns 0 without arming again, and nothing disconnects the pipe (`windows-x86_64/src/platform/win32/instance.c:53`, `:180-182`): every wait wakes at once for the launcher's life, the line is lost, later starts find the pipe busy |  | Read; the sweep's `win32_pipe_no_data.c` under `scripts/wine.sh`. The window is microseconds |
+| LPORT.8 | Windows' GUI launcher stays attached to the console it was started from (`win32/startup.c:248-257`, `AttachConsole` for `--help`, and its `on_console` handler `:189-199`): Ctrl+C at that prompt, or closing its window or a `.bat`'s, stops the game, where a GUI program started from cmd is otherwise its own |  | Read. Run due: `deusex-launcher.exe --play` from `wine cmd`, Ctrl+C, launcher.log |
+
+## X: the harness, the scripts and CI
+
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| X.6 | `move.py --pawn` never flags a tick before the reference path's start or past its end, however far off (`DXEngine/tools/dxcap/move.py:202-219`, the skip `:213-214`): a pawn that never leaves its start, walks the other way or overshoots and goes elsewhere "never parts by more than 1"; NATIVES.md's Terrorist34 walk rests on it |  | Run: `move.py --pawn` on four made paths (stuck, backward, overshoot, aside): all four "never parts", the aside's alone right to (the sweep's `movepy`) |
+| X.7 | `dedicated original` drops the run's settings `dedicated dxe` takes (`DXEngine/tools/dxcap.sh:1040` against `run_dxe` `:882-924`): `DXCAP_FLAGS`, `DXCAP_INI_CASE` and `DXCAP_USERINI_FIRST` left out, no `DXCAP_MEMLOG`, `DXCAP_PERF` or `DXCAP_FPS`, so a pair under `DXCAP_FLAGS=-lanplay` or `PORT=` compares two command lines without a word |  | Read. Run due: `DXCAP_FLAGS=-lanplay` on both `dedicated` runs, the logs' command lines |
+| X.8 | A parent folder with a space breaks the harness's `INI=` and `USERINI=` (`dxcap.sh:734`, `:1040`, `:887-888`): they go on the original's line as plain words, Wine's quote lands before `INI=` and the original's Parse cuts the value at the space (Core.dll `0x10146c4e`), so the original reads no ini, has no console, idles and closes with exit 0; DXEngine's `--cmdline` under `DXCAP_INI_CASE` or `DXCAP_USERINI_FIRST` the same |  | Read. Run due: `DX_ROOT` through a link whose name has a space, `original ProveConsole 30` |
+| X.9 | DXEngine's own release is cut only when DXEngine's code changed since its last (`scripts/ci.sh:263-267`), where its binaries follow the launcher branch's `cmake/deps.lock` (SDL3), engine.cmake, toolchains and the workspace's scripts too: an SDL3 bump or a flag reaches Port Ex Machina's release and never DXEngine's latest |  | Read; `DX_CI_DRY=1 ci.sh publish` after a launcher-only change |
+| X.10 | CI on main can drop a pending run: GitHub keeps one pending run per concurrency group and cancels the older, and the run that survives diffs its own push alone (`build.yml:26-28`, `ci.sh:76-102`), so a code push pending behind a build and followed by a docs-only pin push is never built or released; build.yml's "a release is never cut short" holds for running runs alone. A failed run followed by a docs-only pin push ends the same |  | Read, with GitHub's concurrency docs |
+| X.11 | Harness and script checks that can pass when they should fail: `fps_check` looks for the 64-bit MangoHud alone (`dxcap.sh:199-201`), the original's 32-bit process loading lib32's, so without it the original runs uncapped beside a capped DXEngine (E17.2's fix incomplete; this machine has both); `check-abi.sh` stops without a word at a file with no GLIBC references (`versions()` `:33` under pipefail, `:43`; windows-x86_64 `:86`, `:92`), its "no glibc refs" line never printed, the files after it unchecked (every launcher branch); `check-docs.sh` passes a `NAME.md#a` link to a missing file in the same folder and any token with a `:` (`:151`, `:254`, `:257`), and counts commit links into deusex-launcher and dx-reverse-info unverifiable; staging and packaging skip a missing engine file but the first without a word, DXEngine.pk3 not ABI-checked, `dx.sh check` passing a port with nothing staged (`dx.sh:103-105`, `ci.sh:218-221`); `grab.py:87` and `burst.py:108` taking the last window xdotool lists, the tree's order, not the newest (E17.S4's fix maybe incomplete) |  | Run: `check-abi.sh --max 2.28` on a made non-ELF file then a dynamic one, exit 1, no line, the second unchecked (the sweep's `abi`); the rest read |
+| X.12 | `tools/dxcap.sh help` is stale against DEVELOPMENT.md's table (`dxcap.sh:76-97`): its `DXCAP_MISSION_MAP` list lacks seven consoles (BackFace, Debris, Fog, Glow, IntroDoor, Matrix, MoverLight), its `DXCAP_CONFIG` list the keys of 21. Recommendation: point at the table |  | Read (the sweep's `usage_vs_table.py`) |
 
 ## Refuted
 
@@ -192,11 +253,11 @@ None open.
 
 ## Not yet read
 
-What no sweep has read, by area: the next sweep's ground, beside the first sweep's numbers no
-commit cites ([`bugs-recovered.md`](bugs-recovered.md)).
+What no sweep has read, by area: the next sweep's ground.
 
 - **VM:** FixedArray, Map and Pointer past their headers.
-- **PKG:** PackageManager's package finding and save folders.
+- **PKG:** PackageManager's package finding and save folders; two travels asked in one frame
+  (`BindOrderConsole` started on its map: the first taken in DXEngine).
 - **PHYS:** Math's mat.h, quaternion.h, FrustumPlanes, hsb and halffloat; physWalking and
   stepUp, the BrushTracker and OverlapTest against the binary.
 - **AI:** the event manager against the binary.
@@ -215,13 +276,8 @@ commit cites ([`bugs-recovered.md`](bugs-recovered.md)).
 - **WIN:** Wayland past its timer and keymap (skimmed), the open-folder dialogs, DXWidgets'
   widgets but the push button, the scroll bar and the log view, the canvas and font code past
   the span layout.
-- **LCORE:** keys, theme_colors, padcurve and settings_table (skimmed); sha1.c, keys.c's
-  scancodes against DXWidgets', platform/ and app/ past their callers.
-- **LAPP:** src/screens past window.c, src/core past the files the core's reading named, the
-  tests.
-- **LUI:** uiscript.c, test-only (skimmed); pad3d.c, padmesh.c, icon.c, glyphs.c past
-  dxl_hints.
-- **LPORT:** the tests, fetch-sysroot.sh and profile-map.sh (skimmed); the vdf unescaping.
-- **MAIN:** the drawing of gui.c's text and dialog.c's layout, the pixels against the
-  original's.
-- **X:** natives_audit.py, dxcap's Python, tools/probes and check-abi.sh (skimmed).
+- **LCORE:** json.c past its writer, finder_places.c and gamedb.c; mods.c, finder.c and
+  servers.c in part; app/browser.c past its first 140 lines; posix net.c (skimmed).
+- **LAPP:** the tests the port branches share, the Windows ones read.
+- **MAIN:** the pixels against the original's: nothing run (MAIN.12).
+- **X:** tools/probes' GLES, fbdev and SDL probes past their headers.
