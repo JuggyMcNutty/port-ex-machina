@@ -42,7 +42,7 @@ None open.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| VM.5 | Strings are 16-bit and the string natives take them so, as the original's (DXEngine d7c1954a, a8adca72), but the text that comes in and goes out is still 8-bit: a typed character past Latin-1 goes nowhere, and a wide string loads with `?` for each such character (a note in a save, every conversation comment of `DeusExConText.u`) | the UI; implemented, not as the original (small ones) | `TypeConsole` typing U+0100 and past; a note of such characters saved and loaded across both engines |
+| VM.5 | Strings are 16-bit, the string natives take them so, and packages and saves read and write them as the original's (DXEngine d7c1954a, a8adca72, a6383a58; the launchers' save reader too), but typing, the fonts, the network and ini files are still 8-bit: a typed character past Latin-1 goes nowhere | the UI; implemented, not as the original (small ones) | `TypeConsole` typing U+0100 and past |
 | VM.16 | `VisibleActors(None, 300)` round the menu map's first PlayerStart finds one actor in DXEngine and none in the original, two runs of each, before and after VM.5's stages (`OpsConsole`), every other iterator's count alike | not yet | `OpsConsole` with `ListRadius`-like logging of what `VisibleActors` gives, against the original's line of sight (engine-dll.md, the iterators) |
 
 ## PKG: saving, loading, travel and the loading screen
