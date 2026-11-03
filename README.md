@@ -11,9 +11,9 @@ launcher made for it, on Linux, Windows and the TrimUI Smart Pro.
        alt="Hong Kong's Lucky Money club: neon calligraphy, a glass pillar, the patrons">
 </p>
 
-**An alpha.** The opening missions are played by hand, every map loads and an ending plays to
-the credits, but the game is not yet played through end to end on DXEngine: expect bugs, and
-[report them](#reporting-bugs).
+**The game is playable on DXEngine.** The opening missions are played by hand, every map loads
+and an ending plays to the credits; the game is not yet played through end to end.
+[Report a bug](#reporting-bugs).
 
 **You need your own copy of Deus Ex, version 1112fm**, GOG's or Steam's
 ([which copies play](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#an-install)).
@@ -81,11 +81,11 @@ and of the launcher in
 | [`windows-x86_64`](https://github.com/JuggyMcNutty/deusex-launcher/blob/windows-x86_64/README.md) | Windows 10 (1903) or newer | runs under Proton's wine; untried on Windows itself |
 | [`trimui-smartpro`](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/README.md) | the TrimUI Smart Pro | runs on the device |
 
-linux-x86_64 is **the development platform**, where the project is developed and tested. The
-game is not fully playable on any port:
+linux-x86_64 is **the development platform**, where the project is developed and tested.
 [`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md) lists where
-the engine differs from the original. Each port is a branch of the launcher, its README
-saying what the port offers and how to install and build it ([how ports work](docs/PORTING.md)).
+the engine differs from the original, on every port. Each port is a branch of the launcher,
+its README saying what the port offers and how to install and build it
+([how ports work](docs/PORTING.md)).
 
 ## Download
 
