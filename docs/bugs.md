@@ -2,7 +2,10 @@
 
 The bugs found and not yet fixed, each with its proof: the third sweep's (every doc of the four
 repositories read for what is open, each place DXEngine or the launchers are not the original
-that the owner has not chosen, and each check no run has made), and those found since. The
+that the owner has not chosen, and each check no run has made), the fourth's (what the third
+left unread and the first sweep's numbers no commit cites, read area by area against the
+binaries), and those found since. A proof is a run of both engines ("Run:"), or the
+original's binary as read with the run that will prove the fix ("Read:", "Run due:"). The
 refuted are listed at the end so they are not reported again.
 
 IDs are this list's own, `<section>.<n>`, an item's kept when those before it are fixed, each
@@ -14,18 +17,18 @@ cites each open difference by its ID, and says "by choice" of each the owner has
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
-| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 0 |
-| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
-| [AI](#ai-the-npcs) | the NPCs | 0 |
-| [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
-| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
-| [NET](#net-the-network) | the network | 0 |
-| [REN](#ren-the-renderer) | the renderer | 0 |
-| [AUD](#aud-the-audio) | the audio | 0 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
-| [WIN](#win-the-game-window) | the game window | 0 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 4 |
+| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 9 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 4 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 3 |
+| [AI](#ai-the-npcs) | the NPCs | 7 |
+| [DX](#dx-deusexs-natives) | DeusEx's natives | 4 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 3 |
+| [NET](#net-the-network) | the network | 4 |
+| [REN](#ren-the-renderer) | the renderer | 9 |
+| [AUD](#aud-the-audio) | the audio | 6 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 2 |
+| [WIN](#win-the-game-window) | the game window | 4 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
 
@@ -36,51 +39,122 @@ choice" where it is said and takes it off this list; one to change it stays here
 said, until the change is made and proven as any other fix. Nothing here changes before the
 owner rules.
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| D.39 | A pawn's bleeding with `ClotPeriod` at 0 or under stops at once (`UScriptedPawn.cpp:307`), where the original divides by it: infinity resets the bleed, a negative period grows the wound, a 0 s frame gives a NaN that sticks. No map sets `ClotPeriod`. Recommendation: keep, by choice | Every NPC | Read: DeusEx.dll's bleed loop (`0x100195a0`), otherwise alike (the sweep's) |
+| D.40 | The NoSmooth samplers keep 8x anisotropy on Vulkan and GL (`Vulkan/SamplerManager.cpp:32,37`, `GLRenderDevice.cpp:620-623`), so a point-sampled texture at a slant is blended where `D3DDrv`'s is pixel-exact; D3D11 points them. The anisotropy by choice covers smooth filtering. Recommendation: point-sample NoSmooth without anisotropy | The scene's pixels | Read: d3ddrv-dll.md's blending table; RADV averages nearest plus anisotropy (ENGINE.md:463, a glyph). Run due: a NoSmooth surface at a grazing angle, RADV against `D3DDrv` |
+| D.41 | GL ES draws with no mip bias (`GLRenderDevice.cpp:632` sets -0.5 on desktop GL alone), so the Smart Pro takes mips half a level coarser than `D3DDrv`'s fit. Recommendation: the bias through the ES shader's `texture()` | The scene's pixels | Read; ENGINE.md states it as a fact, not by choice |
+| D.42 | A full-screen game losing the focus stays full screen, where the original leaves full screen and minimises (WinDrv `0x1110a0a3`); SDL3 minimises a real exclusive mode alone, never on Wayland or Xwayland or in desktop full screen. Recommendation: keep, by choice | The UI | Read (the sweep's) |
 
 ## VM: the script VM and the object system
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| VM.17 | A variable as an operand or argument is read after the later arguments are evaluated (`ExpressionValue.h:483-489`, `ExpressionEvaluator.cpp:1019-1036`, `Frame.cpp:299-315`): `I + Bump(I)`, Bump setting its `out` I to 10, is 10, where the original copies each argument as it evaluates it (`execLocalVariable` `0x1012ebc0`) and gives 1; `$` and script calls alike. No stock instance found | Small | Run: `SweepVmConsole`, `I + SweepBump(I)` 1 in the original and 10 in DXEngine, in the console's tick and the level's, `Text $ AppendText()` `ab` against `xb` |
+| VM.18 | A string property compares with case (`Properties/UProperty.h:182`), where the original's `UStrProperty::Identical` is `appStricmp` (Core.dll `0x101676f0`): a string differing from its default in case alone travels and saves in DXEngine and goes back to the default in the original, struct `==` with a string member differs (`0x101303a0`), and a case-only rename replicates | Saving, loading and travel | Run: `CaseTravelConsole`, `TruePlayerName` set to `JC DENTON` (its default `JC Denton`) across a map exit: `JC Denton` in the original's HQ, `JC DENTON` in DXEngine's; `SweepVmConsole`'s struct `==` abc/ABC True against False |
+| VM.19 | A `GotoState` to no state, or to one the class has not, inside `EndState`, preempts the outer `GotoState` (`Packages/Core/UObject.cpp:628`), where the original's ends in no state without `RF_StateChanged` (Core.dll `0x1012e8f0`) and the outer one goes on into its state. No stock path | Small | Run: `NonePreemptConsole`: the original's actor in `goal`, its BeginState and Begin run, DXEngine's in None, for both kinds |
+| VM.20 | A property named again by a subclass is found as the base class's by `GetPropertyText`, `SetPropertyText` and the console's per-object `SET` (`Native/NObject.cpp:637`, `:1137`, `UObject.cpp:212`), where the original's field walk takes the class's own first (`0x1013e0b0`, `0x10143fd0`): `PlayerPawn.bSinglePlayer` over `Actor.bSinglePlayer`, `DeusExMPGame.bGameEnded` over `GameInfo`'s, which the server's query answerer reads | Small | Run: `SweepVmConsole`, GetPropertyText(bSinglePlayer) False (PlayerPawn's) in the original, True (Actor's) in DXEngine |
+| VM.21 | Property text taken unlike the original's import (`UByteProperty.cpp:59`, `UIntProperty.cpp:42-49`, `UBoolProperty.cpp:95-104`): an enum from a number (the original matches enum names alone, `0x10165aa0`), an int from `+5` (the original's takes `-` or a digit first, `0x10165f00`), a bool from a token (`True,`, `1.0`, a quoted `"True"`, `0x10166380`'s ReadToken), and an enum from a name with text after it | Small | Run: `SweepVmConsole`: enum from 2 SK_Zero against SK_Two, from `SK_Two junk` SK_Two against SK_One, int from +5 3 against 5, the three bools True against False |
+| VM.22 | `bool(string)` takes the text by `atof` (`ExpressionEvaluator.cpp:690-703`), the original by `appAtoi` (`execStringToBool` `0x10132490`): `bool("0.5")`, `"-0.5"` and `"0x1"` are True in DXEngine, False in the original | Small | Run: `SweepVmConsole`, both ticks |
+| VM.23 | `VSize` and `Dot` work in floats (`NObject.cpp:502`, `:1280`), the original on the x87, its sum whole, stored once (`execVSize` `0x10138d10`, `execDot_VectorVector` `0x10138630`): the last bit differs, some 18% of the level tick's results modelled; `Lerp` (`0x10136610`, `(B-A)*a+A`) and a rotator over a float (`0x101397c0`) alike, unused in stock. VSize has 202 stock calls | Small | Run: `SweepVmConsole`'s mantissas: VSize a 2326783 against 2326782, b, c and Dot a, b, c each a last bit apart in the level's tick |
+| VM.24 | A call to a function import that did not load crashes the engine as the script error is reported: `PrintPrettyExpression.cpp:599-601` reads `expr->Func->Name` with `Func` null, the call stack printing the statement being run (`Frame.cpp:185-188`), where every other null case is guarded. E1.8's fix incomplete |  | Read: the code's path from `ExpressionEvaluator.cpp:834-835`'s throw; a run needs a package built against a function then removed |
+| VM.25 | Latent, no stock data reaches them: a string constant decoded as UTF-8 (`ExpressionEvaluator.cpp:451-454`, `Bytecode.h:107-117`), where the original widens each byte, so a mod's `Â©` shows as one character; `DynamicCast` and the iterators matching classes by name (`ExpressionEvaluator.cpp:526-535`, `UObject.cpp:406-416`), the original by pointer (`0x10130ed0`); a name kept in each spelling (`NameString`) where the original keeps the first made (five stock flag names, `annadies`/`AnnaDies`, show only through `string(name)`), and `name(S)` and `StringToName` taking UTF-8 bytes | Small | Read (the sweep's), each against Core.dll |
 
 ## PKG: saving, loading, travel and the loading screen
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| PKG.20 | A travel URL with a space before its `#`, Mission 14's five (`14_Vandenberg_Sub`'s exits `14_OceanLab_Lab.dx #Sunkenlab` and `14_Oceanlab_silo.dx #frontgate`, the lab's teleporter `14_OceanLab_UC.dx #UC`, the UC's back, `14_OceanLab_Lab.dx #Sunkentunnel`, and the silo's exit to Area 51, `15_area51_bunker.dx #bunker_start`), looks for the map with the space (`UnrealURL.cpp:65-67`, `PackageManager::FindMapFile`, `MapExists`, `FindCurrentSave` taking off only a last `.dx`): on Linux no file is found, the travel fails after `DeusExPreTravel` and the player stays, its augmentations and skills gone, or the silo loads again; the game cannot be finished there. The original keeps the space too (FURL `0x103f7b60`) and Windows' file system drops it (`appFindPackageFile`, Core.dll `0x10148ec0`); DeusEx.dll's browse cuts the name at its first `.dx` for Current. On windows-x86_64 the map is found but a return loads it fresh, not from Current | Saving, loading and travel | Run: `SpaceURLConsole` (the exit's own `SendPlayer`): the original on `14_OceanLab_Lab`, its URL `14_OceanLab_Lab.dx ?Name=Player...#Sunkenlab`, DXEngine `Failed to load '14_OceanLab_Lab.dx ': Can't find file`, on the sub, AugmentationSystem and SkillSystem None; `Which=3`: `Failed to load '15_area51_bunker.dx '`, the silo loaded again |
+| PKG.21 | The ini reader keeps a value's quotes and trims a key's and a value's whitespace (`Package/IniFile.cpp:99-109`, `ReadLine` `:149-175`; quotes taken off `.int` values alone, `PackageManager.cpp:1343`), where the original splits at `=` and trims nothing, taking the quotes off as it reads (DeusEx.exe `FConfigFile::Read` `0x10916780`): `ServerName="My Server"` keeps its quotes, `Key = 5` is read where the original misses it. No stock or Revision ini has one | Small | Read. Run due: `ConfigConsole` with `Runs = 5` and `Words[0]="quoted"` written into `DXCapConfig.ini` |
+| PKG.22 | A struct extending another is serialized base first (`UStruct.cpp:59-65`, `:128`; `UStructProperty.cpp:47-63`, `:79-94`), the original's own members first, then its super's (`SerializeBin` `0x10126610`, no Plane case in `SerializeItem` `0x101691b0`): a Plane goes W, X, Y, Z there, so `Actor.SimAnim` and `SimBlendAnim[4]` are permuted between the engines' saves (seen in TNM2's). Nothing reads SimAnim in single player | Saving, loading and travel | Read (the sweep's) |
+| PKG.23 | Load and save edges no stock data reaches: NodeFlags not masked to `0x1F` and `PF_Highlighted` not cleared at a load (`UModel.cpp:97`, `:118`, `UPolys.cpp:44`; the original `0x103aa780`, `0x103aa3a0`, `0x103aa510`; 00_Intro, 03_NYC_Hangar and 10_Paris_Metro carry NF_IsFront and NF_IsBack bits, refreshed before they are read); a tag of a native or transient property loaded where the original refuses it (`UObject.cpp:812-866`, `0x10126730`); an object `new` made Transient by its flags saved (`PackageWriter.cpp:219-233`); a tag's array index of 16,384 to 32,767 written in 2 bytes, read back as 4 (`PackageStream.cpp:399-404`) |  | Read (the sweep's) |
 
 ## PHYS: physics, traces and movers
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| PHYS.20 | The reach tests' moves pass through the pawn's base and take a mover as blocking by both actors' `bBlockActors` (`UPawn_ReachDeusEx.cpp:64-75`), where the original's walk, fly and swim moves skip the base only with `bIgnoreBases` (all pass 0, `MoveActor`'s filter `0x103995f1`) and block by `IsBlockedBy`: an NPC on a lift's floor tests through it, a flying bird through movers | Moving: wandering and tactical movement | Read. Run due: a pawn based on a lift, `AIDirectionReachable` and `PointReachable` across it |
+| PHYS.21 | `JumpLanding`'s steps are raw traces (`UPawn_Path.cpp:540`), the original's three `MoveActor` test moves, held off 2 units and passing pawns and non-static decorations (`jumpLanding` `0x103c2530`): a jumper's landing on a crate or an NPC, some 2 units lower, and the search toward a falling pawn | Moving: wandering and tactical movement | Read. Run due: a jumper's `PointReachable` off a ledge onto a crate |
+| PHYS.22 | Line checks' edges and precision: `VisibleActors`' radius by a float square root (`VM/Iterator.cpp:359-360`), the original's squared sum on the x87 (`0x103e53d0`), so a negative radius finds nothing where the original's reaches as far as a positive one; a line under 0.01 clear without its walk (`TraceTest.cpp:614-621`), the original walking it, so from inside solid it finds nothing; `FastWalkNode` in doubles (`TraceRayModel.cpp:101`), the original's plane distances and split points floats (`0x103f33a0`); `NActor::FastTrace` walking end to start (`NActor.cpp:194`); `FindRegion`'s sums in floats, the original's x87 in Z, Y, X order (`0x103f5db0`); `SuggestJumpVelocity`'s accumulator | Implemented, not as the original | Read (VM.16's and the sweep's investigators), against engine-dll.md's traces |
 
 ## AI: the NPCs
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| AI.8 | Blend slots set unlike the original's (`UActor_Animation.cpp`): `PlayBlendAnim` of a one-frame sequence sets frame 0 at once (`:193-198`), the original frame -1 with its tween (`0x103e0d80`, `0x103e0efa`), so every head turn (HeadLeft, HeadRight, HeadUp, HeadDown and Still, one frame on every stock human mesh) snaps in conversations and `LookAtActor`; a slot with no sequence tweens, where the original starts it at 0.001 untweened (`0x103e0e58`), the first Blink; a tween time of -1 at frame 0 and `BlendAnimMinRate`, the original's at frame -1/frames and `OldBlendAnimRate`; `SimBlendAnim` packed in another order, none by `TweenBlendAnim`; `TweenBlendAnim`'s log texts | Head turns and lip sync: blend animations | Run: `BlendFieldsConsole` on Paul Denton: HeadLeft frame -1, tween 1 in the original, its slot -0.94, -0.92, -0.90 over the next ticks, DXEngine's 0 at once; Blink on a new slot 0.001 untweened against -0.5 at 5; the -1 tween -0.5 at 5 against 0 at 20; `SimBlendAnim` packed against none |
+| AI.9 | `ActorReachable` of a navigation point answers unlike the original's for 5 of 87 pawn and node pairs on Liberty Island, both ways, every run (MedicalBot1 to a linked node, the original True; MedicalBot5 and 6 to unlinked ones, the original False; Gunther Hermann to an unlinked one, the original True). Cause partly read: the original answers from the path network for a pawn standing at a node (`execactorReachable` `0x103bc1a0`: true for that node or one `CanMoveTo` reaches from it), where DXEngine always walks (`NPawn.cpp:294`, `UPawn_Reach.cpp:16`); the medical bots fit, Gunther does not | Moving: wandering and tactical movement | Run: `NavReachConsole`, two runs of each, each engine's 87 answers alike run to run, 5 apart between them |
+| AI.10 | `FindPathToward` of an actor no nearby node reaches answers unlike the original's for 10 of 24 tries on Liberty Island (BumFemale0 a route by PathNode16 in the original, None in DXEngine; Gunther Hermann None against PathNode831), every run. Read: the original's second way marks end points on the goal's list (`findPathToward` `0x103db3f0`, `0x103db938`, `0x103db94d`) and searches from the pawn list's first node, where DXEngine runs both on the pawn's (`UPawn_Path.cpp:758-766`) | Moving: wandering and tactical movement | Run: `SecondWayConsole`, two runs of each, alike run to run |
+| AI.11 | `AIPickRandomDestination`'s second try (a multiplier under 1) takes the last step inside the reached distance (`UPawn_AI.cpp:555`), where the original asks with that distance as both its least and most and takes the first step past it (`0x103c8141`-`0x103c8148`): wander and flee spots one step, the pawn's radius, nearer | Moving: wandering and tactical movement | Run: `PickDestConsole`, 14 of 48 picks apart, each the pawn's radius: BumFemale0 180 against 160 (radius 20), Gunther Hermann 242.0 against 217.8 (24.2) |
+| AI.12 | The blend slots tick on their own schedule (`UActor.cpp:407-410`, `UActor_Animation.cpp:520-580`): three whole-tick passes, checked before the main animation's tick, where the original's share the main loop's passes (4 less those it used) and its time left, after it (`AActor::Tick` `0x103a1aa0`), a looping main animation ending its step between `AnimLast` and 1.0 freezing them that tick (BreatheLight: 0.4 s of every 2 s) | Head turns and lip sync: blend animations | Read. Run due: `BlendFieldsConsole`'s tick lines once AI.8 is fixed |
+| AI.13 | `GetPathnodeList` filters by reach and keeps the nearest 32 within 1000 (`UPawn_AI.cpp:626-641`), where the original picks 32 first, once full replacing the nearest entry farther than the new one, then filters, under 1e6 squared (`0x103c6490`): `ReachablePathnodes` (projectile avoidance, `GetOvershootDestination`) where more than 32 nodes lie in reach | Moving: wandering and tactical movement | Read |
+| AI.14 | Small path and pick differences: `AIPickRandomDestination` pitched only in water or flying (`UPawn_AI.cpp:542`), the original's unless walking or swimming out of water (`0x103c8041`); `ReachableFromAnchor` tracing anchor to goal (`UPawn_Path.cpp:424`), the original goal to anchor (`0x103da93e`); `ReachablePathnodes` leaving its out variable on the last node, the original None; `FindBestJump`'s log of a drop of 350 or more missing (`0x10481960`) | Moving: wandering and tactical movement | Read |
 
 ## DX: DeusEx's natives
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| DX.4 | `DeusExTextParser`'s name and colour state (`UDeusExTextParser.cpp`): `GetName` gives the last name always (`:295`), the original's at a NOTE, G, F or L token alone, else None (`0x10001980`); GOAL sets no name (`:177`), the original's `ParseName` runs before `FindEndTag` (`0x10001f80`); G and F need `=` first (`:194`), the original takes what follows the first `=` anywhere, None without one (`0x10002880`); `GetColor` the last colour (`:300`), the original's black but at DC, C and /C (`0x100019c0`); DC sets the script's `defaultColor` (`:187`), the original only `lastColor`, at /C too (`0x100028c0`); `FILE` with no `=` empties the fields (`:241`), the original's keeps them (`0x10002380`). No stock text reaches them | What the player reads | Read (the sweep's) |
+| DX.5 | `ConBindEvents` with an empty `ConversationPackage` binds from `DeusExCon` (`UActor_Conversation.cpp:28-34`), the original loading `Text.ConList_MissionNN`, failing and binding nothing (DeusEx.dll `0x10014320`); a package not there throws, which can stop the game, where the original's `LOAD_NoWarn` load binds nothing. Mods alone | Conversations | Read |
+| DX.6 | A random label event with both `bCycleOnce` and `bCycleRandom` goes random (`UConEventRandomLabel.cpp:29-50`), where the original stays on the last label for good and never sets `bLabelsCycled` (ConSys.dll `0x1000a270`). No stock event has both (561 random, 496 cycling then random, 169 once, 15 forever) | Conversations | Read |
+| DX.7 | Small DeusEx differences: ConListItems named None, transient, in the actor's level (`UActor_Conversation.cpp:66-68`), the original's `ConListItemN`, public, in the conversation list's package, the old ones deleted at once (`0x10010b70`); the conversation camera made in package DeusEx, named, public (`0x100106f0`); `burnTimer` putting the fire out at `>` (`UScriptedPawn.cpp:283`), the original at `>=` (`0x10019c32`); `SortAsFound` by lower case (`UGameDirectory.cpp:200`), NTFS by upper, apart for names with `[\]^_` at a letter's place | Every NPC | Read; visible to a script that prints them alone |
 
 ## EXT: the window tree (Extension)
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| EXT.23 | Five window classes run their own tick last (`UComputerWindow.cpp:276`, `UScaleWindow.cpp:861`, `UButtonWindow.cpp:263`, `UTextLogWindow.cpp:67`, `UEditWindow.cpp:595`, each calling `UWindow.cpp:2415`'s script Tick, timers and children first), where the original's tree runs the C++ tick first, then the script's, the timers, the children (`XRootWindow::TickTree` `0x1003bfc0`): a repeat or press delay, a log line's expiry, the blink and the InfoLink's typing land after the children's and timers' work. No stock subclass of the five has a script Tick | The UI | Read |
+| EXT.24 | `UComputerWindow` makes neither of its two children (`UComputerWindow.cpp:238`), where the original's `Init` makes a shown `textWindow` and a hidden `EditWindow` `inputWindow` (`0x1000d530`), its cursor drawn only while that is hidden (`0x1000fae0`): the InfoLink's tree two windows short, the script's `textWindow` and `inputWindow` None | The UI | Read |
+| EXT.25 | Optional arguments left out keep the old value where the original's exec gives its default: `RootWindow.LockMouse` false, false (`URootWindow.cpp:158`), the original's true, true (`0x1003ce30`); `Window.SetBaselineData` and `GC.SetBaselineData` (`UWindow.cpp:1419`, `UGC.cpp:620`), the original's 2.0, 1.0 (`0x10053de0`, `0x1002b970`); a button's `SetTextColors`, `SetButtonColors` and `SetButtonTextures` setting the slots given (`UButtonWindow.cpp:157-187`), the original's all six, green and None for those left out (`0x10008940`, `0x100079f0`). Every stock call passes them, or leaves out slots at their default | The UI | Read: 129 Extension execs' defaults against the binary, these apart |
 
 ## NET: the network
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| NET.11 | A server's FAILCODE overwrites the join's error (`NetClient.cpp:232`), where the original's calls the console's `ConnectFailure` alone and keeps the FAILURE's `Rejected By Server: <text>` (`0x1040a880`): joining a server with a password shows `Rejected by the server: NEEDPW`, the original `Rejected By Server: You need to enter a password to join this game.` | Multiplayer | Read. Run due: `PassJoinConsole` against a server with `?GamePassword=dxcap`, each engine the client |
+| NET.12 | `NetParseValue` ends a value at `)` and matches a key anywhere (`NetClient.cpp:84-104`), where Core's Parse ends it at a space, CR, LF, tab or comma and skips a match straight after a letter or digit (`0x10146bc0`, `appStrfind` `0x10145ca0`): a DXEngine server logs `JC(1)` in as `JC(1`, losing its class, team, skin and password (`NetServer.cpp:344`), and HELLO's `VER=` is found in `MINVER=` | Multiplayer | Read. Run due: `ParenJoinConsole` against each engine's server, the server's login line |
+| NET.13 | In a URL a `/` is kept in the map's name (`UnrealURL.cpp`), where the original's FURL takes a map, a `/` and a portal for the map and its portal, and a second `/` for no URL (`0x103f7b60`); NATIVES.md calls it the original's. Other URL departures, none on a stock path: `HasOption` matching `name=value` (the original's whole option, `0x103f9df0`), the protocol compared with case, no URL ever invalid (the original refuses a space in an option or portal, a `/` not followed by `/`, an empty one), a drive letter keeping the portal and protocol, a relative URL naming a host without a port taking the default | Multiplayer | Read (the sweep's). Run due: `open 01_NYC_UNATCOIsland/tunnel_drop_nyc` in both |
+| NET.14 | Small network differences: a login with a FailCode and no Error refused (`Engine::PreLogin`), the original's on an Error alone (`0x1039f780`); `UTcpLink::SendText` answering the length without its CR LF in line mode and queueing with no socket (`UTcpLink.cpp:420-432`), the original 0 with none, else the length with them (IpDrv `0x10708870`); a client travel's info from the level's own, every player exported (`CreateTravelInfo`), the original's the viewport's actor alone, the level's for `?RESTART` alone (`0x1038fe90`); `open` and `start` taking one word, the original's the rest of the line (`0x1038a030`) | Multiplayer | Read |
 
 ## REN: the renderer
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| REN.31 | Auto-panned surfaces scroll 64 texels a second by the zone's pan speed (`Render/RenderSubsystem.cpp:36`, `:145-146`, `:155-156`), counted in a float from the engine's start across levels, where the original's pan is the zone's speed x the level's `TimeSeconds` x 35 x 256, made an int, masked to 18 bits, x 1/256 (Render.dll `0x10b1a628`-`0x10b1a652`, V at `0x10b1a6f6`): 35 texels a second, wrapping at 1,024 from the level's own time. The sky's cloud banks (`ClenCloudBank_A`, `_B`, on some 40 maps) drift 1.83 times as fast | The scene's pixels | Read: the constants in Render.dll's file, 35.0 at `0x10b2a8b0`, 256.0 at `0x10b2b2f8`, 1/256 at `0x10b2a810`, and the code between (`flds 0x39c` the zone's speed, `fmuls 0x478` the level's time, `and 0x3ffff`) |
+| REN.32 | A light's texels are not held to the rectangle Render.dll lights (`Light/LightmapBuilder.cpp:170-211`; `LE_Cylinder` every texel, `Light/LightEffect.cpp:361-368`), where the original's `SetupLight` gives each light the texels within \|axis\| x sqrt(max(0, 1.05 r^2 - h^2)) of its foot on the surface's plane, clamped to the map, and every shape runs over that alone (`0x10b05fa0`, `0x10b066a2`-`0x10b06865`; the cylinder `0x10b04a80`): a moving cylinder light lights a disc of its radius where the original's lights a square (none on the stock maps); the 425 stock cylinder lights a few texels more at the pool's far edge (`02_NYC_BatteryPark`'s `Light230`, up to 68 of 254); the far band of a non-incidence or shell light (MuzzleFlash, ExplosionLight, the augmentation's Beam, 12 Spotlights) | Lighting | Read. Run due: `LightConsole` with `Effect=17 Spawn=300 View=600`, both at 1024x768, the square against the disc; the sweep's census of the stock cylinder lights' texels |
+| REN.33 | An `LE_OmniBumpMap` light lights surfaces (`Light/LightEffect.cpp:39`), where the original's gives an ownerless bump-map light kind 3, which no light map takes (`AddLight` `0x10b08b30`, `0x10b08b85`; `SetupForSurf` `0x10b06c90` merges kinds 0 to 2); render-dll.md's light maps give it the plain shape. No stock light uses it | Lighting | Read. Run due: `LightConsole` with `Effect=15 Spawn=64` |
+| REN.34 | A mover's faces all take the mover's zone, its ambient light, pan speeds and fog (`Render/VisibleBrush.cpp:122-126`, `:149`, `:188-191`), where the original files each fragment into the BSP and its node takes its parent's zone on the fragment's side (`AddPolyFragment`, Engine.dll `0x1037bb00`): a mover across zones of different ambient light (`03_NYC_Airfield`'s `BreakableGlass8`, 15 against 5; `09_NYC_Dockyard`'s `DeusExMover5`; `12_Vandenberg_Cmd`'s `DeusExMover2` and `5`) | Draw order and movers | Read. Run due: `GlassConsole` with `GlassName=BreakableGlass8` on `03_NYC_Airfield`, with and without `Flip` |
+| REN.35 | Surface flags and textures no stock map reaches: `PF_SmallWavy` not drawn (`RenderSubsystem.cpp:139-157`), the original's U + 8 sin t + 4 cos 2.3t and V + 8 cos t + 4 sin 2.3t; detail and macro textures each locked at its own frame and the macro taken from the base material (`VisibleNode.cpp:76-92`, `:131`, `VisibleBrush.cpp:155-170`), the original's both from `AnimCurrent` as it is, so the Matrix sprite on a macro surface passes an empty texture; the client's `NoLighting` not taken for meshes (`VisibleMesh.cpp:353`, `:653`; `0x10b26291`); a pawn's spotlight aimed by `Rotation` (`LightEffect.cpp:270`), the original's by its view rotation (`0x10b04f80`) | Lighting | Read |
+| REN.36 | A realtime texture is converted and sent to the device again at every draw of it in the frame it changed (`UTexture.cpp:104-112`, each draw's TextureInfo carrying the flag, every device sending it whole), its reason gone since one copy per texture (DXEngine 1ccba4c3); on the software device each such draw also forces a mid-frame `DrawRecorded` (`SoftwareRenderDevice.cpp:289`, `:307`); `UTexture.cpp:98-102`'s comment is wrong now. No change to the picture, a cost wherever a fire, water or scripted texture covers several nodes, worst on the software device and the Smart Pro |  | Read. Run due: the uploads counted per frame (the sweep's `realtime-reupload-count.diff`) on 15_Area51_Bunker's flames, then the frame time A/B |
+| REN.37 | The devices disagree at the near plane: the software device and D3D11 clip every frame at view z 1 (`SoftwareRenderDevice.cpp:665-672`, `D3D11RenderDevice.cpp:2119`), Vulkan and desktop GL only in a mirror's frame, clamping the depth otherwise (VK.2's fix), GL ES at the near plane; ENGINE.md:572 says the software device clips as Vulkan does. The original likely projects no vertex nearer than 1 (`DrawLodMesh` `0x10b0ea80`, `0x10b0f8db`), how it cuts such a face not read | The software device | Read. Run due: a mesh 0.5 units before the eye on each device, and the original's |
+| REN.38 | GL's uploads check a mip's size alone, not its bytes against `MipBytes` (`GLUploadManager.cpp:34`, `:124`), where Vulkan, D3D11 and the software device check them, and `UTexture.cpp:52` pads uncompressed mips alone: a mod's short DXT1 mip reads past its data on GL and GL ES; GL caps at 16,384, not `GL_MAX_TEXTURE_SIZE`, and throws on a texture over it where Vulkan draws white |  | Read. Run due: an ASan build with a hand-made .utx |
+| REN.39 | Device edges: the Vulkan device requires `VK_KHR_sampler_mirror_clamp_to_edge` (`VulkanRenderDevice.cpp:35`), used for clamped tiles alone, so a GPU without it falls to the software device where GL clamps to the edge (the aarch64 boards); the swapchain takes the surface's first format without B8G8R8A8_UNORM and sRGB-nonlinear (`DXGPU/src/vulkanswapchain.cpp:93`), an sRGB one doubling the gamma; the single-texture bindless path never clears a full array (`VulkanRenderDevice.h:210`); GL flushes its texture cache at each window resize (`GLRenderDevice.cpp:182`); D3D11's base and macro pans share a cache entry (`D3D11RenderDevice.cpp:1582-1586`), E12.4's whole-set check not carried to it, its present and read-back passes binding no sampler, and its scene shader Surreal Engine's (no detail bands, a 1x macro), within the To do's D3D11 parity |  | Read (the sweep's) |
 
 ## AUD: the audio
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| AUD.9 | The Music slider and every music fade are linear (`UDXEngineAudioDevice.cpp:252-255`, `:648-649`, `Audio/AudioDevice.cpp:321-324`), where Galaxy squares the music's volume as it mixes (`SetVolumes` `0x106061b0` gives `glxSetMusicVolume` the fade x Music/255 x 127, the mixer gains a music voice by 2v^2/32768, `0x106152df`-`0x10615327`) and a fade falls by dt (or x0.2, x3) to 0 at its time, then holds silent 2 x Latency before the song changes (`Update` `0x10609510`): at the default 153 the music some 4.5 dB louder than the original's, 12.5 dB at 64, half-way through a fade -5.4 dB against -12; galaxy-dll.md omits the square and the silence | Sound | Read. Run due: the sweep's `MusicConsole` with `DXCAP_RECORD=1 DXCAP_MUSIC=1`, `sound.py --levels` |
+| AUD.10 | A song's IT mix volume is applied by OpenMPT (`AudioSource.cpp:380-401`, libopenmpt's `m_nSamplePreAmp`), where Galaxy's IT loader reads the global volume, speed and tempo alone, never the mix volume, separation or the samples' global volume (`0x10628990`): against the songs of mix volume 48 (Title, LibertyIsland, NYCStreets, HongKong), BatteryPark (100) +6.4 dB, UNATCO, VersaLife, ParisChateau and Lebedev (90) +5.5, Intro (82) +4.6, HongKongCanal and NavalBase (80) +4.4; and OpenMPT pans linearly where Galaxy takes its square-root table (`0x106153d4`), resamples by an 8-tap sinc where Galaxy interpolates linearly, and plays the MJ12 and UNATCO samples of global volume 36 and 57 quieter | Sound | Read (the sweep's `itinfo.py` over the stock songs). Run due: `LoadingConsole` with `DXCAP_RECORD=1 DXCAP_MUSIC=1`, the music's level on the island against UNATCO HQ |
+| AUD.11 | With no audio output the engine does not start: `AudioDevice.cpp:44-46`, `:58-63` throw, `Engine.cpp:261` outside any catch, the Fatal Error window `Failed to initialize OpenAL device`, exit 1, where the original logs `Audio initialization failed.` and plays on silent (`UEngine::InitAudio` `0x1037fe50`, engine-dll.md, starting the game engine): a machine with no sound card, server or endpoint | Sound | Run: DXEngine with `DXCAP_AUDIO=1` and `ALSOFT_CONF` of the wave driver with no file (the sweep's `alsoft-nodevice.conf`): `DXEngine error: Failed to initialize OpenAL device`, exit 1 |
+| AUD.12 | At a fade's end the old song can play a burst at full volume: the same `Update` sets the full gain at once while `PlayMusic` and `SetMusicOrder` only flag the music thread, which stops the old queued buffers (up to some 46 ms) up to 5 ms later (`UDXEngineAudioDevice.cpp:657-688`, `:252-255`; `AudioDevice.cpp:144-151`, `:166-172`, `:357-380`), where Galaxy holds 2 x Latency silent and changes the song in one locked `Update` | Sound | Read. Run due: `MusicConsole`'s three fades, the 5 ms envelope 1.0 to 1.2 s after each, the original's silent |
+| AUD.13 | The music's source lacks `AL_DIRECT_CHANNELS_SOFT` (`AudioDevice.cpp:73-74`), so on headphones, where OpenAL Soft turns HRTF on by itself, the music becomes two virtual speakers at 30 degrees, narrowed and coloured, where Galaxy adds it to its output as it is; the sounds' mix goes direct | Sound | Read. Run due: a `DXCAP_RECORD=1` run with `stereo-encoding = hrtf` (the sweep's `alsoft-hrtf.conf`), the music's correlation against a plain run |
+| AUD.14 | Small audio differences: `UseStereo=False` folds the sounds' mix alone (`AudioDevice.cpp:468-481`), the music staying stereo, where NATIVES.md says mono and Galaxy's whole output is; `[DeusEx.DeusExGameEngine] UseSound=False` read nowhere (`PropertyOffsets.cpp:2092`), the original making no audio subsystem; a song that fails to load throws on the main thread (`UDXEngineAudioDevice.cpp:610-626`, `:679`, `AudioSource.cpp:384-391`), Galaxy logging `glxLoadMusic failed` and playing on | Sound | Read |
 
 ## ENG: the engine, its input and its config
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| ENG.17 | An exec function's parameters are not taken as the original's (`Engine::ExecCommand`): a class or object parameter fails, `Unsupported value type`, and the command is unknown; a bool is true for `1` and `true` alone, with case; a parameter left out that is not optional passes 0 and the call is made. The original imports each by its property's ImportText, a failure logging Core's `BadProperty` and making no call (`ScriptConsoleExec` `0x10150860`; bools `0x10166380`, objects `0x10166e20`, classes `0x10167110`): with cheats on, `killall`, `augadd`, `viewclass`, `cheatview`, `showclass` and `getweapon` do nothing, `behindview True` and `invisible True` turn the setting off, a bare `behindview` calls it with False | Small | Run: `ExecParmConsole` with cheats on: `killall Terrorist` 0 terrorists after in the original, 29 in DXEngine; `behindview True` True against False; a bare `behindview` True (refused) against False; `augadd AugSpeed` had against not |
+| ENG.18 | Latent: `Array::at` checks no bound, and `Logger::LoadLog` reads each item's entries 0 to 2 unchecked (`Logger.cpp:145-157`), so a malformed log given to `--showcrashreport` reads past an empty array; `CheckCrashReporter` is compiled on every build |  | Read |
 
 ## WIN: the game window
 
-None open.
+| ID | What | Said in NATIVES.md | Proof |
+|---|---|---|---|
+| WIN.9 | The Fatal Error window widens each byte of its text as Latin-1 (`UI/ErrorWindow/ErrorWindow.cpp:105-124`, `:143-149`, `:268`, `:293-294`, its comment too), where the engine's text is UTF-8 since VM.5's stage 7 (e148247e): an `é` in a path, map name or logged line shows as `Ã©`, in the window and the copied text. E16c.22 regressed |  | Read. Run due: E16c.22's own, the engine started on `--url=café.dx`, a shot of the window |
+| WIN.10 | The SDL3 window presses the wheel once per scroll event, fractions included (`DXWidgets/src/window/sdl3/sdl3_display_window.cpp:1011-1022`; the dev Wayland backend `wayland_display_backend.cpp:398-404` too), where SDL 3.4 sends fractions on X11's XI2 and on Wayland and keeps the whole notches in `integer_y`, unread; the original one press per notch (WinDrv `0x1110b2bd`): under linux-x86_64's launcher a high-resolution wheel or a touchpad moves the belt several slots a notch | The UI | Read. Run due: a uinput mouse sending `REL_WHEEL_HI_RES` 15 eight times, the belt logged |
+| WIN.11 | The Fatal Error window is 1500x800 DIPs centred on the primary screen (`ErrorWindow.cpp:61-68`), so under that (1366x768; 1920x1080 at 150%; 2560x1440 at 200%) its caption, close box and buttons fall off the screen or under the taskbar, and on Windows Alt+F4 and Alt+Space do nothing in an SDL3 window (SDL answers `WM_SYSKEYDOWN` 0) and the log view takes no Esc |  | Read. Run due: `--url=nomap.dx` on a 1280x720-DIP desktop, a shot |
+| WIN.12 | Window edges: Alt+Enter back to a window on X11 (SDL3) puts it at the display's corner, `GetFrameGeometry` read right after `ShowNormal` while still full screen (`DXEngine/GameWindow.cpp:36-46`, `sdl3_display_window.cpp:167-180`); SDL3 lists the primary display's modes and size (`sdl3_display_backend.cpp:240`, `:253`) but goes full screen on the window's (`sdl3_display_window.cpp:212`); the X11 paste asks for `STRING`, not `UTF8_STRING`, and serves its own selection as Latin-1 with `?` past it (`x11_display_window.cpp:809`, `:830`, `:1409`), so an Omega copied and pasted comes back `?` (NATIVES.md says UTF-8 both ways; `PasteConsole` passes as wl-copy serves UTF-8 under `STRING`); the dbus file dialog (`dbus_open_file_dialog.cpp:200`, `:227`, `:317`; `dbus_save_file_dialog.cpp:12-22`) passing a null message on a lost bus, unescaping `%20` alone and dropping the save dialog's filters (Save Report, MSVC's alone) | The UI | Read. Run due: `PadConsole` with `axis-keys.txt` and `DXCAP_BACKEND=SDL3`, `xwininfo` after the toggle back |
 
 ## MAIN: the recreation (deusex-launcher's main)
 
@@ -113,40 +187,34 @@ None open.
 | DX | `Accessed None` in an infolink's end (`ConPlayBase.TerminateConversation`, `con.ClearBindEvents`) as a map exit is taken, a playthrough | The original's script: the infolink had ended and set `con` None, and the travel's `PreTravel` (`DeusExPlayer.PreTravel`, `DataLinkPlay.AbortAndSaveHistory`) ends it a second time during its END TRANSMISSION blink; no `DataLinkPlay` is saved (a transient class), nothing is lost |
 | PKG | The belt changes no weapon after a save is loaded, nor does a conversation put one away (a playthrough) | The save held it: a new game begun from inside the game with the pistol drawn had brought the old pistol back beside the new one, the original's bug as much as DXEngine's (a destroyed actor not travelling, by choice in [`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md); `NewGameConsole`) |
 | EXT | A viewport window's frame takes its canvas frame's corner in the original (`Extension.dll` `0x1004acad`), which a render viewport would move, a conversation's letterbox, where DXEngine's canvas frame is the screen's (EXT.22, from EXT.14's reading) | The canvas's frame is the whole view's while the windows draw: `XRootWindow::PreRender` (`0x1003a760`) pushes the frame it has and gives the scene the render viewport's, and `PostRender` (`0x1003a960`) keeps a copy of that one for the scene's projections and puts the pushed one back (`0x1003aa11`) before `PaintWindows`; so the corner a viewport window adds is (0, 0), as DXEngine's canvas has it |
+| DX | `ConBindEvents` binds another of the actors sharing a name than the original's, its walk the level's actors where the original's walks pawns, decorations and players by object index, the last offered winning (`DXEngine/DXEngine/Packages/ConSys/UConversation.cpp:38-68`; ConSys.dll `0x1000fec0`) | Both engines bind the same actor in every stock case tried: `BindOrderConsole` on 06_HongKong_WanChai_Underworld, `RightHandHack`'s RightHandMan TriadRedArrow6 in both, and a Basketball spawned there with the name bound in both; on 08_NYC_Street `DL_Exit`'s and `DL_JockShipWarning`'s Jock BlackHelicopter1 in both (DXEngine's run from the menu map, as the original's). Only the order of the actors bound, listed, differs |
+| AI | The script's `ActorReachable` of a navigation point never asks the path network, where the original's answers a pawn standing at a node from it (`DXEngine/DXEngine/Native/NPawn.cpp:294`; Engine.dll `0x103bc1a0`), so an NPC on a node walks straight to an unlinked one | Not as stated: the original answers True for many unlinked nodes a pawn stands by too (`NavReachConsole`: 50 of 87 True, DXEngine 51), its answers and DXEngine's alike but for five pairs, filed as AI.9 |
 
 ## Not yet read
 
 What no sweep has read, by area: the next sweep's ground, beside the first sweep's numbers no
 commit cites ([`bugs-recovered.md`](bugs-recovered.md)).
 
-- **VM:** nothing checked against the binaries; Expression.h's visitors, PrintPrettyExpression,
-  the property classes' Copy and Compare.
-- **PKG:** IniFile and IniProperty, NameString (skimmed); the loads of UBspNodes and UPolys,
-  UMesh.
-- **PHYS:** Collision/BottomLevel's TraceRayModel, Math past rotator.h, UPawn's reach and path
-  code.
-- **AI:** the walk, fly and swim reach moves in detail; AICanSee, and the blend tween's fields,
-  against the binary; UActor_Base, Zone, Render and Conversation.
-- **DX:** the binaries for the ConListItems' names, the bleed loop and the laser's maths;
-  DeusExText's `ParseToken` past `NOTE` and `COMMENT` (`GOAL`'s case, the string `FindEndTag`
-  gives back).
-- **EXT:** UComputerWindow; UScaleWindow past its first 620 lines (its geometry and drawing);
-  the other natives' wrappers in detail; the binary past what the RE docs say.
-- **NET:** UnrealURL's parsing; the package cache (FindPackageFile, UsePackageFile); what only
-  the binary shows.
-- **REN:** BspClipper's rasterizer, the LightEffect shapes but NoneEffect and FireEngine's spark
-  kinds (skimmed); the binaries.
-- **VK:** vulkanobjects.h's command wrappers, GLSLCompiler::Compile, VulkanSurface and the
-  widget surface code.
-- **GL:** gl_load.c past its loader entry, DXWidgets' GL context code, ES drivers but Mesa's.
-- **SWD3D:** the widgets' PresentBitmap backends, D3D11's bloom and present HLSL (skimmed),
-  Wine's and Windows' behaviour at run time; nothing run.
-- **AUD:** OpenAL's and OpenMPT's output against Galaxy's; the MSVC and Windows path of
-  `-nosound`; nothing run.
-- **ENG:** CrashReporter (MSVC's alone), Array.h, JsonValue's parser, MD5, SHA1 and PEIcon
-  (skimmed); the binaries.
-- **WIN:** Wayland past its timer, the dbus and Win32 file dialogs, DXWidgets' widgets past the
-  error window's, the canvas and font code.
+- **VM:** FixedArray, Map and Pointer past their headers.
+- **PKG:** PackageManager's package finding and save folders.
+- **PHYS:** Math's mat.h, quaternion.h, FrustumPlanes, hsb and halffloat; physWalking and
+  stepUp, the BrushTracker and OverlapTest against the binary.
+- **AI:** the event manager against the binary.
+- **EXT:** UGC's drawing, the ScaleManager, ScrollArea, Tile and Clip windows against the
+  binary.
+- **NET:** replication against the binary (ReplicateActor, the actor channel's ReceivedBunch,
+  NetSerialize, NetRemote), UdpLink, the file channel's tick and destroy.
+- **REN:** a mesh's lighting (`SetupForActor`, `Light`), ShadowFromBits, OccludeBsp,
+  OccludeFrame and FDynamicSprite, the hand-written fire, water, wet and ice passes, VisibleMesh
+  past its flags, RenderCanvas, against Render.dll.
+- **GL:** the Wayland EGL context (skimmed), ES drivers but Mesa's.
+- **SWD3D:** the software device's rasterizer and SIMD in depth; Wine's and Windows' behaviour
+  at run time.
+- **AUD:** the utilities E15a's last items touched (`DXEngine/Utils`); the output against
+  Galaxy's read, not recorded.
+- **WIN:** Wayland past its timer and keymap (skimmed), the open-folder dialogs, DXWidgets'
+  widgets but the push button, the scroll bar and the log view, the canvas and font code past
+  the span layout.
 - **LCORE:** keys, theme_colors, padcurve and settings_table (skimmed); sha1.c, keys.c's
   scancodes against DXWidgets', platform/ and app/ past their callers.
 - **LAPP:** src/screens past window.c, src/core past the files the core's reading named, the
