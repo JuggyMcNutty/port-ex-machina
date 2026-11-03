@@ -13,7 +13,8 @@ A change is clean when it builds and tests there *and* builds warning-free for e
 that ships: the Smart Pro and linux-aarch64 build with the same GCC 13.2, but code linux-x86_64
 does not (the engine's SDL2 backend and the software device's NEON lanes, each port's own
 files); windows-x86_64 with Clang, code linux-x86_64 does not either (`src/platform/win32/`, the
-engine's Win32 window and D3D11), its tests passing under Wine.
+engine's Win32 window and D3D11), its tests passing under Wine; the engine at the compilers'
+default warnings, having no warning flags of its own (for the owner, bugs.md D.45).
 
 ## The repositories
 
@@ -146,8 +147,10 @@ loudly instead of leaving stale instructions:
   backticks or links, a name with a `/`, must exist (a bare file name goes unchecked), every
   link to a heading (`#anchor`) must find one, and every link into another of the repositories
   must name a branch the workspace has (the launcher's `main` and the ports `LAUNCHER-PIN.txt`
-  pins, `main` elsewhere) and resolve in that repository's checkout here. A checkout git cannot
-  read fails rather than going unchecked, and so does a missing `AGENTS.md`.
+  pins, `main` elsewhere) and resolve in that repository's checkout here; but a `NAME.md#anchor`
+  to a missing file in the same folder and any token with a `:` pass, and a commit link into
+  deusex-launcher or dx-reverse-info is counted unverifiable (bugs.md X.11). A checkout git
+  cannot read fails rather than going unchecked, and so does a missing `AGENTS.md`.
 - `scripts/engine.sh check`: the engine clone is at the commit `ENGINE-PIN.txt` names, on its
   branch.
 - `scripts/launcher.sh check`: each port's worktree is at the commit `LAUNCHER-PIN.txt` names,
@@ -155,10 +158,11 @@ loudly instead of leaving stale instructions:
 - `test_cpumode`, on trimui-smartpro: the Smart Pro's game hook, `port-hooks.sh`, run against
   stand-in spruceOS helpers: each CPU mode the launcher offers (`src/core/cpumode.c`) runs its
   own helper there, and one the hook does not know takes the launcher's default.
-- `scripts/dx.sh check` runs the first three, confirms every port has its required files,
-  checks the glibc ceiling of whatever is staged (a Windows port's floor and the DLLs its
-  programs import), and checks that a port's list of the game's builds (`src/core/gamedb.c`,
-  DXLauncher's) is the engine's (`UE1GameDatabase.h`).
+- `scripts/dx.sh check` runs the first three, confirms every port has its required files, checks
+  the glibc ceiling of whatever is staged (a Windows port's floor and the DLLs its programs
+  import; a port with nothing staged passed over, `check-abi.sh` stopping without a word at a
+  file with no GLIBC references: bugs.md X.11), and checks that a port's list of the game's
+  builds (`src/core/gamedb.c`, DXLauncher's) is the engine's (`UE1GameDatabase.h`).
 
 ## CI
 
@@ -188,9 +192,9 @@ here, so a run can be repeated on this machine:
   ([the toolchains](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#the-toolchains)).
 - A port's job fails on a compiler or linker warning in our own code, third-party code exempt
   (`scripts/ci.sh warnings`), and on a skipped test but `test_gamefiles` and `test_ui_scripts`,
-  which need the game, and `test_gpu_probe`, which needs a GPU's Mesa driver
-  (`scripts/ci.sh skips`). A failed test is named on the run's page, an annotation, without its
-  log opened (`scripts/ci.sh failed`).
+  which need the game, and `test_gpu_probe`, which needs a GPU's Mesa driver and is skipped too
+  when its probe fails (bugs.md LAPP.9) (`scripts/ci.sh skips`). A failed test is named on the
+  run's page, an annotation, without its log opened (`scripts/ci.sh failed`).
 - The recreation's job is `scripts/recreation.sh test`: its build, with the runner's compiler
   and SDL2, and its tests.
 
@@ -200,7 +204,9 @@ build reads (the engine's harness, its `tools/perf/`, `tools/host-tools.sh` and
 `tools/natives_audit.py`; the workspace's `LICENSE`, `tools/probes/` and
 `scripts/check-docs.sh`) starts no run, and a push of pins whose commits change only those
 builds nothing. The list is `scripts/ci.sh`'s `is_code`; each workflow's `paths` filter says the
-same.
+same. A run still pending on `main` is cancelled by the next push's, and each run diffs its own
+push alone, so a code push pending when a docs-only pin push follows is never built or released
+(bugs.md X.10).
 
 **Releases**, each with notes naming the commits built and linking what changed since the one
 before it (`scripts/ci.sh publish`):
@@ -208,7 +214,7 @@ before it (`scripts/ci.sh publish`):
 | Repository | Tagged | Holds, for each port | When |
 |---|---|---|---|
 | this one | `<date>-<sha8>`, its commit | `DX-<port>`: the app, launcher and engine | every run of the pins that builds |
-| DXEngine | `<date>-<sha8>`, the engine's commit | `DXEngine-<port>`: the engine alone, its notices with it | when its code changed since its last |
+| DXEngine | `<date>-<sha8>`, the engine's commit | `DXEngine-<port>`: the engine alone, its notices with it | when its code changed since its last, not when its build alone did (the launcher branch's `deps.lock`, its `engine.cmake`, the toolchains: bugs.md X.9) |
 | deusex-launcher, one per port | `<port>-<date>-<sha8>`, the branch's commit | `DXLauncher-<port>`: the launcher alone | when that branch's code changed since its last |
 
 Each file is a tarball, or a zip for the Windows port and the Smart Pro (the Smart Pro's app

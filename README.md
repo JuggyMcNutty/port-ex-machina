@@ -12,8 +12,9 @@ launcher made for it, on Linux, Windows and the TrimUI Smart Pro.
 </p>
 
 **The game is playable on DXEngine.** The opening missions are played by hand, every map loads
-and an ending plays to the credits; the game is not yet played through end to end.
-[Report a bug](#reporting-bugs).
+and an ending plays to the credits; the game is not yet played through end to end, and on Linux
+cannot be yet: Mission 14's travels with a space before their `#` find no map there (bugs.md
+PKG.20). [Report a bug](#reporting-bugs).
 
 **You need your own copy of Deus Ex, version 1112fm**, GOG's or Steam's
 ([which copies play](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#an-install)).
@@ -158,7 +159,7 @@ How the project is worked on, where it stands and what is open: [`AGENTS.md`](AG
 Clone this repository into an empty folder; `fetch` puts the others beside it.
 
 ```sh
-mkdir deusex && cd deusex     # the parent folder: any name
+mkdir deusex && cd deusex     # the parent folder: any name without a space (bugs.md X.8)
 git clone https://github.com/JuggyMcNutty/port-ex-machina.git && cd port-ex-machina
 scripts/dx.sh fetch           # once: the engine, the launcher's main and port branches, the RE
 scripts/dx.sh test [<port>]   # unit tests: linux-x86_64's (after its deps), or another port
@@ -214,7 +215,7 @@ Every repository is a folder of its own in one parent folder, none inside anothe
 none of them owns. The parent is not versioned itself.
 
 ```
-deusex/                  the parent folder (any name)
+deusex/                  the parent folder (any name without a space: bugs.md X.8)
   port-ex-machina/       this repository:
     AGENTS.md              rules, status, decisions, to do, open items (CLAUDE.md imports it)
     ENGINE-PIN.txt         the engine's version: DXEngine's repository, branch and commit

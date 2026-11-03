@@ -122,12 +122,15 @@ Decided work for later sessions, each deleted when it is done.
 
 Bugs found and not yet fixed: [`docs/bugs.md`](docs/bugs.md), each fix citing its ID. Players'
 reports: each repository's GitHub issues ([which takes what](README.md#reporting-bugs)).
-Known defects, each in the doc that owns its code: DXLauncher's (linux-x86_64, linux-aarch64)
+Known defects, each by its bugs.md ID in the doc that owns its code: DXLauncher's
+(linux-x86_64, linux-aarch64)
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#known-defects),
-windows-x86_64's copy of it on Windows' own calls
+windows-x86_64's copy of it
 [`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/windows-x86_64/docs/LAUNCHER.md#known-defects),
-and the Smart Pro's tailored copy of it
-[`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects).
+the Smart Pro's tailored copy of it
+[`docs/LAUNCHER.md`](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/docs/LAUNCHER.md#known-defects),
+and the recreation's
+[README](https://github.com/JuggyMcNutty/deusex-launcher/blob/main/README.md#known-defects).
 Where the engine differs from the original: each section's "Differs" in
 [`NATIVES.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md), the
 owner's "by choice" or open by its bugs.md ID.
