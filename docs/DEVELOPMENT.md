@@ -136,6 +136,7 @@ written this way:
     a launcher's `shot` in a `DXL_UI_SCRIPT` -- and taken again when what they show changes,
     with every copy: this repository's README shows copies of DXEngine's and the launcher's,
     and a shot of its own.
+12. **No stage label** in a README ("alpha", "beta"): its status says what plays.
 
 Editing docs with string replacement fails silently when the pattern does not match: prefer full
 rewrites, or scripted replacements that assert the pattern was found.
@@ -268,3 +269,6 @@ These apply everywhere:
   current engine does not log). Stage before running -- and never copy over an engine that still
   runs (`stage` into the app it runs from; `recreation.sh install` into `gamefiles/System`): the
   copy fails with `Text file busy` and the old binary stays.
+- **Every port's engine builds from the one tree** (`scripts/engine.sh build <port>`): an edit
+  made while a build runs goes into that build. Builds, harness runs and the Wine tests share
+  that tree, the desktop's display and the Wine prefix: run them one at a time.

@@ -200,7 +200,7 @@ DXLauncher's OS dependencies are few and named: each behind a header in
 | Waiting on that, and on a signal | `platform/wait.h` | `wait.c`: a pipe each, `poll` | `wait.c`: an event each, `WaitForMultipleObjects` |
 | The file system where it differs: the launcher's own path, a path's root, links, atomic writes | `platform/fs.h` | `fs.c`: `/proc/self/exe`, `realpath`, `symlink`, `mkstemp`, `fsync`, `rename` | `fs.c`: the wide calls, `GetFinalPathNameByHandleW`, `CreateSymbolicLinkW`, `CREATE_NEW`, `FlushFileBuffers`, `MoveFileExW` |
 | Its folders | `platform/folders.h` | `folders.c`: the XDG base directories | `folders.c`: the Known Folders |
-| How a program it started ended; its environment | `platform/os.h` | `os.c`: the signals' names, `setenv` | `os.c`: the exception codes' names, `_wputenv_s` |
+| How a program it started ended; its environment; a key's code in the keyboard's layout | `platform/os.h` | `os.c`: the signals' names, `setenv`; no key code | `os.c`: the exception codes' names, `_wputenv_s`; `MapVirtualKeyExW` |
 | What ends a start from outside | `platform/startup.h` | `startup.c`: SIGINT, SIGTERM, SIGHUP | `startup.c`: the console's Ctrl+C, Ctrl+Break and closing |
 | The server browser's network | `platform/net.h` | `net.c`: `getaddrinfo`, TCP and UDP sockets, `poll`, and for the local network's servers `SO_BROADCAST` to each interface's broadcast address from `getifaddrs` | `net.c`: Winsock 2, `WSAPoll`, each adapter's broadcast address from `GetAdaptersAddresses` |
 
