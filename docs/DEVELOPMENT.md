@@ -13,8 +13,10 @@ A change is clean when it builds and tests there *and* builds warning-free for e
 that ships: the Smart Pro and linux-aarch64 build with the same GCC 13.2, but code linux-x86_64
 does not (the engine's SDL2 backend and the software device's NEON lanes, each port's own
 files); windows-x86_64 with Clang, code linux-x86_64 does not either (`src/platform/win32/`, the
-engine's Win32 window and D3D11), its tests passing under Wine; the engine at the compilers'
-default warnings, having no warning flags of its own (bugs.md D.45, ruled to change).
+engine's Win32 window and D3D11), its tests passing under Wine; the engine with `-Wall` on
+DXCommon, DXEngine, DXWidgets and DXGPU, the third-party code in them too where it builds clean
+(glslang and VMA at the compilers' defaults, picoPNG without its one `maybe-uninitialized`;
+OpenMPT and OpenAL Soft projects of their own).
 
 ## The repositories
 

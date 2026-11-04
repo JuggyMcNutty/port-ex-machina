@@ -19,7 +19,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 8 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 4 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 3 |
@@ -47,7 +47,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| D.45 | The engine builds with no warning flags of its own (`DXEngine/CMakeLists.txt`, the ports' engine.cmake), so CI's warning-free gate checks it at the compilers' defaults, blind to code only a cross port compiles (Win32, D3D11, SDL2, NEON); the launcher builds with `-Wall -Wextra -Wshadow -Wvla`. Ruled: `-Wall` on DXCommon, DXEngine, DXWidgets and DXGPU, measured first |  | Read |
 
 ## VM: the script VM and the object system
 
