@@ -12,9 +12,8 @@ launcher made for it, on Linux, Windows and the TrimUI Smart Pro.
 </p>
 
 **The game is playable on DXEngine.** The opening missions are played by hand, every map loads
-and an ending plays to the credits; the game is not yet played through end to end, and on Linux
-cannot be yet: Mission 14's travels with a space before their `#` find no map there (bugs.md
-PKG.20). [Report a bug](#reporting-bugs).
+and an ending plays to the credits; the game is not yet played through end to end.
+[Report a bug](#reporting-bugs).
 
 **You need your own copy of Deus Ex, version 1112fm**, GOG's or Steam's
 ([which copies play](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#an-install)).
@@ -162,11 +161,12 @@ Clone this repository into an empty folder; `fetch` puts the others beside it.
 mkdir deusex && cd deusex     # the parent folder: any name without a space (bugs.md X.8)
 git clone https://github.com/JuggyMcNutty/port-ex-machina.git && cd port-ex-machina
 scripts/dx.sh fetch           # once: the engine, the launcher's main and port branches, the RE
-scripts/dx.sh test [<port>]   # unit tests: linux-x86_64's (after its deps), or another port
-                              # branch's host build, then the port's own (Windows' under Wine)
+scripts/dx.sh deps    <port>  # toolchains and sysroot, if the port needs them (linux-x86_64's
+                              # before any test)
+scripts/dx.sh test [<port>]   # unit tests: linux-x86_64's, or another port branch's host
+                              # build, then the port's own (Windows' under Wine)
 scripts/engine.sh status      # the pin and the engine's branch
 
-scripts/dx.sh deps    <port>  # toolchains and sysroot, if the port needs them
 scripts/dx.sh build   <port>  # launcher, then engine
 scripts/dx.sh stage   <port>  # build/<port>/app: exactly what ships
 scripts/dx.sh run     <port>  # native ports, and Windows' under Wine
