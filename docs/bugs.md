@@ -135,7 +135,7 @@ owner rules.
 |---|---|---|---|
 | AUD.14 | Small audio differences: `UseStereo=False` folds the sounds' mix alone (`AudioDevice.cpp:482-489`), the music staying stereo, where NATIVES.md says mono and Galaxy's whole output is; `[DeusEx.DeusExGameEngine] UseSound=False` read nowhere (`PropertyOffsets.cpp:2092`), the original making no audio subsystem | Sound | Read |
 | AUD.15 | The music is heard as it changes (`UDXEngineAudioDevice.cpp`, the music thread), where the original's comes some 0.93 s after the sounds of the same tick: in `MusicConsole`'s recording (Wine, the game's `Latency` 40) every music change, the Sound menu's instant slider too, lands 0.92 to 0.96 s after the beep a second before it, a song's first sound 0.95 s after its `ClientSetMusic`, where DXEngine's are within 0.03 s; Galaxy's music rendered that far ahead of its mix (40,960 frames at 44.1 kHz) or Wine's output, unread | Sound | Run: `MusicConsole`, both engines (`sound.py --music`, the onsets and the steps' times). Read due: Galaxy's music stream (`glxStartOutput` `0x10613350`, the module player's buffer) |
-| AUD.16 | A song's pans and position, which the module rewrite (`DXEngine/Audio/GalaxyMusic.cpp`) cannot give: OpenMPT pans linearly where Galaxy takes square roots (`0x106153d4`), so with the song played 3 dB up to match a centred channel a hard-panned one plays 3.2 dB over the original's (`MusicConsole`'s pair, -10.4 dBFS against -13.6), and without Galaxy's leak of a pan held to 127 of 128 into the other side (21 dB under); Galaxy sets a song's pans, speed and tempo only as it enters order 0 (`0x10615710`), so a song started at another order plays centred and slow (the pair so loaded: centred in the original, panned in DXEngine), and each loop re-centres a channel a pattern panned (LibertyIsland's 2 and 3, eight of HKClub's); a section change silences the voices and plays on from the section, where libopenmpt replays the song to it (`seek.sync_samples`); the music saturates at 16 bits before the sounds are added (`0x106146a0`). An exact pan law needs libopenmpt's mixer changed (`Thirdparty/openmpt`, a drafted patch): the owner's to rule | Sound | Run: `MusicConsole`'s pair, both engines. Read: galaxy-dll.md, an IT song |
+| AUD.16 | A song's start, loop and sections, which the module rewrite (`DXEngine/Audio/GalaxyMusic.cpp`) cannot give: Galaxy sets a song's pans, speed and tempo only as it enters order 0 (`0x10615710`), so a song started at another order plays centred and slow (`MusicConsole`'s first pair, so loaded: centred in the original, -16.8 dBFS a side, panned in DXEngine, -13.5 dBFS on its own side), and each loop re-centres a channel a pattern panned (LibertyIsland's 2 and 3, eight of HKClub's); a section change silences the voices and plays on from the section, where libopenmpt replays the song to it (`seek.sync_samples`); the music saturates at 16 bits before the sounds are added (`0x106146a0`) | Sound | Run: `MusicConsole`'s first pair, both engines. Read: galaxy-dll.md, an IT song |
 
 ## ENG: the engine, its input and its config
 
@@ -251,7 +251,10 @@ What no sweep has read, by area: the next sweep's ground.
 - **SWD3D:** the software device's rasterizer and SIMD in depth; Wine's and Windows' behaviour
   at run time.
 - **AUD:** the utilities E15a's last items touched (`DXEngine/Utils`); the output against
-  Galaxy's read, not recorded.
+  Galaxy's read, not recorded; whether a sound's update sets only the pan its voice moves to,
+  which Galaxy's mixer moves by at most 512 of 32,767 each time it works out the gains
+  (`0x10615329`), where `GalaxyMixer` sets a sound's at once (a song's commands and its order
+  0 set both, `0x106177aa`, `0x106159aa`).
 - **WIN:** Wayland past its timer and keymap (skimmed), the open-folder dialogs, DXWidgets'
   widgets but the push button, the scroll bar and the log view, the canvas and font code past
   the span layout.
