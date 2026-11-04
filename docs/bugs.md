@@ -19,7 +19,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 8 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 3 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 9 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 5 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 3 |
@@ -47,14 +47,9 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| D.39 | A pawn's bleeding with `ClotPeriod` at 0 or under stops at once (`UScriptedPawn.cpp:307`), where the original divides by it: infinity resets the bleed, a negative period grows the wound, a 0 s frame gives a NaN that sticks. No map sets `ClotPeriod`. Recommendation: keep, by choice | Every NPC | Read: DeusEx.dll's bleed loop (`0x100195a0`), otherwise alike (the sweep's) |
-| D.40 | The NoSmooth samplers keep 8x anisotropy on Vulkan and GL (`Vulkan/SamplerManager.cpp:32,37`, `GLRenderDevice.cpp:620-623`), so a point-sampled texture at a slant is blended where `D3DDrv`'s is pixel-exact; D3D11 points them. The anisotropy by choice covers smooth filtering. Recommendation: point-sample NoSmooth without anisotropy | The scene's pixels | Read: d3ddrv-dll.md's blending table; RADV averages nearest plus anisotropy (ENGINE.md:463, a glyph). Run due: a NoSmooth surface at a grazing angle, RADV against `D3DDrv` |
-| D.41 | GL ES draws with no mip bias (`GLRenderDevice.cpp:632` sets -0.5 on desktop GL alone), so the Smart Pro takes mips half a level coarser than `D3DDrv`'s fit. Recommendation: the bias through the ES shader's `texture()` | The scene's pixels | Read; ENGINE.md states it as a fact, not by choice |
-| D.42 | A full-screen game losing the focus stays full screen, where the original leaves full screen and minimises (WinDrv `0x1110a0a3`); SDL3 minimises a real exclusive mode alone, never on Wayland or Xwayland or in desktop full screen. Recommendation: keep, by choice | The UI | Read (the sweep's) |
-| D.43 | Under `-firstrun` DXLauncher keeps a stored FirstRun above 1100 (`config.h:56-61`, `run.c:706`, `:712` on trimui-smartpro), where the original writes 1100 and so does main (`launch.c:416`); LAUNCHER.md calls it the original's. Nothing writes more. Recommendation: take the original's |  | Read |
-| D.44 | The recreation forwards a second start's command line without the program's path (`main/src/launch/launch.c:315-325`), where the original sends the raw line cut at its first space, so a path with a space (Steam's `Deus Ex`, GOG's `GOG Games`) is cut inside itself and its receiver opens a piece of it (launch-flow.md). Not in main's README. Recommendation: keep, by choice, and say so there |  | Read |
-| D.45 | The engine builds with no warning flags of its own (`DXEngine/CMakeLists.txt`, the ports' engine.cmake), so CI's warning-free gate checks it at the compilers' defaults, blind to code only a cross port compiles (Win32, D3D11, SDL2, NEON); the launcher builds with `-Wall -Wextra -Wshadow -Wvla`. Recommendation: `-Wall` on DXCommon, DXEngine, DXWidgets and DXGPU, measured first |  | Read |
-| D.46 | The recreation on a CPU without MMX (any not x86) takes the Detail page's low sound settings, 11025 Hz among them (`main/src/platform/posix/machine.c:43`, `main/src/core/detail.c:31-37`), as the original on such a machine would. Recommendation: keep |  | Read |
+| D.40 | The NoSmooth samplers keep 8x anisotropy on Vulkan and GL (`Vulkan/SamplerManager.cpp:32,37`, `GLRenderDevice.cpp:620-623`), so a point-sampled texture at a slant is blended where `D3DDrv`'s is pixel-exact; D3D11 points them. The anisotropy by choice covers smooth filtering. Ruled: point-sample NoSmooth without anisotropy | The scene's pixels | Read: d3ddrv-dll.md's blending table; RADV averages nearest plus anisotropy (ENGINE.md:463, a glyph). Run due: a NoSmooth surface at a grazing angle, RADV against `D3DDrv` |
+| D.41 | GL ES draws with no mip bias (`GLRenderDevice.cpp:632` sets -0.5 on desktop GL alone), so the Smart Pro takes mips half a level coarser than `D3DDrv`'s fit. Ruled: the bias through the ES shader's `texture()` | The scene's pixels | Read. Run due: a scene on the Smart Pro, its mips against desktop GL's |
+| D.45 | The engine builds with no warning flags of its own (`DXEngine/CMakeLists.txt`, the ports' engine.cmake), so CI's warning-free gate checks it at the compilers' defaults, blind to code only a cross port compiles (Win32, D3D11, SDL2, NEON); the launcher builds with `-Wall -Wextra -Wshadow -Wvla`. Ruled: `-Wall` on DXCommon, DXEngine, DXWidgets and DXGPU, measured first |  | Read |
 
 ## VM: the script VM and the object system
 
