@@ -19,7 +19,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 3 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 8 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 4 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 3 |
@@ -47,8 +47,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| D.40 | The NoSmooth samplers keep 8x anisotropy on Vulkan and GL (`Vulkan/SamplerManager.cpp:32,37`, `GLRenderDevice.cpp:620-623`), so a point-sampled texture at a slant is blended where `D3DDrv`'s is pixel-exact; D3D11 points them. The anisotropy by choice covers smooth filtering. Ruled: point-sample NoSmooth without anisotropy | The scene's pixels | Read: d3ddrv-dll.md's blending table; RADV averages nearest plus anisotropy (ENGINE.md:463, a glyph). No stock texture sets `bNoSmooth` (no package's names hold it). Run due: a test texture of the harness's (`testtextures.py`) set NoSmooth on a surface at a grazing angle, RADV against `D3DDrv` |
-| D.41 | GL ES draws with no mip bias (`GLRenderDevice.cpp:632` sets -0.5 on desktop GL alone), so the Smart Pro takes mips half a level coarser than `D3DDrv`'s fit. Ruled: the bias through the ES shader's `texture()` | The scene's pixels | Read. The opening view at night shows no mip apart, GL ES and desktop GL 0.23 grey levels apart without the bias. Run due: a test texture whose mips are each a colour of their own (`testtextures.py`), GL ES (`"Type": "GLES"`, on the desktop too) against desktop GL |
 | D.45 | The engine builds with no warning flags of its own (`DXEngine/CMakeLists.txt`, the ports' engine.cmake), so CI's warning-free gate checks it at the compilers' defaults, blind to code only a cross port compiles (Win32, D3D11, SDL2, NEON); the launcher builds with `-Wall -Wextra -Wshadow -Wvla`. Ruled: `-Wall` on DXCommon, DXEngine, DXWidgets and DXGPU, measured first |  | Read |
 
 ## VM: the script VM and the object system
