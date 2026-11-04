@@ -30,7 +30,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [REN](#ren-the-renderer) | the renderer | 8 |
 | [AUD](#aud-the-audio) | the audio | 5 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 4 |
-| [WIN](#win-the-game-window) | the game window | 4 |
+| [WIN](#win-the-game-window) | the game window | 3 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 3 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 4 |
 | [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 4 |
@@ -157,7 +157,6 @@ owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | WIN.9 | The Fatal Error window widens each byte of its text as Latin-1 (`UI/ErrorWindow/ErrorWindow.cpp:105-124`, `:143-149`, `:268`, `:293-294`, its comment too), where the engine's text is UTF-8 since VM.5's stage 7 (e148247e): an `é` in a path, map name or logged line shows as `Ã©`, in the window and the copied text. E16c.22 regressed |  | Read. Run due: E16c.22's own, the engine started on `--url=café.dx`, a shot of the window |
-| WIN.10 | The SDL3 window presses the wheel once per scroll event, fractions included (`DXWidgets/src/window/sdl3/sdl3_display_window.cpp:1011-1022`; the dev Wayland backend `wayland_display_backend.cpp:398-404` too), where SDL 3.4 sends fractions on X11's XI2 and on Wayland and keeps the whole notches in `integer_y`, unread; the original one press per notch (WinDrv `0x1110b2bd`): under linux-x86_64's launcher a high-resolution wheel or a touchpad moves the belt several slots a notch | The UI | Read. Run due: a uinput mouse sending `REL_WHEEL_HI_RES` 15 eight times, the belt logged |
 | WIN.11 | The Fatal Error window is 1500x800 DIPs centred on the primary screen (`ErrorWindow.cpp:61-68`), so under that (1366x768; 1920x1080 at 150%; 2560x1440 at 200%) its caption, close box and buttons fall off the screen or under the taskbar, and on Windows Alt+F4 and Alt+Space do nothing in an SDL3 window (SDL answers `WM_SYSKEYDOWN` 0) and the log view takes no Esc |  | Read. Run due: `--url=nomap.dx` on a 1280x720-DIP desktop, a shot |
 | WIN.12 | Window edges: Alt+Enter back to a window on X11 (SDL3) puts it at the display's corner, `GetFrameGeometry` read right after `ShowNormal` while still full screen (`DXEngine/GameWindow.cpp:36-46`, `sdl3_display_window.cpp:167-180`); SDL3 lists the primary display's modes and size (`sdl3_display_backend.cpp:240`, `:253`) but goes full screen on the window's (`sdl3_display_window.cpp:212`); the X11 paste asks for `STRING`, not `UTF8_STRING`, and serves its own selection as Latin-1 with `?` past it (`x11_display_window.cpp:809`, `:830`, `:1409`), so an Omega copied and pasted comes back `?` (NATIVES.md says UTF-8 both ways; `PasteConsole` passes as wl-copy serves UTF-8 under `STRING`); the dbus file dialog (`dbus_open_file_dialog.cpp:200`, `:227`, `:317`; `dbus_save_file_dialog.cpp:12-22`) passing a null message on a lost bus, unescaping `%20` alone and dropping the save dialog's filters (Save Report, MSVC's alone) | The UI | Read. Run due: `PadConsole` with `axis-keys.txt` and `DXCAP_BACKEND=SDL3`, `xwininfo` after the toggle back |
 
