@@ -24,7 +24,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 3 |
-| [AI](#ai-the-npcs) | the NPCs | 1 |
+| [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 3 |
@@ -75,7 +75,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| AI.16 | Liberty Island's security bots are on their patrol sooner: 2 s into the level `SecurityBot0` and `SecurityBot1` hold a `MoveTarget` (`PatrolPoint19`, `PatrolPoint14`), where the original's hold none (`NavReachConsole`'s and `SecondWayConsole`'s `movetarget`, every run of each engine; their answers and routes alike). Cause not read | Moving: wandering and tactical movement | Run: `NavReachConsole`, `SecondWayConsole`, both engines |
 
 ## DX: DeusEx's natives
 
@@ -188,6 +187,7 @@ owner rules.
 | EXT | A viewport window's frame takes its canvas frame's corner in the original (`Extension.dll` `0x1004acad`), which a render viewport would move, a conversation's letterbox, where DXEngine's canvas frame is the screen's (EXT.22, from EXT.14's reading) | The canvas's frame is the whole view's while the windows draw: `XRootWindow::PreRender` (`0x1003a760`) pushes the frame it has and gives the scene the render viewport's, and `PostRender` (`0x1003a960`) keeps a copy of that one for the scene's projections and puts the pushed one back (`0x1003aa11`) before `PaintWindows`; so the corner a viewport window adds is (0, 0), as DXEngine's canvas has it |
 | DX | `ConBindEvents` binds another of the actors sharing a name than the original's, its walk the level's actors where the original's walks pawns, decorations and players by object index, the last offered winning (`DXEngine/DXEngine/Packages/ConSys/UConversation.cpp:38-68`; ConSys.dll `0x1000fec0`) | Both engines bind the same actor in every stock case tried: `BindOrderConsole` on 06_HongKong_WanChai_Underworld, `RightHandHack`'s RightHandMan TriadRedArrow6 in both, and a Basketball spawned there with the name bound in both; on 08_NYC_Street `DL_Exit`'s and `DL_JockShipWarning`'s Jock BlackHelicopter1 in both (DXEngine's run from the menu map, as the original's). Only the order of the actors bound, listed, differs |
 | AI | The script's `ActorReachable` of a navigation point never asks the path network, where the original's answers a pawn standing at a node from it (`DXEngine/DXEngine/Native/NPawn.cpp:294`; Engine.dll `0x103bc1a0`), so an NPC on a node walks straight to an unlinked one | Not as stated: the original answers True for many unlinked nodes a pawn stands by too (`NavReachConsole`: 50 of 87 True, DXEngine 51), its answers and DXEngine's alike but for five pairs, filed as AI.9 |
+| AI | Liberty Island's security bots on their patrol sooner: at `NavReachConsole`'s and `SecondWayConsole`'s probe, 1 s after the open by the console's clock, `SecurityBot0` and `SecurityBot1` held a `MoveTarget` in DXEngine (`PatrolPoint19`, `PatrolPoint14`), none in the original (AI.16) | The probe's moment, not the bots': the console's clock takes in the load's frame whole (`UConsole::PreRender`, Engine.dll `0x10379d10`: the viewport's time between two frames shown), the actors 0.4 s of it at most ([a level's tick](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#a-levels-tick)). The original's load of the island took some 1.2 to 1.7 s under Proton, so its probe came at its first tick, every pawn still in `StartUp`'s sleep; DXEngine's took 0.34 s, so its probe came some 0.6 s of the actors' time later, `SecurityBot0`, drawn in the first frame, on its patrol from the second tick and `SecurityBot1` once its sleep (`FRand()+0.2`) had run out, as each run's draw had it. `PatrolStartConsole` at 120 frames a second, by tick and by the actors' time: `SecurityBot0` out of `StartUp` at the second tick in both engines, toward `PatrolPoint19`, `SecurityBot1` as its sleep runs out, toward `PatrolPoint14`. Both consoles probe at the first tick on the island (DXEngine 37baee2a): every `movetarget` None in both engines, the answers and routes alike |
 
 ## Not yet read
 
