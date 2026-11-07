@@ -23,15 +23,15 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 0 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 1 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 2 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
-| [NET](#net-the-network) | the network | 1 |
+| [NET](#net-the-network) | the network | 0 |
 | [REN](#ren-the-renderer) | the renderer | 2 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 2 |
-| [WIN](#win-the-game-window) | the game window | 2 |
+| [WIN](#win-the-game-window) | the game window | 3 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
 | [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 0 |
@@ -63,7 +63,8 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PHYS.25 | An actor's life span ends at 0.0001 or less of the float as stored (`UActor.cpp:550`), where the original's compares the value before it is stored with the double, `<=` (Engine.dll `0x103a270b`), within a float step of it; the walking and rolling physics make a direction of any length above 0, where the original's `physWalking` and `physRolling` call Core's `SafeNormal`, which makes one of squared length under 1e-8 none (the calls not read one by one) | Small | Read (SMALL's investigator, with PHYS.24) |
+| PHYS.26 | `PHYS_Spider` moves nothing (`UActor::TickSpider` empty), where the original's `physSpider` walks a pawn on walls and ceilings; no stock script sets it | Small | Read (PHYS.25's investigator) |
+| PHYS.27 | `PickWallAdjust` is Surreal Engine's own algorithm, not the original's (Engine.dll `0x103c4150`); no stock script calls it | Small | Read (PHYS.25's investigator) |
 
 ## AI: the NPCs
 
@@ -84,7 +85,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| NET.27 | A client's animation rate and frame from its server are scaled by float constants (`Network/NetChannel.cpp:569-572`), where the original's multiplies by doubles: at most one ulp apart | Multiplayer | Read (SMALL's investigator, with PHYS.24) |
 
 ## REN: the renderer
 
@@ -102,15 +102,16 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| ENG.25 | The write of a read-only ini throws `Could not create <file>` (`IniFile::SaveTo` and `UpdateFile` through `File::create_always`, `Utils/File.cpp:221-228`), where the original's config writer fails quietly and the game plays on; run as root, DXEngine writes an ini whose every write bit is off, which Windows' read-only attribute refuses an administrator (found with LCORE.10, the launchers' side, fixed) | Mods | Read. Run due: the original's write of a read-only ini read (Core.dll's config cache); a run with the run's DeusEx.ini and User.ini read-only, a console's SaveConfig and the exit, both engines |
-| ENG.26 | A start URL whose browse fails with no error's text is not tried again (`Engine.cpp`, the start), where the original's Init tries it once more at `DX.dx` unless that was the URL (Engine.dll `0x103895f0`-`0x10389663`); no known stock path reaches it | The command line | Read (SMALL's investigator, with ENG.22) |
+| ENG.27 | An ini is written only at a clean exit (`SaveAllIniFiles`), where the original's writes each changed file at every `SaveConfig` (Core.dll `0x10151540`, `Flush(0)`) and every resize of the viewport (WinDrv.dll `0x1110e2f3`-`0x1110e35b`), so a setting changed in play is lost to a crash or a kill | Mods | Read (ENG.25's investigator) |
+| ENG.28 | A start in a save whose file does not read, or on a map whose package does not load, ends with the error thrown, where the original's browses `DX.dx` (a slot's level not loading, DeusEx.dll `0x10011323`) or `Dx.Dx` in its place | The command line | Read (ENG.25's investigator) |
 
 ## WIN: the game window
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | WIN.14 | Window edges fixed by reading (DXEngine 957658cd), their runs due: the Win32 window's Alt+F4 closing the Fatal Error window and its full screen putting the window back where it was, on the monitor it is on (Wine passes a sent key to no Win32-backend window here); SDL2 listing the modes of the display the window is on | The UI | Read. Run due: a Win32-backend run on Windows, or a way to key a Wine window; SDL2 on two displays |
-| WIN.17 | The console's `ENDFULLSCREEN` is no command, where the original's WinDrv takes it in any state, logging `EndFullscreen` (`0x11106dcf`); no stock script sends it | The UI | Read (SMALL's investigator, with WIN.16) |
+| WIN.18 | A size the window is dragged to is not kept: `WindowedViewportX` and `Y` are never set from the window, where the original's client takes each size its window is given for its windowed size and saves it to the ini at once, the width made even (WinDrv.dll `0x1110d9a8`, `WM_SIZE` `0x1110a033`), so the way back from full screen and the next start come at it | The UI | Read (ENG.25's investigator) |
+| WIN.19 | The window's own words (`togglefullscreen`, `setres`, `getres` and the rest) are taken before the exec functions (`Engine.cpp`, `viewportWords`), where the original's window takes them after the exec functions and the engine's words (`UWindowsViewport::Exec`, WinDrv.dll `0x11106d90`); no stock exec function shares one | The UI | Read (ENG.25's investigator) |
 
 ## MAIN: the recreation (deusex-launcher's main)
 
@@ -177,7 +178,8 @@ What no sweep has read, by area: the next sweep's ground.
 - **PKG:** PackageManager's package finding and save folders; two travels asked in one frame
   (`BindOrderConsole` started on its map: the first taken in DXEngine).
 - **PHYS:** Math's mat.h, quaternion.h, FrustumPlanes, hsb and halffloat; physWalking and
-  stepUp, the BrushTracker and OverlapTest against the binary.
+  stepUp, the BrushTracker and OverlapTest against the binary; the normal the original's
+  cylinder point check gives an actor's contact, and what reads it.
 - **AI:** the event manager against the binary.
 - **EXT:** UGC's drawing, the ScaleManager, ScrollArea, Tile and Clip windows against the
   binary.
