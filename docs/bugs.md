@@ -20,7 +20,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 2 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 3 |
@@ -31,7 +31,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [REN](#ren-the-renderer) | the renderer | 8 |
 | [AUD](#aud-the-audio) | the audio | 3 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
-| [WIN](#win-the-game-window) | the game window | 3 |
+| [WIN](#win-the-game-window) | the game window | 1 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 2 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 1 |
 | [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 2 |
@@ -49,6 +49,7 @@ owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | D.47 | A tag of exactly 65,536 bytes is written with its size, where the original's writer gives it size 0 (Core.dll `0x1012a840`'s size codes), so a save of one would not read back. No stock property is that large. Recommended: DXEngine's, by choice |  | Read (PKG.22's investigator) |
+| D.48 | Full screen goes to the display the window is on, SDL3 listing that display's modes (`DXWidgets/src/window/sdl3/sdl3_display_backend.cpp`, `WindowsDisplay`), as the X11 and Wayland windows do where the window manager puts it, where the original's is always the primary display's wherever the window was: `D3DDrv` creates DirectDraw's Primary driver, its list of drivers leaving out every other monitor (D3DDrv.dll `0x1000a639`-`0x1000a80c`). A window moved to a second display and made full screen goes back to the first in the original. Recommended: DXEngine's, by choice, as a desktop program goes full screen where its window is | The menus' settings | Read. Run due: two displays, the window on the second, Screen Resolution's list and the full screen's display |
 
 ## VM: the script VM and the object system
 
@@ -124,8 +125,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| WIN.11 | The Fatal Error window is 1500x800 DIPs centred on the primary screen (`ErrorWindow.cpp:65-72`), so under that (1366x768; 1920x1080 at 150%; 2560x1440 at 200%) its caption, close box and buttons fall off the screen or under the taskbar, and on Windows Alt+F4 and Alt+Space do nothing in an SDL3 window (SDL answers `WM_SYSKEYDOWN` 0) and the log view takes no Esc |  | Read. Run due: `--url=nomap.dx` on a 1280x720-DIP desktop, a shot |
-| WIN.12 | Window edges: Alt+Enter back to a window on X11 (SDL3) puts it at the display's corner, `GetFrameGeometry` read right after `ShowNormal` while still full screen (`DXEngine/GameWindow.cpp:36-46`, `sdl3_display_window.cpp:167-180`); SDL3 lists the primary display's modes and size (`sdl3_display_backend.cpp:240`, `:253`) but goes full screen on the window's (`sdl3_display_window.cpp:212`); the X11 paste asks for `STRING`, not `UTF8_STRING`, and serves its own selection as Latin-1 with `?` past it (`x11_display_window.cpp:808`, `:829`, `:1408`), so an Omega copied and pasted comes back `?` (NATIVES.md says UTF-8 both ways; `PasteConsole` passes as wl-copy serves UTF-8 under `STRING`); the dbus file dialog (`dbus_open_file_dialog.cpp:200`, `:227`, `:317`; `dbus_save_file_dialog.cpp:12-22`) passing a null message on a lost bus, unescaping `%20` alone and dropping the save dialog's filters (Save Report, MSVC's alone) | The UI | Read. Run due: `PadConsole` with `axis-keys.txt` and `DXCAP_BACKEND=SDL3`, `xwininfo` after the toggle back |
 | WIN.14 | Window edges WIN.11's and WIN.12's investigator found: the X11 window gives the file dialog its id in decimal, where the portal reads hex (`DXWidgets/src/window/x11/x11_display_backend.cpp:68`, `:76`, `:84`); the Win32 window's Alt+F4 never closes the Fatal Error window (`win32_display_window.cpp:937-938`) and its full screen forgets the window's place; the SDL3 game window's Alt+Space opens no window menu, where the original's does; SDL2 lists display 0's modes but goes full screen on the window's display (`sdl2_display_backend.cpp:260`, `:271`; `sdl2_display_window.cpp:192`) | The UI | Read (WIN.11's investigator) |
 
 ## MAIN: the recreation (deusex-launcher's main)
