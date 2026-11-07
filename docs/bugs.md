@@ -28,7 +28,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 0 |
-| [REN](#ren-the-renderer) | the renderer | 2 |
+| [REN](#ren-the-renderer) | the renderer | 3 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 2 |
 | [WIN](#win-the-game-window) | the game window | 3 |
@@ -91,7 +91,8 @@ owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | REN.38 | GL's uploads checked by their bytes, by reading (DXEngine 8ce0bc6b): a top mip short of `MipBytes` or past `GL_MAX_TEXTURE_SIZE` the white texel, a short lower level zeros, as Vulkan and D3D11 take them, where GL read past a mod's short DXT1 mip on GL and GL ES | Mods | Read. Run due: an ASan build with a hand-made .utx, a DXT1 texture whose top mip is short, on GL and GL ES |
-| REN.39 | Device edges fixed by reading (DXEngine 8ce0bc6b), their runs due: Vulkan without `VK_KHR_sampler_mirror_clamp_to_edge` clamping to the edge (the aarch64 boards' GPUs); the swapchain's choice where the surface lists an sRGB format first; the single-texture bindless array cleared whole; GL's and D3D11's resize no longer flushing every texture (PRECACHING after Alt+Enter with `UsePrecache`, which no log line shows); D3D11's base and macro pans and its present and read-back samplers |  | Read. Run due: each on its device, D3D11's under Wine |
+| REN.39 | Device edges fixed by reading (DXEngine 8ce0bc6b), their runs due: Vulkan without `VK_KHR_sampler_mirror_clamp_to_edge` clamping to the edge (the aarch64 boards' GPUs); the swapchain's choice where the surface lists an sRGB format first; the single-texture bindless array cleared whole; GL's and D3D11's resize no longer flushing every texture (seen only by counting uploads: no frame shows it); D3D11's base and macro pans and its present and read-back samplers |  | Read. Run due: each on its device, D3D11's under Wine |
+| REN.43 | The console's `FLUSH`, which `DeusExPlayer.ShowMainMenu` and the brightness menu send, draws no PRECACHING frame after it (`Engine::PrecacheOnFlip` set at a map's load alone), where the original's `UEngine::Flush(1)` (Engine.dll `0x10380fed`) has `D3DDrv`'s Flush set `PrecacheOnFlip` from `UsePrecache` (`0x10002ec9`), so with it on the main menu opens on PRECACHING | Small | Read (REN.39's run planner) |
 
 ## AUD: the audio
 
