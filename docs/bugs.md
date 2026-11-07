@@ -33,8 +33,8 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 3 |
 | [WIN](#win-the-game-window) | the game window | 2 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
-| [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 1 |
-| [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 2 |
+| [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
+| [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 1 |
 | [LUI](#lui-the-launchers-screens-and-ui-kit) | the launchers' screens and UI kit | 0 |
 | [LPORT](#lport-the-launchers-ports-win32-the-smart-pro-the-sysroots) | the launchers' ports (Win32, the Smart Pro, the sysroots) | 1 |
 | [X](#x-the-harness-the-scripts-and-ci) | the harness, the scripts and CI | 0 |
@@ -127,14 +127,12 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| LAPP.12 | The hand-over channel stays with the first client: a client started beside it never takes the channel over once that client ends (`open_channel` and `open_pipe` run only as the instance is first held), so a later start opens a second game in place of handing its line to the one still running; main has a channel per client and does not. Every port branch |  | Read (the launchers' investigator) |
 
 ## LCORE: the launchers' core (ini, config, keys, profiles)
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | LCORE.10 | Run as root, DXLauncher still replaces a read-only ini at the next save: `access()` passes every file for root (`src/platform/posix/fs.c`, `dxl_fs_write_atomic`), and the Smart Pro's user is root (SSH logs in as root). trimui-smartpro |  | Read. Run due: on the device, a read-only `DeusEx.ini`, a setting saved, the file's bytes; whether the card's mount keeps write bits |
-| LCORE.14 | A linked ini whose link points nowhere is replaced by a plain file at the next save (`src/platform/posix/fs.c:78-89`), where the engine writes through the link. linux-x86_64, linux-aarch64, trimui-smartpro |  | Read (the launchers' investigator) |
 
 ## LUI: the launchers' screens and UI kit
 
