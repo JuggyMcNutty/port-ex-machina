@@ -114,7 +114,7 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| WIN.14 | Window edges WIN.11's and WIN.12's investigator found: the X11 window gives the file dialog its id in decimal, where the portal reads hex (`DXWidgets/src/window/x11/x11_display_backend.cpp:68`, `:76`, `:84`); the Win32 window's Alt+F4 never closes the Fatal Error window (`win32_display_window.cpp:937-938`) and its full screen forgets the window's place; the SDL3 game window's Alt+Space opens no window menu, where the original's does; SDL2 lists display 0's modes but goes full screen on the window's display (`sdl2_display_backend.cpp:260`, `:271`; `sdl2_display_window.cpp:192`) | The UI | Read (WIN.11's investigator) |
+| WIN.14 | Window edges fixed by reading (DXEngine 957658cd), their runs due: the Win32 window's Alt+F4 closing the Fatal Error window and its full screen putting the window back where it was, on the monitor it is on (Wine passes a sent key to no Win32-backend window here); SDL2 listing the modes of the display the window is on | The UI | Read. Run due: a Win32-backend run on Windows, or a way to key a Wine window; SDL2 on two displays |
 
 ## MAIN: the recreation (deusex-launcher's main)
 
