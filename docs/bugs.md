@@ -31,7 +31,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [REN](#ren-the-renderer) | the renderer | 5 |
 | [AUD](#aud-the-audio) | the audio | 1 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 3 |
-| [WIN](#win-the-game-window) | the game window | 1 |
+| [WIN](#win-the-game-window) | the game window | 2 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 1 |
 | [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 2 |
@@ -115,6 +115,7 @@ owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | WIN.14 | Window edges fixed by reading (DXEngine 957658cd), their runs due: the Win32 window's Alt+F4 closing the Fatal Error window and its full screen putting the window back where it was, on the monitor it is on (Wine passes a sent key to no Win32-backend window here); SDL2 listing the modes of the display the window is on | The UI | Read. Run due: a Win32-backend run on Windows, or a way to key a Wine window; SDL2 on two displays |
+| WIN.16 | The game's window can be dragged smaller than 640x480, where the original's holds it at 640x480 or more (WinDrv.dll `0x1110a812`), and a full-screen toggle logs nothing, where the original's logs `AttemptFullscreen` and `EndFullscreen` (`0x1110d500`, `0x1110d380`) | The UI | Read (WIN.15's investigator) |
 
 ## MAIN: the recreation (deusex-launcher's main)
 
