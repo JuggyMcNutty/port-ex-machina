@@ -29,7 +29,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 1 |
 | [REN](#ren-the-renderer) | the renderer | 6 |
-| [AUD](#aud-the-audio) | the audio | 2 |
+| [AUD](#aud-the-audio) | the audio | 1 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 3 |
 | [WIN](#win-the-game-window) | the game window | 1 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
@@ -101,7 +101,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| AUD.17 | Galaxy's section and channel edges AUD.16 leaves: a section starts only as the playing row ends (Galaxy.dll `0x10616f29`), `SongSection` reading the order before it, or 255 before order 0, until then, where DXEngine starts it and reports it at once; a section past the last order silences the voices and plays on at the next order, DXEngine ignoring the request; an IT song's header's surround channel plays a quarter left (left 0.866, right −0.5), DXEngine's centred; with `UseStereo` off Galaxy's mix rounds each voice's gain down to one of 64 levels, does not interpolate 16-bit samples, sends nothing to the reverb and saturates the music keeping each sample's low byte (Galaxy.dll `0x10623eed`; `MusicConsole` mono: tone A on eight channels at full scale in 8.0% of the samples in the original, 34.0% in DXEngine; the stock songs 0.13 to 0.47 dB louder in DXEngine) | Sound | Read (AUD.16's investigator) |
 | AUD.18 | The sounds' wall test passes a line of 0.01 or shorter over (`Packages/Engine/Subsystems/UDXEngineAudioDevice.cpp:619`), where the original's walks every line, so a sound within 0.01 of the listener, the listener inside solid, is not muffled; Galaxy's line's direction not read | Sound | Read (PHYS.22's investigator) |
 
 ## ENG: the engine, its input and its config
