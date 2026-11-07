@@ -29,7 +29,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 3 |
 | [REN](#ren-the-renderer) | the renderer | 8 |
-| [AUD](#aud-the-audio) | the audio | 3 |
+| [AUD](#aud-the-audio) | the audio | 1 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
 | [WIN](#win-the-game-window) | the game window | 1 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 2 |
@@ -112,9 +112,7 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| AUD.14 | `UseStereo=False` folds the sounds' mix alone (`AudioDevice.cpp:507-514`), the music staying stereo, where Galaxy's whole output is mono: `MusicConsole` with `DXCAP_INI=Galaxy.GalaxyAudioSubsystem:UseStereo=False` recorded the original's tones and songs alike in both channels, a surround channel not cancelled (UNATCO_Music −17.2 dB), where a fold of DXEngine's stereo music, tried, cancelled UNATCO's surround channels (−25.8 dB), the rest within 0.35 dB: Galaxy's mono mix wants reading | Sound | Run (`MusicConsole`, both engines, with `DXCAP_RECORD=1 DXCAP_MUSIC=1`) |
-| AUD.16 | A song's loop and sections, which the module rewrite (`DXEngine/Audio/GalaxyMusic.cpp`) cannot give: Galaxy gives each channel the song's own pan, and the song its speed and tempo, again as it enters order 0 (`0x10615710`), so each loop re-centres a channel a pattern panned (LibertyIsland's 2 and 3, eight of HKClub's); a section change silences the voices and plays on from the section, where libopenmpt replays the song to it (`seek.sync_samples`); the music saturates at 16 bits before the sounds are added (`0x106146a0`). Ruled: each made Galaxy's in libopenmpt's player (`DXEngine/Thirdparty/openmpt`), as its pan law is; a song started past order 0 keeps its own pans, speed and tempo, by choice (NATIVES.md's Sound) | Sound | Read: galaxy-dll.md, an IT song. Run due: `MusicConsole` on a stock song through its loop (LibertyIsland's channels 2 and 3) and a section change, both engines |
-| AUD.17 | Galaxy's section and channel edges AUD.16 leaves: a section starts only as the playing row ends (Galaxy.dll `0x10616f29`), `SongSection` reading the order before it, or 255 before order 0, until then, where DXEngine starts it and reports it at once; a section past the last order silences the voices and plays on at the next order, DXEngine ignoring the request; an IT song's header's surround channel plays a quarter left (left 0.866, right −0.5), DXEngine's centred; with `UseStereo` off Galaxy's mix rounds each voice's gain to one of 64 levels, does not interpolate 16-bit samples, sends nothing to the reverb and cancels no surround sound | Sound | Read (AUD.16's investigator) |
+| AUD.17 | Galaxy's section and channel edges AUD.16 leaves: a section starts only as the playing row ends (Galaxy.dll `0x10616f29`), `SongSection` reading the order before it, or 255 before order 0, until then, where DXEngine starts it and reports it at once; a section past the last order silences the voices and plays on at the next order, DXEngine ignoring the request; an IT song's header's surround channel plays a quarter left (left 0.866, right −0.5), DXEngine's centred; with `UseStereo` off Galaxy's mix rounds each voice's gain down to one of 64 levels, does not interpolate 16-bit samples, sends nothing to the reverb and saturates the music keeping each sample's low byte (Galaxy.dll `0x10623eed`; `MusicConsole` mono: tone A on eight channels at full scale in 8.0% of the samples in the original, 34.0% in DXEngine; the stock songs 0.13 to 0.47 dB louder in DXEngine) | Sound | Read (AUD.16's investigator) |
 
 ## ENG: the engine, its input and its config
 
