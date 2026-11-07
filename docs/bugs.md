@@ -21,8 +21,8 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | Section | Area | Open |
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
-| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
-| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
+| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 0 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 4 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
@@ -30,11 +30,11 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [NET](#net-the-network) | the network | 3 |
 | [REN](#ren-the-renderer) | the renderer | 6 |
 | [AUD](#aud-the-audio) | the audio | 2 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 2 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 3 |
 | [WIN](#win-the-game-window) | the game window | 1 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 2 |
-| [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 1 |
-| [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 2 |
+| [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 2 |
+| [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 3 |
 | [LUI](#lui-the-launchers-screens-and-ui-kit) | the launchers' screens and UI kit | 1 |
 | [LPORT](#lport-the-launchers-ports-win32-the-smart-pro-the-sysroots) | the launchers' ports (Win32, the Smart Pro, the sysroots) | 2 |
 | [X](#x-the-harness-the-scripts-and-ci) | the harness, the scripts and CI | 0 |
@@ -53,13 +53,11 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| VM.25 | Name edges VM.25's first-spelling fix left (DXEngine 046e714c): a map's editor-only name entries are made (`Package/PackageStream.cpp`'s name table), where the original's linker makes no name of one whose flags lack load-for-client or -server and maps it to None (Core.dll `0x10160543`, before the `FName` call at `0x10160553`): 1,230 in the 88 maps, three of them a name's first spelling here (`BArricade`, `supplyroom`, `walkway`); a name read as UTF-8 by `string()` and `GetPropertyText` (`ExpressionEvaluator.cpp:809`, `UObject.cpp:274-285`), a package's names being Latin-1 bytes and those made from a file name, URL, the ini or `StringToName` UTF-8; a package with a name saved 16-bit refused (`PackageStream.cpp:117-118`), the original reading it (`0x101459b0`, made 8-bit, `?` past Latin-1). No stock or mod package has a name past ASCII | Small | Read (VM.25's investigator; its `latent-16bit.diff` drafted). Run due: the three names' spelling after their maps load, both engines |
 
 ## PKG: saving, loading, travel and the loading screen
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PKG.27 | Config edges PKG.25's fix left: a class's `SaveConfig` does not read its own defaults again (`Packages/Core/UClass.cpp:304-308`, `:352`), where the original's does (`0x10151540`), so a case-only change stays in that class's default for the session; an `INI=` name under five characters or with no `.` fourth or fifth from its end (`INI=MyMod`) is two files to the original, `MyMod` and `MyMod.ini` (GOG DeusEx.exe `0x10915e30`), one to DXEngine and the launchers; `exec`'s file is run line by line whole (`Engine.cpp`, `ExecFile`), where the original's `ExecMacro` takes each by `ParseLine` (`0x10147e60`): `//` a comment, `\|` chaining commands, 255 characters a line; a command word is the first blank-separated word, where `ParseCommand` (`0x10147a20`) also takes `exec"x"`; the URL's `?=x` option from `[DefaultPlayer]` skipped. No stock file reaches them | The command line | Read (PKG.25's investigator) |
 
 ## PHYS: physics, traces and movers
 
@@ -117,6 +115,7 @@ owner rules.
 |---|---|---|---|
 | ENG.22 | The game starts on the ini's `[URL] LocalMap` (`Engine.cpp:310`), where the original's starts at `DX.dx` whatever it names (Engine.dll `0x10389429`-`0x103894a4`); every known ini names `DX.dx` | The command line | Read (PKG.27's investigator) |
 | ENG.23 | A single-player level's client-only actors are removed (`Engine.cpp:1168`, every actor not for the server), where the original's keeps them in single player; no stock export is client-only | Mods | Read (PKG.27's investigator) |
+| ENG.24 | The player's ini settings are read again with a converter that takes `yes` and `no` for a bool (`Packages/Engine/Actors/Pawn/UPlayerPawn.cpp:133-149`, `LoadProperties`; `IniProperty.cpp:109`) and puts DXEngine's own default in place of text it cannot read, where the original's import takes 1, True, 0 and False alone (`UBoolProperty::ImportText`, Core.dll `0x10166380`), as DXEngine's class import does (`UBoolProperty.cpp:96-120`): a User.ini `bInvertMouse=Yes` inverts the mouse in DXEngine alone; whether those defaults are Engine.u's not checked | The command line | Read (the launchers' investigator) |
 
 ## WIN: the game window
 
@@ -136,6 +135,7 @@ owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | LAPP.11 | Only the first launcher holds the instance lock (POSIX `flock`; Windows' mutex, which a second launcher closes), so once the first ends a later start sees no other while another still runs, and reads that one's `Running.ini` as a crash, opening Recovery; DXLauncher's anti-aliasing probe ignores a stop for up to 10 s (`src/app/run.c:653`), the game then started and stopped before it is ready, `Running.ini` left. main and the port branches |  | Read (LAPP.7's investigator) |
+| LAPP.12 | The hand-over channel stays with the first client: a client started beside it never takes the channel over once that client ends (`open_channel` and `open_pipe` run only as the instance is first held), so a later start opens a second game in place of handing its line to the one still running; main has a channel per client and does not. Every port branch |  | Read (the launchers' investigator) |
 
 ## LCORE: the launchers' core (ini, config, keys, profiles)
 
@@ -143,6 +143,7 @@ owner rules.
 |---|---|---|---|
 | LCORE.10 | Run as root, DXLauncher still replaces a read-only ini at the next save: `access()` passes every file for root (`src/platform/posix/fs.c`, `dxl_fs_write_atomic`), and the Smart Pro's user is root (SSH logs in as root). trimui-smartpro |  | Read. Run due: on the device, a read-only `DeusEx.ini`, a setting saved, the file's bytes; whether the card's mount keeps write bits |
 | LCORE.13 | Small ini edges LCORE.12's fix left: `dxl_text_bool` takes `Yes` and `No` for User.ini's script-class bools, which DXEngine and the original refuse; main saves a new `INI=` ini to the path as given, so where its folder is there in another case alone the save fails, where the engine makes it in that folder; main's save calls an ini whose link points nowhere read-only |  | Read (LCORE.12's investigator) |
+| LCORE.14 | A linked ini whose link points nowhere is replaced by a plain file at the next save (`src/platform/posix/fs.c:78-89`), where the engine writes through the link. Every port branch |  | Read (the launchers' investigator) |
 
 ## LUI: the launchers' screens and UI kit
 
