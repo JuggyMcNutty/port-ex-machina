@@ -24,7 +24,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 2 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 4 |
-| [AI](#ai-the-npcs) | the NPCs | 5 |
+| [AI](#ai-the-npcs) | the NPCs | 3 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 1 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 4 |
@@ -77,11 +77,9 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| AI.9 | `ActorReachable` of a navigation point answers unlike the original's for 5 of 87 pawn and node pairs on Liberty Island, both ways, every run (MedicalBot1 to a linked node, the original True; MedicalBot5 and 6 to unlinked ones, the original False; Gunther Hermann to an unlinked one, the original True). Cause partly read: the original answers from the path network for a pawn standing at a node (`execactorReachable` `0x103bc1a0`: true for that node or one `CanMoveTo` reaches from it), where DXEngine always walks (`NPawn.cpp:293`, `UPawn_Reach.cpp:16`); the medical bots fit, Gunther does not | Moving: wandering and tactical movement | Run: `NavReachConsole`, two runs of each, each engine's 87 answers alike run to run, 5 apart between them |
-| AI.10 | `FindPathToward` of an actor no nearby node reaches answers unlike the original's for 10 of 24 tries on Liberty Island (BumFemale0 a route by PathNode16 in the original, None in DXEngine; Gunther Hermann None against PathNode831), every run. Read: the original's second way marks end points on the goal's list (`findPathToward` `0x103db3f0`, `0x103db938`, `0x103db94d`) and searches from the pawn list's first node, where DXEngine runs both on the pawn's (`UPawn_Path.cpp:758-766`) | Moving: wandering and tactical movement | Run: `SecondWayConsole`, two runs of each, alike run to run |
-| AI.11 | `AIPickRandomDestination`'s second try (a multiplier under 1) takes the last step inside the reached distance (`UPawn_AI.cpp:555`), where the original asks with that distance as both its least and most and takes the first step past it (`0x103c8141`-`0x103c8148`): wander and flee spots one step, the pawn's radius, nearer | Moving: wandering and tactical movement | Run: `PickDestConsole`, 14 of 48 picks apart, each the pawn's radius: BumFemale0 180 against 160 (radius 20), Gunther Hermann 242.0 against 217.8 (24.2) |
 | AI.13 | `GetPathnodeList` filters by reach and keeps the nearest 32 within 1000 (`UPawn_AI.cpp:626-641`), where the original picks 32 first, once full replacing the nearest entry farther than the new one, then filters, under 1e6 squared (`0x103c6490`): `ReachablePathnodes` (projectile avoidance, `GetOvershootDestination`) where more than 32 nodes lie in reach | Moving: wandering and tactical movement | Read |
 | AI.14 | Small path and pick differences: `AIPickRandomDestination` pitched only in water or flying (`UPawn_AI.cpp:542`), the original's unless walking or swimming out of water (`0x103c8041`); `ReachableFromAnchor` tracing anchor to goal (`UPawn_Path.cpp:424`), the original goal to anchor (`0x103da93e`); `ReachablePathnodes` leaving its out variable on the last node, the original None; `FindBestJump`'s log of a drop of 350 or more missing (`0x10481960`) | Moving: wandering and tactical movement | Read |
+| AI.16 | Liberty Island's security bots are on their patrol sooner: 2 s into the level `SecurityBot0` and `SecurityBot1` hold a `MoveTarget` (`PatrolPoint19`, `PatrolPoint14`), where the original's hold none (`NavReachConsole`'s and `SecondWayConsole`'s `movetarget`, every run of each engine; their answers and routes alike). Cause not read | Moving: wandering and tactical movement | Run: `NavReachConsole`, `SecondWayConsole`, both engines |
 
 ## DX: DeusEx's natives
 
