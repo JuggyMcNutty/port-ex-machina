@@ -20,7 +20,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 2 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 3 |
@@ -48,8 +48,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| D.47 | A tag of exactly 65,536 bytes is written with its size, where the original's writer gives it size 0 (Core.dll `0x1012a840`'s size codes), so a save of one would not read back. No stock property is that large. Recommended: DXEngine's, by choice |  | Read (PKG.22's investigator) |
-| D.48 | Full screen goes to the display the window is on, SDL3 listing that display's modes (`DXWidgets/src/window/sdl3/sdl3_display_backend.cpp`, `WindowsDisplay`), as the X11 and Wayland windows do where the window manager puts it, where the original's is always the primary display's wherever the window was: `D3DDrv` creates DirectDraw's Primary driver, its list of drivers leaving out every other monitor (D3DDrv.dll `0x1000a639`-`0x1000a80c`). A window moved to a second display and made full screen goes back to the first in the original. Recommended: DXEngine's, by choice, as a desktop program goes full screen where its window is | The menus' settings | Read. Run due: two displays, the window on the second, Screen Resolution's list and the full screen's display |
 
 ## VM: the script VM and the object system
 
