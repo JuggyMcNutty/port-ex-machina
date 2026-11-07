@@ -21,11 +21,11 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | Section | Area | Open |
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
-| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 2 |
-| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 2 |
+| [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 4 |
 | [AI](#ai-the-npcs) | the NPCs | 3 |
-| [DX](#dx-deusexs-natives) | DeusEx's natives | 1 |
+| [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 4 |
 | [REN](#ren-the-renderer) | the renderer | 8 |
@@ -55,13 +55,11 @@ owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | VM.25 | Name edges VM.25's first-spelling fix left (DXEngine 046e714c): a map's editor-only name entries are made (`Package/PackageStream.cpp`'s name table), where the original's linker makes no name of one whose flags lack load-for-client or -server and maps it to None (Core.dll `0x10160543`, before the `FName` call at `0x10160553`): 1,230 in the 88 maps, three of them a name's first spelling here (`BArricade`, `supplyroom`, `walkway`); a name read as UTF-8 by `string()` and `GetPropertyText` (`ExpressionEvaluator.cpp:809`, `UObject.cpp:274-285`), a package's names being Latin-1 bytes and those made from a file name, URL, the ini or `StringToName` UTF-8; a package with a name saved 16-bit refused (`PackageStream.cpp:117-118`), the original reading it (`0x101459b0`, made 8-bit, `?` past Latin-1). No stock or mod package has a name past ASCII | Small | Read (VM.25's investigator; its `latent-16bit.diff` drafted). Run due: the three names' spelling after their maps load, both engines |
-| VM.30 | A NaN compares unequal (`Native/NObject.cpp:559`, `:1031`; `VM/ExpressionEvaluator.cpp:974`, `:1528`; `Packages/Core/Properties/UProperty.h:198`), where the original's script float `==` and `!=` test the x87's C3 flag alone (Core.dll `0x1013567e`, `0x1013575e`), as do its vector `==` and `Identical` (`0x1016679a`), so a NaN equals anything: a script comparing one takes the other branch, a replicated script float that is NaN is sent each time | Small | Read (NET.17's investigator). Run due: a console comparing a NaN with 0 and with itself, both engines |
 
 ## PKG: saving, loading, travel and the loading screen
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PKG.26 | A tag of a property a class declares again goes to the first of its name the lookup finds (`Packages/Core/UObject.cpp:835-843`), where the original's `FindField` finds the class's own first: `GameReplicationInfo`'s int `Region` takes `Actor`'s struct `Region` tag, which the original skips, logging `Type mismatch in Region of GameReplicationInfo: file 10, class 2` (`original-LoadConsole-20261102-200413`'s log, 56 times in the harness's runs) | Mods | Read (PKG.22's investigator). Run due: `LoadConsole`, the GRI's `Region` after a load, both engines |
 | PKG.27 | Config edges PKG.25's fix left: a class's `SaveConfig` does not read its own defaults again (`Packages/Core/UClass.cpp:304-308`, `:352`), where the original's does (`0x10151540`), so a case-only change stays in that class's default for the session; an `INI=` name under five characters or with no `.` fourth or fifth from its end (`INI=MyMod`) is two files to the original, `MyMod` and `MyMod.ini` (GOG DeusEx.exe `0x10915e30`), one to DXEngine and the launchers; `exec`'s file is run line by line whole (`Engine.cpp`, `ExecFile`), where the original's `ExecMacro` takes each by `ParseLine` (`0x10147e60`): `//` a comment, `\|` chaining commands, 255 characters a line; a command word is the first blank-separated word, where `ParseCommand` (`0x10147a20`) also takes `exec"x"`; the URL's `?=x` option from `[DefaultPlayer]` skipped. No stock file reaches them | The command line | Read (PKG.25's investigator) |
 
 ## PHYS: physics, traces and movers
@@ -85,7 +83,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| DX.8 | An actor whose `BindName` is empty is passed over (`Packages/Engine/Actors/UActor_Conversation.cpp:68`), where the original's compare binds it to a conversation with no owner (ConSys.dll `0x1000fec0`). All 1,955 stock conversations have one | Conversations | Read (DX.7's investigator) |
 
 ## EXT: the window tree (Extension)
 
