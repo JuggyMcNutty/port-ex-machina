@@ -27,10 +27,10 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
-| [NET](#net-the-network) | the network | 0 |
+| [NET](#net-the-network) | the network | 1 |
 | [REN](#ren-the-renderer) | the renderer | 2 |
-| [AUD](#aud-the-audio) | the audio | 1 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 4 |
+| [AUD](#aud-the-audio) | the audio | 0 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 2 |
 | [WIN](#win-the-game-window) | the game window | 2 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
@@ -63,7 +63,7 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PHYS.24 | A move of nothing is tested against the float 0.0001 (`UActor_Phys.cpp:807`, `:860`, `UActor_PhysWalking.cpp:100`, `UActor_PhysRolling.cpp:64`, `UActor_PhysTrailer.cpp:35`), where the original's `MoveActor` compares with the double 0.0001 (Engine.dll `0x1039915a`), so a move of exactly 0.0001f on an axis is one in DXEngine and none in the original; those callers' own originals not read | Small | Read (PHYS.22's investigator) |
+| PHYS.25 | An actor's life span ends at 0.0001 or less of the float as stored (`UActor.cpp:550`), where the original's compares the value before it is stored with the double, `<=` (Engine.dll `0x103a270b`), within a float step of it; the walking and rolling physics make a direction of any length above 0, where the original's `physWalking` and `physRolling` call Core's `SafeNormal`, which makes one of squared length under 1e-8 none (the calls not read one by one) | Small | Read (SMALL's investigator, with PHYS.24) |
 
 ## AI: the NPCs
 
@@ -84,6 +84,7 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
+| NET.27 | A client's animation rate and frame from its server are scaled by float constants (`Network/NetChannel.cpp:569-572`), where the original's multiplies by doubles: at most one ulp apart | Multiplayer | Read (SMALL's investigator, with PHYS.24) |
 
 ## REN: the renderer
 
@@ -96,23 +97,20 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| AUD.18 | The sounds' wall test passes a line of 0.01 or shorter over (`Packages/Engine/Subsystems/UDXEngineAudioDevice.cpp:619`), where the original's walks every line, so a sound within 0.01 of the listener, the listener inside solid, is not muffled; Galaxy's line's direction not read | Sound | Read (PHYS.22's investigator) |
 
 ## ENG: the engine, its input and its config
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| ENG.22 | The game starts on the ini's `[URL] LocalMap` (`Engine.cpp:310`), where the original's starts at `DX.dx` whatever it names (Engine.dll `0x10389429`-`0x103894a4`); every known ini names `DX.dx` | The command line | Read (PKG.27's investigator) |
-| ENG.23 | A single-player level's client-only actors are removed (`Engine.cpp:1168`, every actor not for the server), where the original's keeps them in single player; no stock export is client-only | Mods | Read (PKG.27's investigator) |
-| ENG.24 | The player's ini settings are read again with a converter that takes `yes` and `no` for a bool (`Packages/Engine/Actors/Pawn/UPlayerPawn.cpp:133-149`, `LoadProperties`; `IniProperty.cpp:109`) and puts DXEngine's own default in place of text it cannot read, where the original's import takes 1, True, 0 and False alone (`UBoolProperty::ImportText`, Core.dll `0x10166380`), as DXEngine's class import does (`UBoolProperty.cpp:96-120`): a User.ini `bInvertMouse=Yes` inverts the mouse in DXEngine alone; whether those defaults are Engine.u's not checked | The command line | Read (the launchers' investigator) |
 | ENG.25 | The write of a read-only ini throws `Could not create <file>` (`IniFile::SaveTo` and `UpdateFile` through `File::create_always`, `Utils/File.cpp:221-228`), where the original's config writer fails quietly and the game plays on; run as root, DXEngine writes an ini whose every write bit is off, which Windows' read-only attribute refuses an administrator (found with LCORE.10, the launchers' side, fixed) | Mods | Read. Run due: the original's write of a read-only ini read (Core.dll's config cache); a run with the run's DeusEx.ini and User.ini read-only, a console's SaveConfig and the exit, both engines |
+| ENG.26 | A start URL whose browse fails with no error's text is not tried again (`Engine.cpp`, the start), where the original's Init tries it once more at `DX.dx` unless that was the URL (Engine.dll `0x103895f0`-`0x10389663`); no known stock path reaches it | The command line | Read (SMALL's investigator, with ENG.22) |
 
 ## WIN: the game window
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | WIN.14 | Window edges fixed by reading (DXEngine 957658cd), their runs due: the Win32 window's Alt+F4 closing the Fatal Error window and its full screen putting the window back where it was, on the monitor it is on (Wine passes a sent key to no Win32-backend window here); SDL2 listing the modes of the display the window is on | The UI | Read. Run due: a Win32-backend run on Windows, or a way to key a Wine window; SDL2 on two displays |
-| WIN.16 | The game's window can be dragged smaller than 640x480, where the original's holds it at 640x480 or more (WinDrv.dll `0x1110a812`), and a full-screen toggle logs nothing, where the original's logs `AttemptFullscreen` and `EndFullscreen` (`0x1110d500`, `0x1110d380`) | The UI | Read (WIN.15's investigator) |
+| WIN.17 | The console's `ENDFULLSCREEN` is no command, where the original's WinDrv takes it in any state, logging `EndFullscreen` (`0x11106dcf`); no stock script sends it | The UI | Read (SMALL's investigator, with WIN.16) |
 
 ## MAIN: the recreation (deusex-launcher's main)
 
@@ -188,10 +186,12 @@ What no sweep has read, by area: the next sweep's ground.
   NetSerialize, NetRemote), UdpLink, the file channel's tick and destroy.
 - **REN:** a mesh's lighting (`SetupForActor`, `Light`), ShadowFromBits, OccludeBsp,
   OccludeFrame and FDynamicSprite, the hand-written fire, water, wet and ice passes, VisibleMesh
-  past its flags, RenderCanvas, against Render.dll.
+  past its flags, RenderCanvas, against Render.dll; `AttachDecal`, Surreal's own code.
 - **GL:** the Wayland EGL context (skimmed), ES drivers but Mesa's.
 - **SWD3D:** the software device's rasterizer and SIMD in depth; Wine's and Windows' behaviour
   at run time.
+- **ENG:** the client's and the render and audio devices' settings read by hand: their
+  fallbacks for a key not there against the classes' defaults.
 - **AUD:** the utilities E15a's last items touched (`DXEngine/Utils`); the output against
   Galaxy's read, not recorded; whether a sound's update sets only the pan its voice moves to,
   which Galaxy's mixer moves by at most 512 of 32,767 each time it works out the gains
