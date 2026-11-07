@@ -27,8 +27,8 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
-| [NET](#net-the-network) | the network | 1 |
-| [REN](#ren-the-renderer) | the renderer | 5 |
+| [NET](#net-the-network) | the network | 0 |
+| [REN](#ren-the-renderer) | the renderer | 2 |
 | [AUD](#aud-the-audio) | the audio | 1 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 3 |
 | [WIN](#win-the-game-window) | the game window | 2 |
@@ -84,7 +84,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| NET.24 | A `?load=N` loads save slot N (`Engine.cpp`, `LoadFromSaveFile`), where the original's browses the map the URL names: from Liberty Island `open 01_NYC_UNATCOHQ?load=9` loads UNATCO HQ, and from there `open 01_NYC_UNATCOIsland?load=01_NYC_UNATCOHQ` the island, where DXEngine loads no level (`URLEdgesConsole` with `Short`); DeusEx.dll reads the option's value at `0x100115ce` and `0x10011736`-`0x1001178c`, its use (the mission test only, it seems) not settled, a draft taking it for the `Current` lookup refuted by the run. No stock path reaches it | Saving, loading and travel | Run: `URLEdgesConsole` with `Short`, both engines |
 
 ## REN: the renderer
 
@@ -92,9 +91,6 @@ owner rules.
 |---|---|---|---|
 | REN.38 | GL's uploads checked by their bytes, by reading (DXEngine 8ce0bc6b): a top mip short of `MipBytes` or past `GL_MAX_TEXTURE_SIZE` the white texel, a short lower level zeros, as Vulkan and D3D11 take them, where GL read past a mod's short DXT1 mip on GL and GL ES | Mods | Read. Run due: an ASan build with a hand-made .utx, a DXT1 texture whose top mip is short, on GL and GL ES |
 | REN.39 | Device edges fixed by reading (DXEngine 8ce0bc6b), their runs due: Vulkan without `VK_KHR_sampler_mirror_clamp_to_edge` clamping to the edge (the aarch64 boards' GPUs); the swapchain's choice where the surface lists an sRGB format first; the single-texture bindless array cleared whole; GL's and D3D11's resize no longer flushing every texture (PRECACHING after Alt+Enter with `UsePrecache`, which no log line shows); D3D11's base and macro pans and its present and read-back samplers |  | Read. Run due: each on its device, D3D11's under Wine |
-| REN.40 | A plain mesh's back faces are drawn: a face takes `PF_Flat` when its mesh is `bMeshCurvy` (`Render/VisibleMesh.cpp:351`, `:651`), where the original's gives it one unless the mesh is (Render.dll `0x10b0dbac`), and the cull reads the face's own flags alone (`:517`), where the original's `DrawMesh` takes them with the actor's (`0x10b0dc8a`): a translucent or open plain mesh shows its far side in DXEngine alone. Which stock meshes are plain not counted | Mesh detail | Read (REN.32's investigator). Run due: a plain mesh drawn translucent, `MeshConsole`, both engines |
-| REN.41 | Mirror frames for glass buried in solid: 06_HongKong_WanChai_Underworld's `BreakableGlass9` to `14` lie wholly inside solid, the tracker files none of their polygons, yet `VisibleFrame::ProcessMoverMirrors` opens a mirror frame for each of their mirrored faces in view, up to six drawn for nothing, the world in front hiding them; the original never meets them. No change to the picture, a cost |  | Read (REN.34's investigator). Run due: the mirror frames counted at a view of them, the frame time before and after |
-| REN.42 | The far plane: since the near plane's cut (DXEngine 8ce0bc6b) Vulkan, GL and GL ES clip past 32,768 units, where `D3DDrv` clips at 32,767 and the software device and D3D11 clamp and draw past it; `D3DDrv` at 16-bit colour, the stock ini's, has its far plane at 8,192 and draws while `GUglyHackFlags` has 1 set (likely the weapon) with its near plane at 0.25 (D3DDrv.dll `0x1000c40f`-`0x1000c45b`, `0x100057ef`-`0x10005806`), which DXEngine, modelling 32-bit colour alone, does not; no stock view past 8,192 checked | The near plane | Read (REN.36's investigator) |
 
 ## AUD: the audio
 
