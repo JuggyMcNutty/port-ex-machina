@@ -217,7 +217,7 @@ before it (`scripts/ci.sh publish`):
 | Repository | Tagged | Holds, for each port | When |
 |---|---|---|---|
 | this one | `<date>-<sha8>`, its commit | `DX-<port>`: the app, launcher and engine | every run of the pins that builds |
-| DXEngine | `<date>-<sha8>`, the engine's commit | `DXEngine-<port>`: the engine alone, its notices with it | when its code changed since its last, not when its build alone did (the launcher branch's `deps.lock`, its `engine.cmake`, the toolchains: bugs.md X.9) |
+| DXEngine | `<date>-<sha8>`, the engine's commit; a rebuild of one commit the same day `<date>-<sha8>.2` and on | `DXEngine-<port>`: the engine alone, its notices with it | when its code changed since its last, or its build did since this repository's last: a port branch's `engine.cmake`, toolchain, `port.sh` or `cmake/deps.lock` (SDL3's version), the workspace's build scripts or `ports.yml` |
 | deusex-launcher, one per port | `<port>-<date>-<sha8>`, the branch's commit | `DXLauncher-<port>`: the launcher alone | when that branch's code changed since its last |
 
 Each file is a tarball, or a zip for the Windows port and the Smart Pro (the Smart Pro's app

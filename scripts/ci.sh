@@ -252,18 +252,21 @@ archive() {   # <parent folder> <its folder to pack> <file>
 # The releases (docs/DEVELOPMENT.md#ci), of a run's files in <dir>: this
 # repository's, every port's app (DX-*), tagged <date>-<sha8>; DXEngine's,
 # the engine alone (DXEngine-*), tagged <date>-<sha8> on its commit, when its
-# code changed since its last release; and deusex-launcher's, one per port,
+# code changed since its last release or its build did since this
+# repository's last (engine_build_changed), a rebuild of one commit the same
+# day <date>-<sha8>.2 and on (free_tag); and deusex-launcher's, one per port,
 # its launcher alone (DXLauncher-<port>.*), tagged <port>-<date>-<sha8> on
 # its branch's commit, when that branch's code changed since its last. The
 # two others need RELEASES_TOKEN, a token that may write to them; GH_TOKEN is
 # this repository's own. Each is tried, a failure failing the whole at the end.
 cmd_publish() {
-    local dist="${1:?which folder?}" ws="$DX_WORKSPACE" sha date eng p pin last rc=0
+    local dist="${1:?which folder?}" ws="$DX_WORKSPACE" sha date eng p pin last prevws tag rc=0
     [ -d "$dist" ] || die "no folder $dist"
     CI_TMP="$(mktemp -d)"; trap 'rm -rf "$CI_TMP"' EXIT
     sha="$(git -C "$ws" rev-parse HEAD)"
     date="$(date -u +%Y.%m.%d)"
     eng="$(engine_pin < "$ws/ENGINE-PIN.txt")"
+    prevws="$(last_release port-ex-machina '20')"   # before this run's own
     notes_workspace "$sha" > "$CI_TMP/notes-ws.md"
     release "${GITHUB_REPOSITORY:-JuggyMcNutty/port-ex-machina}" "$date-${sha:0:8}" "$sha" "$CI_TMP/notes-ws.md" \
         "$dist"/DX-* || rc=1
@@ -272,9 +275,10 @@ cmd_publish() {
         return "$rc"
     fi
     last="$(last_release DXEngine '20')"
-    if [ -z "$last" ] || code_between DXEngine "$last" "$eng"; then
+    if [ -z "$last" ] || code_between DXEngine "$last" "$eng" || engine_build_changed "$prevws" "$sha"; then
         notes_engine "$last" "$eng" "$sha" > "$CI_TMP/notes-engine.md"
-        release JuggyMcNutty/DXEngine "$date-${eng:0:8}" "$eng" "$CI_TMP/notes-engine.md" "$dist"/DXEngine-* || rc=1
+        tag="$(free_tag DXEngine "$date-${eng:0:8}")"
+        release JuggyMcNutty/DXEngine "$tag" "$eng" "$CI_TMP/notes-engine.md" "$dist"/DXEngine-* || rc=1
     fi
     for p in $(dx_ports); do
         pin="$(launcher_pin "$p" < "$ws/LAUNCHER-PIN.txt")"
@@ -286,6 +290,45 @@ cmd_publish() {
         fi
     done
     return "$rc"
+}
+
+# engine_build_changed <workspace commit> <workspace commit>: whether what the
+# engine's binaries are built with, besides its code, changed between two of
+# this repository's commits: its build scripts or CI, or a pinned port
+# branch's engine.cmake, toolchain, port.sh or cmake/deps.lock (SDL3's
+# version among them). The first empty or unknown: changed.
+engine_build_changed() {
+    local old="$1" new="$2" f p a b dir="$CI_TMP/deusex-launcher.git"
+    [ -n "$old" ] && git -C "$DX_WORKSPACE" cat-file -e "$old^{commit}" 2>/dev/null || return 0
+    while read -r f; do
+        case "$f" in
+            scripts/engine.sh|scripts/dx.sh|scripts/lib/*|.github/workflows/ports.yml)
+                say "the engine's build: $f changed"; return 0 ;;
+        esac
+    done < <(git -C "$DX_WORKSPACE" diff --no-renames --name-only "$old" "$new")
+    for p in $(dx_ports); do
+        a="$(git -C "$DX_WORKSPACE" show "$old:LAUNCHER-PIN.txt" | launcher_pin "$p")"
+        b="$(git -C "$DX_WORKSPACE" show "$new:LAUNCHER-PIN.txt" | launcher_pin "$p")"
+        [ "$a" != "$b" ] || continue
+        [ -n "$a" ] || { say "the engine's build: $p newly pinned"; return 0; }
+        [ -d "$dir" ] || owner_git clone -q --bare --filter=blob:none "$OWNER_GIT/deusex-launcher.git" "$dir"
+        while read -r f; do
+            case "$f" in
+                "ports/$p/engine.cmake"|"ports/$p/"toolchain*.cmake|"ports/$p/port.sh"|cmake/deps.lock)
+                    say "the engine's build: $p's $f changed"; return 0 ;;
+            esac
+        done < <(git -C "$dir" diff --no-renames --name-only "$a" "$b")
+    done
+    return 1
+}
+
+# free_tag <repository> <tag>: the tag, or the first of <tag>.2, .3, ... the
+# repository has not, for a rebuild of one commit the same day.
+free_tag() {
+    local tags t="$2" n=2
+    tags="$(owner_git ls-remote --tags --refs "$OWNER_GIT/$1.git" | sed 's|.*refs/tags/||')"
+    while grep -qxF "$t" <<< "$tags"; do t="$2.$n"; n=$((n + 1)); done
+    printf '%s\n' "$t"
 }
 
 # last_release <repository> <tag's start>: the commit of its newest release
