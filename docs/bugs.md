@@ -23,7 +23,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 0 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 4 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 1 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
@@ -63,9 +63,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PHYS.20 | The reach tests' walk, fly and swim moves passed through the pawn's base and took a mover as blocking by both actors' `bBlockActors`, where the original's skip the base only with `bIgnoreBases` (all pass 0, `MoveActor`'s filter `0x103995f1`) and block by `IsBlockedBy`. Fixed by reading (DXEngine 8f2e8a2b): a pawn on a lift's floor and a door before a non-blocking walker or flyer to be run | Moving: wandering and tactical movement | Read (AI.13's investigator). Run due: `LiftReachConsole`, which finds no lift or door on 00_TrainingFinal in either engine yet (its `FloorOf` to be looked at), both engines |
-| PHYS.22 | Line checks' edges and precision: `VisibleActors`' radius by a float square root (`VM/Iterator.cpp:348-349`), the original's squared sum on the x87 (`0x103e53d0`), so a negative radius finds nothing where the original's reaches as far as a positive one; a line under 0.01 clear without its walk (`TraceTest.cpp:614-622`), the original walking it, so from inside solid it finds nothing; `FastWalkNode` in doubles (`TraceRayModel.cpp:101`), the original's plane distances and split points floats (`0x103f33a0`); `NActor::FastTrace` walking end to start (`NActor.cpp:194`); `FindRegion`'s sums in floats, the original's x87 in Z, Y, X order (`0x103f5db0`); `SuggestJumpVelocity`'s accumulator; a test move under 0.0001 on each axis keeps the hit before it in the original, and `SuggestJumpVelocity` not worked in the original's float order, so a trial's last decimals may differ (AI.13's investigator) | Implemented, not as the original | Read (VM.16's and the sweep's investigators), against engine-dll.md's traces |
-| PHYS.23 | The ladder probe stopped at a texture with no outer (`Packages/Engine/Actors/UActor_PhysFlying.cpp:126`), where the original's test of one never passes (Engine.dll `0x103ccc40`): a texture in no group has its package for its outer since DXEngine 97f60b7f (VM.29), so by reading the probe now goes on past `Chainlnk_01`, `PlatMetlGrate_B`, the `HK_*` and `V_Com_Center` walls as the original's, in some ten maps with ladders (02_NYC_Warehouse, the NYC Undergrounds, 09_NYC_ShipFan, 10_Paris_Catacombs, 12_Vandenberg_Cmd and Gas, 14_Oceanlab_Silo, 15_Area51_Entrance, 06_HongKong_WanChai_Market) | Moving: wandering and tactical movement | Read (VM.29's investigator). Run due: a spot by such a ladder, `LadderConsole`, both engines |
 | PHYS.24 | A move of nothing is tested against the float 0.0001 (`UActor_Phys.cpp:807`, `:860`, `UActor_PhysWalking.cpp:100`, `UActor_PhysRolling.cpp:64`, `UActor_PhysTrailer.cpp:35`), where the original's `MoveActor` compares with the double 0.0001 (Engine.dll `0x1039915a`), so a move of exactly 0.0001f on an axis is one in DXEngine and none in the original; those callers' own originals not read | Small | Read (PHYS.22's investigator) |
 
 ## AI: the NPCs
