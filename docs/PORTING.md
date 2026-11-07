@@ -197,7 +197,7 @@ DXLauncher's OS dependencies are few and named: each behind a header in
 |---|---|---|---|
 | The game as a child it waits for, over a line both ways | `platform/process.h` | `process.c`: `fork`, `execve`, `socketpair` | `process.c`: `CreateProcessW` with the list of handles it inherits, a named pipe, `TerminateProcess` |
 | Crash-isolated GPU detection | `platform/gpu_probe.h` | `gpu_probe.c`: `fork` + `dlopen` of the Vulkan loader and EGL | `gpu_probe.c`: `vulkan-1.dll` and WGL, in `dxl-cli`, on a thread a hung driver is left behind on |
-| Single instance, and handing a command line to it | `platform/instance.h` | `instance.c`: `flock` on a pidfile, a unix socket file, both in the user's runtime folder | `instance.c`: a named mutex, a named pipe of messages |
+| Single instance, and handing a command line to it | `platform/instance.h` | `instance.c`: a read lock each launcher holds on a file (`F_OFD_SETLK`), a unix socket file, both in the user's runtime folder | `instance.c`: a named mutex each launcher makes, a named pipe of messages |
 | Waiting on that, and on a signal | `platform/wait.h` | `wait.c`: a pipe each, `poll` | `wait.c`: an event each, `WaitForMultipleObjects` |
 | The file system where it differs: the launcher's own path, a path's root, links, atomic writes | `platform/fs.h` | `fs.c`: `/proc/self/exe`, `realpath`, `symlink`, `mkstemp`, `fsync`, `rename` | `fs.c`: the wide calls, `GetFinalPathNameByHandleW`, `CreateSymbolicLinkW`, `CREATE_NEW`, `FlushFileBuffers`, `MoveFileExW` |
 | Its folders | `platform/folders.h` | `folders.c`: the XDG base directories | `folders.c`: the Known Folders |

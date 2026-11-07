@@ -32,11 +32,11 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [AUD](#aud-the-audio) | the audio | 2 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 3 |
 | [WIN](#win-the-game-window) | the game window | 1 |
-| [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 2 |
-| [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 2 |
-| [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 3 |
-| [LUI](#lui-the-launchers-screens-and-ui-kit) | the launchers' screens and UI kit | 1 |
-| [LPORT](#lport-the-launchers-ports-win32-the-smart-pro-the-sysroots) | the launchers' ports (Win32, the Smart Pro, the sysroots) | 2 |
+| [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
+| [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 1 |
+| [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 2 |
+| [LUI](#lui-the-launchers-screens-and-ui-kit) | the launchers' screens and UI kit | 0 |
+| [LPORT](#lport-the-launchers-ports-win32-the-smart-pro-the-sysroots) | the launchers' ports (Win32, the Smart Pro, the sysroots) | 1 |
 | [X](#x-the-harness-the-scripts-and-ci) | the harness, the scripts and CI | 0 |
 
 ## D: for the owner
@@ -126,13 +126,11 @@ owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | MAIN.12 | The wizard's logo band was never compared with the original: both installs here have `Help/LogoSmall.bmp` (500x77, GOG's of 2021-11-26), so every wizard page shows it in both programs and main's screenshots and its 14 of 15 to the pixel were made without it; main draws the logo whole in a 2-pixel raised edge (`dialog.c:215-224`, `:285-291`), where Wine's modal frame is 3 pixels and its bitmap static likely stretched |  | Read. Run due: `dx-reverse-info/tools/wine/wizard-capture.sh` on goggamefiles against `build/pageshots` |
-| MAIN.15 | The wizard's device list stops at 32 devices (`main/src/wizard/wizard.c:27`, `MAX_SHOWN`), where the original's has no cap; a forward goes to the first client socket in the runtime folder, where the original's to the first `IsBrowser` window in the window stacking order, likely the newest client |  | Read (MAIN.13's investigator) |
 
 ## LAPP: the desktop launcher's app, processes and POSIX platform
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| LAPP.11 | Only the first launcher holds the instance lock (POSIX `flock`; Windows' mutex, which a second launcher closes), so once the first ends a later start sees no other while another still runs, and reads that one's `Running.ini` as a crash, opening Recovery; DXLauncher's anti-aliasing probe ignores a stop for up to 10 s (`src/app/run.c:653`), the game then started and stopped before it is ready, `Running.ini` left. main and the port branches |  | Read (LAPP.7's investigator) |
 | LAPP.12 | The hand-over channel stays with the first client: a client started beside it never takes the channel over once that client ends (`open_channel` and `open_pipe` run only as the instance is first held), so a later start opens a second game in place of handing its line to the one still running; main has a channel per client and does not. Every port branch |  | Read (the launchers' investigator) |
 
 ## LCORE: the launchers' core (ini, config, keys, profiles)
@@ -140,21 +138,18 @@ owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | LCORE.10 | Run as root, DXLauncher still replaces a read-only ini at the next save: `access()` passes every file for root (`src/platform/posix/fs.c`, `dxl_fs_write_atomic`), and the Smart Pro's user is root (SSH logs in as root). trimui-smartpro |  | Read. Run due: on the device, a read-only `DeusEx.ini`, a setting saved, the file's bytes; whether the card's mount keeps write bits |
-| LCORE.13 | Small ini edges LCORE.12's fix left: `dxl_text_bool` takes `Yes` and `No` for User.ini's script-class bools, which DXEngine and the original refuse; main saves a new `INI=` ini to the path as given, so where its folder is there in another case alone the save fails, where the engine makes it in that folder; main's save calls an ini whose link points nowhere read-only |  | Read (LCORE.12's investigator) |
-| LCORE.14 | A linked ini whose link points nowhere is replaced by a plain file at the next save (`src/platform/posix/fs.c:78-89`), where the engine writes through the link. Every port branch |  | Read (the launchers' investigator) |
+| LCORE.14 | A linked ini whose link points nowhere is replaced by a plain file at the next save (`src/platform/posix/fs.c:78-89`), where the engine writes through the link. linux-x86_64, linux-aarch64, trimui-smartpro |  | Read (the launchers' investigator) |
 
 ## LUI: the launchers' screens and UI kit
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| LUI.8 | `uiscript`'s `find` focuses its control at once (`src/screens/uiscript.c`), so a script cannot catch a control the d-pad does not reach. A walk by the arrows, tried, selected each list row it passed: `profiles.script` renamed and deleted the wrong profiles. Every port branch |  | Read; the walk tried (LUI.8's investigator's draft), `tests/ui/profiles.script` |
 
 ## LPORT: the launchers' ports (Win32, the Smart Pro, the sysroots)
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | LPORT.6 | Sysroot downloads are checked against no hash: `trimui-smartpro/ports/trimui-smartpro/fetch-sysroot.sh:118` (SDL2's tarball) and `:134` (Mesa's two headers); the workspace's `scripts/lib/common.sh` `dx_fetch_debs` (`:336-364`, no SHA256 nor Release file, cached files taken on `-s`, bookworm's Packages index cached for good) and `dx_fetch_arch_pkg` (`:373-385`): a changed or corrupt download goes into the linux-x86_64, linux-aarch64 and Smart Pro builds' link unnoticed, where every other fetch is SHA256-pinned |  | Read |
-| LPORT.9 | Windows' console handler never gets the sign-out or shutdown events in a process that loads user32, so LAUNCHER.md's "the console's handler waits for the stop" is untrue for those two (`windows-x86_64/src/platform/win32/startup.c`) |  | Read (LPORT.8's investigator) |
 
 ## X: the harness, the scripts and CI
 
