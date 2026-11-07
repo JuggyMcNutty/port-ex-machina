@@ -91,9 +91,10 @@ checkout links it in. None of it is versioned and all of it can be deleted;
 
 Staging makes `build/<port>/app` from empty: it installs the binaries and
 what the launcher's install rules add, lays the port's `packaging/` over
-them, copies in the engine's files (`PORT_ENGINE_FILES`, one missing but the
-first passed over without a word: bugs.md X.11) and its notices
-(`DXEngine-LICENSE.md`, the engine's `LICENSE.md`), and runs `port_stage`.
+them, copies in the engine's files (`PORT_ENGINE_FILES`: without an engine
+build, the launcher alone, with a warning; an engine build that lacks one
+fails the staging) and its notices (`DXEngine-LICENSE.md`, the engine's
+`LICENSE.md`), and runs `port_stage`.
 The launcher's own files are in its home, never in the app.
 
 ## Adding a port

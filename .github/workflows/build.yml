@@ -22,7 +22,9 @@ on:
   workflow_dispatch:
 
 # One run per ref at a time: a pull request's newer push cancels its older
-# run; main's queue, so a release is never cut short.
+# run; main's queue, so a release is never cut short, and a pending run a
+# newer push replaces is built by that one, which compares with the last
+# release (scripts/ci.sh plan).
 concurrency:
   group: build-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}

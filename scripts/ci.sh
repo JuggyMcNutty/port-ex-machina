@@ -72,12 +72,20 @@ code_between() {
 }
 
 # The workspace's push builds when code changed: its own, or the engine's or a
-# port's between the commits its pins named before and name now.
+# port's between the commits its pins named before and name now. Before is a
+# push's last release, not its previous commit: GitHub keeps one pending run a
+# group, cancelling the older, and a failed run releases nothing, so a later
+# push of docs alone would leave their code unbuilt. A pull request's base.
 pins_changed_code() {
     local before="${CI_BEFORE:-}" sha="$CI_SHA" f p old new
     if [ "$CI_EVENT" = workflow_dispatch ]; then
         say "run by hand -- building"
         return 0
+    fi
+    if [ "$CI_EVENT" = push ]; then
+        before="$(last_release port-ex-machina '20')"
+        [ -n "$before" ] || { say "no release yet -- building"; return 0; }
+        say "against the last release, ${before:0:7}"
     fi
     if [ -z "$before" ] || [ "$before" = 0000000000000000000000000000000000000000 ] ||
        ! git -C "$DX_WORKSPACE" cat-file -e "$before^{commit}" 2>/dev/null; then
@@ -209,6 +217,9 @@ cmd_package() {
     [ -d "$b/app" ] || die "nothing staged -- scripts/dx.sh stage $p"
     # shellcheck source=/dev/null
     files="$(PORT_ENGINE_FILES="DXEngine DXEngine.pk3"; . "$DX_LAUNCHER/$p/ports/$p/port.sh"; echo "$PORT_ENGINE_FILES")"
+    for f in $files DXEngine-LICENSE.md; do
+        [ -f "$b/app/$f" ] || die "the staged app lacks $f -- scripts/dx.sh build $p, then stage"
+    done
     case "$p" in windows-x86_64|trimui-smartpro) ext=zip ;; *) ext=tar.gz ;; esac
     case "$p" in trimui-smartpro) dir=DeusEx ;; *) dir=DXLauncher ;; esac
     tmp="$(mktemp -d "$b/.package.XXXXXX")"
@@ -216,7 +227,7 @@ cmd_package() {
     cp -a "$b/app" "$tmp/app/$dir"
     cp -a "$b/app" "$tmp/launcher/$dir"
     for f in $files DXEngine-LICENSE.md; do
-        [ ! -f "$b/app/$f" ] || cp -a "$b/app/$f" "$tmp/engine/DXEngine/"
+        cp -a "$b/app/$f" "$tmp/engine/DXEngine/"
         rm -f "$tmp/launcher/$dir/$f"
     done
     if [ -d "$b/app/licenses" ]; then

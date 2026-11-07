@@ -101,7 +101,8 @@ cmd_stage() {
         local e="$BUILD/engine" f
         if [ -x "$e/${PORT_ENGINE_FILES%% *}" ]; then
             for f in $PORT_ENGINE_FILES; do
-                [ ! -f "$e/$f" ] || cp "$e/$f" "$APP/"
+                [ -f "$e/$f" ] || die "the engine build in $e lacks $f -- scripts/dx.sh build $PORT"
+                cp "$e/$f" "$APP/"
             done
             # Its notices, and those of the code it carries, with it.
             cp "$DX_ENGINE/LICENSE.md" "$APP/DXEngine-LICENSE.md"
@@ -176,15 +177,22 @@ cmd_check() {
     # programs import (dx_abi_args): the branch's scripts/check-abi.sh.
     say "== ABI of staged builds"
     for p in $(dx_ports); do
-        local src="$DX_LAUNCHER/$p" app="$DX_ROOT/build/$p/app" abi bins=()
+        local src="$DX_LAUNCHER/$p" app="$DX_ROOT/build/$p/app" abi bins=() files
         [ -f "$src/ports/$p/port.cmake" ] || continue
+        # An engine staged is staged whole (PORT_ENGINE_FILES).
+        files="$(PORT_ENGINE_FILES="DXEngine DXEngine.pk3"; . "$src/ports/$p/port.sh"; echo "$PORT_ENGINE_FILES")"
+        if [ -f "$app/${files%% *}" ]; then
+            for f in $files; do
+                [ -f "$app/$f" ] || { echo "FAIL build/$p/app lacks $f -- scripts/dx.sh build $p, then stage" >&2; rc=1; }
+            done
+        fi
         abi="$(dx_abi_args "$src/ports/$p/port.cmake")"
         [ -n "$abi" ] || continue
         for f in deusex-launcher dxl-cli DXEngine "$app"/*.exe "$app"/*.dll; do
             f="$app/${f##*/}"
             [ -f "$f" ] && bins+=("$f")
         done
-        [ ${#bins[@]} -gt 0 ] || continue
+        [ ${#bins[@]} -gt 0 ] || { say "skipped $p: nothing staged (scripts/dx.sh stage $p)"; continue; }
         # shellcheck disable=SC2086
         "$src/scripts/check-abi.sh" $abi "${bins[@]}" || rc=1
     done

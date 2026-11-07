@@ -158,7 +158,7 @@ How the project is worked on, where it stands and what is open: [`AGENTS.md`](AG
 Clone this repository into an empty folder; `fetch` puts the others beside it.
 
 ```sh
-mkdir deusex && cd deusex     # the parent folder: any name without a space (bugs.md X.8)
+mkdir deusex && cd deusex     # the parent folder: a name without a space (no build tried in one)
 git clone https://github.com/JuggyMcNutty/port-ex-machina.git && cd port-ex-machina
 scripts/dx.sh fetch           # once: the engine, the launcher's main and port branches, the RE
 scripts/dx.sh deps    <port>  # toolchains and sysroot, if the port needs them (linux-x86_64's
@@ -215,7 +215,7 @@ Every repository is a folder of its own in one parent folder, none inside anothe
 none of them owns. The parent is not versioned itself.
 
 ```
-deusex/                  the parent folder (any name without a space: bugs.md X.8)
+deusex/                  the parent folder (a name without a space: no build is tried in one)
   port-ex-machina/       this repository:
     AGENTS.md              rules, status, decisions, to do, open items (CLAUDE.md imports it)
     ENGINE-PIN.txt         the engine's version: DXEngine's repository, branch and commit

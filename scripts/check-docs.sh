@@ -17,8 +17,11 @@
 # doc's own directory; its checkout's root, src/, ports/*/packaging/ and
 # ports/*/; then the workspace's -- the folder the repositories share (so
 # DXEngine/..., gamefiles/... and reference/... resolve), this repository,
-# the engine clone, dx-reverse-info, gamefiles/ (the game install), and each
-# launcher checkout with its src/, ports/*/packaging/ and ports/*/.
+# the engine clone and its source folder (DXEngine/DXEngine), dx-reverse-info,
+# gamefiles/ (the game install), deusex-launcher/ (so <branch>/... resolves),
+# and each launcher checkout with its src/, ports/*/packaging/ and ports/*/.
+# A code span's path:line is checked as its path. A link's target resolves
+# against its doc's folder alone, as GitHub's do, with a "/" or without.
 #
 # A link to https://github.com/JuggyMcNutty/<repository>/(blob|tree)/<branch>/<path>
 # must name a branch the workspace has -- main of port-ex-machina,
@@ -26,9 +29,10 @@
 # LAUNCHER-PIN.txt pins -- and a path that exists in that repository's
 # checkout here: port-ex-machina at main is this one, dx-reverse-info and
 # DXEngine at main are their clones, and deusex-launcher at <branch> is
-# deusex-launcher/<branch>/. A link to a DXEngine commit must name one the
-# clone has; one to a repository itself, to its issues, to its releases or to
-# a file of its latest release, is taken as is.
+# deusex-launcher/<branch>/. A link to a commit of one of the four must name
+# one its checkout has (deusex-launcher's share one repository); one to a
+# repository itself, to its issues, to its releases or to a file of its
+# latest release, is taken as is.
 #
 # A link with an #anchor to a markdown file (or to a heading of the doc itself)
 # must name one of that file's headings, as GitHub makes their ids: lower case,
@@ -91,7 +95,7 @@ checkout_of() {
 
 # The workspace's roots, after a doc's own: names relative to a port (as
 # packaging/ or target.c) resolve in any launcher checkout's ports.
-workspace=("$DX_ROOT" "$ROOT" "$ENGINE" "$DX_RE" "$DX_ROOT/gamefiles")
+workspace=("$DX_ROOT" "$ROOT" "$ENGINE" "$ENGINE/DXEngine" "$DX_RE" "$DX_ROOT/gamefiles" "$DX_LAUNCHER")
 for d in "$DX_LAUNCHER"/*/; do
     d="${d%/}"
     workspace+=("$d" "$d/src")
@@ -182,8 +186,15 @@ check_url() {
     local rest="${path#"$OWNER_URL"/}" repo kind ref sub dir
     repo="${rest%%/*}"
     if [[ "$rest" =~ ^[^/]+/commit/([0-9a-f]+)$ ]]; then
-        [ "$repo" = DXEngine ] && [ -d "$ENGINE/.git" ] || return 2
-        git -C "$ENGINE" cat-file -e "${BASH_REMATCH[1]}^{commit}" 2>/dev/null && return 0
+        local sha="${BASH_REMATCH[1]}" clone=""
+        case "$repo" in
+            port-ex-machina) clone="$ROOT" ;;
+            DXEngine) clone="$ENGINE" ;;
+            dx-reverse-info) clone="$DX_RE" ;;
+            deusex-launcher) clone="$DX_LAUNCHER/main" ;;   # its checkouts share one repository
+        esac
+        [ -n "$clone" ] && [ -e "$clone/.git" ] || return 2
+        git -C "$clone" cat-file -e "$sha^{commit}" 2>/dev/null && return 0
         fail "NO COMMIT $doc:$line: $url"; return 1
     fi
     if [[ "$rest" =~ ^[^/]+(/issues|/releases(/latest/download/[^/]+)?)?/?$ ]]; then
@@ -249,6 +260,17 @@ for c in "${checkouts[@]}"; do
             fi
         fi
         tok="${tok%%#*}"                   # link anchors
+        # A link resolves against its doc's folder, as GitHub's do, "/" or no.
+        if [ "$kind" = L ] && [ -n "$tok" ] && [[ "$tok" != */* ]] && ! [[ "$tok" =~ ^[a-z]+: ]]; then
+            checked=$((checked + 1))
+            if [ -e "$co/$(dirname "$doc")/$tok" ]; then
+                [ "$verbose" = 1 ] && echo "ok   $label:$line $tok"
+            else
+                fail "MISSING $label:$line: $tok"
+            fi
+            continue
+        fi
+        tok="${tok%%:[0-9]*}"              # path:line, path:line-line
         # Relative paths only: must contain "/" and a letter, and nothing that
         # makes it a URL, a command, a placeholder, a glob or an address.
         [[ "$tok" == */* ]] || continue

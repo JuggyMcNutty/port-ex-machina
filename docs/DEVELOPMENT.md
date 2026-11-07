@@ -147,13 +147,13 @@ Docs and scripts that describe the tree are checked against it, so a move or a r
 loudly instead of leaving stale instructions:
 
 - `scripts/check-docs.sh`: across the workspace's repositories, every path a doc names in
-  backticks or links, a name with a `/`, must exist (a bare file name goes unchecked), every
-  link to a heading (`#anchor`) must find one, and every link into another of the repositories
-  must name a branch the workspace has (the launcher's `main` and the ports `LAUNCHER-PIN.txt`
-  pins, `main` elsewhere) and resolve in that repository's checkout here; but a `NAME.md#anchor`
-  to a missing file in the same folder and any token with a `:` pass, and a commit link into
-  deusex-launcher or dx-reverse-info is counted unverifiable (bugs.md X.11). A checkout git
-  cannot read fails rather than going unchecked, and so does a missing `AGENTS.md`.
+  backticks, a name with a `/` (a `path:line` by its path; a bare file name goes unchecked),
+  and every link's target, in its doc's folder as GitHub has it, must exist; every link to a
+  heading (`#anchor`) must find one; and every link into another of the repositories must name
+  a branch the workspace has (the launcher's `main` and the ports `LAUNCHER-PIN.txt` pins,
+  `main` elsewhere) and resolve in that repository's checkout here, a commit link to one the
+  checkout has. A checkout git cannot read fails rather than going unchecked, and so does a
+  missing `AGENTS.md`.
 - `scripts/engine.sh check`: the engine clone is at the commit `ENGINE-PIN.txt` names, on its
   branch.
 - `scripts/launcher.sh check`: each port's worktree is at the commit `LAUNCHER-PIN.txt` names,
@@ -163,9 +163,9 @@ loudly instead of leaving stale instructions:
   own helper there, and one the hook does not know takes the launcher's default.
 - `scripts/dx.sh check` runs the first three, confirms every port has its required files, checks
   the glibc ceiling of whatever is staged (a Windows port's floor and the DLLs its programs
-  import; a port with nothing staged passed over, `check-abi.sh` stopping without a word at a
-  file with no GLIBC references: bugs.md X.11), and checks that a port's list of the game's
-  builds (`src/core/gamedb.c`, DXLauncher's) is the engine's (`UE1GameDatabase.h`).
+  import; a port with nothing staged said skipped) and that a staged engine is whole (its
+  `PORT_ENGINE_FILES`), and checks that a port's list of the game's builds
+  (`src/core/gamedb.c`, DXLauncher's) is the engine's (`UE1GameDatabase.h`).
 
 ## CI
 
@@ -207,9 +207,9 @@ build reads (the engine's harness, its `tools/perf/`, `tools/host-tools.sh` and
 `tools/natives_audit.py`; the workspace's `LICENSE`, `tools/probes/` and
 `scripts/check-docs.sh`) starts no run, and a push of pins whose commits change only those
 builds nothing. The list is `scripts/ci.sh`'s `is_code`; each workflow's `paths` filter says the
-same. A run still pending on `main` is cancelled by the next push's, and each run diffs its own
-push alone, so a code push pending when a docs-only pin push follows is never built or released
-(bugs.md X.10).
+same. A push to `main` is compared with the last release, not with the commit before it: a run
+still pending is cancelled by the next push's, and a failed run releases nothing, so the next
+run builds what they would have.
 
 **Releases**, each with notes naming the commits built and linking what changed since the one
 before it (`scripts/ci.sh publish`):
