@@ -36,7 +36,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
 | [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 0 |
 | [LUI](#lui-the-launchers-screens-and-ui-kit) | the launchers' screens and UI kit | 0 |
-| [LPORT](#lport-the-launchers-ports-win32-the-smart-pro-the-sysroots) | the launchers' ports (Win32, the Smart Pro, the sysroots) | 1 |
+| [LPORT](#lport-the-launchers-ports-win32-the-smart-pro-the-sysroots) | the launchers' ports (Win32, the Smart Pro, the sysroots) | 0 |
 | [X](#x-the-harness-the-scripts-and-ci) | the harness, the scripts and CI | 0 |
 
 ## D: for the owner
@@ -139,7 +139,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| LPORT.6 | Sysroot downloads are checked against no hash: `trimui-smartpro/ports/trimui-smartpro/fetch-sysroot.sh:118` (SDL2's tarball) and `:134` (Mesa's two headers); the workspace's `scripts/lib/common.sh` `dx_fetch_debs` (`:336-364`, no SHA256 nor Release file, cached files taken on `-s`, bookworm's Packages index cached for good) and `dx_fetch_arch_pkg` (`:373-385`): a changed or corrupt download goes into the linux-x86_64, linux-aarch64 and Smart Pro builds' link unnoticed, where every other fetch is SHA256-pinned |  | Read |
 
 ## X: the harness, the scripts and CI
 

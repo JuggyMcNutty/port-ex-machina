@@ -325,35 +325,81 @@ dx_abi_args() {
 }
 
 # ---- Debian packages --------------------------------------------------------
+# dx_sha256_is <file> <sha256>: whether the file is there with that SHA256.
+dx_sha256_is() { [ -f "$1" ] && echo "$2  $1" | sha256sum -c --status; }
+
+# The suites the ports' sysroots take packages from, each pinned: its Packages
+# index's SHA256, unpacked, and a snapshot.debian.org time that holds that
+# index for good, fetched from where the mirror's has moved on (a point
+# release), so a sysroot's packages come back byte for byte. To move a pin,
+# take the mirror's index's SHA256 and today's snapshot time.
+DX_DEBIAN_SNAPSHOT="20261107T000000Z"
+dx_debian_index_sha256() {
+    case "$1/$2" in
+        bookworm/amd64) echo 515e692f2c4121c6fcec444ef100cc18f79a991910615f3a88c8b7becfc94d2f ;;
+        bookworm/arm64) echo c7c883a61f348283050d3a754e7c8119117c4019bf65da804c78fdae315866f1 ;;
+        buster/amd64)   echo de275fb3da615c712042dc81ca78648cfb4e2dbc621b086dbd7ba76f919999ee ;;
+        buster/arm64)   echo e9ac25a14f19f4800a6e7d4eaba7a6ec5e80f6f23f11f1146c7cbc5e571ef708 ;;
+        *) return 1 ;;
+    esac
+}
+
 # dx_fetch_debs <dest> <suite> <arch> <package>...
 #
 # Downloads each package (resolved through the suite's Packages index, so no
 # version numbers are hardcoded) and unpacks its data into <dest>, the way
-# dpkg would lay it out. Downloads are cached in deps/cache/, each kept only
-# once it is whole (a .part file until then: a cut transfer is fetched again,
-# where the next run found it cached and failed unpacking it). A suite gone to
-# Debian's archive (buster) is fetched from there.
+# dpkg would lay it out. The index is the pinned one (dx_debian_index_sha256):
+# the mirror's while it is, else the snapshot's; each package is the one with
+# the SHA256 the index gives, fetched again where the cached one is not, from
+# the snapshot where the mirror has it no more. Downloads are cached in
+# deps/cache/, each kept only once it is whole and checked (a .part file until
+# then). A suite gone to Debian's archive (buster) is fetched from there.
 dx_fetch_debs() {
     local dest="$1" suite="$2" arch="$3"; shift 3
     local mirror="https://deb.debian.org/debian"
-    case "$suite" in buster|stretch|jessie) mirror="https://archive.debian.org/debian" ;; esac
+    local snapshot="https://snapshot.debian.org/archive/debian/$DX_DEBIAN_SNAPSHOT"
+    case "$suite" in buster|stretch|jessie)
+        mirror="https://archive.debian.org/debian"
+        snapshot="https://snapshot.debian.org/archive/debian-archive/$DX_DEBIAN_SNAPSHOT/debian" ;;
+    esac
+    local want
+    want="$(dx_debian_index_sha256 "$suite" "$arch")" || die "no pinned $suite/$arch index (scripts/lib/common.sh)"
     local cache="$DX_DEPS/cache/debian-$suite-$arch"
     mkdir -p "$cache" "$dest"
-    if [ ! -s "$cache/Packages" ]; then
-        say "fetching the $suite/$arch package index ..."
-        curl -fsSL --retry 3 "$mirror/dists/$suite/main/binary-$arch/Packages.xz" | xz -d > "$cache/Packages.part" ||
-            die "could not fetch the $suite/$arch package index"
-        mv "$cache/Packages.part" "$cache/Packages"
+    local from
+    if ! dx_sha256_is "$cache/Packages" "$want"; then
+        for from in "$mirror" "$snapshot"; do
+            say "fetching the $suite/$arch package index from $from ..."
+            if curl -fsSL --retry 3 "$from/dists/$suite/main/binary-$arch/Packages.xz" | xz -d > "$cache/Packages.part" &&
+                dx_sha256_is "$cache/Packages.part" "$want"; then
+                mv "$cache/Packages.part" "$cache/Packages"
+                break
+            fi
+            say "  not the pinned index"
+        done
+        rm -f "$cache/Packages.part"
+        dx_sha256_is "$cache/Packages" "$want" || die "no $suite/$arch package index with the pinned SHA256 $want"
     fi
-    local pkg file deb tmp
+    local pkg file sum deb tmp
     for pkg in "$@"; do
-        file=$(awk -v p="$pkg" '$1 == "Package:" { hit = ($2 == p) } hit && $1 == "Filename:" { print $2; exit }' "$cache/Packages")
-        [ -n "$file" ] || die "no package $pkg in $suite/$arch"
+        file="" sum=""
+        read -r file sum < <(awk -v p="$pkg" '
+            $1 == "Package:" { if (hit && f != "") exit; hit = ($2 == p) }
+            hit && $1 == "Filename:" { f = $2 }
+            hit && $1 == "SHA256:" { s = $2 }
+            END { if (f != "") print f, s }' "$cache/Packages") || true
+        [ -n "$file" ] && [ -n "$sum" ] || die "no package $pkg in $suite/$arch"
         deb="$cache/$(basename "$file")"
-        if [ ! -s "$deb" ]; then
+        if ! dx_sha256_is "$deb" "$sum"; then
             say "  $pkg <- $(basename "$file")"
-            curl -fsSL --retry 3 -o "$deb.part" "$mirror/$file" || die "could not fetch $pkg"
-            mv "$deb.part" "$deb"
+            for from in "$mirror" "$snapshot"; do
+                if curl -fsSL --retry 3 -o "$deb.part" "$from/$file" && dx_sha256_is "$deb.part" "$sum"; then
+                    mv "$deb.part" "$deb"
+                    break
+                fi
+            done
+            rm -f "$deb.part"
+            dx_sha256_is "$deb" "$sum" || die "could not fetch $pkg with the SHA256 its index gives ($sum)"
         fi
         tmp="$(mktemp -d)"
         (cd "$tmp" && ar x "$deb")
@@ -363,22 +409,24 @@ dx_fetch_debs() {
 }
 
 # ---- Arch Linux packages (pinned headers, host tools) -----------------------
-# dx_fetch_arch_pkg <dest> <name> <version> <arch> [path in the package]...
-#   e.g. dx_fetch_arch_pkg "$tmp" vulkan-headers 1:1.4.357.0-1 any
+# dx_fetch_arch_pkg <dest> <name> <version> <arch> <sha256> [path in the package]...
+#   e.g. dx_fetch_arch_pkg "$tmp" vulkan-headers 1:1.4.357.0-1 any 2f6c34cc...
 #
 # Unpacks one exact package version from archive.archlinux.org, which keeps
-# every version ever published -- so a header set pinned by version comes back
-# byte for byte. Only the paths given are unpacked (usr/include by default).
-# Downloads are cached in deps/cache/, kept once whole, as dx_fetch_debs's.
+# every version ever published, the package's file the one with its pinned
+# SHA256 -- so a header set pinned by version comes back byte for byte. Only
+# the paths given are unpacked (usr/include by default). Downloads are cached
+# in deps/cache/, kept once whole and checked, as dx_fetch_debs's.
 dx_fetch_arch_pkg() {
-    local dest="$1" name="$2" ver="$3" arch="$4"; shift 4
+    local dest="$1" name="$2" ver="$3" arch="$4" sha="$5"; shift 5
     local file="$name-$ver-$arch.pkg.tar.zst"
     local cache="$DX_DEPS/cache/archlinux"
     mkdir -p "$cache" "$dest"
-    if [ ! -s "$cache/$file" ]; then
+    if ! dx_sha256_is "$cache/$file" "$sha"; then
         say "  $name $ver"
         curl -fsSL --retry 3 -o "$cache/$file.part" \
             "https://archive.archlinux.org/packages/${name:0:1}/$name/${file//:/%3A}" || die "could not fetch $name $ver"
+        dx_sha256_is "$cache/$file.part" "$sha" || { rm -f "$cache/$file.part"; die "$file is not the pinned one ($sha)"; }
         mv "$cache/$file.part" "$cache/$file"
     fi
     tar -C "$dest" --zstd -xf "$cache/$file" "${@:-usr/include}"
