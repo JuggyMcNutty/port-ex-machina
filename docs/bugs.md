@@ -27,7 +27,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
-| [NET](#net-the-network) | the network | 3 |
+| [NET](#net-the-network) | the network | 1 |
 | [REN](#ren-the-renderer) | the renderer | 6 |
 | [AUD](#aud-the-audio) | the audio | 2 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 3 |
@@ -87,9 +87,7 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| NET.24 | Small URL and travel edges NET.13's fix left: a map loaded again into the level it is already, the original's keeping the same objects (`URLPartsConsole`'s first version: `P.Level == FirstLevel` True), DXEngine making new ones; a URL of another protocol opened in the system's browser by the original (`appLaunchURL`, Engine.dll `0x1038b890`), DXEngine trying to join it as a server; `?load=N` a save's slot in DXEngine, an ordinary browse to the original (DeusEx.dll `0x10010b90`); a URL kept whole, where the original's holds 1,023 characters. No stock path reaches them | Multiplayer | Read (NET.13's investigator) |
-| NET.25 | A paused listen server reads the host's input into the remote players' pawns too (`Packages/Engine/Actors/Pawn/UPlayerPawn.cpp:13-20`, `PausedInput`), where the original calls each pawn's own `Player->ReadInput` (Engine.dll `0x103a57f7`), which a net connection's does nothing in (`0x1030262b`); `TickPhysics` runs an actor's pending touch with no physics (`Packages/Engine/Actors/UActor_Phys.cpp:60`), where the original's `PostTouch` ends `performPhysics` (`0x103c9917`), which its tick calls only for an actor with physics (`0x103a275c`) | Multiplayer | Read (NET.21's investigator) |
-| NET.26 | A proxy whose life span runs out is destroyed (`Packages/Engine/Actors/UActor.cpp`, the tick's life span), where the original refuses to destroy an actor that is not the authority, so a simulated or autonomous proxy stays and its `Expired` comes again each tick, its state code and timer going on (`RoleGatesConsole`: the original's `Sim`, `SimState` and `Auto` expiring tick after tick and there at 3.25 s, DXEngine's gone). Address not read | Multiplayer | Run: `RoleGatesConsole`, both engines |
+| NET.24 | A `?load=N` loads save slot N (`Engine.cpp`, `LoadFromSaveFile`), where the original's browses the map the URL names: from Liberty Island `open 01_NYC_UNATCOHQ?load=9` loads UNATCO HQ, and from there `open 01_NYC_UNATCOIsland?load=01_NYC_UNATCOHQ` the island, where DXEngine loads no level (`URLEdgesConsole` with `Short`); DeusEx.dll reads the option's value at `0x100115ce` and `0x10011736`-`0x1001178c`, its use (the mission test only, it seems) not settled, a draft taking it for the `Current` lookup refuted by the run. No stock path reaches it | Saving, loading and travel | Run: `URLEdgesConsole` with `Short`, both engines |
 
 ## REN: the renderer
 
