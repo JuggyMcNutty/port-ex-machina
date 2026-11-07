@@ -195,9 +195,9 @@ here, so a run can be repeated on this machine:
   ([the toolchains](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#the-toolchains)).
 - A port's job fails on a compiler or linker warning in our own code, third-party code exempt
   (`scripts/ci.sh warnings`), and on a skipped test but `test_gamefiles` and `test_ui_scripts`,
-  which need the game, and `test_gpu_probe`, which needs a GPU's Mesa driver and is skipped too
-  when its probe fails (bugs.md LAPP.9) (`scripts/ci.sh skips`). A failed test is named on the
-  run's page, an annotation, without its log opened (`scripts/ci.sh failed`).
+  which need the game, and `test_gpu_probe`, which needs a GPU's Mesa driver (a probe that
+  answers with none a skip, one that fails a failure) (`scripts/ci.sh skips`). A failed test is
+  named on the run's page, an annotation, without its log opened (`scripts/ci.sh failed`).
 - The recreation's job is `scripts/recreation.sh test`: its build, with the runner's compiler
   and SDL2, and its tests.
 
