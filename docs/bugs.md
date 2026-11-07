@@ -32,7 +32,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 2 |
 | [WIN](#win-the-game-window) | the game window | 2 |
-| [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
+| [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
 | [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 0 |
 | [LUI](#lui-the-launchers-screens-and-ui-kit) | the launchers' screens and UI kit | 0 |
@@ -116,7 +116,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| MAIN.12 | The wizard's logo band was never compared with the original: both installs here have `Help/LogoSmall.bmp` (500x77, GOG's of 2021-11-26), so every wizard page shows it in both programs and main's screenshots and its 14 of 15 to the pixel were made without it; main draws the logo whole in a 2-pixel raised edge (`dialog.c:215-224`, `:285-291`), where Wine's modal frame is 3 pixels and its bitmap static likely stretched |  | Read. Run due: `dx-reverse-info/tools/wine/wizard-capture.sh` on goggamefiles against `build/pageshots` |
 
 ## LAPP: the desktop launcher's app, processes and POSIX platform
 
@@ -203,5 +202,4 @@ What no sweep has read, by area: the next sweep's ground.
 - **LCORE:** json.c past its writer, finder_places.c and gamedb.c; mods.c, finder.c and
   servers.c in part; app/browser.c past its first 140 lines; posix net.c (skimmed).
 - **LAPP:** the tests, read in part.
-- **MAIN:** the pixels against the original's: nothing run (MAIN.12).
 - **X:** tools/probes' GLES, fbdev and SDL probes past their headers.
