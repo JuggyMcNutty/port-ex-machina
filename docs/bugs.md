@@ -30,11 +30,11 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [NET](#net-the-network) | the network | 0 |
 | [REN](#ren-the-renderer) | the renderer | 2 |
 | [AUD](#aud-the-audio) | the audio | 1 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 3 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 4 |
 | [WIN](#win-the-game-window) | the game window | 2 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 1 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
-| [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 1 |
+| [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 0 |
 | [LUI](#lui-the-launchers-screens-and-ui-kit) | the launchers' screens and UI kit | 0 |
 | [LPORT](#lport-the-launchers-ports-win32-the-smart-pro-the-sysroots) | the launchers' ports (Win32, the Smart Pro, the sysroots) | 1 |
 | [X](#x-the-harness-the-scripts-and-ci) | the harness, the scripts and CI | 0 |
@@ -105,6 +105,7 @@ owner rules.
 | ENG.22 | The game starts on the ini's `[URL] LocalMap` (`Engine.cpp:310`), where the original's starts at `DX.dx` whatever it names (Engine.dll `0x10389429`-`0x103894a4`); every known ini names `DX.dx` | The command line | Read (PKG.27's investigator) |
 | ENG.23 | A single-player level's client-only actors are removed (`Engine.cpp:1168`, every actor not for the server), where the original's keeps them in single player; no stock export is client-only | Mods | Read (PKG.27's investigator) |
 | ENG.24 | The player's ini settings are read again with a converter that takes `yes` and `no` for a bool (`Packages/Engine/Actors/Pawn/UPlayerPawn.cpp:133-149`, `LoadProperties`; `IniProperty.cpp:109`) and puts DXEngine's own default in place of text it cannot read, where the original's import takes 1, True, 0 and False alone (`UBoolProperty::ImportText`, Core.dll `0x10166380`), as DXEngine's class import does (`UBoolProperty.cpp:96-120`): a User.ini `bInvertMouse=Yes` inverts the mouse in DXEngine alone; whether those defaults are Engine.u's not checked | The command line | Read (the launchers' investigator) |
+| ENG.25 | The write of a read-only ini throws `Could not create <file>` (`IniFile::SaveTo` and `UpdateFile` through `File::create_always`, `Utils/File.cpp:221-228`), where the original's config writer fails quietly and the game plays on; run as root, DXEngine writes an ini whose every write bit is off, which Windows' read-only attribute refuses an administrator (found with LCORE.10, the launchers' side, fixed) | Mods | Read. Run due: the original's write of a read-only ini read (Core.dll's config cache); a run with the run's DeusEx.ini and User.ini read-only, a console's SaveConfig and the exit, both engines |
 
 ## WIN: the game window
 
@@ -128,7 +129,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| LCORE.10 | Run as root, DXLauncher still replaces a read-only ini at the next save: `access()` passes every file for root (`src/platform/posix/fs.c`, `dxl_fs_write_atomic`), and the Smart Pro's user is root (SSH logs in as root). trimui-smartpro |  | Read. Run due: on the device, a read-only `DeusEx.ini`, a setting saved, the file's bytes; whether the card's mount keeps write bits |
 
 ## LUI: the launchers' screens and UI kit
 
