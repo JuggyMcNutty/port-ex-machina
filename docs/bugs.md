@@ -23,8 +23,8 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 4 |
-| [AI](#ai-the-npcs) | the NPCs | 3 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 3 |
+| [AI](#ai-the-npcs) | the NPCs | 1 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 4 |
@@ -66,8 +66,7 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PHYS.20 | The reach tests' moves pass through the pawn's base and take a mover as blocking by both actors' `bBlockActors` (`UPawn_ReachDeusEx.cpp:64-75`), where the original's walk, fly and swim moves skip the base only with `bIgnoreBases` (all pass 0, `MoveActor`'s filter `0x103995f1`) and block by `IsBlockedBy`: an NPC on a lift's floor tests through it, a flying bird through movers | Moving: wandering and tactical movement | Read. Run due: a pawn based on a lift, `AIDirectionReachable` and `PointReachable` across it |
-| PHYS.21 | `JumpLanding`'s steps are raw traces (`UPawn_Path.cpp:540`), the original's three `MoveActor` test moves, held off 2 units and passing pawns and non-static decorations (`jumpLanding` `0x103c2530`): a jumper's landing on a crate or an NPC, some 2 units lower, and the search toward a falling pawn | Moving: wandering and tactical movement | Read. Run due: a jumper's `PointReachable` off a ledge onto a crate |
+| PHYS.20 | The reach tests' walk, fly and swim moves passed through the pawn's base and took a mover as blocking by both actors' `bBlockActors`, where the original's skip the base only with `bIgnoreBases` (all pass 0, `MoveActor`'s filter `0x103995f1`) and block by `IsBlockedBy`. Fixed by reading (DXEngine 8f2e8a2b): a pawn on a lift's floor and a door before a non-blocking walker or flyer to be run | Moving: wandering and tactical movement | Read (AI.13's investigator). Run due: `LiftReachConsole`, which finds no lift or door on 00_TrainingFinal in either engine yet (its `FloorOf` to be looked at), both engines |
 | PHYS.22 | Line checks' edges and precision: `VisibleActors`' radius by a float square root (`VM/Iterator.cpp:348-349`), the original's squared sum on the x87 (`0x103e53d0`), so a negative radius finds nothing where the original's reaches as far as a positive one; a line under 0.01 clear without its walk (`TraceTest.cpp:614-622`), the original walking it, so from inside solid it finds nothing; `FastWalkNode` in doubles (`TraceRayModel.cpp:101`), the original's plane distances and split points floats (`0x103f33a0`); `NActor::FastTrace` walking end to start (`NActor.cpp:194`); `FindRegion`'s sums in floats, the original's x87 in Z, Y, X order (`0x103f5db0`); `SuggestJumpVelocity`'s accumulator | Implemented, not as the original | Read (VM.16's and the sweep's investigators), against engine-dll.md's traces |
 | PHYS.23 | The ladder probe stopped at a texture with no outer (`Packages/Engine/Actors/UActor_PhysFlying.cpp:126`), where the original's test of one never passes (Engine.dll `0x103ccc40`): a texture in no group has its package for its outer since DXEngine 97f60b7f (VM.29), so by reading the probe now goes on past `Chainlnk_01`, `PlatMetlGrate_B`, the `HK_*` and `V_Com_Center` walls as the original's, in some ten maps with ladders (02_NYC_Warehouse, the NYC Undergrounds, 09_NYC_ShipFan, 10_Paris_Catacombs, 12_Vandenberg_Cmd and Gas, 14_Oceanlab_Silo, 15_Area51_Entrance, 06_HongKong_WanChai_Market) | Moving: wandering and tactical movement | Read (VM.29's investigator). Run due: a spot by such a ladder, `LadderConsole`, both engines |
 
@@ -75,8 +74,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| AI.13 | `GetPathnodeList` filters by reach and keeps the nearest 32 within 1000 (`UPawn_AI.cpp:626-641`), where the original picks 32 first, once full replacing the nearest entry farther than the new one, then filters, under 1e6 squared (`0x103c6490`): `ReachablePathnodes` (projectile avoidance, `GetOvershootDestination`) where more than 32 nodes lie in reach | Moving: wandering and tactical movement | Read |
-| AI.14 | Small path and pick differences: `AIPickRandomDestination` pitched only in water or flying (`UPawn_AI.cpp:542`), the original's unless walking or swimming out of water (`0x103c8041`); `ReachableFromAnchor` tracing anchor to goal (`UPawn_Path.cpp:424`), the original goal to anchor (`0x103da93e`); `ReachablePathnodes` leaving its out variable on the last node, the original None; `FindBestJump`'s log of a drop of 350 or more missing (`0x10481960`) | Moving: wandering and tactical movement | Read |
 | AI.16 | Liberty Island's security bots are on their patrol sooner: 2 s into the level `SecurityBot0` and `SecurityBot1` hold a `MoveTarget` (`PatrolPoint19`, `PatrolPoint14`), where the original's hold none (`NavReachConsole`'s and `SecondWayConsole`'s `movetarget`, every run of each engine; their answers and routes alike). Cause not read | Moving: wandering and tactical movement | Run: `NavReachConsole`, `SecondWayConsole`, both engines |
 
 ## DX: DeusEx's natives
