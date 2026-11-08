@@ -20,18 +20,18 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 0 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 2 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 0 |
-| [REN](#ren-the-renderer) | the renderer | 3 |
+| [REN](#ren-the-renderer) | the renderer | 4 |
 | [AUD](#aud-the-audio) | the audio | 0 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 2 |
-| [WIN](#win-the-game-window) | the game window | 3 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
+| [WIN](#win-the-game-window) | the game window | 1 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
 | [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 0 |
@@ -48,6 +48,7 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
+| D.49 | Full screen the size is not kept: `FullscreenViewportX` and `Y` stay as configured, 0 the desktop's mode, where the original's viewport keeps each size it is given full screen as the client's full screen size and saves it (`ResizeViewport`, WinDrv.dll `0x1110e2f3`-`0x1110e35b`), so a size asked that the display lacks is saved as the mode it took; DXEngine's 0 is its own | The settings | Read (WIN.18's investigator) |
 
 ## VM: the script VM and the object system
 
@@ -63,8 +64,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PHYS.26 | `PHYS_Spider` moves nothing (`UActor::TickSpider` empty), where the original's `physSpider` walks a pawn on walls and ceilings; no stock script sets it | Small | Read (PHYS.25's investigator) |
-| PHYS.27 | `PickWallAdjust` is Surreal Engine's own algorithm, not the original's (Engine.dll `0x103c4150`); no stock script calls it | Small | Read (PHYS.25's investigator) |
 
 ## AI: the NPCs
 
@@ -93,6 +92,7 @@ owner rules.
 | REN.38 | GL's uploads checked by their bytes, by reading (DXEngine 8ce0bc6b): a top mip short of `MipBytes` or past `GL_MAX_TEXTURE_SIZE` the white texel, a short lower level zeros, as Vulkan and D3D11 take them, where GL read past a mod's short DXT1 mip on GL and GL ES | Mods | Read. Run due: an ASan build with a hand-made .utx, a DXT1 texture whose top mip is short, on GL and GL ES |
 | REN.39 | Device edges fixed by reading (DXEngine 8ce0bc6b), their runs due: Vulkan without `VK_KHR_sampler_mirror_clamp_to_edge` clamping to the edge (the aarch64 boards' GPUs); the swapchain's choice where the surface lists an sRGB format first; the single-texture bindless array cleared whole; GL's and D3D11's resize no longer flushing every texture (seen only by counting uploads: no frame shows it); D3D11's base and macro pans and its present and read-back samplers |  | Read. Run due: each on its device, D3D11's under Wine |
 | REN.43 | The console's `FLUSH`, which `DeusExPlayer.ShowMainMenu` and the brightness menu send, draws no PRECACHING frame after it (`Engine::PrecacheOnFlip` set at a map's load alone), where the original's `UEngine::Flush(1)` (Engine.dll `0x10380fed`) has `D3DDrv`'s Flush set `PrecacheOnFlip` from `UsePrecache` (`0x10002ec9`), so with it on the main menu opens on PRECACHING | Small | Read (REN.39's run planner) |
+| REN.44 | The render device's console words are not taken: `GETDETAILTEXTURES`, `TOGGLEDETAILTEXTURES` (which saves the device's config; `URenderDevice::Exec`, Engine.dll `0x10371b8a`), and `D3DDrv`'s `LODBIAS` and `SHOWPOOLS` (`D3DDrv.dll` `0x100061b0`), each logged unrecognized; no stock script sends them | The UI | Read (WIN.19's investigator, [a key's binding](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#a-keys-binding)) |
 
 ## AUD: the audio
 
@@ -103,16 +103,12 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| ENG.27 | An ini is written only at a clean exit (`SaveAllIniFiles`), where the original's writes each changed file at every `SaveConfig` (Core.dll `0x10151540`, `Flush(0)`) and every resize of the viewport (WinDrv.dll `0x1110e2f3`-`0x1110e35b`), so a setting changed in play is lost to a crash or a kill | Mods | Read (ENG.25's investigator) |
-| ENG.28 | A start in a save whose file does not read, or on a map whose package does not load, ends with the error thrown, where the original's browses `DX.dx` (a slot's level not loading, DeusEx.dll `0x10011323`) or `Dx.Dx` in its place | The command line | Read (ENG.25's investigator) |
 
 ## WIN: the game window
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | WIN.14 | Window edges fixed by reading (DXEngine 957658cd), their runs due: the Win32 window's Alt+F4 closing the Fatal Error window and its full screen putting the window back where it was, on the monitor it is on (Wine passes a sent key to no Win32-backend window here); SDL2 listing the modes of the display the window is on | The UI | Read. Run due: a Win32-backend run on Windows, or a way to key a Wine window; SDL2 on two displays |
-| WIN.18 | A size the window is dragged to is not kept: `WindowedViewportX` and `Y` are never set from the window, where the original's client takes each size its window is given for its windowed size and saves it to the ini at once, the width made even (WinDrv.dll `0x1110d9a8`, `WM_SIZE` `0x1110a033`), so the way back from full screen and the next start come at it | The UI | Read (ENG.25's investigator) |
-| WIN.19 | The window's own words (`togglefullscreen`, `setres`, `getres` and the rest) are taken before the exec functions (`Engine.cpp`, `viewportWords`), where the original's window takes them after the exec functions and the engine's words (`UWindowsViewport::Exec`, WinDrv.dll `0x11106d90`); no stock exec function shares one | The UI | Read (ENG.25's investigator) |
 
 ## MAIN: the recreation (deusex-launcher's main)
 
@@ -177,7 +173,10 @@ What no sweep has read, by area: the next sweep's ground.
 
 - **VM:** FixedArray, Map and Pointer past their headers.
 - **PKG:** PackageManager's package finding and save folders; two travels asked in one frame
-  (`BindOrderConsole` started on its map: the first taken in DXEngine).
+  (`BindOrderConsole` started on its map: the first taken in DXEngine); ENG.28's investigator's leads:
+  a package older than version 60 (the original's `OldVersion` question) and one past 100,
+  which DXEngine refuses; a map lacking `MyLevel` or an import; a slot whose `SaveInfo` does
+  not read; the LOADING frame of a travel in play that fails.
 - **PHYS:** Math's mat.h, quaternion.h, FrustumPlanes, hsb and halffloat; physWalking and
   stepUp, the BrushTracker and OverlapTest against the binary; the normal the original's
   cylinder point check gives an actor's contact, and what reads it.
@@ -199,7 +198,9 @@ What no sweep has read, by area: the next sweep's ground.
   which Galaxy's mixer moves by at most 512 of 32,767 each time it works out the gains
   (`0x10615329`), where `GalaxyMixer` sets a sound's at once (a song's commands and its order
   0 set both, `0x106177aa`, `0x106159aa`).
-- **WIN:** Wayland past its timer and keymap (skimmed), the open-folder dialogs, DXWidgets'
+- **WIN:** a dedicated server's answer to the window's and the device's words, which DXEngine's
+  drops before the exec functions and the engine's (`Engine.cpp`, WIN.19's investigator); the
+  original's `BRIGHTNESS` word (Engine.dll's strings); Wayland past its timer and keymap (skimmed), the open-folder dialogs, DXWidgets'
   widgets but the push button, the scroll bar and the log view, the canvas and font code past
   the span layout.
 - **LCORE:** json.c past its writer, finder_places.c and gamedb.c; mods.c, finder.c and

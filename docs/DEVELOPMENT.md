@@ -249,7 +249,8 @@ These apply everywhere:
   [the Smart Pro's](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#the-toolchains)
   does.
 - **Started without `--ini`, as an engine run by hand is, DXEngine
-  reads `DXE-DeusEx.ini`/`DXE-User.ini` in the game's `System` after its first clean exit**,
+  reads `DXE-DeusEx.ini`/`DXE-User.ini` in the game's `System` once it has first written them**
+  (a setting saved, the window resized, or its exit),
   not `DeusEx.ini`/`User.ini`, and of the keys the original launcher writes it reads few; a stub
   `DeusEx.ini` kills it. The launchers start it with `--ini` and `--userini`: DXLauncher the
   profile's, `main` the game's `<Package>.ini` and `User.ini`
