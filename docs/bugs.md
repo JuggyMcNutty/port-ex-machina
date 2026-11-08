@@ -28,10 +28,10 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 0 |
-| [REN](#ren-the-renderer) | the renderer | 4 |
+| [REN](#ren-the-renderer) | the renderer | 3 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
-| [WIN](#win-the-game-window) | the game window | 1 |
+| [WIN](#win-the-game-window) | the game window | 0 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
 | [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 0 |
@@ -88,8 +88,7 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| REN.38 | GL's uploads checked by their bytes, by reading (DXEngine 8ce0bc6b): a top mip short of `MipBytes` or past `GL_MAX_TEXTURE_SIZE` the white texel, a short lower level zeros, as Vulkan and D3D11 take them, where GL read past a mod's short DXT1 mip on GL and GL ES | Mods | Read. Run due: an ASan build with a hand-made .utx, a DXT1 texture whose top mip is short, on GL and GL ES |
-| REN.39 | Device edges fixed by reading (DXEngine 8ce0bc6b), their runs due: Vulkan without `VK_KHR_sampler_mirror_clamp_to_edge` clamping to the edge (the aarch64 boards' GPUs); the swapchain's choice where the surface lists an sRGB format first; the single-texture bindless array cleared whole; GL's and D3D11's resize no longer flushing every texture (seen only by counting uploads: no frame shows it); D3D11's base and macro pans and its present and read-back samplers |  | Read. Run due: each on its device, D3D11's under Wine |
+| REN.39 | Device edges fixed by reading (DXEngine 8ce0bc6b), their runs due: the swapchain's choice where the surface lists an sRGB format first; the single-texture bindless array cleared whole; D3D11's base and macro pans and its present and read-back samplers |  | Read. Run due: the surface's by hand in a Wayland window (the harness's X11 surface lists no such order); the array's and the dither's with a case the build before fails (`DXE_DEBUG_BINDLESS_FILL=10` on the main menu, and the dither on `TileConsole` under Wine, drew the same before as after); D3D11's pans against Vulkan's once its picture matches. Proven: a GPU without `VK_KHR_sampler_mirror_clamp_to_edge` keeping the Vulkan device, its clamped tiles the same to the level, where before the software device drew; GL's and D3D11's resize sending no texture again, where before each size sent some 95 |
 | REN.43 | The console's `FLUSH`, which `DeusExPlayer.ShowMainMenu` and the brightness menu send, draws no PRECACHING frame after it (`Engine::PrecacheOnFlip` set at a map's load alone), where the original's `UEngine::Flush(1)` (Engine.dll `0x10380fed`) has `D3DDrv`'s Flush set `PrecacheOnFlip` from `UsePrecache` (`0x10002ec9`), so with it on the main menu opens on PRECACHING | Small | Read (REN.39's run planner) |
 | REN.44 | The render device's console words are not taken: `GETDETAILTEXTURES`, `TOGGLEDETAILTEXTURES` (which saves the device's config; `URenderDevice::Exec`, Engine.dll `0x10371b8a`), and `D3DDrv`'s `LODBIAS` and `SHOWPOOLS` (`D3DDrv.dll` `0x100061b0`), each logged unrecognized; no stock script sends them | The UI | Read (WIN.19's investigator, [a key's binding](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#a-keys-binding)) |
 
@@ -107,7 +106,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| WIN.14 | Window edges fixed by reading (DXEngine 957658cd), their runs due: the Win32 window's Alt+F4 closing the Fatal Error window and its full screen putting the window back where it was, on the monitor it is on (Wine passes a sent key to no Win32-backend window here); SDL2 listing the modes of the display the window is on | The UI | Read. Run due: a Win32-backend run on Windows, or a way to key a Wine window; SDL2 on two displays |
 
 ## MAIN: the recreation (deusex-launcher's main)
 
