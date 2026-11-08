@@ -4,8 +4,10 @@
  *     gl_ClipDistance[0] compiles, and the draw is clipped only while
  *     GL_CLIP_DISTANCE0 is on (a mirror's plane; without one the device
  *     clips by a discard);
- *   - RGB10_A2 scene buffers made with glTexStorage2D: beside an R32UI
- *     attachment (the engine's scene has none) and D32F depth, single and multisampled, the samples resolved by
+ *   - RGB10_A2 scene buffers made with glTexStorage2D, beside D32F depth,
+ *     as the engine's scene is, single and multisampled -- 4x halved until
+ *     the colour and depth attachments both take it, as the device chooses
+ *     (GLRenderDevice::ResizeSceneBuffers) -- the samples resolved by
  *     a blit, sampled by a pass, and read back as
  *     RGBA/UNSIGNED_INT_2_10_10_10_REV (as the device reads a shot), with all
  *     ten bits kept, and as RGBA/UNSIGNED_BYTE.
@@ -56,7 +58,6 @@ typedef void* (*egl_get_proc_fn)(const char*);
 #define GL_NEAREST 0x2600
 #define GL_RGBA8 0x8058
 #define GL_RGB10_A2 0x8059
-#define GL_R32UI 0x8236
 #define GL_DEPTH_COMPONENT32F 0x8CAC
 #define GL_RGBA 0x1908
 #define GL_UNSIGNED_BYTE 0x1401
@@ -73,7 +74,6 @@ typedef void* (*egl_get_proc_fn)(const char*);
 #define GL_NUM_SAMPLE_COUNTS 0x9380
 #define GL_MAX_COLOR_TEXTURE_SAMPLES 0x910E
 #define GL_MAX_DEPTH_TEXTURE_SAMPLES 0x910F
-#define GL_MAX_INTEGER_SAMPLES 0x9110
 #define GL_IMPLEMENTATION_COLOR_READ_TYPE 0x8B9A
 #define GL_IMPLEMENTATION_COLOR_READ_FORMAT 0x8B9B
 #define GL_CLIP_DISTANCE0 0x3000
@@ -263,18 +263,16 @@ static unsigned storage(unsigned format, int samples, unsigned* err)
 	return t;
 }
 
-static unsigned framebuffer(unsigned color, unsigned hit, unsigned depth, const char* what)
+static unsigned framebuffer(unsigned color, unsigned depth, const char* what)
 {
 	unsigned fbo = 0;
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, color, 0);
-	if (hit)
-		glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, hit, 0);
 	if (depth)
 		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depth, 0);
-	unsigned bufs[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-	glDrawBuffers(hit ? 2 : 1, bufs);
+	unsigned bufs[1] = { GL_COLOR_ATTACHMENT0 };
+	glDrawBuffers(1, bufs);
 	unsigned e = first_error();
 	unsigned st = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	printf("%-44s attach=%s fbo=%s\n", what, errname(e), st == GL_FRAMEBUFFER_COMPLETE ? "complete" : "INCOMPLETE");
@@ -401,7 +399,7 @@ int main(void)
 	{
 		unsigned err = 0;
 		unsigned color = storage(GL_RGBA8, 1, &err);
-		unsigned fbo = framebuffer(color, 0, 0, "RGBA8 target");
+		unsigned fbo = framebuffer(color, 0, "RGBA8 target");
 		const char* fs_src = "out vec4 o;\nin vec2 uv;\nvoid main() { o = vec4(1.0, 0.0, 0.0, 1.0); }\n";
 		unsigned vs = compile(GL_VERTEX_SHADER, es_clip, quad_vs, "	gl_ClipDistance[0] = p.x;\n", "vertex shader writing gl_ClipDistance[0]");
 		unsigned fs = compile(GL_FRAGMENT_SHADER, es, fs_src, NULL, "fragment shader");
@@ -441,11 +439,10 @@ int main(void)
 	printf("\n-- RGB10_A2 scene buffers --\n");
 	{
 		int fmt = 0, type = 0;
-		int max_color = 0, max_depth = 0, max_integer = 0;
+		int max_color = 0, max_depth = 0;
 		glGetIntegerv(GL_MAX_COLOR_TEXTURE_SAMPLES, &max_color);
 		glGetIntegerv(GL_MAX_DEPTH_TEXTURE_SAMPLES, &max_depth);
-		glGetIntegerv(GL_MAX_INTEGER_SAMPLES, &max_integer);
-		printf("max samples: color %d, depth %d, integer %d\n", max_color, max_depth, max_integer);
+		printf("max samples: color %d, depth %d\n", max_color, max_depth);
 		int counts = 0, samples[16] = { 0 };
 		glGetInternalformativ(GL_TEXTURE_2D_MULTISAMPLE, GL_RGB10_A2, GL_NUM_SAMPLE_COUNTS, 1, &counts);
 		if (counts > 16) counts = 16;
@@ -455,21 +452,21 @@ int main(void)
 			printf(" %d", samples[i]);
 		printf("\n");
 
-		/* The engine's choice: 4x, halved until every attachment takes it. */
+		/* The engine's choice: 4x, halved until the colour and the depth
+		 * attachments both take it. */
 		int ms = 4;
-		while (ms > 1 && (ms > max_color || ms > max_depth || ms > max_integer))
+		while (ms > 1 && (ms > max_color || ms > max_depth))
 			ms /= 2;
 
 		unsigned err = 0;
 		unsigned color1 = storage(GL_RGB10_A2, 1, &err);
 		printf("%-44s %s\n", "glTexStorage2D(RGB10_A2)", errname(err));
-		unsigned hit1 = storage(GL_R32UI, 1, &err);
 		unsigned depth1 = storage(GL_DEPTH_COMPONENT32F, 1, &err);
-		unsigned scene1 = framebuffer(color1, hit1, depth1, "RGB10_A2 + R32UI + D32F");
+		unsigned scene1 = framebuffer(color1, depth1, "RGB10_A2 + D32F");
 		unsigned pp_color = storage(GL_RGB10_A2, 1, &err);
-		unsigned pp = framebuffer(pp_color, 0, 0, "RGB10_A2 alone (post-process)");
+		unsigned pp = framebuffer(pp_color, 0, "RGB10_A2 alone (post-process)");
 		unsigned out_color = storage(GL_RGB10_A2, 1, &err);
-		unsigned out = framebuffer(out_color, 0, 0, "RGB10_A2 alone (pass output)");
+		unsigned out = framebuffer(out_color, 0, "RGB10_A2 alone (pass output)");
 
 		unsigned scene_ms = 0;
 		if (ms > 1)
@@ -478,10 +475,9 @@ int main(void)
 			unsigned color_ms = storage(GL_RGB10_A2, ms, &err);
 			snprintf(what, sizeof(what), "glTexStorage2DMultisample(RGB10_A2, %d)", ms);
 			printf("%-44s %s\n", what, errname(err));
-			unsigned hit_ms = storage(GL_R32UI, ms, &err);
 			unsigned depth_ms = storage(GL_DEPTH_COMPONENT32F, ms, &err);
-			snprintf(what, sizeof(what), "%dx RGB10_A2 + R32UI + D32F", ms);
-			scene_ms = framebuffer(color_ms, hit_ms, depth_ms, what);
+			snprintf(what, sizeof(what), "%dx RGB10_A2 + D32F", ms);
+			scene_ms = framebuffer(color_ms, depth_ms, what);
 		}
 		else
 			printf("multisampling: the engine would take 1 sample here\n");

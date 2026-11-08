@@ -9,19 +9,25 @@
  *       independentBlend are listed, not required: nothing in the engine uses them)
  *     - a graphics queue family that can present to the surface
  *   DXEngine  VulkanRenderDevice.cpp
- *     - required extension VK_KHR_sampler_mirror_clamp_to_edge
- *     - optional: descriptor indexing (Surreal Engine requires it; without
- *       it DXEngine binds a descriptor set per texture combination instead)
+ *     - optional extension VK_KHR_sampler_mirror_clamp_to_edge (a clamped
+ *       tile's sampler; without it the tile is clamped to the edge)
+ *     - optional: bindless textures, which need VK_EXT_descriptor_indexing
+ *       listed, its five features the bindless set uses (partially bound,
+ *       runtime array, non-uniform sampled-image indexing, sampled images
+ *       updated after bind, a variable count) and room for the set's
+ *       MaxBindlessTextures image samplers updated after bind (five
+ *       limits); without them DXEngine binds a descriptor set per texture
+ *       combination instead
  *     - a device that draws on the CPU (Mesa's lavapipe) only with
  *       Settings.json's CPUDriver, the GPUs passed over; without it the
  *       GPUs come first, and where a CPU device is all there is, the
  *       software device draws in its place
  *
- * Descriptor indexing is checked three ways, because a driver can advertise a
- * high API version without supporting what that version makes mandatory: as the
- * EXT extension string, as the Vulkan 1.2 core feature struct, and via the
- * older per-extension struct. The PowerVR Rogue GE8300 reports API 1.3.225 and
- * supports it by none of the three.
+ * The engine reads the indexing features and limits only where the device
+ * lists VK_EXT_descriptor_indexing (DXGPU's VulkanInstance), as this does; the
+ * Vulkan 1.2 core flags are shown beside it, queried on their own, because a
+ * driver can advertise a high API version without what it makes mandatory:
+ * the PowerVR Rogue GE8300 reports API 1.3.225 and has neither.
  *
  * Build: see docs/PORTING.md "Device probes". Needs only the Vulkan loader.
  */
@@ -70,6 +76,10 @@ int main(int argc, char **argv) {
 
     PFN_vkGetPhysicalDeviceFeatures2 getFeatures2 =
         (PFN_vkGetPhysicalDeviceFeatures2)vkGetInstanceProcAddr(inst, "vkGetPhysicalDeviceFeatures2");
+    PFN_vkGetPhysicalDeviceProperties2 getProperties2 =
+        (PFN_vkGetPhysicalDeviceProperties2)vkGetInstanceProcAddr(inst, "vkGetPhysicalDeviceProperties2");
+    /* DescriptorSetManager::MaxBindlessTextures */
+    const uint32_t bindless_count = 16536;
 
     for (uint32_t i = 0; i < n; i++) {
         VkPhysicalDeviceProperties p;
@@ -98,7 +108,6 @@ int main(int argc, char **argv) {
         printf("  -- required extensions --\n");
         static const char *req[] = {
             "VK_KHR_swapchain",
-            "VK_KHR_sampler_mirror_clamp_to_edge",
         };
         int all = 1;
         for (size_t k = 0; k < sizeof req / sizeof *req; k++) {
@@ -106,35 +115,72 @@ int main(int argc, char **argv) {
             all = all && got;
             printf("    %-38s %s\n", req[k], got ? "present" : "ABSENT");
         }
+        printf("  -- optional extensions --\n");
+        printf("    %-38s %s\n", "VK_KHR_sampler_mirror_clamp_to_edge",
+               has_ext(ext, en, "VK_KHR_sampler_mirror_clamp_to_edge")
+                   ? "present" : "absent: a clamped tile clamped to the edge");
 
-        printf("  -- descriptor indexing, three ways (optional: bindless textures) --\n");
-        printf("    VK_EXT_descriptor_indexing            %s\n",
-               YN(has_ext(ext, en, "VK_EXT_descriptor_indexing")));
-        if (getFeatures2) {
-            VkPhysicalDeviceVulkan12Features v12;
-            memset(&v12, 0, sizeof v12);
-            v12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-
+        /* As the engine reads them: with the extension listed, its feature and
+         * property structs alone in the chains (DXGPU's VulkanInstance) */
+        int indexing_ext = has_ext(ext, en, "VK_EXT_descriptor_indexing");
+        int bindless = 0;
+        printf("  -- bindless textures (optional) --\n");
+        printf("    VK_EXT_descriptor_indexing            %s\n", YN(indexing_ext));
+        if (indexing_ext && getFeatures2 && getProperties2 && p.apiVersion != VK_API_VERSION_1_0) {
             VkPhysicalDeviceDescriptorIndexingFeatures di;
             memset(&di, 0, sizeof di);
             di.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
-            v12.pNext = &di;
+            VkPhysicalDeviceFeatures2 f2;
+            memset(&f2, 0, sizeof f2);
+            f2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+            f2.pNext = &di;
+            getFeatures2(devs[i], &f2);
 
+            VkPhysicalDeviceDescriptorIndexingProperties dp;
+            memset(&dp, 0, sizeof dp);
+            dp.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES;
+            VkPhysicalDeviceProperties2 p2;
+            memset(&p2, 0, sizeof p2);
+            p2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+            p2.pNext = &dp;
+            getProperties2(devs[i], &p2);
+
+            printf("    descriptorBindingPartiallyBound           %s\n", YN(di.descriptorBindingPartiallyBound));
+            printf("    runtimeDescriptorArray                    %s\n", YN(di.runtimeDescriptorArray));
+            printf("    shaderSampledImageArrayNonUniformIndexing %s\n", YN(di.shaderSampledImageArrayNonUniformIndexing));
+            printf("    descriptorBindingSampledImageUpdateAfterBind %s\n", YN(di.descriptorBindingSampledImageUpdateAfterBind));
+            printf("    descriptorBindingVariableDescriptorCount  %s\n", YN(di.descriptorBindingVariableDescriptorCount));
+            printf("    limits updated after bind (need %u each):\n", bindless_count);
+            printf("      maxDescriptorSetUpdateAfterBindSampledImages     %u\n", dp.maxDescriptorSetUpdateAfterBindSampledImages);
+            printf("      maxDescriptorSetUpdateAfterBindSamplers          %u\n", dp.maxDescriptorSetUpdateAfterBindSamplers);
+            printf("      maxPerStageDescriptorUpdateAfterBindSampledImages %u\n", dp.maxPerStageDescriptorUpdateAfterBindSampledImages);
+            printf("      maxPerStageDescriptorUpdateAfterBindSamplers     %u\n", dp.maxPerStageDescriptorUpdateAfterBindSamplers);
+            printf("      maxPerStageUpdateAfterBindResources              %u\n", dp.maxPerStageUpdateAfterBindResources);
+            bindless =
+                di.descriptorBindingPartiallyBound &&
+                di.runtimeDescriptorArray &&
+                di.shaderSampledImageArrayNonUniformIndexing &&
+                di.descriptorBindingSampledImageUpdateAfterBind &&
+                di.descriptorBindingVariableDescriptorCount &&
+                dp.maxDescriptorSetUpdateAfterBindSampledImages >= bindless_count &&
+                dp.maxDescriptorSetUpdateAfterBindSamplers >= bindless_count &&
+                dp.maxPerStageDescriptorUpdateAfterBindSampledImages >= bindless_count &&
+                dp.maxPerStageDescriptorUpdateAfterBindSamplers >= bindless_count &&
+                dp.maxPerStageUpdateAfterBindResources >= bindless_count;
+        }
+        if (getFeatures2 && p.apiVersion >= VK_API_VERSION_1_2) {
+            VkPhysicalDeviceVulkan12Features v12;
+            memset(&v12, 0, sizeof v12);
+            v12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
             VkPhysicalDeviceFeatures2 f2;
             memset(&f2, 0, sizeof f2);
             f2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
             f2.pNext = &v12;
             getFeatures2(devs[i], &f2);
-
-            printf("    1.2 core  descriptorIndexing          %s\n", YN(v12.descriptorIndexing));
-            printf("    1.2 core  runtimeDescriptorArray      %s\n", YN(v12.runtimeDescriptorArray));
-            printf("    1.2 core  sampledImageNonUniformIndex %s\n",
-                   YN(v12.shaderSampledImageArrayNonUniformIndexing));
-            printf("    1.2 core  bufferDeviceAddress         %s\n", YN(v12.bufferDeviceAddress));
-            printf("    EXT struct runtimeDescriptorArray     %s\n", YN(di.runtimeDescriptorArray));
-        } else {
-            printf("    (vkGetPhysicalDeviceFeatures2 unavailable)\n");
+            printf("    (1.2 core, beside it: descriptorIndexing %s, runtimeDescriptorArray %s)\n",
+                   YN(v12.descriptorIndexing), YN(v12.runtimeDescriptorArray));
         }
+        printf("    bindless: %s\n", bindless ? "yes" : "no, a descriptor set per texture combination");
 
         int features_ok = f.samplerAnisotropy;
         int cpu = p.deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU;

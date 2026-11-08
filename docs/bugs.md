@@ -38,7 +38,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 6 |
 | [LUI](#lui-the-launchers-screens-and-ui-kit) | the launchers' screens and UI kit | 0 |
 | [LPORT](#lport-the-launchers-ports-win32-the-smart-pro-the-sysroots) | the launchers' ports (Win32, the Smart Pro, the sysroots) | 0 |
-| [X](#x-the-harness-the-scripts-and-ci) | the harness, the scripts and CI | 3 |
+| [X](#x-the-harness-the-scripts-and-ci) | the harness, the scripts and CI | 0 |
 
 ## D: for the owner
 
@@ -263,9 +263,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| X.14 | `probe-gles-scene` measures the scene the engine no longer makes: an R32UI target in both framebuffers, the sample count held by `GL_MAX_INTEGER_SAMPLES` (`tools/probes/probe-gles-scene.c:459-461`, `:466-484`), where the engine's scene lost that target (DXEngine 4e575aeb) and takes the colour and depth formats' least (`RenderDevice/OpenGL/GLRenderDevice.cpp:218-230`): on the GE8300 (integer samples 1) no multisampled scene is made, drawn or resolved, though the Smart Pro's README and ENGINE.md say the GE8300 resolves one, multisampled up to 4x |  | Read |
-| X.15 | `probe-vulkan-caps` is behind the engine: it still wants `VK_KHR_sampler_mirror_clamp_to_edge`, rejecting a device without it (`tools/probes/probe-vulkan-caps.c:92-93`, `:180-189`), which DXEngine 8ce0bc6b made optional (`VulkanRenderDevice.cpp:39`), and its bindless check reads 2 or 3 of the engine's 5 descriptor-indexing features and none of its update-after-bind limits (`:220-227`) |  | Read |
-| X.16 | `probe-gles-sampler` and `probe-texture-formats` misreport: mirror clamp looked for under names no ES driver gives (`tools/probes/probe-gles-sampler.c:217-221`, `GL_EXT_texture_mirror_clamp_to_edge` never matched), `glBufferStorage` asked for by its desktop name (`:287-297`, ES's `glBufferStorageEXT`), the row "RGBA16F msample-f" a plain 2D texture (`:263`), a loop that never ends if `glBindSampler` fails (`:255`), no `OUT_OF_MEMORY` in its names; `probe-texture-formats.c:18` names RGBA8 the dither's, which is `R32_SFLOAT` |  | Read |
 
 ## Refuted
 

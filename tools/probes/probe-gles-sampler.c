@@ -116,17 +116,10 @@ static const char* errname(unsigned e)
 	case 0x0500: return "INVALID_ENUM";
 	case 0x0501: return "INVALID_VALUE";
 	case 0x0502: return "INVALID_OPERATION";
+	case 0x0505: return "OUT_OF_MEMORY";
 	case 0x0506: return "INVALID_FRAMEBUFFER_OPERATION";
 	default: return "other";
 	}
-}
-
-static unsigned drain(get_string_fn gs, gl_get_error_fn ge)
-{
-	(void)gs;
-	unsigned e = ge(), n = 0;
-	while (e != GL_NO_ERROR && n < 100) { e = ge(); n++; }
-	return n ? e : GL_NO_ERROR;
 }
 
 int main(void)
@@ -217,7 +210,9 @@ int main(void)
 		if (strcmp(e, "GL_EXT_texture_compression_s3tc") == 0 || strcmp(e, "GL_WEBGL_compressed_texture_s3tc") == 0) has_s3tc = 1;
 		if (strcmp(e, "GL_OES_texture_float_linear") == 0) has_float_linear = 1;
 		if (strcmp(e, "GL_EXT_texture_filter_anisotropic") == 0) has_aniso = 1;
-		if (strcmp(e, "GL_OES_texture_mirror_clamp") == 0 || strcmp(e, "GL_EXT_texture_mirror_clamp") == 0) has_mirror_clamp = 1;
+		/* ES's own, then desktop's two */
+		if (strcmp(e, "GL_EXT_texture_mirror_clamp_to_edge") == 0 || strcmp(e, "GL_ARB_texture_mirror_clamp_to_edge") == 0 ||
+			strcmp(e, "GL_EXT_texture_mirror_clamp") == 0) has_mirror_clamp = 1;
 		if (strcmp(e, "GL_EXT_buffer_storage") == 0) has_bufstorage = 1;
 	}
 	printf("extensions: %d (s3tc=%d float_linear=%d aniso=%d mirror_clamp_ext=%d buffer_storage=%d)\n",
@@ -252,15 +247,16 @@ int main(void)
 		e = glGetError();
 		printf("%-30s %s\n", params[i].name, errname(e));
 	}
-	while (glBindSampler(0, s), glGetError() != GL_NO_ERROR) {}
-	printf("glBindSampler:        OK\n");
+	while (glGetError() != GL_NO_ERROR) {}
+	glBindSampler(0, s);
+	printf("glBindSampler:        %s\n", errname(glGetError()));
 
 	printf("\n-- scene buffer formats --\n");
 	struct { const char* name; int ifmt, fmt, type; int attachment; } texes[] = {
 		{ "RGBA16F color", GL_RGBA16F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0 },
 		{ "R32UI color", GL_R32UI, GL_RED_INTEGER, GL_UNSIGNED_INT, GL_COLOR_ATTACHMENT1 },
 		{ "D32F depth", GL_DEPTH_COMPONENT32F, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT },
-		{ "RGBA16F msample-f", GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT, GL_COLOR_ATTACHMENT0 },
+		{ "RGBA16F half floats", GL_RGBA16F, GL_RGBA, GL_HALF_FLOAT, GL_COLOR_ATTACHMENT0 },
 	};
 	unsigned tex[4];
 	glGenTextures(4, tex);
@@ -284,30 +280,37 @@ int main(void)
 
 	printf("\n-- persistent mapping (GL_EXT_buffer_storage) --\n");
 	{
-		void* pbs = p_get_proc ? p_get_proc("glBufferStorage") : NULL;
-		void* pmbr = p_get_proc ? p_get_proc("glMapBufferRange") : NULL;
-		void* pfence = p_get_proc ? p_get_proc("glFenceSync") : NULL;
-		void* pwait = p_get_proc ? p_get_proc("glClientWaitSync") : NULL;
-		void* pdel = p_get_proc ? p_get_proc("glDeleteSync") : NULL;
-		void* pgenbuf = p_get_proc ? p_get_proc("glGenBuffers") : NULL;
-		void* pdelbuf = p_get_proc ? p_get_proc("glDeleteBuffers") : NULL;
-		void* pbindbuf = p_get_proc ? p_get_proc("glBindBuffer") : NULL;
+		/* ES's name, then desktop's; the core entry points as the others are
+		 * taken, eglGetProcAddress then the library (an EGL 1.4 driver
+		 * gives core functions no address) */
+		void* pbs = p_get_proc ? p_get_proc("glBufferStorageEXT") : NULL;
+		if (!pbs && p_get_proc)
+			pbs = p_get_proc("glBufferStorage");
+		#define GETCORE(name) ((p_get_proc && p_get_proc(name)) ? p_get_proc(name) : (gles ? dlsym(gles, name) : NULL))
+		void* pmbr = GETCORE("glMapBufferRange");
+		void* pfence = GETCORE("glFenceSync");
+		void* pwait = GETCORE("glClientWaitSync");
+		void* pdel = GETCORE("glDeleteSync");
+		void* pgenbuf = GETCORE("glGenBuffers");
+		void* pdelbuf = GETCORE("glDeleteBuffers");
+		void* pbindbuf = GETCORE("glBindBuffer");
 		printf("glBufferStorage via eglGetProcAddress: %s\n", pbs ? "resolved" : "NULL");
 		if (pbs && !has_bufstorage) printf("  (extension string absent but entry point resolved)\n");
+		if (pbs && !(pmbr && pfence && pwait && pdel && pgenbuf && pdelbuf && pbindbuf))
+			printf("  a core entry point the test needs is missing: not tried\n");
 		if (pbs && pmbr && pfence && pwait && pdel && pgenbuf && pdelbuf && pbindbuf)
 		{
 			typedef void (*buf_storage_fn)(unsigned, long long, const void*, unsigned);
 			typedef void* (*map_range_fn)(unsigned, long long, long long, unsigned);
-			typedef void* (*fence_fn)(unsigned, long long);
-			typedef unsigned (*wait_fn)(void*, unsigned long long, unsigned);
+			typedef void* (*fence_fn)(unsigned, unsigned);
+			typedef unsigned (*wait_fn)(void*, unsigned, unsigned long long);
 			typedef void (*del_fn)(void*);
 			typedef void (*gen_buf_fn)(int, unsigned*);
 			typedef void (*del_buf_fn)(int, const unsigned*);
 			typedef void (*bind_buf_fn)(unsigned, unsigned);
-			#define GL_MAP_PERSISTENT_BIT 0x0100
-			#define GL_MAP_COHERENT_BIT 0x0200
+			#define GL_MAP_PERSISTENT_BIT 0x0040
+			#define GL_MAP_COHERENT_BIT 0x0080
 			#define GL_MAP_WRITE_BIT 0x0001
-			#define GL_MAP_INVALIDATE_BUFFER_BIT 0x0008
 			#define GL_ARRAY_BUFFER 0x8892
 			#define GL_SYNC_GPU_COMMANDS_COMPLETE 0x9117
 			#define GL_SYNC_FLUSH_COMMANDS_BIT 0x00000001
@@ -330,7 +333,7 @@ int main(void)
 			printf("glBufferStorage(PERSISTENT|COHERENT|WRITE, 4096): %s\n", errname(e2));
 			if (e2 == GL_NO_ERROR)
 			{
-				void* m = p_map(GL_ARRAY_BUFFER, 0, 4096, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+				void* m = p_map(GL_ARRAY_BUFFER, 0, 4096, GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT);
 				e2 = glGetError();
 				printf("glMapBufferRange(persistent): %s ptr=%s\n", errname(e2), m ? "ok" : "NULL");
 				if (m && e2 == GL_NO_ERROR)
@@ -338,7 +341,7 @@ int main(void)
 					for (int i = 0; i < 1024; i++) ((unsigned*)m)[i] = 0xdeadbeefu ^ (unsigned)i;
 					void* f = p_f(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 					glGetError();
-					unsigned r = p_w(f, 1000000000ull, GL_SYNC_FLUSH_COMMANDS_BIT);
+					unsigned r = p_w(f, GL_SYNC_FLUSH_COMMANDS_BIT, 1000000000ull);
 					printf("fence wait: %s\n", (r == GL_ALREADY_SIGNALED || r == GL_CONDITION_SATISFIED) ? "signaled" : "timeout/other");
 					int mismatches = 0;
 					for (int i = 0; i < 1024; i++)

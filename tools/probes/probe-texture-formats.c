@@ -15,7 +15,8 @@
 #include <string.h>
 
 static const struct { const char *name; VkFormat fmt; } formats[] = {
-    { "R8G8B8A8_UNORM (null/dither)", VK_FORMAT_R8G8B8A8_UNORM },
+    { "R8G8B8A8_UNORM (the null texture)", VK_FORMAT_R8G8B8A8_UNORM },
+    { "R32_SFLOAT (the dither)", VK_FORMAT_R32_SFLOAT },
     { "R5G6B5_UNORM_PACK16", VK_FORMAT_R5G6B5_UNORM_PACK16 },
     { "BC1_RGBA_UNORM_BLOCK", VK_FORMAT_BC1_RGBA_UNORM_BLOCK },
     { "R8G8B8_UNORM", VK_FORMAT_R8G8B8_UNORM },
