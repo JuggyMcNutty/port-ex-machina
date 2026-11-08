@@ -35,7 +35,7 @@ is_code() {   # <repository> <path>
         DXEngine:LICENSE.md|deusex-launcher:THIRD-PARTY.md) return 0 ;;
         *.md|*:docs/*) return 1 ;;
         port-ex-machina:LICENSE|port-ex-machina:tools/probes/*|port-ex-machina:scripts/check-docs.sh) return 1 ;;
-        DXEngine:tools/dxcap/*|DXEngine:tools/dxcap.sh|DXEngine:tools/perf/*) return 1 ;;
+        DXEngine:tools/dxcap/*|DXEngine:tools/dxcap.sh|DXEngine:tools/perf/*|DXEngine:tools/calcvel/*) return 1 ;;
         DXEngine:tools/host-tools.sh|DXEngine:tools/natives_audit.py) return 1 ;;
     esac
     return 0
