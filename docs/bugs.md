@@ -20,7 +20,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 0 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
@@ -48,7 +48,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| D.49 | Full screen the size is not kept: `FullscreenViewportX` and `Y` stay as configured, 0 the desktop's mode, where the original's viewport keeps each size it is given full screen as the client's full screen size and saves it (`ResizeViewport`, WinDrv.dll `0x1110e2f3`-`0x1110e35b`), so a size asked that the display lacks is saved as the mode it took; DXEngine's 0 is its own | The settings | Read (WIN.18's investigator) |
 
 ## VM: the script VM and the object system
 
