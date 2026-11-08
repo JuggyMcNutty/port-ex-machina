@@ -21,13 +21,13 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 13 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 14 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 3 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 8 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 8 |
 | [AI](#ai-the-npcs) | the NPCs | 5 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
-| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 6 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 9 |
 | [NET](#net-the-network) | the network | 5 |
 | [REN](#ren-the-renderer) | the renderer | 13 |
 | [AUD](#aud-the-audio) | the audio | 4 |
@@ -62,6 +62,7 @@ owner rules.
 | D.60 | The mouse moves by raw input (X11's `XI_RawMotion`, Win32's `WM_INPUT`, SDL's relative mode), where the stock original never starts DirectInput (no shipped ini has `UseDirectInput`; WinDrv.dll `0x11101d20`) and moves by the window's mouse moves from its middle (`0x11109b30`), the system's pointer acceleration in them. Recommendation: keep, by choice | The menus' settings | Read |
 | D.61 | `UseJoystick` is read, saved and ignored, a pad following `Settings.json` (stock `UseJoystick` False). Recommendation: keep, by choice | The menus' settings | Read |
 | D.62 | `Translucency` and `UseSpatial` are DXEngine's own properties of the render and audio devices, inert, which GET answers, where the original's classes have neither (GET `Unrecognized property`); NATIVES.md calls `UseSpatial` the original's. Recommendation: drop both | The menus' settings | Run: `FallbackConsole` (D3D): `Unrecognized property UseSpatial` and `... Translucency` in the original, False and True in DXEngine |
+| D.63 | A smoothed tile's edges are clamped on every device (`RenderDevice/Vulkan/VulkanRenderDevice.cpp:643`, `RenderDevice/OpenGL/GLRenderDevice.cpp:1634`, `RenderDevice/D3D11/D3D11RenderDevice.cpp:1826`, `RenderDevice/Software/SoftwareRenderDevice.cpp:542`), where D3DDrv's addressing wraps (`InitTextureStageState` `0x10009e20`, stage 0 at `0x10009e68`), a bilinear tile's outer half texel blending with the opposite edge: the menus' snapshot, once filtered (EXT.29), differs in its outer 2.5 pixels at 1280x720; no stock art relies on it. Recommendation: keep, by choice | Tiles | Read |
 
 ## VM: the script VM and the object system
 
@@ -122,6 +123,9 @@ owner rules.
 | EXT.30 | The arrow keys' focus wraps round a clip window's ends (`Packages/Extension/Windows/UWindow.cpp:1039`, `:1041`), where the original's clip window clears its tab group's `bWrapFocus` (`XClipWindow::Init` `0x1000b320`; `MoveFocus` `0x1004ef30`), so the focus stays: the inventory's ammo buttons and checkbox and the medical bot's augmentation buttons, each in a clip window | The UI | Run: `ClipWrapConsole`: from C3 down and right and from C1 up and left the original's focus stays on C3, C3, C1, C1, DXEngine's goes to C1, C1, C3, C3; a plain tab group's wrap alike |
 | EXT.31 | A window's GC state is not the original's: `GetStyle` 0 with no background texture, `EnableMasking`, `EnableTranslucency` and `EnableModulation` setting their flag alone (`Packages/Extension/Windows/UGC.cpp:424`, `:429`, `:444`), `PostDrawWindow` handed a fresh GC (`Render/RenderWindow.cpp:227`), `DrawActor` with `bUnlit` or `ScaleGlow` left out keeping the actor's (`UGC.cpp:57`, `:59`); the original's GC is the window's, its style made again by each (`XGC::GenerateStyle` `0x1002aed0`), `PostDrawWindow` taking what `DrawWindow` left, `DrawActor` passing False and 1.0 (`0x1002cd80`). No stock script reaches them | The UI | Run: `GCStateConsole` with `CapGCStateWindow`: the original's styles 1, 3, 1 and 0 by the windows' setters, smoothing and translucency set, drawing off for the none, style 3 after `EnableTranslucency`, `PostDrawWindow` at style 4 with modulation and `FontMenuSmall`; DXEngine's style 0 and every flag off throughout, its post fresh |
 | EXT.32 | A stretched window background is drawn in screen pixels unrounded (`Packages/Extension/Windows/UWindow.cpp:2302`), where the original cuts it to whole units (`DrawIconPattern` `0x10028770`, `ClipTile`, `DrawTile`): the drugged view's `DrunkFX` over a HUD 853.33 units wide at 2560x1440 covers 2,560 pixels in DXEngine, 2,559 in the original | The UI | Run: `DrugConsole` full screen at 2560x1440: drugged, the original's last column brighter than the four before it (29.8 against some 15.6 of 255, the background 2,559 pixels wide), DXEngine's even to the edge |
+| EXT.33 | Undo and Redo leave nothing selected (`Packages/Extension/Windows/Text/UEditWindow.cpp:55-68`, the cursor set unselected at `:67`), where the original's select what they put back (`XEditWindow::Undo` `0x1001e0a0`, `Redo` `0x1001e170`, through `ReplaceText` `0x1001fe20` with select on, `0x10020186`-`0x10020199`), so a key typed next replaces it: every edit field's Ctrl+Z and Ctrl+Y (`EditWindow.VirtualKeyPressed`), the save description's and the notes' among them | The UI | Run: `UndoConsole`: a Backspace undone puts the 'c' back selected (2+1) in the original, unselected (0+0) in DXEngine, an 'X' typed then giving `abXdef` against `abcXdef`; a typing redone 3+2 against 0+0 |
+| EXT.34 | An edit window's changed flag and its undo steps ignore the clean mark `ClearTextChangedFlag` sets: the flag set by any change and `TextChanged`'s `bModified` always True (`UEditWindow.cpp:211-214`, `:322-323`, `:506-514`, `:64-65`), a typing joined to the last step whatever the mark (`AddUndo`, `:35-53`), `SetMaxUndos(0)` no limit (`:50`, `:94-97`); the original's flag is the step against the mark (`HasTextChanged` `0x10013760`, `SetTextChangedFlag` `0x1001ddc0`), `bModified` that comparison (`ChangeText` `0x1001fab0`), a typing after the mark a step of its own (`AddUndo` `0x10020450`, `0x100204ee`-`0x10020502`), `SetMaxUndos(0)` keeping none (`ClampUndo` `0x10020290`): a Goals screen note typed into, left and typed into again, then undone, loses both typings and is saved so when left (`PersonaScreenGoals.SaveNote`) | The UI | Run: `UndoConsole`: undone back to the clean mark, changed False and `TextChanged` modified False in the original, True and True in DXEngine; after a `ClearTextChangedFlag` an undo leaves `abcd`, unchanged, against `abc`, changed; `SetMaxUndos(0)` `abcd` against `abc` |
+| EXT.35 | Small text-window drawing differences no stock script reaches: a large text window's GC handed to the script's `DrawWindow` with the window's alignments and word wrap (`Packages/Extension/Windows/Text/ULargeTextWindow.cpp:93-94`), the original's as it was, its own defaults (`XLargeTextWindow::Draw` `0x1002e500`, `XGC::XGC` `0x10026ad0`); rows stepped by their tallest glyph (`Packages/Extension/Windows/UGC.cpp:154`, `:157-159`), the original's by the font's height (`ComputeLineHeight` `0x1002d9d0`); the insertion point not drawn while the GC's drawing is off (`UEditWindow.cpp:659-660`), the original's drawn (`XEditWindow::Draw` `0x10020d00`, its last `SetStyle`) | The UI | Run: `UndoConsole`'s `CapLargeTextGCWindow`: alignments 0, 0 and word wrap True in the original, 1, 1, False in DXEngine. The rows and the insertion point read alone |
 
 ## NET: the network
 
@@ -274,10 +278,9 @@ What no sweep has read, by area: the next sweep's ground.
   order of a filed mover's corners; the collision hash's hit order; `FarMoveActor`'s touches.
 - **AI:** `AICanSmell`'s body; which state changes made in a callback keep their new
   receivers; the light tree's queries; a non-pawn's visual check against movers.
-- **EXT:** `XScaleWindow`'s geometry and drawing (`ComputeThumbConfig`, `Draw`,
-  `DrawScaleTexture`); the GC's text helpers for the edit and large text windows
-  (`DrawTextLine`, `DrawTextChar`, `CharToPixel`, `PixelToChar`, `ConvertPixelPos`); how
-  D3DDrv filters a smoothed tile.
+- **EXT:** the edit field's mouse handlers, `Tick`, word moves and `FilterString`;
+  `XLargeTextWindow::ConfigurationChanged` and its preferred size; the GL and D3D11 devices'
+  tile samplers past their clamp.
 - **NET:** `ServerTickClient`'s priority and view prediction; the connection's packets and
   bunch merging; the pending level and the server's handshake; IpDrv's net driver; UdpLink's
   `ReadBinary`; AInternetLink's `ParseURL`, `IpAddrToString`, `GetLastError` and `Validate`;
