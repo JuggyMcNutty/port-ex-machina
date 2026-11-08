@@ -28,7 +28,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 0 |
-| [REN](#ren-the-renderer) | the renderer | 3 |
+| [REN](#ren-the-renderer) | the renderer | 1 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
 | [WIN](#win-the-game-window) | the game window | 0 |
@@ -89,8 +89,6 @@ owner rules.
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
 | REN.39 | Device edges fixed by reading (DXEngine 8ce0bc6b), their runs due: the swapchain's choice where the surface lists an sRGB format first; the single-texture bindless array cleared whole; D3D11's base and macro pans and its present and read-back samplers |  | Read. Run due: the surface's by hand in a Wayland window (the harness's X11 surface lists no such order); the array's and the dither's with a case the build before fails (`DXE_DEBUG_BINDLESS_FILL=10` on the main menu, and the dither on `TileConsole` under Wine, drew the same before as after); D3D11's pans against Vulkan's once its picture matches. Proven: a GPU without `VK_KHR_sampler_mirror_clamp_to_edge` keeping the Vulkan device, its clamped tiles the same to the level, where before the software device drew; GL's and D3D11's resize sending no texture again, where before each size sent some 95 |
-| REN.43 | The console's `FLUSH`, which `DeusExPlayer.ShowMainMenu` and the brightness menu send, draws no PRECACHING frame after it (`Engine::PrecacheOnFlip` set at a map's load alone), where the original's `UEngine::Flush(1)` (Engine.dll `0x10380fed`) has `D3DDrv`'s Flush set `PrecacheOnFlip` from `UsePrecache` (`0x10002ec9`), so with it on the main menu opens on PRECACHING | Small | Read (REN.39's run planner) |
-| REN.44 | The render device's console words are not taken: `GETDETAILTEXTURES`, `TOGGLEDETAILTEXTURES` (which saves the device's config; `URenderDevice::Exec`, Engine.dll `0x10371b8a`), and `D3DDrv`'s `LODBIAS` and `SHOWPOOLS` (`D3DDrv.dll` `0x100061b0`), each logged unrecognized; no stock script sends them | The UI | Read (WIN.19's investigator, [a key's binding](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#a-keys-binding)) |
 
 ## AUD: the audio
 
@@ -141,6 +139,7 @@ owner rules.
 
 | Area | Finding | Why refuted |
 |---|---|---|
+| REN | The console's `FLUSH`, which `DeusExPlayer.ShowMainMenu` and the brightness menu send, draws no PRECACHING frame after it, where the original's `UEngine::Flush(1)` has `D3DDrv`'s Flush set `PrecacheOnFlip` from `UsePrecache` (`0x10002ec9`), so with it on the main menu opens on PRECACHING (REN.43) | Not so in the original: `RenderWordsConsole` with `DXCAP_PRECACHE=1`, the level's action at the console's ticks Precaching at the map's first and at none of the five after `FLUSH` or `BRIGHTNESS`, as in DXEngine |
 | PHYS | A walking player rests 4.8 over the floor at Liberty Island's start, where the original's rests 4.75, its landing lower, the first frame after the load shorter (`DXEngine/docs/NATIVES.md`, small) | Where it rests follows its landing, so the first frame's length after the load, which is the load's real time on the machine: run again, both engines rest it at 4.25 at the start and after the first walk, 12.2 after the second, 1.70 from the wall (`StandConsole`, two runs of each, every line alike but the moment's places) |
 | ENG | A `SpawnNotify` is not asked about an actor spawned while a notification runs, DXEngine's guard against one spawning without end, the original's taken for unread (`DXEngine/DXEngine/Packages/Engine/Actors/UActor.cpp:128`) | The original's has the same guard: `SpawnActor` (`0x10394f60`) holds a flag (`GSpawnNotifying`, `0x10588b48`) over the notifications' walk, and an actor spawned meanwhile hears none (engine-dll.md, spawning) |
 | VM | RadiusActors(None, 300) on the menu map finds one actor more than the original's, 99 against 98 (`DXEngine/DXEngine/VM/Iterator.cpp`, `DXEngine/tools/dxcap/Classes/OpsConsole.uc`) | DX.dx's player rides the menu's flyby, so a count from it is the moment's: 2 s in, the original's player stood at 2769, 308, -98 and DXEngine's at 2752, 299, -92, InterpolationPoint14 (a collision radius of 10) 327 units from the one and 307 from the other, outside 300 plus its radius and inside it, as the original's test has it (engine-dll.md, traces). OpsConsole counts round the level's first PlayerStart (DXEngine cbc56edd): both engines, twice each, give 96, every `DXOPS:` line alike. |
@@ -196,10 +195,10 @@ What no sweep has read, by area: the next sweep's ground.
   (`0x10615329`), where `GalaxyMixer` sets a sound's at once (a song's commands and its order
   0 set both, `0x106177aa`, `0x106159aa`).
 - **WIN:** a dedicated server's answer to the window's and the device's words, which DXEngine's
-  drops before the exec functions and the engine's (`Engine.cpp`, WIN.19's investigator); the
-  original's `BRIGHTNESS` word (Engine.dll's strings); Wayland past its timer and keymap (skimmed), the open-folder dialogs, DXWidgets'
-  widgets but the push button, the scroll bar and the log view, the canvas and font code past
-  the span layout.
+  drops before the exec functions and the engine's (`Engine.cpp`, WIN.19's investigator);
+  Wayland past its timer and keymap (skimmed), the open-folder dialogs, DXWidgets' widgets but
+  the push button, the scroll bar and the log view, the canvas and font code past the span
+  layout.
 - **LCORE:** json.c past its writer, finder_places.c and gamedb.c; mods.c, finder.c and
   servers.c in part; app/browser.c past its first 140 lines; posix net.c (skimmed).
 - **LAPP:** the tests, read in part.
