@@ -130,7 +130,7 @@ jobs:
       - name: packages
         run: >
           port-ex-machina/scripts/ci-apt-install.sh
-          libwayland-bin libvulkan-dev libegl-dev
+          libwayland-bin libvulkan-dev libegl-dev desktop-file-utils
           libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev libxtst-dev
           libopenal1 libopengl0 libegl1 libx11-6 libxi6 libxext6 libdbus-1-3 libglib2.0-0t64 libfontconfig1 libfreetype6
 
@@ -194,10 +194,13 @@ jobs:
               { port-ex-machina/scripts/ci.sh failed "build/$PORT/ci-test.log"; exit 1; }
 
       # The tests that need what a runner lacks: the game (test_gamefiles,
-      # test_ui_scripts) and a GPU's Mesa driver (test_gpu_probe, which takes
-      # no CPU driver for one, and a runner has only llvmpipe).
+      # test_gamefiles_saves, test_ui_scripts) and a GPU's Mesa driver
+      # (test_gpu_probe, which takes no CPU driver for one, and a runner has
+      # only llvmpipe).
       - name: skipped tests
-        run: port-ex-machina/scripts/ci.sh skips "build/$PORT/ci-test.log" test_gamefiles test_ui_scripts test_gpu_probe
+        run: >
+          port-ex-machina/scripts/ci.sh skips "build/$PORT/ci-test.log"
+          test_gamefiles test_gamefiles_saves test_ui_scripts test_gpu_probe
 
       - name: package
         run: port-ex-machina/scripts/ci.sh package "$PORT"

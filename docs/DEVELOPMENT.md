@@ -63,7 +63,7 @@ Its packages, with pacman's multilib repository enabled:
 
 | For | Packages |
 |---|---|
-| building | `base-devel`, CMake, Ninja, `pkgconf`, `sdl2-compat` (with `sdl3` under it), `sdl2_ttf`, `sdl3_ttf` and `libxmp` (the desktop launcher's window), OpenAL, `waylandpp`, `vulkan-headers`, `vulkan-tools` |
+| building | `base-devel`, CMake, Ninja, `pkgconf`, `sdl2-compat` (with `sdl3` under it), `sdl2_ttf`, `sdl3_ttf` and `libxmp` (the desktop launcher's window), OpenAL, `waylandpp`, `vulkan-headers`, `vulkan-tools`; `desktop-file-utils` for the launcher's `test_desktop_mime_cache` |
 | running | Mesa with the GPU's Vulkan driver, `libpulse` and `libpipewire` (the desktop's audio), `ttf-dejavu` |
 | the harness and `recreation.sh check` | `xdotool`, ImageMagick, gdb, Python 3 (pyenv's, below); MangoHud (`mangohud`, `lib32-mangohud`) for the harness's `DXCAP_FPS`; `vulkan-swrast` (Mesa's lavapipe) for the software device against Mesa's CPU drivers ([the software device](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#the-software-device)); `xorg-server-xvfb` for the recreation's private display |
 | deploying | `sshpass` |
@@ -194,9 +194,11 @@ here, so a run can be repeated on this machine:
   TrimUI's SDK
   ([the toolchains](https://github.com/JuggyMcNutty/deusex-launcher/blob/trimui-smartpro/ports/trimui-smartpro/README.md#the-toolchains)).
 - A port's job fails on a compiler or linker warning in our own code, third-party code exempt
-  (`scripts/ci.sh warnings`), and on a skipped test but `test_gamefiles` and `test_ui_scripts`,
-  which need the game, and `test_gpu_probe`, which needs a GPU's Mesa driver (a probe that
-  answers with none a skip, one that fails a failure) (`scripts/ci.sh skips`). A failed test is
+  (`scripts/ci.sh warnings`), and on a skipped test but `test_gamefiles`, `test_gamefiles_saves`
+  and `test_ui_scripts`, which need the game, and `test_gpu_probe`, which needs a GPU's Mesa
+  driver (skipped where an OpenGL ES context the test makes itself is no GPU's of Mesa's; a
+  probe that fails a failure) (`scripts/ci.sh skips`); `test_desktop_mime_cache` runs on the
+  runner's `update-desktop-database` (`desktop-file-utils`). A failed test is
   named on the run's page, an annotation, without its log opened (`scripts/ci.sh failed`).
 - The recreation's job is `scripts/recreation.sh test`: its build, with the runner's compiler
   and SDL2, and its tests.
