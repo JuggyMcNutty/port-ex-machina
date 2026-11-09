@@ -30,7 +30,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 2 |
 | [NET](#net-the-network) | the network | 2 |
 | [REN](#ren-the-renderer) | the renderer | 4 |
-| [AUD](#aud-the-audio) | the audio | 4 |
+| [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
 | [WIN](#win-the-game-window) | the game window | 5 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
@@ -114,10 +114,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| AUD.19 | The Ogg music source keeps its decoded packet across a loop: `SeekToSample(0)` closes and reopens the decoder but leaves `pcm` and its position (`Audio/AudioSource.cpp:297-314`), so the next read copies the last packet's tail from the freed decoder (`:337-353`), and a reopen that fails throws on the music thread (`Utils/Exception.cpp:212`). No stock song is Ogg (all 35 are IT); a mod's Ogg `Music` reaches it (`UDXEngineAudioDevice.cpp:645-646`), Galaxy refusing one | Sound | Read. Run due: an AddressSanitizer build playing a looping Ogg song past two loops (`MusicConsole`'s `Songs`) |
-| AUD.20 | An IT pattern's `T0x` and `T1x` are dropped (`Audio/GalaxyMusic.cpp:105-107`), where Galaxy's loader keeps the command for a parameter under 0x20 (Galaxy.dll `0x1062a167`-`0x1062a172`) and its player takes the command's low nibble, 4, a vibrato (`0x10617444`). No stock song has one | Sound | Read. Run due: a `CapTone` order with `T1F`, the tone's pitch wavering in the original, 441 Hz in DXEngine |
-| AUD.23 | On a float output the sounds' mix and the music are summed and never saturated by the engine: the limiter is off (`Audio/AudioDevice.cpp:49-59`, its comment saying the sum is saturated again, which holds for an integer output alone), the mix and the music float32 sources (`:552`; `:301`, `:333`), each held to 16-bit range alone (`:466-473`; `Audio/GalaxyMixer.cpp:230-232`), so their sum reaches some twice full scale, which OpenAL Soft writes as float (`Thirdparty/openal-soft/core/devformat.h:59`; the pulse backend's FLOAT32, `Thirdparty/openal-soft/alc/backends/pulseaudio.cpp:903`) and the system clips only after its volume, where Galaxy's SSE output stage rounds each sample, saturates it to 16 bits and adds it, saturating, to the music already in its 16-bit buffer (`0x10622FE4`, `0x10623127`-`0x1062314d`): loud fighting over music is clipped in the original before any volume, in DXEngine after the desktop's. NATIVES.md says the sum saturates | Sound | Run: `MusicConsole` recorded with the game's stream at 50% (set back to 100% before the stream closed): over tone A past full scale, the original's peak 0.130 of full scale and 0.129 with the next step's beep over it, DXEngine's 0.126 and 0.189 |
-| AUD.24 | Small music items no stock song reaches: a Q retrigger follows IT's carried count (libopenmpt `kITRetrigger`, `Snd_fx.cpp:5862-5871`), where Galaxy's `E9y` retriggers each row at ticks that are multiples of y, tick 0 among them (`0x10616eb0`), all 330 stock Q rows coming out alike (the sweep's `itscan.py`, `qscan.py`); `SCF` dropped (`Audio/GalaxyMusic.cpp:101`), Galaxy cutting at tick 16 |  | Read; run due: a `CapTone` order with noteless `Q04` rows at speed 6, onsets 4, 2, 4, 2 ticks apart in the original, 4 in DXEngine |
 
 ## ENG: the engine, its input and its config
 
