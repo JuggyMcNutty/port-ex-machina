@@ -28,7 +28,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
-| [NET](#net-the-network) | the network | 2 |
+| [NET](#net-the-network) | the network | 0 |
 | [REN](#ren-the-renderer) | the renderer | 3 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
@@ -85,8 +85,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| NET.38 | A DXEngine server sends no client `SimFallServer`'s `CapSimFall` -- hidden, `DT_None`, always relevant, a simulated proxy with `bSimFall`, spawned 3 s after the player is in, its `Physics` changed every 2 s --, neither the original's client nor its own, on the builds before NET.31's fix and after (`Network/NetServer.cpp`'s due list and channels; the cause not read), where the original's server sends it | Multiplayer | Run: `SimFallServer` with `JoinConsole`: the original's server's `CapSimFall` logged by a DXEngine client at 3.1 s; a DXEngine server's by neither client, before and after |
-| NET.39 | A player's `bBadConnectionAlert` on a DXEngine server is on for its first second in the game, then off, where the original's is off from its first half second: the test is the original's (Engine.dll `0x10404e1c`-`0x10404ef0`), what goes into it in the first period with the player not (the acks of packets sent while the client loaded the map, or the player's channel open sooner, not read). No stock script reads it | Multiplayer | Run: `AlertServer` with `JoinConsole`: the original's False at 0.5 s and after; DXEngine's True at 0.5 s and 1.0 s, then False |
 
 ## REN: the renderer
 
@@ -181,6 +179,7 @@ owner rules.
 | AI | Liberty Island's security bots on their patrol sooner: at `NavReachConsole`'s and `SecondWayConsole`'s probe, 1 s after the open by the console's clock, `SecurityBot0` and `SecurityBot1` held a `MoveTarget` in DXEngine (`PatrolPoint19`, `PatrolPoint14`), none in the original (AI.16) | The probe's moment, not the bots': the console's clock takes in the load's frame whole (`UConsole::PreRender`, Engine.dll `0x10379d10`: the viewport's time between two frames shown), the actors 0.4 s of it at most ([a level's tick](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#a-levels-tick)). The original's load of the island took some 1.2 to 1.7 s under Proton, so its probe came at its first tick, every pawn still in `StartUp`'s sleep; DXEngine's took 0.34 s, so its probe came some 0.6 s of the actors' time later, `SecurityBot0`, drawn in the first frame, on its patrol from the second tick and `SecurityBot1` once its sleep (`FRand()+0.2`) had run out, as each run's draw had it. `PatrolStartConsole` at 120 frames a second, by tick and by the actors' time: `SecurityBot0` out of `StartUp` at the second tick in both engines, toward `PatrolPoint19`, `SecurityBot1` as its sleep runs out, toward `PatrolPoint14`. Both consoles probe at the first tick on the island (DXEngine 37baee2a): every `movetarget` None in both engines, the answers and routes alike |
 | NET | After a value too big for a bunch a DXEngine server sends that property no more (the first wave's NET.32) | `CapBigString` logged a change of the string's length alone, and `xyz` is as long as `abc`: logging each change of its text, the original's client of DXEngine's server gets `abc`, then `xyz` at 7 s, and DXEngine's of the original's `abc`, '' at 5 s, `xyz` at 9 s; the overflow's one difference is D.56's |
 | ENG | A key held across a map load is not pressed again, the new level's pawn getting none of its `Button` bytes until it is pressed again, where the original's `LoadMap` resets the input and its poll presses each key held (`UInput::ResetInput` `0x10394910`, WinDrv `0x11109853`-`0x111098d3`) | `SideKeyConsole` with Left Shift, W, X and Space held over a reload of Liberty Island: the new pawn's `bRun` and `bDuck` 1 in DXEngine as in the original, from the level's first logged tick |
+| NET | A DXEngine server sends no client `SimFallServer`'s `CapSimFall` -- hidden, `DT_None`, always relevant, a simulated proxy with `bSimFall`, spawned 3 s after the player is in at `PHYS_Projectile` --, where the original's server sends it (NET.38) | The harness's: it was placed 200 units over the player, in the ceiling (zone 0, from DXMP_Cathedral's BSP) over 18 of the map's 22 player starts, the three the DXEngine-server runs began at among them, and an actor at `PHYS_Projectile` in zone 0 is destroyed at its first move in both engines (Engine.dll `0x103d462a`; `UActor_PhysProjectile.cpp`), in the frame it was spawned, before any client is sent it; the original-server run began where the ceiling is some 270 up. `SimFallServer` places it where the player stands: each engine's server's sent the other's client, its first bunch's `Physics` alone |
 
 ## Not yet read
 
