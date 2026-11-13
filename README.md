@@ -235,9 +235,10 @@ deusex/                  the parent folder (a name without a space: no build is 
                          and the IDA databases
   goggamefiles/          GOG's install, for the RE: DeusEx.exe, which Steam's packs, and
                          its IDA database
-  reference/             the 1112f SDK, the IDA databases' backups, DXD3D9 2.0
-                         (docs/DEVELOPMENT.md), and the wizard's captures once
-                         dx-reverse-info's tools/wine/wizard-capture.sh takes them
+  reference/             the 1112f SDK, the IDA databases' backups, the wizard's
+                         captures once dx-reverse-info's tools/wine/wizard-capture.sh
+                         takes them, and mods/, the mods for the mod plan, DXD3D9 2.0
+                         among them (docs/DEVELOPMENT.md)
   deps/                  fetched toolchains and sysroots
   build/                 build/<port>/{engine,app,profile}, build/main/ (the recreation's
                          launcher and its live check), build/host-tools (the engine's
