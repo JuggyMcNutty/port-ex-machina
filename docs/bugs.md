@@ -24,12 +24,12 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 0 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 1 |
-| [AI](#ai-the-npcs) | the NPCs | 1 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
+| [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
-| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 2 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 2 |
-| [REN](#ren-the-renderer) | the renderer | 4 |
+| [REN](#ren-the-renderer) | the renderer | 3 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
 | [WIN](#win-the-game-window) | the game window | 5 |
@@ -65,13 +65,11 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PHYS.37 | A mover's floats past its filing's: its polygons are filed as the original's `FPoly::Transform` files them (`0x10387360`; `Collision/TopLevel/BrushTracker.cpp`, `CoreCoords`, each corner and W the original's by `tools/test/filedcorners` in W1-PHYSMOVER's model), yet a line's hit on a filed plane lands a float step off the original's, the trace's own float order against it not read (`Collision/TopLevel/TraceTest.cpp`), and its box (`GetBoundingBox`) a float step off at a `PostScale` (43.999996 against 44.0) | Draw order and movers | Run: `FiledPlaneConsole`, Battery Park's MainDoors (`DeusExMover47`) open at yaw 10240: the edge's 5 hits at -367.044403 against the original's -367.044434 and the face's 5 at -307.592438 against -307.592468, where the build before had the edge's alike; `PostScaleConsole`'s three boxes |
 
 ## AI: the NPCs
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| AI.23 | Senders of equal score are ordered by `std::sort` (`Packages/Engine/Actors/UEventManager.cpp`), where the original's `appQsort` is MSVCRT's `qsort`, its comparator (`0x10382420`) ordering equal scores by their place in the array, the order of ties the system's (Windows' or Wine's): only two senders at one squared distance, or one score from a callback, show it, in which of them is the best | Every NPC | Read (AI.21's investigator) |
 
 ## DX: DeusEx's natives
 
@@ -82,8 +80,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| EXT.36 | `URootWindow::SetRawBackground` keeps the old texture or colour for an argument left out (`Packages/Extension/Windows/TabGroup/URootWindow.cpp`), where the original's native gives None and white (Extension.dll `0x1003cbe0`) | On screen | Read (EXT.27's investigator) |
-| EXT.37 | `UWindow::SetBackground` asks no new layout of its parent (`Packages/Extension/Windows/UWindow.cpp`), where the original's does (Extension.dll `0x1004d5e0`) | On screen | Read (EXT.27's investigator) |
 
 ## NET: the network
 
@@ -99,7 +95,6 @@ owner rules.
 | REN.39 | Device edges fixed by reading (DXEngine 8ce0bc6b), their runs due: the single-texture bindless array cleared whole; D3D11's base and macro pans and its present and read-back samplers |  | Read. Run due: the array's and the dither's with a case the build before fails (`DXE_DEBUG_BINDLESS_FILL=10` on the main menu, and the dither on `TileConsole` under Wine, drew the same before as after); D3D11's pans against Vulkan's once its picture matches. Proven: a GPU without `VK_KHR_sampler_mirror_clamp_to_edge` keeping the Vulkan device, its clamped tiles the same to the level, where before the software device drew; GL's and D3D11's resize sending no texture again, where before each size sent some 95; a surface listing `R8G8B8A8_SRGB` first (SDL3's Wayland window, its list cut to that and `R8G8B8A8_UNORM`) given the UNORM format, its picture the usual one's, where before the sRGB format washed it out |
 | REN.62 | A decal counts as drawn on a node the original's walk saves no polygon of (`Render/VisibleFrame.cpp`, `ProcessNodeSurface`; `Render/VisibleDecal.cpp`, `StampDecals`), where the original stamps one only where `ClipDecal` leaves some of it in a polygon `OccludeBsp` saved, any span of which shows (`0x10b173d0`; DrawFrame's loop `0x10b1b0e6`-`0x10b1b2f0`): the nodes' span tests part, so a few decals out of sight live on past the second `DeusExDecal.Timer` waits | Out of sight | Run: `DecalSeenConsole` on the island: of the 29 marks the eye's line to is blocked, on the sea floor past the dock, DXEngine counts 23 and the original 15, its 15 among them, the 8 more at 800 and 1,000 units out |
 | REN.71 | A mover's face turned from where it lay is drawn darker than the original's: Liberty Island's `DeusExMover10` opened 90 degrees, its face's light map built again where it now is (`Light/LightSystem_Light.cpp`, `GetMoverLightmap`), where the original's face keeps the light it had, or is lit otherwise (not read; render-dll.md, light maps). Every door that turns toward the shade | Lighting | Run: `MoverDecalConsole`'s shot 2, the opened door's face 0.039 of white in DXEngine, before and after the decal fixes, against the original's 0.092, the wall beside 0.130 in both; shut, 0.094 and 0.094 |
-| REN.72 | The canvas's tiles are drawn at Z 1.0 (`Native/NCanvas.cpp`, `DrawTile` and `DrawTileClipped`), where the original's pass the canvas's `Z` to the tile (`execDrawTile` `0x10377ba0`, `execDrawTileClipped` `0x10378450`, into `UCanvas::DrawTile` `0x10376160`): a script that sets `Canvas.Z` before a tile, which no stock one is known to, draws it at another depth there, before or behind what the canvas drew | Small | Read (REN.51's investigator) |
 
 ## AUD: the audio
 
@@ -207,9 +202,11 @@ What no sweep has read, by area: the next sweep's ground.
   waiting for `bBegunPlay` (`UActor_Phys.cpp:193`), the original's script `SetLocation`
   (`0x103e3120`) asking for them always; the player's start on Liberty Island at z -256.20 in
   DXEngine, -256.25 in the original (`HashOrderConsole`'s and `WallHitConsole`'s first lines).
-  a mover filed at 64 bits at a load and a save; `qsort`'s ties past three and past
-  eight; the trace's float order against a filed plane (PHYS.37); `FinishMove`'s touch filter, its riders' order and its
-  missing encroachment check, met outside the ground.
+  a mover filed at 64 bits at a load and a save; the trace's other sums at 24 bits, still in
+  doubles (`Collision/TopLevel/TraceTest.cpp`'s `CutLine`, `PullTime` and `BoxCheckTime`), and a
+  mover's own brush walk's float order (the original's coords path from `0x103f3593`, its
+  planes turned per node, ours turned first); `FinishMove`'s touch filter, its riders' order and
+  its missing encroachment check, met outside the ground.
 - **EXT:** the edit field's mouse handlers, `Tick`, word moves and `FilterString`;
   `XLargeTextWindow::ConfigurationChanged` and its preferred size; the GL and D3D11 devices'
   tile samplers past their clamp.
@@ -225,7 +222,7 @@ What no sweep has read, by area: the next sweep's ground.
   zone-0 frame; the face draw's side and near clip, `ClipBspSurf` and its 3DNow! copy; whether
   the stock doorways hold zone portals behind their doors (REN.60's reach); Fire.dll's `.data`
   passes, `RedrawSparks`' cases 13 to 28 and 33 to 43, `DrawFlashRamp`, `SetWaveLight` and the
-  ice blits; the canvas line drawer's tile (`0x10377170`); DX.dx's ElectricityEmitter's fog.
+  ice blits; the canvas line drawer's tile past its `Z` (`0x10377170`); DX.dx's ElectricityEmitter's fog.
 - **GL:** SDL's WGL code and SDL2's sources (inferred from SDL3's); vendor drivers at run time;
   D3D11's HDR on an HDR display; DXGI's `ResizeBuffers` at 0x0 under Wine.
 - **ENG:** SoftDrv's own use of its settings; the menus' pointer speed, an absolute
