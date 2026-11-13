@@ -221,7 +221,8 @@ What no sweep has read, by area: the next sweep's ground.
   D3D11's HDR on an HDR display; DXGI's `ResizeBuffers` at 0x0 under Wine.
 - **ENG:** SoftDrv's own use of its settings; the menus' pointer speed, an absolute
   `MousePosition` against raw deltas; UInput's words past `KEYNAME` and `KEYBINDING`; WinDrv's
-  client and viewport words past WIN.23; Galaxy's `Exec`; DeusEx.exe's `GLaunchExec`.
+  client's words, and its viewport's past WIN.23's and `PREFERENCES`; Galaxy's A3D `s_...`
+  words, taken with A3D 2.0 in use alone.
 - **AUD:** whether Galaxy's plain routine sends a voice to the reverb; its 3DNow! routine; the
   vibrato's depth and Q's timing past the stock songs.
 - **WIN:** SDL3's screen keyboard on the Steam Deck, the game window starting text input as it
