@@ -21,7 +21,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 0 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
@@ -32,7 +32,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [REN](#ren-the-renderer) | the renderer | 0 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
-| [WIN](#win-the-game-window) | the game window | 3 |
+| [WIN](#win-the-game-window) | the game window | 2 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
 | [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 0 |
@@ -49,7 +49,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| D.81 | `PREFERENCES` opens nothing and is logged (`Engine.cpp`, `WindowExec` and `LauncherExec`), where the original's opens its Advanced Options window, out of full screen first (WinDrv.dll `0x11106d90`; the launcher's `GLaunchExec`, `WConfigProperties` captioned `AdvancedOptionsTitle`): the config's classes and their properties in a tree, edited in place ([launch-flow.md](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/launch-flow.md)). Ruled: build the Advanced Options window, `PREFERENCES` opening it as the original's does (the server's clipboard and `OBJ GARBAGE` kept by choice) | The command line | Run: `WindowWordsConsole` |
 
 ## VM: the script VM and the object system
 
@@ -107,7 +106,6 @@ owner rules.
 |---|---|---|---|
 | WIN.35 | Fixed by reading (DXEngine 09c89c61), its run due: the engine's own Wayland window (a dev build's, and linux-aarch64's built on a device) types through the desktop's input method by text-input-v3 (`DXWidgets/src/window/wayland/wayland_display_backend.cpp`), committed text alone, as the original leaves an IME to Windows (WinDrv.dll `0x1110b6d0`) | The UI | Run: `TypeConsole` under `DXCAP_BACKEND=Wayland`: KWin's `activeClientSupportsTextInput` true while the edit field has the focus, false on the build before. Run due: the same beside `tools/dxcap/imtype.py` with an input method that composes as KWin's Virtual Keyboard (IBus Wayland with libpinyin preloaded, which KWin takes at a login; Plasma's on-screen keyboard now): `nihao ` typed as 2 characters, 20320 and 22909, where the build before types 6 |
 | WIN.39 | Fixed by reading (DXEngine 09c89c61), its run due: SDL3's window typed an input method's composition as text, `SDL_EVENT_TEXT_EDITING` handed to `OnTextInput` with `SDL_EVENT_TEXT_INPUT` (`DXWidgets/src/window/sdl3/sdl3_display_window.cpp`, the event dispatch), so `n`, `ni`, `nih` ... came before the committed text; committed text alone now, as the original's | The UI | Run due: `TypeConsole` under `DXCAP_BACKEND=SDL3-Wayland` beside `tools/dxcap/imtype.py` with an input method that composes (WIN.35's): the build before types each composition before `你好`, the build after `你好` alone |
-| WIN.38 | The original launcher's `EDITACTOR`, an actor's property inspector (DeusEx.exe's `GLaunchExec`), is taken by nothing (`Engine.cpp`, `LauncherExec`), whose `MPLAYER` and `HEAT` reach dead services (`0x109142C0`); Galaxy's words are the original's. Typed only | Small | Read (WIN.31's investigator); D2's drafted `EditActorConsole` due |
 
 ## MAIN: the recreation (deusex-launcher's main)
 
