@@ -32,7 +32,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [REN](#ren-the-renderer) | the renderer | 1 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
-| [WIN](#win-the-game-window) | the game window | 5 |
+| [WIN](#win-the-game-window) | the game window | 3 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
 | [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 0 |
@@ -106,11 +106,9 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| WIN.29 | `STAT` toggles the renderer's panels a word, as the original's (`Engine.cpp`, `RendererExec`), but draws Fps's line alone (`Render/RenderCanvas.cpp`, `DrawStats`), where the original draws each of the nine panels its `DrawStats` has that is on (Render.dll `0x10b13a50`): Global, Net, Hardware, Mesh, Zone, Occlusion, Game and Cache list the original's own timings, connection counts and caches, which DXEngine does not keep so; the other words' panels draw nothing in either. Typed only | Small | Read (`ViewWordsConsole`: the FPS line alike in both engines) |
 | WIN.30 | DXEngine has no demo driver (`Engine.cpp`, `LevelExec`): a named `DEMOREC` or `DEMOPLAY` answers "Demo recording failed: DXEngine has no demo driver" or "Demo playback failed: ...", `STOPDEMO` nothing, `[Engine.Engine] DemoRecordingDevice` unread, where the original's level records with its demo driver, single player too (`InitListen` `0x10407870`, a CLIENTDEMO with an `Engine.DemoRecSpectator`), plays a demo back and answers each word (`UDemoRecDriver::Exec` `0x104083c0`). Typed only | Small | Run: `DemoWordsConsole` on the island: the original's "Demo recording started to DxCapDemo.dem", "Demo recording currently active: DxCapDemo.dem" for `DEMOREC` and `DEMOPLAY`, "Demo DxCapDemo.dem stopped (369 frames)"; DXEngine's failures, the bare words' "You must specify a filename" alike |
-| WIN.31 | The engine's words that list the original's own tables are taken by nothing (`Engine.cpp`, `SystemExec`, `ObjectExec`): `CONFIGHASH` (`USystem::Exec`, Core.dll `0x1016b790`), `DUMPNATIVES` and `OBJ`'s `REFS`, `HASH`, `DEPENDENCIES`, `VFHASH` and `LINKERS` (`StaticExec` `0x10153110`); `DUMPCACHE` lists nothing (`FMemCache::Exec` `0x10125500`), DXEngine having no memory cache; `OBJ LIST`'s bytes are each class's properties', the original's what its serializer walks of each object. Typed only | Small | Run: `EngineWordsConsole` from the menu map: the original's `CONFIGHASH` 153 characters, `DUMPCACHE` 478, `OBJ LINKERS` 2,880, `OBJ HASH` 38, `OBJ REFS` 62,118; DXEngine '' for each |
 | WIN.35 | The engine's own Wayland window (a dev build's) types text through no input method (`text-input-v3`; `DXWidgets/src/window/wayland/wayland_display_backend.cpp`), its compose sequences alone, so a language typed through one, Chinese or Japanese, types nothing in it; SDL3's window takes one. No port builds it |  | Read |
-| WIN.38 | Galaxy's console words are taken by nothing, DXEngine's audio device having no words of its own: `MUSICORDER`, a jump to the song's order, logged "Galaxy order"; `ASTAT AUDIO` and `ASTAT DETAIL`, each channel's sound, volume, pitch, radius and priority drawn over the view; `CDTRACK` and `CDVOLUME`; `RECORDSOUND` and `ENDRECORDSOUND`, the microphone at 8 kHz saved as `Test.wav` and played at the player (Galaxy.dll `Exec` `0x10607070`, `PostRender` `0x10608570`); nor the original launcher's `EDITACTOR`, an actor's property inspector (DeusEx.exe's `GLaunchExec`), whose `MPLAYER` and `HEAT` reach dead services (`0x109142C0`). Typed only | Small | Read (WIN.31's investigator) |
+| WIN.38 | The original launcher's `EDITACTOR`, an actor's property inspector (DeusEx.exe's `GLaunchExec`), is taken by nothing (`Engine.cpp`, `LauncherExec`), whose `MPLAYER` and `HEAT` reach dead services (`0x109142C0`); Galaxy's words are the original's. Typed only | Small | Read (WIN.31's investigator); D2's drafted `EditActorConsole` due |
 
 ## MAIN: the recreation (deusex-launcher's main)
 
