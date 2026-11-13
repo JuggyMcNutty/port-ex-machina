@@ -29,7 +29,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 0 |
-| [REN](#ren-the-renderer) | the renderer | 1 |
+| [REN](#ren-the-renderer) | the renderer | 0 |
 | [AUD](#aud-the-audio) | the audio | 0 |
 | [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
 | [WIN](#win-the-game-window) | the game window | 3 |
@@ -90,7 +90,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| REN.73 | 09_NYC_Dockyard's `DeusExMover91` opened draws its turned face at 0.98 of the original's (`Light/LightSystem_Light.cpp`, `GetLightmap`: its static map kept as built where the door stood shut), where the original's face is lit as if its map were built where it stands open, not by its 4 MB cache's drop (alike at `CacheSizeMegs` 64); the cause not read (a face the original's walk first draws only once the door is open is one guess) | Lighting | Run: `MoverDecalConsole` at 1024x768, `DXCAP_MISSION_MAP=09_NYC_Dockyard`, `DoorName=DeusExMover91 TriggerTag=FrontOffice`: shot 2's face at 0.980 of the original's through `D3DDrv`, the build before, which builds a mover's map again where it stands, at 1.002; alike with `TriggerShut` |
 
 ## AUD: the audio
 
@@ -177,6 +176,7 @@ owner rules.
 | ENG | A key held across a map load is not pressed again, the new level's pawn getting none of its `Button` bytes until it is pressed again, where the original's `LoadMap` resets the input and its poll presses each key held (`UInput::ResetInput` `0x10394910`, WinDrv `0x11109853`-`0x111098d3`) | `SideKeyConsole` with Left Shift, W, X and Space held over a reload of Liberty Island: the new pawn's `bRun` and `bDuck` 1 in DXEngine as in the original, from the level's first logged tick |
 | NET | A DXEngine server sends no client `SimFallServer`'s `CapSimFall` -- hidden, `DT_None`, always relevant, a simulated proxy with `bSimFall`, spawned 3 s after the player is in at `PHYS_Projectile` --, where the original's server sends it (NET.38) | The harness's: it was placed 200 units over the player, in the ceiling (zone 0, from DXMP_Cathedral's BSP) over 18 of the map's 22 player starts, the three the DXEngine-server runs began at among them, and an actor at `PHYS_Projectile` in zone 0 is destroyed at its first move in both engines (Engine.dll `0x103d462a`; `UActor_PhysProjectile.cpp`), in the frame it was spawned, before any client is sent it; the original-server run began where the ceiling is some 270 up. `SimFallServer` places it where the player stands: each engine's server's sent the other's client, its first bunch's `Physics` alone |
 | REN | A decal counts as drawn on a node the original's walk saves no polygon of: `DecalSeenConsole`'s blocked marks on the sea floor past the dock, 23 counted against the original's 15 (REN.62) | The view's height: at 16:9 the original's frame keeps the 4:3 width and loses height (23.3 degrees below the middle, DXEngine's Hor+ view 29.9), and the 8 marks more lie below it, inside DXEngine's; at 1024x768 both engines count the same 23 of the 29, none parting |
+| REN | Dockyard's `DeusExMover91` opened, its turned face at 0.98 of the original's after REN.71's fix, where the build before gave 1.00 (REN.73) | The region measured held the office's walls, their detail texture `DStone_A` drawn by DXEngine and not by the original under D3DDrv (by choice): over the face alone, opened against shut, both engines keep the light it had shut, 1.000 (the build before 1.068), and with DXEngine's detail textures off the region is 1.009 (the build before 1.031) |
 
 ## Not yet read
 
