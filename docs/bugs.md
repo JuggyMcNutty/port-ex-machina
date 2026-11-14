@@ -35,7 +35,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [WIN](#win-the-game-window) | the game window | 2 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
-| [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 3 |
+| [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 0 |
 | [LUI](#lui-the-launchers-screens-and-ui-kit) | the launchers' screens and UI kit | 0 |
 | [LPORT](#lport-the-launchers-ports-win32-the-smart-pro-the-sysroots) | the launchers' ports (Win32, the Smart Pro, the sysroots) | 0 |
 | [X](#x-the-harness-the-scripts-and-ci) | the harness, the scripts and CI | 0 |
@@ -122,9 +122,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| LCORE.21 | A mod laid out in a folder of its own as its installer lays it over the game (The Zodiac's `System`, `ZodiacMaps`, `Textures` and `Music`; GMDX's `GMDXv9`, `HDTP`, `New Vision` and `System`): its ini's `..\<folder>\...` paths name the game's folders (`dxl_mod_folder`, `src/core/mods.c:284`), so the mod's `ZodiacMaps` or `New Vision` are none of its profile's paths, and its `System`, holding what its installer puts over the game's (GMDX's `DeusExCon*.u`), comes after the game's or not at all. Every port branch |  | Read |
-| LCORE.22 | A mod's ini in a folder of the mod other than its `System` -- GMDX's `GMDXv9\System\gmdx.ini`, which its shortcut names by `INI=` -- is not found: a mod's settings are looked for in its `System` alone (`own_inis`, `src/core/mods.c:75`), so its profile starts from the game's ini. Every port branch |  | Read |
-| LCORE.23 | A mod that runs from a `System` folder of its own, its own `Core.dll` there (Transcended's `Mods\Transcended\System`, Revision's, The Nameless Mod's `TNM2`): its ini's relative paths are resolved against the game's `System` (`dxl_mod_folder`), Transcended's `..\..\..\System\*.u` naming a folder above the game's; the engine is not given `--system` for it; and a Launch-style `<name>Default.ini` takes no `<name>User.ini` or `<name>DefUser.ini` beside it as the mod's controls (`own_inis`, `src/core/mods.c:75`). Every port branch |  | Read |
 
 ## LUI: the launchers' screens and UI kit
 
