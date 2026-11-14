@@ -23,19 +23,19 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 0 |
-| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 1 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 0 |
 | [REN](#ren-the-renderer) | the renderer | 0 |
 | [AUD](#aud-the-audio) | the audio | 0 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 1 |
 | [WIN](#win-the-game-window) | the game window | 2 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
-| [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 0 |
+| [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 3 |
 | [LUI](#lui-the-launchers-screens-and-ui-kit) | the launchers' screens and UI kit | 0 |
 | [LPORT](#lport-the-launchers-ports-win32-the-smart-pro-the-sysroots) | the launchers' ports (Win32, the Smart Pro, the sysroots) | 0 |
 | [X](#x-the-harness-the-scripts-and-ci) | the harness, the scripts and CI | 0 |
@@ -59,11 +59,13 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
+| PKG.43 | A mod started from a `System` folder of its own -- Transcended's `Mods\Transcended\System`, Revision's `Revision\System`, The Nameless Mod's `TNM2`, each with its own `Core.dll` -- has its relative paths (its `Paths`, `SavePath`, `CachePath`, `INI=` and `USERINI=`), its classes' config files and its `.int` files taken from that folder, the original's own `Core.dll`'s (`appBaseDir`, `0x1016d0e0`; [the .int files](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#the-int-files), [configuration](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#configuration)); DXEngine takes them all from the game's `System` (`Package/PackageManager.cpp:281`, `GameFolder.cpp:52-58`), so Transcended's `..\..\..\System\*.u` names a folder above the game's, and its class config files are the game's | Mods | Read. Run due: Transcended from its own ini, its paths, config files and text from `Mods\Transcended\System`, in both engines |
 
 ## PHYS: physics, traces and movers
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
+| PHYS.40 | A mover standing on a falling actor: the actor's move moves what stands on it after itself (`UActor::FinishMove`, `Packages/Engine/Actors/UActor_Phys.cpp:799`), the mover's `MoveBrush` finds the actor it stands on in its way and pushes it (`CheckEncroachment`, `TryMoveSmooth`), whose move moves the mover again, without end: the stack overflows and the game crashes. The original moves what stands on an actor first, what it stands on passed over, and a non-pawn among them that would encroach on something does not move ([engine-dll.md](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md), `MoveActor`) | Stops the game | Run: Hotel Carone 1.14's `16_HotelCarone_Hotel` (its ini as its manual setup makes it) on DXEngine: SIGSEGV within a second, gdb's stack 12,000 frames of `FinishMove`, `TryMove`, `MoveBrush`, `CheckEncroachment`, `TryMoveSmooth` from a `DeusExTickFalling`. Run due: the same map in both engines, the two actors named |
 
 ## AI: the NPCs
 
@@ -99,6 +101,7 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
+| ENG.39 | The ini's `[Engine.Engine] Language` is not read for text: the original reads a package's text from `<name>.<language>` before `<name>.int` ([the .int files](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#the-int-files)), DXEngine from `.int` alone (`Package/PackageManager.cpp:1367`, `:1477`): Transcended's `Language=DXT` (its 24 `.dxt` files), Vanilla? Madder.'s `VMD` (`DeusEx.vmd`) and The Nameless Mod's `opt` (`DeusEx.opt`) show the game's text where theirs differs | Mods | Read. Run due: a key Transcended's `DeusEx.DXT` gives otherwise than the game's `DeusEx.int`, shown by both engines |
 
 ## WIN: the game window
 
@@ -121,6 +124,9 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
+| LCORE.21 | A mod laid out in a folder of its own as its installer lays it over the game (The Zodiac's `System`, `ZodiacMaps`, `Textures` and `Music`; GMDX's `GMDXv9`, `HDTP`, `New Vision` and `System`): its ini's `..\<folder>\...` paths name the game's folders (`dxl_mod_folder`, `src/core/mods.c:284`), so the mod's `ZodiacMaps` or `New Vision` are none of its profile's paths, and its `System`, holding what its installer puts over the game's (GMDX's `DeusExCon*.u`), comes after the game's or not at all. Every port branch |  | Read |
+| LCORE.22 | A mod's ini in a folder of the mod other than its `System` -- GMDX's `GMDXv9\System\gmdx.ini`, which its shortcut names by `INI=` -- is not found: a mod's settings are looked for in its `System` alone (`own_inis`, `src/core/mods.c:75`), so its profile starts from the game's ini. Every port branch |  | Read |
+| LCORE.23 | A mod that runs from a `System` folder of its own (PKG.43's): its ini's relative paths are resolved against the game's `System` (`dxl_mod_folder`), Transcended's `..\..\..\System\*.u` naming a folder above the game's, and the engine is not told the mod's folder. Every port branch |  | Read |
 
 ## LUI: the launchers' screens and UI kit
 
@@ -230,4 +236,7 @@ What no sweep has read, by area: the next sweep's ground.
 - **LCORE:** a server's ping after a second ask, taken from the last ask, against how the
   game's own browser measures it; `trash.c`.
 - **LAPP:** `test_ui_controls.c` past its first 480 lines.
+- **Mods:** GMDX 9.0.3's own Liberty Island: `CrateUnbreakableMed9 fell out of the world!` in
+  DXEngine's run, where the game's island loses no crate; the original's run with GMDX not yet
+  made.
 - **LUI:** the list widget past its use on the servers page.
