@@ -31,7 +31,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [NET](#net-the-network) | the network | 0 |
 | [REN](#ren-the-renderer) | the renderer | 0 |
 | [AUD](#aud-the-audio) | the audio | 0 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 1 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 0 |
 | [WIN](#win-the-game-window) | the game window | 2 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
@@ -100,7 +100,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| ENG.39 | The ini's `[Engine.Engine] Language` is not read for text: the original reads a package's text from `<name>.<language>` before `<name>.int` ([the .int files](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#the-int-files)), DXEngine from `.int` alone (`Package/PackageManager.cpp:1367`, `:1477`): Transcended's `Language=DXT` (its 24 `.dxt` files), Vanilla? Madder.'s `VMD` (`DeusEx.vmd`) and The Nameless Mod's `opt` (`DeusEx.opt`) show the game's text where theirs differs | Mods | Read. Run due: a key Transcended's `DeusEx.DXT` gives otherwise than the game's `DeusEx.int`, shown by both engines |
 
 ## WIN: the game window
 
