@@ -23,7 +23,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 0 |
-| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 1 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
@@ -59,7 +59,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PKG.43 | A mod started from a `System` folder of its own -- Transcended's `Mods\Transcended\System`, Revision's `Revision\System`, The Nameless Mod's `TNM2`, each with its own `Core.dll` -- has its relative paths (its `Paths`, `SavePath`, `CachePath`, `INI=` and `USERINI=`), its classes' config files and its `.int` files taken from that folder, the original's own `Core.dll`'s (`appBaseDir`, `0x1016d0e0`; [the .int files](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#the-int-files), [configuration](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#configuration)); DXEngine takes them all from the game's `System` (`Package/PackageManager.cpp:281`, `GameFolder.cpp:52-58`), so Transcended's `..\..\..\System\*.u` names a folder above the game's, and its class config files are the game's | Mods | Read. Run due: Transcended from its own ini, its paths, config files and text from `Mods\Transcended\System`, in both engines |
 
 ## PHYS: physics, traces and movers
 
@@ -126,7 +125,7 @@ owner rules.
 |---|---|---|---|
 | LCORE.21 | A mod laid out in a folder of its own as its installer lays it over the game (The Zodiac's `System`, `ZodiacMaps`, `Textures` and `Music`; GMDX's `GMDXv9`, `HDTP`, `New Vision` and `System`): its ini's `..\<folder>\...` paths name the game's folders (`dxl_mod_folder`, `src/core/mods.c:284`), so the mod's `ZodiacMaps` or `New Vision` are none of its profile's paths, and its `System`, holding what its installer puts over the game's (GMDX's `DeusExCon*.u`), comes after the game's or not at all. Every port branch |  | Read |
 | LCORE.22 | A mod's ini in a folder of the mod other than its `System` -- GMDX's `GMDXv9\System\gmdx.ini`, which its shortcut names by `INI=` -- is not found: a mod's settings are looked for in its `System` alone (`own_inis`, `src/core/mods.c:75`), so its profile starts from the game's ini. Every port branch |  | Read |
-| LCORE.23 | A mod that runs from a `System` folder of its own (PKG.43's): its ini's relative paths are resolved against the game's `System` (`dxl_mod_folder`), Transcended's `..\..\..\System\*.u` naming a folder above the game's, and the engine is not told the mod's folder. Every port branch |  | Read |
+| LCORE.23 | A mod that runs from a `System` folder of its own, its own `Core.dll` there (Transcended's `Mods\Transcended\System`, Revision's, The Nameless Mod's `TNM2`): its ini's relative paths are resolved against the game's `System` (`dxl_mod_folder`), Transcended's `..\..\..\System\*.u` naming a folder above the game's; the engine is not given `--system` for it; and a Launch-style `<name>Default.ini` takes no `<name>User.ini` or `<name>DefUser.ini` beside it as the mod's controls (`own_inis`, `src/core/mods.c:75`). Every port branch |  | Read |
 
 ## LUI: the launchers' screens and UI kit
 
