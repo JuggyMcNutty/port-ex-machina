@@ -23,7 +23,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 0 |
-| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
@@ -59,6 +59,7 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
+| PKG.44 | A map named with a folder -- `..\<folder>\Maps\<map>.dx`, as a mod's travel can name one -- is found by its file name in the folders of the `Paths` first (`Package/PackageManager.cpp:433`, `FindMapFile`, the URL's folder dropped), so another map of that name there is loaded in its place; the original's `appFindPackageFile` (`0x10148ec0`) tries the name as given, from `System`, first, then the `Paths` ([a package's file](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#packages-and-linkers)) | Mods | Read. Run due: a copy of one map under another folder by a stock map's name, opened by that path, in both engines |
 
 ## PHYS: physics, traces and movers
 
