@@ -26,8 +26,10 @@ None of the game's files are included. Made with AI assistance.
   original by scripted runs of both engines; on Vulkan, OpenGL or OpenGL ES, or on the CPU alone
   where the GPU has no driver, with a gamepad or a keyboard and mouse.
 - **A launcher made for it.** DXLauncher finds the game and keeps each way of playing in a
-  profile, with its own settings, saves and screenshots; multiplayer, mods, recovery after a
-  crash and a big screen for the television, all in the game's own look and sound.
+  profile, with its own settings, saves and screenshots; multiplayer, mods with no code of
+  their own ([which play](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md#mods)),
+  recovery after a crash and a big screen for the television, all in the game's own look and
+  sound.
 - **Linux, Windows and a handheld.** Desktop Linux on x86_64, Linux on aarch64, Windows 10
   (1903) or newer, and the TrimUI Smart Pro, each port's launcher tailored to it
   ([the ports](#engine-ports)).

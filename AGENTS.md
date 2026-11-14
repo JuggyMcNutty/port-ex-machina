@@ -79,10 +79,12 @@ one); `scripts/recreation.sh` builds, installs, checks and runs it. The RE,
 - **Mods**: the abandoned ones (HX, HXFix, Hotel Carone, The Zodiac) are read as the game's
   DLLs are, when a need comes up. The active ones (Deus Ex Randomizer, GMDX, Transcended,
   Revision, The Nameless Mod, Vanilla? Madder.) and the libraries they ship are never
-  reverse-engineered: their content is played as it ships, and their natives run from the
-  player's own copy of their DLLs, in a 32-bit helper on the player's own `Core.dll` and
-  `Engine.dll` (the mod loader). Of their DLLs only what a loader reads, the import and export
-  tables, is looked at, and nothing of theirs goes in a repository.
+  reverse-engineered, and nothing of theirs goes in a repository: their content is played as it
+  ships. One with native code of its own (Revision, The Nameless Mod, Vanilla? Madder.) does not
+  play: its natives, and what its DLLs change in the engine, are its developers' work, not
+  possible without their permission. Running them from the player's own DLLs (a mod loader) is
+  set aside: what such a DLL changes in the original engine reaches only the loader's copy
+  ([mods](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md#mods)).
 - **The harness runs on the desktop's display**, never a hidden one: this machine is a dedicated
   development device
   ([the display](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#the-display)).
@@ -118,10 +120,6 @@ Decided work for later sessions, each deleted when it is done.
   Transcended, each played as a folder of its own through DXLauncher's Mods, and what each meets
   in DXEngine fixed against the original (a mod started from a `System` folder of its own among
   it).
-- **The mod loader**: windows-x86_64's 32-bit helper, running the natives of Revision, The
-  Nameless Mod and Vanilla? Madder. from the player's DLLs, each native classed by what it does
-  there; first DXEngine's developer switch that plays past a missing native, and
-  `natives_audit.py --mod`. If it pans out, a 32-bit Linux loader of our own in place of Wine.
 - **HX**: `HX.dll` read, its natives and engine classes made DXEngine's, HXFix on top.
 - **A net speed option in DXLauncher**: the rate a profile's game asks of servers
   (`[Engine.Player]`'s `ConfiguredInternetSpeed`), chosen in the launcher, where DXEngine
