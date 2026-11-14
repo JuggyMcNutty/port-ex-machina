@@ -76,6 +76,13 @@ one); `scripts/recreation.sh` builds, installs, checks and runs it. The RE,
   `ALAudio.dll`, `OpenGLDrv.dll` beyond its gamma ramp (the look is judged against `D3DDrv`).
   Never: `Editor.dll`, `Window.dll`'s code, the Glide, Metal and SGL drivers, `Setup.exe`, the
   GOG DLL, `RGalaxy.dll`.
+- **Mods**: the abandoned ones (HX, HXFix, Hotel Carone, The Zodiac) are read as the game's
+  DLLs are, when a need comes up. The active ones (Deus Ex Randomizer, GMDX, Transcended,
+  Revision, The Nameless Mod, Vanilla? Madder.) and the libraries they ship are never
+  reverse-engineered: their content is played as it ships, and their natives run from the
+  player's own copy of their DLLs, in a 32-bit helper on the player's own `Core.dll` and
+  `Engine.dll` (the mod loader). Of their DLLs only what a loader reads, the import and export
+  tables, is looked at, and nothing of theirs goes in a repository.
 - **The harness runs on the desktop's display**, never a hidden one: this machine is a dedicated
   development device
   ([the display](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#the-display)).
@@ -107,11 +114,15 @@ Decided work for later sessions, each deleted when it is done.
 - **D3D11 to parity**: windows-x86_64's D3D11 device brought to the Vulkan device's picture
   and features, then offered by its launcher, its GPU probe naming the D3D11 adapter
   ([where it stands](https://github.com/JuggyMcNutty/DXEngine/blob/main/README.md#for-advanced-users)).
-- **Mods with native DLLs of their own**, in a plan of its own: Revision's (`Revision`, `DXOgg`,
-  `EngineI`, `RenderExt`, `RF`, with its own `Engine.u`, `Extension.u` and `DeusEx.u`) and
-  The Nameless Mod's (`TNMNative`, `TNMFU`, `TNMSaveBugHotfix`, on its own build of the
-  engine's DLLs), both in `gamefiles/Revision`, their DLLs read for what they do and their
-  natives made DXEngine's, so that each mod runs.
+- **Mods with no natives of their own**: The Zodiac, Hotel Carone, GMDX, Deus Ex Randomizer and
+  Transcended, each played as a folder of its own through DXLauncher's Mods, and what each meets
+  in DXEngine fixed against the original (a mod started from a `System` folder of its own among
+  it).
+- **The mod loader**: windows-x86_64's 32-bit helper, running the natives of Revision, The
+  Nameless Mod and Vanilla? Madder. from the player's DLLs, each native classed by what it does
+  there; first DXEngine's developer switch that plays past a missing native, and
+  `natives_audit.py --mod`. If it pans out, a 32-bit Linux loader of our own in place of Wine.
+- **HX**: `HX.dll` read, its natives and engine classes made DXEngine's, HXFix on top.
 - **A net speed option in DXLauncher**: the rate a profile's game asks of servers
   (`[Engine.Player]`'s `ConfiguredInternetSpeed`), chosen in the launcher, where DXEngine
   takes the game's stock 2,600 for 20,000.
