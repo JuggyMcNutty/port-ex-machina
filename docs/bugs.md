@@ -24,7 +24,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 0 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
-| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 1 |
+| [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
 | [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
@@ -64,7 +64,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PHYS.40 | A mover standing on a falling actor: the actor's move moves what stands on it after itself (`UActor::FinishMove`, `Packages/Engine/Actors/UActor_Phys.cpp:799`), the mover's `MoveBrush` finds the actor it stands on in its way and pushes it (`CheckEncroachment`, `TryMoveSmooth`), whose move moves the mover again, without end: the stack overflows and the game crashes. The original moves what stands on an actor first, what it stands on passed over, and a non-pawn among them that would encroach on something does not move ([engine-dll.md](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md), `MoveActor`) | Stops the game | Run: Hotel Carone 1.14's `16_HotelCarone_Hotel` (its ini as its manual setup makes it) on DXEngine: SIGSEGV within a second, gdb's stack 12,000 frames of `FinishMove`, `TryMove`, `MoveBrush`, `CheckEncroachment`, `TryMoveSmooth` from a `DeusExTickFalling`. Run due: the same map in both engines, the two actors named |
 
 ## AI: the NPCs
 
