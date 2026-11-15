@@ -23,7 +23,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 |---|---|---|
 | [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 0 |
-| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 1 |
+| [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
@@ -60,7 +60,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PKG.45 | A package saved with nothing to conform to (`SavePackage`, Core.dll `0x10155980`, [packages and linkers](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#packages-and-linkers)): the original's gets a new GUID at each save (`appCreateGuid`), DXEngine's writer keeps the package's own (`PackageWriter::WriteHeader`). Only the network reads a GUID: a level entered from `Current`, then served or recorded in a demo, is named by the map's GUID in DXEngine, whose map numbers its objects otherwise than the save (the writer's own order), by one no map has in the original | Saving, loading and travel | Read (found reading HX's conformed save). Run due: a demo recorded on a level entered again from `Current` and played back, in both engines |
 
 ## PHYS: physics, traces and movers
 
