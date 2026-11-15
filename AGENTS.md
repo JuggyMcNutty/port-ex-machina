@@ -120,7 +120,9 @@ Decided work for later sessions, each deleted when it is done.
   Transcended, each played as a folder of its own through DXLauncher's Mods, and what each meets
   in DXEngine fixed against the original (a mod started from a `System` folder of its own among
   it).
-- **HX**: `HX.dll` read, its natives and engine classes made DXEngine's, HXFix on top.
+- **HX**: what `HX.dll` does that DXEngine does not yet
+  ([bugs.md's HX](docs/bugs.md#hx-hxs-game-on-dxengine)), then HXFix on top, both played
+  through DXLauncher's Mods.
 - **A net speed option in DXLauncher**: the rate a profile's game asks of servers
   (`[Engine.Player]`'s `ConfiguredInternetSpeed`), chosen in the launcher, where DXEngine
   takes the game's stock 2,600 for 20,000.
