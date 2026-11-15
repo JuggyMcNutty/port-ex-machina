@@ -60,13 +60,11 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PKG.44 | A map named with a folder -- `..\<folder>\Maps\<map>.dx`, as a mod's travel can name one -- is found by its file name in the folders of the `Paths` first (`Package/PackageManager.cpp:433`, `FindMapFile`, the URL's folder dropped), so another map of that name there is loaded in its place; the original's `appFindPackageFile` (`0x10148ec0`) tries the name as given, from `System`, first, then the `Paths` ([a package's file](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/core-dll.md#packages-and-linkers)) | Mods | Read. Run due: a copy of one map under another folder by a stock map's name, opened by that path, in both engines |
 
 ## PHYS: physics, traces and movers
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| PHYS.41 | A check of the actors without the world meets no mover: DXEngine walks a mover's brush only when the world is checked too (`Collision/TopLevel/TraceTest.cpp`, `TraceLine`'s and `TraceBox`'s `!traceWorld` before `MoverLineWalk` and `MoverBoxCheck`), where the original's actor check meets a mover by its brush whenever the actors are checked, a `LevelInfo` given or not (`FCollisionHash::ActorLineCheck`, `0x10359160`, under `ULevel::MultiLineCheck`, `0x1039b220`; [traces](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/engine-dll.md#traces)). So a move of an actor colliding with actors but not the world (`UActor_Phys.cpp`, `UPawn_ReachDeusEx.cpp`) passes through a door, a single line check for movers without the level meets none, and HX's static texture trace meets none (bugs.md HX.13) | -- | Read. Run due: an actor colliding with actors alone moved into a closed door, in both engines |
 
 ## AI: the NPCs
 
@@ -153,7 +151,6 @@ What HX's `HX.dll` does that DXEngine does not yet, for the player's own HX ([HX
 | HX.10 | Fixed by reading (DXEngine 07426925), its run due: HX's replication (`UHXActorChannel::ReplicateActor` `0x100152e0`, [the actor channel](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/hx-dll.md#the-actor-channel), [the native lists](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/hx-dll.md#the-native-lists)): a reference the client cannot resolve compared as it is, sent as None each update; the native lists of `HXPlayerPawn`, `HXScriptedPawn`, `HXDecoration` and `HXEffects`, the fourth blend channel and its unpacking on a client (`PreNetReceive`, `PostNetReceive`) | Mods | Read. Run due: an NPC's head turn and a carried decoration seen by a client, in both engines under HX |
 | HX.11 | Fixed by reading (DXEngine 33d7223b), its run due: HX's UI and input (`ResizeWindows` `0x10020ae0`, `PreRenderWindows` `0x100206e0`, `UHXInput`, [windows](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/hx-dll.md#windows), [input](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/hx-dll.md#input)): the root's multiplier by 639.9 and 479.9 (449.9 with `WindowScale` -1), lowered to `WindowScale`; HX's input class's bindings set by `SET ini:Engine.Engine.Input` | Mods | Read. Run due: the HUD at 1600x900 and a key bound in HX's Customize Keys, in both engines |
 | HX.12 | Fixed by reading (DXEngine 5e348f3f), its run due: `HX.exe`'s and `HCC.exe`'s engine (`HX.exe` `0x109047d0`, `HX.dll` `0x10056b60`, [HX.exe](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/hx-dll.md#hxexe)): the frame rate held to 2.5 to 200, none taken for 200, in the frame's wait; the StatLog natives doing nothing, `GetMapFileName` and `GetGMTRef` empty; `DEFAULTINI=` and `DEFUSERINI=` naming the default inis, `HXDefault.ini` and `HXDefUser.ini` for HX; a control channel's text taken only while the connection is open or pending | Mods | Read. Run due: a dedicated server's frame rate and a stats log, in both engines under HX |
-| HX.13 | A trace with no LevelInfo (`StaticTraceTextures`, `0x1001acf0`, [traces](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/hx-dll.md#traces)) meets the movers on its line, as the original's actor check does; DXEngine's trace meets a mover only with the level (PHYS.41) | Mods | Read. Run due: `HXWeapon.GetWallMaterial` on a mover, in both engines |
 
 ## Refuted
 
