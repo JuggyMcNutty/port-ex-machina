@@ -27,7 +27,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
-| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 1 |
 | [NET](#net-the-network) | the network | 0 |
 | [REN](#ren-the-renderer) | the renderer | 0 |
 | [AUD](#aud-the-audio) | the audio | 0 |
@@ -39,7 +39,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [LUI](#lui-the-launchers-screens-and-ui-kit) | the launchers' screens and UI kit | 0 |
 | [LPORT](#lport-the-launchers-ports-win32-the-smart-pro-the-sysroots) | the launchers' ports (Win32, the Smart Pro, the sysroots) | 0 |
 | [X](#x-the-harness-the-scripts-and-ci) | the harness, the scripts and CI | 0 |
-| [HX](#hx-hxs-game-on-dxengine) | HX's game on DXEngine: what `HX.dll` does that DXEngine does not yet | 4 |
+| [HX](#hx-hxs-game-on-dxengine) | HX's game on DXEngine: what `HX.dll` does that DXEngine does not yet | 3 |
 
 ## D: for the owner
 
@@ -80,6 +80,7 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
+| EXT.38 | A window's outer (`CreateNewWindow`, Extension.dll `0x1004df70`, [the UI in front of the game](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/extension-dll.md#the-ui-in-front-of-the-game)): the original makes a new window in its parent window and the root window in the player's pawn, each named after its class and a number within its outer; DXEngine makes every window in the transient package (`UWindow::NewChild`, `UPlayerPawnExt`'s root, `dxRootWindow`), numbered there, so a window's name, path and `Outer` differ to a script (`string(window)`, `GetPathName`) | The UI | Run (found by HX.3's): a window of HX's root made by a probe is `01_NYC_UNATCOIsland.HXJCDentonPlayer0.HXRootWindow0.HXHoldWindow0` in the original, `Transient.HXHoldWindow0` in DXEngine. Read due: the original's naming and a stock game's run |
 
 ## NET: the network
 
@@ -144,7 +145,6 @@ What HX's `HX.dll` does that DXEngine does not yet, for the player's own HX ([HX
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| HX.3 | Fixed by reading (DXEngine 5e348f3f), its window part's run due: HX's frame (`Tick`, `0x1003c3b0`, [the frame](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/hx-dll.md#the-frame)): the Entry level ticked once while the player waits there; destroyed actors freed four a frame, the newest first, the references to them in the level's actors and the viewport's window tree made None ([destroyed actors](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/hx-dll.md#destroyed-actors)); travel exported for HX players alone, logged as HX's; the last URL's portal kept; a viewport's `?restart` with no travel info, as both the game's and HX's give it none | Mods | The travel's run made: `HXFixTestNotes` with either engine hosting, both players exported at each of two travels, 18 of 18. Run due: an actor destroyed while a window holds it, in both engines under HX |
 | HX.9 | Fixed by reading (DXEngine 07426925), its run due: what HX sends a client (`ServerTickClient` `0x1004ad10`, `ActorCanSee` `0x100493b0`, [what a client is sent](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/hx-dll.md#what-a-client-is-sent)): each of the three `AdditionalViews` from its own place, a relevant actor's `LastRenderTime` set, a pawn's `SelectedItem` as its own, the line through see-through surfaces, the due test in floats truncated | Mods | Read. Run due: an actor seen only through glass, and a camera's view, sent to a client, in both engines under HX -- and `HXFixTestKeypad`'s remote client, whose keypad window, opened by a call naming the keypad, opens in one run of three with DXEngine hosting (the build before DXEngine 5e348f3f alike): the keypad may reach the client after the call |
 | HX.10 | Fixed by reading (DXEngine 07426925), its run due: HX's replication (`UHXActorChannel::ReplicateActor` `0x100152e0`, [the actor channel](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/hx-dll.md#the-actor-channel), [the native lists](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/hx-dll.md#the-native-lists)): a reference the client cannot resolve compared as it is, sent as None each update; the native lists of `HXPlayerPawn`, `HXScriptedPawn`, `HXDecoration` and `HXEffects`, the fourth blend channel and its unpacking on a client (`PreNetReceive`, `PostNetReceive`) | Mods | Read. Run due: an NPC's head turn and a carried decoration seen by a client, in both engines under HX |
 | HX.11 | Fixed by reading (DXEngine 33d7223b), its run due: HX's UI and input (`ResizeWindows` `0x10020ae0`, `PreRenderWindows` `0x100206e0`, `UHXInput`, [windows](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/hx-dll.md#windows), [input](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/hx-dll.md#input)): the root's multiplier by 639.9 and 479.9 (449.9 with `WindowScale` -1), lowered to `WindowScale`; HX's input class's bindings set by `SET ini:Engine.Engine.Input` | Mods | Read. Run due: the HUD at 1600x900 and a key bound in HX's Customize Keys, in both engines |
