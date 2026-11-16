@@ -27,7 +27,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
 | [AI](#ai-the-npcs) | the NPCs | 0 |
 | [DX](#dx-deusexs-natives) | DeusEx's natives | 0 |
-| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 1 |
+| [EXT](#ext-the-window-tree-extension) | the window tree (Extension) | 0 |
 | [NET](#net-the-network) | the network | 0 |
 | [REN](#ren-the-renderer) | the renderer | 0 |
 | [AUD](#aud-the-audio) | the audio | 0 |
@@ -80,7 +80,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| EXT.38 | A window's outer (`CreateNewWindow`, Extension.dll `0x1004df70`, [the UI in front of the game](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/extension-dll.md#the-ui-in-front-of-the-game)): the original makes a new window in its parent window and the root window in the player's pawn, each named after its class and a number within its outer; DXEngine makes every window in the transient package (`UWindow::NewChild`, `UPlayerPawnExt`'s root, `dxRootWindow`), numbered there, so a window's name, path and `Outer` differ to a script (`string(window)`, `GetPathName`) | The UI | Run (found by HX.3's): a window of HX's root made by a probe is `01_NYC_UNATCOIsland.HXJCDentonPlayer0.HXRootWindow0.HXHoldWindow0` in the original, `Transient.HXHoldWindow0` in DXEngine. Read due: the original's naming and a stock game's run |
 
 ## NET: the network
 
