@@ -41,13 +41,13 @@ holds the IDA databases beside the game's binaries (`System/*.i64`), never commi
 one given its types, strings and names by dx-reverse-info's scripts
 ([working on the binaries](https://github.com/JuggyMcNutty/dx-reverse-info/blob/main/README.md#working-on-the-binaries)),
 and `goggamefiles/`, GOG's install, `DeusEx.exe`'s, which Steam's packs;
-`reference/mods/` holds the mods for the mod plan, each extracted to a folder of its own beside
-its installer, and its `README.md` says what each is, how it installs and what native code it
-carries; `reference/mods/DXD3D9_2.0` is a third-party Direct3D 9 renderer for the original, a
-closed DLL built on Chris Dohnal's UTD3D9 1.3, whose source carries Epic's copyright and no
-licence: its ideas may be taken, never its code; `deps/` and `build/` the scripts remake, and
-for engine work `DXEngine/tools/host-tools.sh` unpacks `perf` and the Vulkan validation layer
-into `deps/`.
+`reference/mods/` holds the mods ([the rule on them](../AGENTS.md#decided)), each extracted to
+a folder of its own beside its installer, and its `README.md` says what each is, how it installs
+and what native code it carries; `reference/mods/DXD3D9_2.0` is a third-party Direct3D 9
+renderer for the original, a closed DLL built on Chris Dohnal's UTD3D9 1.3, whose source carries
+Epic's copyright and no licence: its ideas may be taken, never its code; `deps/` and `build/`
+the scripts remake, and for engine work `DXEngine/tools/host-tools.sh` unpacks `perf` and the
+Vulkan validation layer into `deps/`.
 
 The launcher's `main` -- the original `DeusEx.exe` recreated, not a port -- is built, installed,
 checked and run by `scripts/recreation.sh` (its header has the commands) into the game's

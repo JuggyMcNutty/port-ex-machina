@@ -118,8 +118,8 @@ Decided work for later sessions, each deleted when it is done.
   ([where it stands](https://github.com/JuggyMcNutty/DXEngine/blob/main/README.md#for-advanced-users)).
 - **Mods with no natives of their own**: The Zodiac, Hotel Carone, GMDX, Deus Ex Randomizer and
   Transcended, each played as a folder of its own through DXLauncher's Mods, and what each meets
-  in DXEngine fixed against the original (a mod started from a `System` folder of its own among
-  it).
+  in DXEngine fixed against the original. Each one's opening plays; The Zodiac, GMDX and
+  Transcended import into DXLauncher, Hotel Carone and Deus Ex Randomizer are untried there.
 - **HX**: HX and HXFix played through DXLauncher's Mods, as DXEngine plays both run by hand
   ([HX in NATIVES.md](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md#mods)).
 - **A net speed option in DXLauncher**: the rate a profile's game asks of servers
