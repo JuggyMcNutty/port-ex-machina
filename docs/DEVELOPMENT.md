@@ -224,10 +224,10 @@ before it (`scripts/ci.sh publish`):
 | DXEngine | `<date>-<sha8>`, the engine's commit; a rebuild of one commit the same day `<date>-<sha8>.2` and on | `DXEngine-<port>`: the engine alone, its notices with it | when its code changed since its last, or its build did since this repository's last: a port branch's `engine.cmake`, toolchain, `port.sh` or `cmake/deps.lock` (SDL3's version), the workspace's build scripts or `ports.yml` |
 | deusex-launcher, one per port | `<port>-<date>-<sha8>`, the branch's commit | `DXLauncher-<port>`: the launcher alone | when that branch's code changed since its last |
 
-Each file is a tarball, or a zip for the Windows port and the Smart Pro (the Smart Pro's app
-folder `DeusEx`, as spruceOS takes it); `scripts/ci.sh package` makes all three from the staged
-app, and they are each run's artifact too, kept two days (the releases keep the files), a pull
-request's among them.
+Each file is a tarball, its files root's (owner and group 0), or a zip for the Windows port and
+the Smart Pro (the Smart Pro's app folder `DeusEx`, as spruceOS takes it); `scripts/ci.sh
+package` makes all three from the staged app, and they are each run's artifact too, kept two
+days (the releases keep the files), a pull request's among them.
 
 **`RELEASES_TOKEN`** makes DXEngine's and deusex-launcher's releases from this repository's runs,
 which GitHub's own token cannot: a fine-grained token of the owner's with Contents read and

@@ -241,11 +241,13 @@ cmd_package() {
     printf '%s\n' "$b/DX-$p.$ext" "$b/DXEngine-$p.$ext" "$b/DXLauncher-$p.$ext"
 }
 
+# A tarball's files belong to root, never to the runner's own user: root's tar
+# restores the owner it records (bugs.md X.17).
 archive() {   # <parent folder> <its folder to pack> <file>
     rm -f "$3"
     case "$3" in
         *.zip) (cd "$1" && cmake -E tar cf "$3" --format=zip "$2") ;;
-        *)     tar -C "$1" -czf "$3" "$2" ;;
+        *)     tar -C "$1" --owner=0 --group=0 --numeric-owner -czf "$3" "$2" ;;
     esac
 }
 

@@ -43,7 +43,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [LCORE](#lcore-the-launchers-core-ini-config-keys-profiles) | the launchers' core (ini, config, keys, profiles) | 3 |
 | [LUI](#lui-the-launchers-screens-and-ui-kit) | the launchers' screens and UI kit | 3 |
 | [LPORT](#lport-the-launchers-ports-win32-the-smart-pro-the-sysroots) | the launchers' ports (Win32, the Smart Pro, the sysroots) | 10 |
-| [X](#x-the-harness-the-scripts-and-ci) | the harness, the scripts and CI | 2 |
+| [X](#x-the-harness-the-scripts-and-ci) | the harness, the scripts and CI | 1 |
 | [HX](#hx-hxs-game-on-dxengine) | HX's game on DXEngine: what `HX.dll` does that DXEngine does not yet | 0 |
 
 ## D: for the owner
@@ -205,7 +205,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| X.17 | The Linux tarballs record the CI runner's user and group, 1001: `archive` packs them with plain `tar -czf` (`scripts/ci.sh:248`), so `sudo tar xzf DX-linux-x86_64.tar.gz -C /opt`, root's tar restoring the owner, gives the folder and its three programs to the local account of uid 1001, which can then change the programs every other user runs. Modes and paths are sound. The tarballs should record owner and group 0 (`--owner=0 --group=0 --numeric-owner`). linux-x86_64 and linux-aarch64 |  | Read: `tar --numeric-owner -tvzf` of the released `DX-linux-x86_64.tar.gz`: every entry 1001/1001. Run due: the same of the next release: 0/0 |
 | X.18 | Small defects of the tests: the launcher's tests run in the real `XDG_RUNTIME_DIR` (no test sets it; `src/platform/posix/instance.c:65-67`), each run's temporary root a new id (`tests/test_runtime.c:125`), so every run leaves a `deusex-launcher.<hash>.lock` there, never removed by design, and its killed launchers their `.sock`: 903 locks and 62 sockets on the development machine, growing with each run. A player's holds one lock. Every port branch |  | Read: the files counted in `/run/user/1000` |
 
 ## HX: HX's game on DXEngine
