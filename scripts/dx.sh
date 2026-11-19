@@ -197,20 +197,23 @@ cmd_check() {
         "$src/scripts/check-abi.sh" $abi "${bins[@]}" || rc=1
     done
 
-    # The builds of Deus Ex a launcher takes are the engine's: it plays only
-    # a DeusEx.exe whose SHA1 its own list has.
+    # The builds of Deus Ex a launcher takes are the engine's: it plays a
+    # DeusEx.exe whose SHA1 its own list has, or one of another beside the
+    # packages of 1112fm, by the GUIDs its own list has (bugs.md D.89).
     say "== the launchers' game builds against the engine's"
-    local engine_db="$DX_ENGINE/DXEngine/UE1GameDatabase.h" want have
+    local engine_db="$DX_ENGINE/DXEngine/UE1GameDatabase.h" want have want_pkg have_pkg
     if [ -f "$engine_db" ]; then
         want="$(grep -oE '"[0-9a-f]{40}"' "$engine_db" | tr -d '"' | sort)"
+        want_pkg="$(grep -oE '"[A-Za-z]+\.u", "[0-9A-Fa-f]{32}"' "$engine_db" | tr -d '" ' | sort)"
         for p in $(dx_ports); do
             local db="$DX_LAUNCHER/$p/src/core/gamedb.c"
             [ -f "$db" ] || continue
             have="$(grep -oE '"[0-9a-f]{40}"' "$db" | tr -d '"' | sort)"
-            if [ "$have" = "$want" ]; then
+            have_pkg="$(grep -oE '"[A-Za-z]+\.u", "[0-9A-Fa-f]{32}"' "$db" | tr -d '" ' | sort)"
+            if [ "$have" = "$want" ] && [ -n "$want_pkg" ] && [ "$have_pkg" = "$want_pkg" ]; then
                 echo "OK   $p: src/core/gamedb.c"
             else
-                echo "FAIL $p: src/core/gamedb.c's builds are not the engine's UE1GameDatabase.h's" >&2
+                echo "FAIL $p: src/core/gamedb.c's builds or packages are not the engine's UE1GameDatabase.h's" >&2
                 rc=1
             fi
         done

@@ -166,8 +166,9 @@ loudly instead of leaving stale instructions:
 - `scripts/dx.sh check` runs the first three, confirms every port has its required files, checks
   the glibc ceiling of whatever is staged (a Windows port's floor and the DLLs its programs
   import; a port with nothing staged said skipped) and that a staged engine is whole (its
-  `PORT_ENGINE_FILES`), and checks that a port's list of the game's builds
-  (`src/core/gamedb.c`, DXLauncher's) is the engine's (`UE1GameDatabase.h`).
+  `PORT_ENGINE_FILES`), and checks that a port's list of the game's builds, by `DeusEx.exe`'s
+  SHA1, and of 1112fm's packages, by their GUIDs (`src/core/gamedb.c`, DXLauncher's), is the
+  engine's (`UE1GameDatabase.h`).
 
 ## CI
 
