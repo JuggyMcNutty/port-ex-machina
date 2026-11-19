@@ -91,7 +91,9 @@ one); `scripts/recreation.sh` builds, installs, checks and runs it. The RE,
 - **Every Linux build at glibc 2.28**: RHEL 8's, the oldest of the actively maintained mainline
   distributions (to 2029), so that every one runs it, linux-x86_64's too, not the build
   system's own; built with a buildroot toolchain, a GCC 13 on glibc 2.28, as Godot's Linux
-  builds are ([the glibc ceiling](docs/DEVELOPMENT.md#gotchas-that-cost-time)).
+  builds are ([the glibc ceiling](docs/DEVELOPMENT.md#gotchas-that-cost-time)). The engine's
+  OpenAL Soft (LGPL) is built from its own copy and shipped beside it, as Windows', so a
+  desktop with none plays.
 - **CI builds at the pins**: the workspace's push of pins that change code builds every port
   on GitHub's CI and publishes the apps in a release here, the engine alone in DXEngine's and
   each port's launcher alone in deusex-launcher's; DXEngine and the launcher run the same jobs

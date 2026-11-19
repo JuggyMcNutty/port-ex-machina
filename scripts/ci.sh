@@ -208,8 +208,8 @@ cmd_failed() {
 # A port's files for the releases, from its staged app, beside it in
 # build/<port>/: DX-<port>, the app as it ships, launcher and engine;
 # DXEngine-<port>, the engine alone, its files as staging copies them
-# (PORT_ENGINE_FILES), its notices and on Windows its runtime's and OpenAL
-# Soft's; DXLauncher-<port>, the app but the engine. A zip for the Windows
+# (PORT_ENGINE_FILES), its notices, OpenAL Soft's where the port ships it
+# and on Windows its runtime's; DXLauncher-<port>, the app but the engine. A zip for the Windows
 # port and the Smart Pro (whose app folder is DeusEx, as spruceOS's App/
 # takes it), else a tarball; DXLauncher's folder, DXEngine's, or DeusEx.
 cmd_package() {
@@ -233,6 +233,8 @@ cmd_package() {
     if [ -d "$b/app/licenses" ]; then
         cp -a "$b/app/licenses" "$tmp/engine/DXEngine/"
         rm -f "$tmp/launcher/$dir/licenses/OpenAL-Soft-COPYING.txt"
+        # No folder left for it alone, where a port stages no other notice.
+        rmdir "$tmp/launcher/$dir/licenses" 2>/dev/null || true
     fi
     archive "$tmp/app" "$dir" "$b/DX-$p.$ext"
     archive "$tmp/engine" DXEngine "$b/DXEngine-$p.$ext"

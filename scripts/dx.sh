@@ -188,7 +188,7 @@ cmd_check() {
         fi
         abi="$(dx_abi_args "$src/ports/$p/port.cmake")"
         [ -n "$abi" ] || continue
-        for f in deusex-launcher dxl-cli DXEngine "$app"/*.exe "$app"/*.dll; do
+        for f in deusex-launcher dxl-cli DXEngine "$app"/*.exe "$app"/*.dll "$app"/*.so.*; do
             f="$app/${f##*/}"
             [ -f "$f" ] && bins+=("$f")
         done
