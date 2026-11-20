@@ -26,7 +26,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
@@ -36,7 +36,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 | [NET](#net-the-network) | the network | 1 |
 | [REN](#ren-the-renderer) | the renderer | 5 |
 | [AUD](#aud-the-audio) | the audio | 1 |
-| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 3 |
+| [ENG](#eng-the-engine-its-input-and-its-config) | the engine, its input and its config | 4 |
 | [WIN](#win-the-game-window) | the game window | 12 |
 | [MAIN](#main-the-recreation-deusex-launchers-main) | the recreation: deusex-launcher's main | 0 |
 | [LAPP](#lapp-the-desktop-launchers-app-processes-and-posix-platform) | the desktop launcher's app, processes and POSIX platform | 0 |
@@ -55,6 +55,7 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
+| D.109 | In the pad's DXController mode (`Settings.json`'s `Gamepad.DXController`) a stick's `Axis` binding adds its value at each event, one a tick, as the original's rule has it (engine-dll.md, a key's binding), so the view turns by as much a frame at any frame rate, twice as fast a second at twice the frame rate. DXController's own launcher does the same and holds the game to 120 frames a second unless told otherwise (its `FPSLimit`), the rate its sticks' defaults are set for; DXEngine has no limit of its own in a single-player game, the display's rate with vsync and none without, so the mod's look is its own only at 120. The choices: keep the original's rule, the look's speed following the frame rate and the mod's sensitivity setting correcting it by hand; or, in this mode alone, a stick's value to its binding scaled by the tick's time x 120, the mod's own speed at any frame rate (its scripts still given the value as it is). Recommendation: the scaling, a player's frame rate here being anything from 60 to several hundred and the mod's defaults its author's at 120 | [the pad](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md#the-pad) | Run: `PadModeConsole` with `pad-mode.txt` at `DXCAP_FPS=60`, `120` and no limit: the yaw a tick a unit of `JoyU` the same, 7.5; the turn over 3 s 540,580, 1,084,180 and 5,759,140 |
 
 ## VM: the script VM and the object system
 
@@ -116,6 +117,7 @@ owner rules.
 | ENG.40 | A key held as the game's window gets the focus back, other than a shift, control or alt, is pressed again only as its repeat comes in the SDL3 and SDL2 windows, and on Wayland, whose repeats are the client's own, not until it is pressed anew: SDL tells of no other key held at a focus gain (`DXWidgets/src/window/sdl3/sdl3_display_window.cpp`, `GetKeyState`; `Engine.cpp`, `PressHeldKeys`), and the engine's own Wayland window marks no mouse button held then. The original's poll presses each key held at once (windrv-dll.md, the keys), as DXEngine's X11 window does and its Win32 window by Windows' key state. The loss itself is the original's: the input reset, no release sent. To press them the SDL windows would ask the platform itself which keys are down (X11's keymap, Wayland's `enter` keys), keeping SDL's own state in step: a feature | The keys | Run: `FocusLossConsole` beside `tools/dxcap/focusheld.py`, Left Shift and X held over a focus change: the original presses both at the return; DXEngine's X11 window both at one stamp; its SDL3 window Shift at once and X 0.6 s later, at its repeat |
 | ENG.46 | Fixed by reading (DXEngine e794119e), its run due: on Windows the engine is a windowed program, so what it wrote to stderr or stdout before its widgets were up showed nowhere. It writes to the console it is started from where it has no output of its own, and with no console an error from before its error window can open shows in a message box (`MainGame.cpp`, `GameApp.cpp`) | Stops the game | Read. Run due, on Windows: `DXEngine.pk3` renamed and the engine started from Explorer: a message box; at a `cmd` prompt `DXEngine.exe --help`: the options printed |
 | ENG.59 | Housekeeping, not seen directly: a surface's texture falls back to `DefaultTexture` and is never read (`Render/VisibleFrame.cpp`, the surface's draw), its flags taken from `surface.Material` alone; whether the original takes `DefaultTexture`'s flags for a surface with no texture is unread |  | Read |
+| ENG.61 | A key is offered to the root window before the console: the window's handlers give a key, and a pad's own in DXEngine's own pad, to the root window first and call the console's `KeyEvent` only for one the root window leaves (`Engine.cpp`, `OnWindowKeyDown`, `OnWindowKeyUp`, `InputEvent`), where the original asks the console first (`UEngine::InputEvent`, Engine.dll `0x103814e0`: the console's `KeyEvent`, a key it takes going no further, then the input's `PreProcess` and `Process`, Extension's, which offers the key to the root window before its binding; engine-dll.md, a key's binding). So while a window holds the keyboard (a menu, one of the game's screens) no key reaches the console's script: the console's own key opens nothing there, and a mod's console that watches every key sees none of the keyboard's in a menu (DXController's, whose pad in the pad's own mode already goes the original's way). Every port | Play | Read. Run due: both engines, a console whose `KeyEvent` logs each key, a menu up and a key pressed: the original logs it, DXEngine does not |
 
 ## WIN: the game window
 
