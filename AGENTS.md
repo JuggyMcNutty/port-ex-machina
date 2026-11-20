@@ -76,14 +76,14 @@ one); `scripts/recreation.sh` builds, installs, checks and runs it. The RE,
   `ALAudio.dll`, `OpenGLDrv.dll` beyond its gamma ramp (the look is judged against `D3DDrv`).
   Never: `Editor.dll`, `Window.dll`'s code, the Glide, Metal and SGL drivers, `Setup.exe`, the
   GOG DLL, `RGalaxy.dll`.
-- **Mods**: the abandoned ones (HX, HXFix, Hotel Carone, The Zodiac) are read as the game's
-  DLLs are, when a need comes up. The active ones (Deus Ex Randomizer, GMDX, Transcended,
-  Revision, The Nameless Mod, Vanilla? Madder.) and the libraries they ship are never
-  reverse-engineered, and nothing of theirs goes in a repository: their content is played as it
-  ships. One with native code of its own (Revision, The Nameless Mod, Vanilla? Madder.) does not
-  play: its natives, and what its DLLs change in the engine, are its developers' work, not
-  possible without their permission. Running them from the player's own DLLs (a mod loader) is
-  set aside: what such a DLL changes in the original engine reaches only the loader's copy
+- **Mods**: the abandoned ones (HX, HXFix, Hotel Carone, The Zodiac) are read as the game's DLLs
+  are, when a need comes up. Of the active ones (Deus Ex Randomizer, GMDX, Transcended, Revision,
+  The Nameless Mod, Vanilla? Madder.) and the libraries they ship, nothing goes in a repository or
+  is published: their content is played as it ships. One with native code of its own (Revision, The
+  Nameless Mod, Vanilla? Madder.) does not play: its natives, and what its DLLs change in the
+  engine, are its developers' work, not possible without their permission. Running them from the
+  player's own DLLs (a mod loader) is set aside: what such a DLL changes in the original engine
+  reaches only the loader's copy
   ([mods](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md#mods)).
 - **The harness runs on the desktop's display**, never a hidden one: this machine is a dedicated
   development device
