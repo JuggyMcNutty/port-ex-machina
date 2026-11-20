@@ -90,7 +90,9 @@ checkout links it in. None of it is versioned and all of it can be deleted;
 `deps/` costs a download (and for a vendor sysroot, the device) to rebuild.
 
 Staging makes `build/<port>/app` from empty: it installs the binaries and
-what the launcher's install rules add, lays the port's `packaging/` over
+what the launcher's install rules add -- `data/` with DXController's folder,
+its `DXController.u` from the mod's release zip that `port_deps` fetches by
+the branch's `cmake/deps.lock` -- lays the port's `packaging/` over
 them, copies in the engine's files (`PORT_ENGINE_FILES`: without an engine
 build, the launcher alone, with a warning; an engine build that lacks one
 fails the staging) and its notices (`DXEngine-LICENSE.md`, the engine's

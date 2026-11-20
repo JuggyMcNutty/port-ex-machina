@@ -130,7 +130,7 @@ written this way:
 9. **A measurement lives in a table that names the engine commit it was taken at**, never in
    prose.
 10. **One wrap width per file, 100 at most**; a bare link may run over.
-11. **A README's screenshots** are in its repository's `docs/screenshots/`, the one exception
+11. **A README's screenshots** are in its repository's `docs/screenshots/`, an exception
     to the rule against committing the game's files ([the rule](../AGENTS.md#rules)): the
     game's scenes as JPEG, the launcher's screens as PNG, each a few hundred KB at most, from
     real runs -- DXEngine's `shot` on a harness timeline
@@ -165,10 +165,12 @@ loudly instead of leaving stale instructions:
   own helper there, and one the hook does not know takes the launcher's default.
 - `scripts/dx.sh check` runs the first three, confirms every port has its required files, checks
   the glibc ceiling of whatever is staged (a Windows port's floor and the DLLs its programs
-  import; a port with nothing staged said skipped) and that a staged engine is whole (its
-  `PORT_ENGINE_FILES`), and checks that a port's list of the game's builds, by `DeusEx.exe`'s
-  SHA1, and of 1112fm's packages, by their GUIDs (`src/core/gamedb.c`, DXLauncher's), is the
-  engine's (`UE1GameDatabase.h`).
+  import; a port with nothing staged said skipped), that a staged engine is whole (its
+  `PORT_ENGINE_FILES`) and a staged launcher's DXController folder too (`data/dxcontroller`:
+  `DXController.u`, its `COPYING` and `README`, the patch, and no other file of the mod's
+  release, no `DeusEx.u` above all), and checks that a port's list of the game's builds, by
+  `DeusEx.exe`'s SHA1, and of 1112fm's packages, by their GUIDs (`src/core/gamedb.c`,
+  DXLauncher's), is the engine's (`UE1GameDatabase.h`).
 
 ## CI
 

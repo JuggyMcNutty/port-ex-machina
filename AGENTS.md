@@ -27,8 +27,11 @@ git is the record. Every session loads it, so keep it small.
 - **Commit as JuggyMcNutty** (`11588877+JuggyMcNutty@users.noreply.github.com`), never the
   machine's global identity ([commits](docs/DEVELOPMENT.md#commits)).
 - **Never commit the game's files**: no ini, `.int`, package, IDA database or capture, but for
-  a README's screenshots ([docs](docs/DEVELOPMENT.md#docs)). All four repositories are public.
-  The RE is behaviour in our own words, never decompiled code.
+  a README's screenshots ([docs](docs/DEVELOPMENT.md#docs)) and, the owner allowing it alone of
+  what is made from the game's, DXController's patch from the stock `DeusEx.u` to its v1.6.1
+  one (`DeusEx-v1.6.1.dxlpatch` in each port branch's `data/dxcontroller/`); never the mod's
+  changed `DeusEx.u` itself, nor `DXController.u`, fetched at its pin. All four repositories are
+  public. The RE is behaviour in our own words, never decompiled code.
 - **Push or move a pin only with the owner's go-ahead.** A change is committed in its own
   repository with the docs it affects, pushed, then pinned here (`scripts/engine.sh pin`,
   `scripts/launcher.sh pin <port>`) and the pin committed.
@@ -85,6 +88,13 @@ one); `scripts/recreation.sh` builds, installs, checks and runs it. The RE,
   player's own DLLs (a mod loader) is set aside: what such a DLL changes in the original engine
   reaches only the loader's copy
   ([mods](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md#mods)).
+- **DXController with every app**: dsgls's controller mod (GPLv3 or later) plays the game
+  unless a profile's option says no. Its `DXController.u` is the author's own build at a pinned
+  release, fetched with a port's dependencies, never in a repository; its changed `DeusEx.u` is
+  made on the player's machine by the patch DXLauncher ships; DXEngine's part is a mode of its
+  pad, written from the mod's documented behaviour, none of its code
+  ([the option](https://github.com/JuggyMcNutty/deusex-launcher/blob/linux-x86_64/docs/LAUNCHER.md#dxcontroller),
+  [the mode](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/ENGINE.md#the-pads-dxcontroller-mode)).
 - **The harness runs on the desktop's display**, never a hidden one: this machine is a dedicated
   development device
   ([the display](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/DEVELOPMENT.md#the-display)).

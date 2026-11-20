@@ -186,6 +186,22 @@ cmd_check() {
                 [ -f "$app/$f" ] || { echo "FAIL build/$p/app lacks $f -- scripts/dx.sh build $p, then stage" >&2; rc=1; }
             done
         fi
+        # A launcher staged has DXController's folder whole: the mod's
+        # package, from its pinned release zip (scripts/dx.sh deps), its
+        # licence and README, and the launcher's patch.
+        if [ -d "$app/data" ]; then
+            for f in DXController.u COPYING README; do
+                [ -f "$app/data/dxcontroller/$f" ] ||
+                    { echo "FAIL build/$p/app lacks data/dxcontroller/$f -- scripts/dx.sh deps $p, build, stage" >&2; rc=1; }
+            done
+            compgen -G "$app/data/dxcontroller/*.dxlpatch" >/dev/null ||
+                { echo "FAIL build/$p/app lacks DXController's patch in data/dxcontroller" >&2; rc=1; }
+            # Nothing else of the mod's release: never a DeusEx.u, nor its exe or DLL.
+            for f in "$app"/data/dxcontroller/* "$app"/DeusEx.u "$app"/DeusEx.exe "$app"/SDL3.dll; do
+                case "${f##*/}" in DXController.u|COPYING|README|*.dxlpatch|'*') continue ;; esac
+                [ ! -e "$f" ] || { echo "FAIL build/$p/app holds ${f#"$app"/}: no file of the mod's but DXController.u ships" >&2; rc=1; }
+            done
+        fi
         abi="$(dx_abi_args "$src/ports/$p/port.cmake")"
         [ -n "$abi" ] || continue
         for f in deusex-launcher dxl-cli DXEngine "$app"/*.exe "$app"/*.dll "$app"/*.so.*; do

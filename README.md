@@ -28,8 +28,8 @@ None of the game's files are included. Made with AI assistance.
 - **A launcher made for it.** DXLauncher finds the game and keeps each way of playing in a
   profile, with its own settings, saves and screenshots; multiplayer, mods with no code of
   their own ([which play](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md#mods)),
-  recovery after a crash and a big screen for the television, all in the game's own look and
-  sound.
+  dsgls's DXController for full controller support, recovery after a crash and a big screen
+  for the television, all in the game's own look and sound.
 - **Linux, Windows and a handheld.** Desktop Linux on x86_64, Linux on aarch64, Windows 10
   (1903) or newer, and the TrimUI Smart Pro, each port's launcher tailored to it
   ([the ports](#engine-ports)).
@@ -91,7 +91,8 @@ its README saying what the port offers and how to install and build it
 
 ## Download
 
-Each port's app, DXLauncher and DXEngine together, from the latest release:
+Each port's app, DXLauncher and DXEngine together, with dsgls's
+[DXController](https://github.com/dsgls/DXController) for the pad, from the latest release:
 
 - Linux on x86_64, glibc 2.28 or newer:
   [`DX-linux-x86_64.tar.gz`](https://github.com/JuggyMcNutty/port-ex-machina/releases/latest/download/DX-linux-x86_64.tar.gz)
@@ -255,7 +256,7 @@ A path in these docs that is not a repository's own is the parent folder's:
 [zlib](LICENSE), for everything in this repository, the launcher and the RE. DXEngine is zlib
 too, a hard fork of Surreal Engine: both their licences are in its
 [`LICENSE.md`](https://github.com/JuggyMcNutty/DXEngine/blob/main/LICENSE.md). What each app
-carries of others', its fonts and libraries, is under their own terms, listed in its branch's
-`THIRD-PARTY.md`.
+carries of others', its fonts, libraries and DXController (the GNU GPL, version 3 or later), is
+under their own terms, listed in its branch's `THIRD-PARTY.md`.
 
 Deus Ex belongs to its owners; this project is not affiliated with or endorsed by them.
