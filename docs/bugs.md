@@ -26,7 +26,7 @@ branch's LAUNCHER.md (main's README) lists its open defects by their IDs under K
 
 | Section | Area | Open |
 |---|---|---|
-| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 1 |
+| [D](#d-for-the-owner) | differences made on purpose, for the owner to rule on or ruled to change | 0 |
 | [VM](#vm-the-script-vm-and-the-object-system) | the script VM and the object system | 1 |
 | [PKG](#pkg-saving-loading-travel-and-the-loading-screen) | saving, loading, travel and the loading screen | 0 |
 | [PHYS](#phys-physics-traces-and-movers) | physics, traces and movers | 0 |
@@ -55,7 +55,6 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| D.109 | In the pad's DXController mode (`Settings.json`'s `Gamepad.DXController`) a stick's `Axis` binding adds its value at each event, one a tick, as the original's rule has it (engine-dll.md, a key's binding), so the view turns by as much a frame at any frame rate, twice as fast a second at twice the frame rate. DXController's own launcher does the same and holds the game to 120 frames a second unless told otherwise (its `FPSLimit`), the rate its sticks' defaults are set for; DXEngine has no limit of its own in a single-player game, the display's rate with vsync and none without, so the mod's look is its own only at 120. The choices: keep the original's rule, the look's speed following the frame rate and the mod's sensitivity setting correcting it by hand; or, in this mode alone, a stick's value to its binding scaled by the tick's time x 120, the mod's own speed at any frame rate (its scripts still given the value as it is). Recommendation: the scaling, a player's frame rate here being anything from 60 to several hundred and the mod's defaults its author's at 120 | [the pad](https://github.com/JuggyMcNutty/DXEngine/blob/main/docs/NATIVES.md#the-pad) | Run: `PadModeConsole` with `pad-mode.txt` at `DXCAP_FPS=60`, `120` and no limit: the yaw a tick a unit of `JoyU` the same, 7.5; the turn over 3 s 540,580, 1,084,180 and 5,759,140 |
 
 ## VM: the script VM and the object system
 
@@ -150,7 +149,7 @@ owner rules.
 
 | ID | What | Said in NATIVES.md | Proof |
 |---|---|---|---|
-| LCORE.45 | A mod made of several folders is not judged for native code of its own before its profile is made: the engine's audit (`DXEngine --audit-natives`, `NativesAudit.cpp`) reads the mod's `System` with the game's alone, not the other folders the mod's own ini names in its paths, so a package there that imports another folder's is not read (`damaged:`, its natives uncounted), and where the mod's own `DeusEx.u` does, the audit ends with an error (GMDX's, whose `DeusEx.u` imports HDTP's packages: `Can't find file for package 'HDTPanim'`); Mods then marks nothing, and a mod of that kind with native code of its own is offered as one that plays, as before LCORE.27. Should: the audit given the paths the mod's profile would have (`dxl_mod_set_paths`, `src/core/mods.c`). Every port branch |  | Run: `DXEngine --audit-natives=<GMDX's GMDXv9/System> <the game>`: the error, exit 1; `dxl-cli --mods`: its natives not known |
+| LCORE.45 | A mod made of several folders is not judged for native code of its own before its profile is made: the engine's audit (`DXEngine --audit-natives`, `NativesAudit.cpp`) reads the mod's `System` with the game's alone, not the other folders the mod's own ini names in its paths, so a package there that imports another folder's is not read (`damaged:`, its natives uncounted), and where the mod's own copy of a game package does, the audit ends with an error (`Can't find file for package ...`); Mods then marks nothing, and a mod of that kind with native code of its own is offered as one that plays, as before LCORE.27. Should: the audit given the paths the mod's profile would have (`dxl_mod_set_paths`, `src/core/mods.c`). Every port branch |  | Run: `DXEngine --audit-natives=<the System of a mod of two folders> <the game>`: the error, exit 1; `dxl-cli --mods`: its natives not known |
 
 ## LUI: the launchers' screens and UI kit
 
